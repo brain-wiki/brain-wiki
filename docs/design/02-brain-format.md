@@ -1,0 +1,519 @@
+# 02 · Brain format
+
+Status: draft for review · Format version: 1 · Normative
+
+This document defines what a brain looks like on disk. It is the contract
+between brain-wiki, every agent host, and the user's other tools. The key
+words MUST, MUST NOT, SHOULD, and MAY are used as in RFC 2119.
+
+## 1. Requirements that shaped the format
+
+| Requirement | Consequence |
+|---|---|
+| Readable and editable by people in any editor, and by Obsidian | Markdown files, YAML frontmatter, `[[wikilinks]]`, no binary state in the brain |
+| Writable by LLMs without corrupting structure | One fact or relation per line; no nested YAML; append-friendly sections |
+| Parseable with simple, fast code | Line-oriented grammars for claims and relations; flat frontmatter |
+| Survives renames and moves | Permanent ULID ids; link repair by id |
+| Safe under concurrent agents and devices | Inbox files are append-only and uniquely named; curated files change only in validated runs |
+| Diff- and merge-friendly in git | Stable ordering, one item per line, no reflowing of untouched lines |
+
+## 2. Directory layout
+
+A directory is a brain if and only if it contains `brain.toml` at its root.
+Default layout (every path is configurable in `[layout]`, see §3):
+
+```text
+<brain>/
+├── brain.toml                  manifest (required)
+├── AGENTS.md                   orientation for file-reading agents (generated block + user text)
+├── rules.md                    standing directives, always loaded (budgeted)
+├── log.md                      append-only human-readable change log
+├── topics/
+│   └── <topic>/
+│       ├── index.md            hub page for the topic (budgeted)
+│       ├── <note>.md           curated notes
+│       └── <subfolder>/…       optional further organization
+├── inbox/
+│   ├── episodes/
+│   │   └── YYYY/MM/<ulid>.md   immutable episodes, UTC year and month
+│   └── agents/
+│       └── <agent>/…           free-form files from host-native memory features
+├── archive/
+│   ├── episodes/YYYY/MM/<ulid>.md   episodes already consolidated
+│   └── rules.md                superseded rules
+└── reports/                    generated health reports (safe to delete)
+```
+
+Rules:
+
+- Paths inside a brain are relative, use `/`, and are compared
+  case-sensitively. Lint warns when two paths differ only by case, because
+  macOS and Windows file systems usually treat them as the same file.
+- Files and directories whose name starts with `.` are ignored (this covers
+  `.git/`, `.obsidian/`, `.trash/`), as are paths matching `layout.ignore`.
+- Only `*.md` files carry knowledge. Other files (images, PDFs) MAY exist
+  and MAY be linked; they are indexed as attachments by name only.
+- `reports/` is generated output. It is never indexed as knowledge.
+- Nothing in the brain depends on the index or on machine-local state. The
+  brain is complete by itself.
+
+**Why topics are folders.** A topic is the unit people browse, the unit of
+privacy defaults, and the unit a hub summarizes. A folder makes that
+visible in every file browser and in Obsidian without extra tooling. Notes
+MAY also live outside any topic (for example in an imported vault); they
+belong to no topic and lint can warn about it.
+
+**Why no state directory inside the brain.** Machine state (index, run
+records) is either rebuildable or device-specific, and putting it in the
+brain would make sync tools and git fight over it. The one piece of
+consolidation state that must travel, "which episodes are done", is encoded
+by location: pending episodes live in `inbox/episodes/`, consolidated ones
+in `archive/episodes/`.
+
+## 3. `brain.toml`
+
+The manifest identifies the brain and holds settings that must travel with
+it. Settings that belong to a user or a machine (where brains are, which
+brain is the default) live in the user config ([03](03-config-and-storage.md)).
+
+```toml
+format = 1                                  # format version (required)
+id = "01J9Z7M0W4K8P2R6T9V3X5Z7A1"           # brain id, a ULID (required, never changes)
+name = "personal"                           # display name (optional)
+
+[layout]                                    # all optional; defaults shown
+topics_dir   = "topics"
+inbox_dir    = "inbox"
+archive_dir  = "archive"
+reports_dir  = "reports"
+hub_filename = "index.md"                   # or "{folder}.md" for folder-note style
+ignore       = []                           # extra glob patterns, relative to the brain root
+
+[budgets]                                   # hard limits enforced by lint and writers
+hub_max_lines       = 150
+rules_max_lines     = 100
+rules_max_chars     = 4000
+agents_md_max_lines = 150
+orient_max_tokens   = 2000
+
+[privacy]
+levels  = ["default", "sensitive", "secret"]  # ascending restriction
+default = "default"
+
+[lint]
+profile = "strict"                          # strict | migrate (see 06)
+
+[consolidate]
+backend = "agent"                           # agent | command
+command = "claude"                          # preset name or full argv list, for backend = "command"
+review  = "direct"                          # direct | branch (branch requires git)
+max_episodes_per_run = 50
+max_supersede_ratio  = 0.25                 # above this, a run is routed to review (see 05)
+
+[git]
+mode = "auto"                               # auto | off ; auto = commit when the brain is a git work tree
+
+[topics.search]                             # one table per declared topic (optional)
+path        = "topics/search"               # default: <topics_dir>/<slug>
+title       = "Search"
+description = "How local search works and why."
+privacy     = "default"
+review      = "branch"                      # per-topic override
+
+[agents.default]                            # profile for unknown hosts
+max_privacy = "default"
+
+[agents.claude-code]                        # profile for one host id
+max_privacy = "sensitive"
+topics      = ["*"]                         # topic allowlist; "*" = all
+write       = ["episodes", "propose_rules", "consolidate"]
+```
+
+Rules:
+
+- `format` and `id` are REQUIRED. Unknown keys MUST be preserved by tools
+  that rewrite the file and SHOULD produce a lint warning.
+- A topic that exists on disk but is not declared still works: its slug is
+  its folder name, title is taken from the hub, privacy is the brain default.
+  Declaring a topic lets the user set description, privacy, review mode, or
+  a non-default path (for imported vaults).
+- Topic slugs match `^[a-z0-9][a-z0-9-]{0,63}$`.
+- Agent profile names are host ids ([08](08-agent-integrations.md#2-host-ids)).
+
+## 4. Common file conventions
+
+- Encoding UTF-8, no BOM. Line endings `\n`; `\r\n` is accepted on read and
+  preserved on write for files that already use it.
+- Frontmatter, when present, is a YAML block delimited by `---` lines at the
+  very top of the file.
+- **Frontmatter values are scalars or lists of scalars.** Nested mappings
+  MUST NOT be used. Reasons: Obsidian's properties editor only handles flat
+  properties; LLMs frequently break nested YAML; flat values index trivially.
+- Wikilinks inside frontmatter are not relations. Typed connections belong
+  in `## Relations` (§7). Importers convert common frontmatter link
+  properties into relations ([09](09-import.md)).
+- Writers change only the lines they mean to change. They MUST NOT reformat
+  frontmatter or reflow prose they did not edit.
+
+## 5. Identifiers
+
+| Thing | Form | Example |
+|---|---|---|
+| brain, note, episode | ULID: 26 characters, Crockford base32, uppercase | `01J9Z7Q2V8K3M4N5P6R7S8T9U0` |
+| claim | `c-` + ULID | `c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C` |
+| rule | `r-` + ULID | `r-01JA0C5D8E2F4G6H8J0K2M4N6P` |
+| run | `run-` + ULID | `run-01JA0D7F9G1H3J5K7M9N1P3Q5R` |
+
+- ULIDs sort by creation time, which keeps episode folders and claim lists
+  naturally ordered and makes ids carry a timestamp without a separate field.
+- Ids are permanent. Renaming or moving a file never changes its id.
+- Ids MUST be unique within a brain. Lint reports duplicates (usually a
+  copied file) and `--fix` re-mints the id of the newer copy.
+
+## 6. Notes
+
+### 6.1 Frontmatter
+
+```yaml
+---
+id: 01J9Z7Q2V8K3M4N5P6R7S8T9U0
+type: decision
+title: Use SQLite FTS5 for local search
+status: active
+privacy: default
+aliases: [FTS5 decision]
+tags: [search, storage]
+created: 2026-10-07
+updated: 2026-10-09
+---
+```
+
+| Field | Required | Values | Notes |
+|---|---|---|---|
+| `id` | yes in `strict`, minted by `lint --fix` | ULID | |
+| `type` | no (default `note`) | lowercase string | Open vocabulary. Suggested: `note`, `hub`, `concept`, `decision`, `howto`, `reference`, `person`, `project`, `source`, `meeting`. |
+| `title` | no | string | Default: first `# ` heading, else file name without `.md`. |
+| `status` | no (default `active`) | `active` \| `superseded` \| `archived` | Closed set; the retrieval engine only reasons about these three. |
+| `stage` | no | string | Free workflow state (`draft`, `shipped`, `abandoned`…). Importers move non-standard `status` values here. |
+| `privacy` | no (inherits) | one of `privacy.levels` | MAY raise the level above the topic's, MUST NOT lower it. |
+| `aliases` | no | list of strings | Same meaning as in Obsidian; used for link resolution and search. |
+| `tags` | no | list of strings | Without `#`. |
+| `created`, `updated` | no | ISO 8601 date or date-time | Writers set `updated` when they change a note. |
+
+Any other scalar or list property MAY be present and is preserved and
+stored (for example `source`, `url`, `author`). Fields reserved for future
+use: `valid_from`, `valid_until`, `confidence`.
+
+### 6.2 Body
+
+```markdown
+# Use SQLite FTS5 for local search
+
+Free prose: context, summary, reasoning. Humans and agents may write
+anything here. Consolidation never edits prose; it only touches the two
+structured sections below.
+
+## Claims
+- SQLite FTS5 is the default search backend. <!-- id:c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; src:inbox/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7.md#L4-L6; origin:agent; at:2026-10-07 -->
+- ~~Search shells out to ripgrep.~~ <!-- id:c-01J8XQ4R6S8T0V2W4X6Y8Z0A2B; status:superseded; by:c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; at:2026-10-07 -->
+- Trigram search needs SQLite 3.34 or newer.
+
+## Relations
+- part_of [[search]]
+- depends_on [[SQLite version policy]] — needs the trigram tokenizer
+- conflicts_with [[Vector-only search proposal]] (unless: embeddings enabled)
+- supersedes [[Use ripgrep for search]]
+```
+
+The section headings `## Claims` and `## Relations` are reserved. Their
+matching is case-insensitive. Each MAY appear at most once per note. All
+other headings are free.
+
+### 6.3 Claims
+
+A claim is one list item under `## Claims`.
+
+```text
+claim      = "- " text [ " " meta ] EOL
+superseded = "- ~~" text "~~ " meta EOL
+meta       = "<!-- " pair *( "; " pair ) " -->"
+pair       = key ":" value
+key        = "id" | "src" | "origin" | "taint" | "at" | "status" | "by"
+```
+
+| Key | Meaning |
+|---|---|
+| `id` | Claim id. Present on every claim written by brain-wiki. Claims a human writes without metadata are valid; `lint --fix` can assign ids. |
+| `src` | One or more comma-separated sources: `<brain path>#L<start>-L<end>` for episode spans, or a URL. |
+| `origin` | `owner`, `agent`, `import`, or `system`, from the source episodes. |
+| `taint` | `true` or `unknown` when any source episode was tainted or of unknown taint. Omitted when false. |
+| `at` | Date or date-time the claim was last asserted. |
+| `status` | Omitted when active. `superseded` or `retracted`. |
+| `by` | For superseded claims: the id of the claim that replaced it. |
+
+Why an HTML comment: it keeps one claim on one line, it is hidden in
+Obsidian reading view and on GitHub, and every Markdown tool leaves it
+alone. The cost is noise in source view, which we accept for parseability.
+Superseded claims stay in place, struck through, so the history of a fact
+is visible where the fact lives. Lint enforces that `by` points to an
+existing claim.
+
+Claims MAY wrap onto continuation lines indented by two or more spaces;
+the metadata comment, if any, MUST be on the last line of the item.
+
+### 6.4 Relations
+
+A relation is one list item under `## Relations`:
+
+```text
+relation   = "- " verb " " target [ " " qualifiers ] [ " " sep " " note ] EOL
+verb       = canonical | alias                       ; table below
+target     = "[[" link "]]" | "[" label "](" path ")"
+qualifiers = "(" qualifier *( ", " qualifier ) ")"
+qualifier  = word | key ( "=" | ": " ) value         ; e.g. supplies_to, weight=0.7, unless: x
+sep        = "—" | "–" | "--" | "-"
+```
+
+**Canonical vocabulary.** Five families, eight verbs. The verb is always
+written from the point of view of the note that contains the line.
+
+| Family | Verb on note A | Meaning | Inverse (written on B) | Stored as | Guard |
+|---|---|---|---|---|---|
+| Containment | `part_of [[B]]` | A is a part, child, or member of B | `has_part [[A]]` | `A part_of B` | no |
+| Dependency | `depends_on [[B]]` | A requires, builds on, or is caused by B | `enables [[A]]` | `A depends_on B` | no |
+| Conflict | `conflicts_with [[B]]` | A contradicts B, or B is an exception that defeats A | `conflicts_with [[A]]` (symmetric) | `A conflicts_with B` | **yes** |
+| Lineage | `supersedes [[B]]` | A replaces B; B is outdated | `superseded_by [[A]]` | `A supersedes B` | **yes** |
+| Peer | `related_to [[B]]` | A and B are related without a stronger claim | `related_to [[A]]` (symmetric) | `A related_to B` | no |
+
+Choices behind the table:
+
+- **Explicit verbs, not positions.** Earlier designs used compass-style
+  poles (up, down, same…). "Down" ended up meaning both "child" and
+  "downstream effect", which sent propagation the wrong way. Plain verbs
+  make direction obvious to people and models without reading a spec.
+- **One canonical direction per family.** Either side may declare a
+  relation; the index stores it once in canonical direction. This is what
+  makes guard retrieval work no matter which note the author edited.
+- **Domain meaning lives in qualifiers.** A finance note might write
+  `- enables [[Cloud capex]] (supplies_to, weight=0.6, lag=1Q)`, a legal
+  note `- conflicts_with [[Clause 7.2]] (exception)`, a research note
+  `- depends_on [[Prior result]] (replicates)`. The family drives retrieval
+  and lint; the qualifier and note are stored and displayed but never
+  change engine behavior. No vocabulary file to load, no compiler.
+- **Guards are the reason typed relations exist.** See §7.
+
+**Aliases.** The parser accepts common synonyms so people can write
+naturally, normalizes them, and records the original word as the first
+qualifier. Lint (`migrate` profile: info; `strict`: warning) suggests the
+canonical form, and `--fix` rewrites it.
+
+| Alias | Canonical |
+|---|---|
+| `parent`, `child_of`, `member_of`, `in` | `part_of` |
+| `contains`, `parent_of` | `has_part` |
+| `requires`, `builds_on`, `uses`, `caused_by` | `depends_on` |
+| `drives`, `causes`, `supports`, `unblocks` | `enables` |
+| `contradicts`, `unless`, `invalidated_by`, `refutes`, `exception` | `conflicts_with` |
+| `replaces`, `obsoletes` | `supersedes` |
+| `replaced_by`, `obsoleted_by` | `superseded_by` |
+| `related`, `see_also`, `similar_to`, `analogous_to` | `related_to` |
+
+**Attributes.** `key=value` qualifiers are stored as attributes. Reserved
+keys with defined types: `weight` (number in [-1, 1]), `sign` (`+`/`-`),
+`lag` (string), `since`, `until` (dates), `unless` (string). Plugins MAY
+interpret attributes (for example signed propagation over `depends_on`);
+the core does not.
+
+**Consistency rules** enforced by lint ([06](06-lint-and-reports.md)):
+
+- If A `supersedes` B, then B's `status` SHOULD be `superseded`.
+- A note MUST NOT supersede itself or form a supersession cycle.
+- Contradictory declarations (A `part_of` B and B `part_of` A) are errors.
+
+### 6.5 Links
+
+Body links of either form are recognized:
+
+- `[[target]]`, `[[target|label]]`, `[[target#heading]]`, `[[target#^block]]`
+- `[label](relative/path.md)`, including `#heading` fragments
+- `![[embed]]` embeds are recorded as links
+
+Untyped body links are stored as `links_to` edges. They feed backlinks,
+orphan detection, and the visualizer, but carry no retrieval rule.
+
+**Resolution order** for a link target `t` (all comparisons on Unicode
+case-folded strings, `.md` optional):
+
+1. `t` is a path relative to the brain root, or to the linking note's folder
+2. `t` equals exactly one note's file name (Obsidian's default behavior)
+3. `t` equals exactly one note's alias
+4. `t` equals exactly one note's title
+5. `t` is a note id (`[[01J9Z7Q2…]]`)
+
+Zero matches is an unresolved link; more than one match at the first
+matching step is ambiguous. Both are lint findings. Writers always emit the
+shortest form that resolves uniquely, which matches what Obsidian produces.
+
+**Renames.** The index remembers each id's previous paths. When a file
+moves and links break, `brain lint --fix` rewrites the links using the id.
+`brain mv` moves a file and rewrites links in one step.
+
+## 7. Guard relations
+
+Two families change what retrieval must return:
+
+- **`supersedes`**: when a search or read returns a note that has been
+  superseded, the superseding note MUST be returned with it, and the old
+  note MUST be labeled as superseded. When the newer note is returned, the
+  note it replaced is listed as history.
+- **`conflicts_with`**: when either side is returned, the other side MUST
+  be returned with it.
+
+This holds regardless of which side declared the relation, of search
+scores, and of result limits: guard neighbors are added on top of the
+top-k results. The only exception is privacy. If a guard neighbor is above
+the caller's privacy level, the caller is told that a hidden superseding or
+conflicting note exists, but not its content ([04](04-index-and-retrieval.md#5-guard-co-retrieval)).
+
+Claim-level supersession (§6.3) is shown inline: superseded claims are
+marked as such in every read and are excluded from search snippets.
+
+## 8. Topic hubs
+
+A hub is the file named `layout.hub_filename` at the root of a topic
+folder. Hubs give a person or an agent a one-page entry point.
+
+```markdown
+---
+id: 01J9Z7M3…
+type: hub
+title: Search
+---
+# Search
+
+How local search works in this project and why.
+
+## Notes
+- [[Use SQLite FTS5 for local search]]: why FTS5 over alternatives
+- [[SQLite version policy]]: minimum versions and fallbacks
+
+## Relations
+- related_to [[storage]]
+```
+
+- Hubs MUST stay within `budgets.hub_max_lines`. When consolidation would
+  push a hub over budget, it must create a child note
+  (`part_of [[hub]]`) instead, and the hub gains one link line.
+- `## Notes` lists the topic's notes with a short gloss. `brain lint --fix`
+  can add missing entries; it never removes lines a person wrote.
+
+## 9. Episodes
+
+Episodes are the inbox. They capture what happened in a session, raw and
+unpolished, so nothing has to be decided at capture time.
+
+Path: `inbox/episodes/<YYYY>/<MM>/<ulid>.md`, using the UTC year and month
+of the ULID's timestamp.
+
+```markdown
+---
+id: 01JA0C5D8E2F4G6H8J0K2M4N6P
+type: episode
+agent: claude-code
+session: 5f2c9a1e-…              # host session id, if known
+origin: agent                    # owner | agent | import | system
+taint: unknown                   # true | false | unknown
+captured: mcp                    # hook | mcp | cli | import | file
+created: 2026-10-10T19:22:11Z
+topics: [search]                 # hints only
+privacy: default
+---
+Switched the search path to FTS5 after ripgrep was too slow on 10k notes.
+
+## Claims
+- ripgrep took ~800 ms per query on the test corpus; FTS5 took ~5 ms.
+- Trigram tokenizer requires SQLite 3.34+.
+
+## Open questions
+- Should CJK text use the trigram table by default?
+```
+
+Rules:
+
+- Episodes are **immutable**. After creation no tool edits them. Lint
+  records each episode's hash in the index and reports changes.
+- `origin`, `taint`, `captured`, and `agent` are set by the code path that
+  writes the episode (hook, MCP server, CLI), never taken from model-written
+  text. See [05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint).
+- The body is free Markdown. `## Claims` and `## Open questions` are
+  suggested sections that consolidation prompts look for; neither is
+  required.
+- Consolidation moves processed episodes to `archive/episodes/` with the
+  same relative path. Archived episodes are kept as provenance: claim `src`
+  references still resolve.
+- Files dropped into `inbox/agents/<agent>/` by host-native memory features
+  are treated as episodes by consolidation without needing frontmatter.
+  Their `origin` is `agent` and their `taint` is `unknown`.
+
+## 10. Rules
+
+`rules.md` holds the user's standing directives. It is injected into every
+orientation, so it is short by construction.
+
+```markdown
+# Rules
+- Prefer pytest over unittest for new tests. <!-- id:r-01JA0C…; quote:"from now on use pytest"; at:2026-10-10; origin:owner -->
+- Write US English in code and docs. <!-- id:r-01JA0D…; quote:"US spelling please"; at:2026-10-10; origin:owner -->
+```
+
+- Hard limits: `budgets.rules_max_lines` and `budgets.rules_max_chars`.
+  Writes that would exceed them fail with an error that says so.
+- Every rule carries `quote`, the user's verbatim words that justify it,
+  and `origin`. Rules with `origin` other than `owner` are invalid.
+- Replacing a rule moves the old line to `archive/rules.md` with
+  `status:superseded; by:<new id>`.
+- Consolidation can never write `rules.md`. Rules are added by the user
+  through the CLI, or by an agent through an MCP tool that the host gates
+  with a user confirmation ([05 §6](05-write-path-and-consolidation.md#6-rules)).
+
+## 11. `AGENTS.md`
+
+`AGENTS.md` lets an agent that can only read files use the brain. It
+contains a generated block between markers, and anything the user writes
+outside the markers is preserved.
+
+```markdown
+<!-- brain-wiki:begin (generated; edit outside these markers) -->
+# This folder is a brain-wiki brain
+- Read `rules.md` first. Topics: (table of slug, title, description)
+- To record something, create `inbox/episodes/YYYY/MM/<ULID>.md` (format …).
+  Do not edit files under `topics/` directly.
+- Relations: part_of, depends_on, conflicts_with, supersedes, related_to …
+<!-- brain-wiki:end -->
+```
+
+`brain lint --fix` and every consolidation run regenerate the block. Total
+length is limited by `budgets.agents_md_max_lines`. When the topic table
+would not fit, it is truncated to the most recently updated topics with a
+pointer to the hubs.
+
+## 12. `log.md`
+
+An append-only, human-readable record of changes made by brain-wiki:
+
+```markdown
+## 2026-10-10T19:40:03Z · consolidate · run-01JA0D7F…
+- agent: claude-code (backend: agent) · episodes: 6 → archived 6
+- topics/search/fts5.md: +2 claims, 1 superseded, +1 relation
+```
+
+`log.md` is for people. Nothing depends on parsing it; undo uses machine
+run records ([05 §8](05-write-path-and-consolidation.md#8-undo)).
+
+## 13. Format versioning
+
+- `format` in `brain.toml` is an integer. This document defines format 1.
+- A tool MUST refuse to write to a brain with a higher format than it
+  supports, and SHOULD still read it on a best-effort basis.
+- Format changes ship with a `brain migrate` step that has a dry run and
+  writes a single commit (or undo point) per migration.
