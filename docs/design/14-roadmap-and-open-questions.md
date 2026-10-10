@@ -15,9 +15,9 @@ self-contained commits. Later milestones depend only on earlier ones.
 | M3 | Lint and reports | Rule catalog, profiles and overrides, fixes as runs, reports, pre-commit hook | Lint suite 100% on its corpus; fix idempotency |
 | M4 | Write path and runs | Episode writer with secret scrubbing and dedupe; `brain log`; rules via CLI; run records, pre-images, undo, locks, git integration; `brain mv`; `brain doctor` | Undo restores exact bytes; git commits contain only touched files |
 | M5 | Consolidation | Selection and packets, ops schema and validator, deterministic applier, review proposals, agent backend (prepare/apply) and command backend with presets | Golden tests per op; consolidation suite runs against at least one real preset |
-| M6 | MCP server | Seven tools, two prompts, error codes, instructions, cache hints | In-memory client tests for every tool and error path |
+| M6 | MCP server | Eight tools, two prompts, error codes, instructions, cache hints | In-memory client tests for every tool and error path |
 | M7 | Agent integrations | Root plugin files for each host, `brain connect`, `brain hook` adapters, opt-in capture, recall markers | Hook fixture tests per host; plugin validation; manual smoke test in each host available on the build machine |
-| M8 | Import | Overlay (phases 0–3), into, to-episodes, from-host presets | Import of a generated messy vault: phase 0 changes no existing file; each phase undoable |
+| M8 | Import and harvest | Overlay (phases 0–3), into, to-episodes, from-host presets; session readers for Claude Code, Codex, and Antigravity; `brain harvest` (dry run, routing, raw and distill), origin lookup (`brain origin`, `brain_read_origin`) | Import of a generated messy vault: phase 0 changes no existing file; each phase undoable. Harvest on recorded fixtures: correct routing and skips, one episode per session chunk, no duplicates with hook capture |
 | M9 | Bench | Generator, suites, graders, report, compare, capture | Offline suites in CI; a consolidation run across two presets produces a report |
 | M10 | Visualizer | Graph export, local server, vendored assets with lock check, static app, exports | Manual checklist on a 10k brain; escaping tests |
 | M11 | Release readiness | User guide, README, CONTRIBUTING, SECURITY, CHANGELOG, version sync, registry files | `scripts/check.py` runs every check; a fresh machine can install and connect one host following the guide |
@@ -39,6 +39,7 @@ These change the design or defaults. Each has a recommendation.
 | Q5 | **Windows support level for v0.1** | First-class; best-effort | Best-effort (core tests in CI, no hook or host guarantees). |
 | Q6 | **npm launcher** (`npx brain-wiki`) | Ship in v0.1; defer | Defer. `uvx` covers the no-install path. |
 | Q7 | **Publishing identity** | Personal GitHub account; an organization | Decide before the first push; it sets the MCP Registry namespace, the marketplace source, and the plugin manifests' repository fields. |
+| Q8 | **Harvest default: distill or raw?** | Distill with the configured preset (cleaner episodes, model cost); raw (no model, verbose episodes for consolidation to distill) | Distill when a command-backend preset is configured, raw otherwise; a backfill dry run shows the token estimate before anything is spent. |
 
 ## 3. Verification items
 
@@ -53,10 +54,12 @@ result.
 | T-3 | Antigravity transcript JSONL line schema | Inspect a real transcript; the capture adapter parses defensively and falls back to `taint: unknown`. |
 | T-4 | Does any host load a plugin-root `AGENTS.md` (or `GEMINI.md`) into user sessions? | Sentinel text in `AGENTS.md`; ask the agent in each host. |
 | T-5 | Can an Antigravity headless run be restricted to no tools (custom agent `tools: []`)? | `agy -p … --agent <none-tools agent> --output-format stream-json`; inspect the tools list. |
+| T-6 | Codex rollout files: line schema, how a session id maps to a file, and how subagent threads are marked | Record fixtures from current Codex releases; the reader is built against them. |
 | T-7 | Which marketplace file does `codex plugin marketplace add` read from a repository: `.agents/plugins/marketplace.json` only, or also `.claude-plugin/marketplace.json`? | Add the repo as a marketplace in a scratch Codex config. |
 | T-8 | Which hosts support elicitation (either form) for `brain_propose_rule` confirmation? | Call the tool in each host. |
 | T-9 | Hook timeouts and output size limits per host in practice | Fixture hooks that sleep and print large outputs. |
 | T-10 | Does `uvx --from brain-wiki==<version> brain hook …` (used by marketplace installs) fit the 300 ms hook budget once cached? | Time it on Linux and macOS. If not, plugin hooks call a small launcher that prefers `brain` on `PATH` and falls back to `uvx`. |
+| T-11 | How much does the Claude Code transcript format vary across recent versions? (Its docs call the format internal.) | Fixtures from several releases; reader tests run against all of them. |
 
 ## 4. Future work (after v0.1)
 

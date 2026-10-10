@@ -73,9 +73,11 @@ CREATE TABLE nodes (
   -- episode-only columns (NULL for notes)
   agent        TEXT,
   session      TEXT,
+  origin_turns TEXT,                -- e.g. '12-48'
+  device       TEXT,
   origin       TEXT CHECK (origin IN ('owner','agent','import','system')),
   taint        TEXT CHECK (taint IN ('true','false','unknown')),
-  captured     TEXT
+  captured     TEXT CHECK (captured IN ('hook','mcp','harvest','cli','import','file'))
 );
 CREATE INDEX nodes_topic   ON nodes(topic);
 CREATE INDEX nodes_kind    ON nodes(kind, status);

@@ -50,3 +50,4 @@ considered and rejected.
 | D17 | The visualizer is a static page with vendored JavaScript, served locally by `brain viz`; no Node build step. | npm-built web app | [12](12-visualizer.md) |
 | D18 | The bench uses synthetic, seeded data and deterministic graders; model comparisons run through the same command backends as consolidation. | Public datasets only; LLM-as-judge by default | [11](11-eval-bench.md) |
 | D19 | License: Apache-2.0. | AGPL, MIT | [13](13-engineering.md) |
+| D20 | Hosts' own session stores are a second capture source (`brain harvest`, with backfill) and can be consulted during consolidation (origin lookup); both opt-in, routed by project, and never required for an episode to make sense. | Hooks as the only capture path; copying transcripts into the brain | [05 §2.2, §4.6](05-write-path-and-consolidation.md#22-harvesting-sessions), [08 §6](08-agent-integrations.md#6-capture-and-harvest) |

@@ -53,6 +53,7 @@ Status: draft for review
 | T14 | **Supply chain.** A compromised dependency or vendored script. | Few runtime dependencies, pinned in the lockfile; vendored JavaScript pinned by version with SHA-256 recorded in the repo and verified in CI; releases built in CI with provenance. | Standard open-source supply-chain risk. |
 | T15 | **Name leakage through links.** A `default` note links to `[[Secret project]]`. | Lint BW312 warns; guard results hide the target. | The link text in the source note is visible to whoever may read that note. |
 | T16 | **Impersonating plugins.** A fake "brain-wiki" plugin in a marketplace. | Document the official sources (repository, PyPI, registry name); the plugin manifests point to the official package. | Users must install from the official source. |
+| T17 | **Over-reading agent transcripts.** Harvest and origin lookup read host session stores, which hold everything a session saw: other projects, secrets, tool output from untrusted sources. | Off by default, enabled per host; every harvest starts as a dry run listing the sessions it would read; sessions route to a brain by working directory and unrouted sessions are skipped; tool output bodies are dropped (origin lookup can include them only on request, wrapped as untrusted); secrets scrubbed before anything is written or sent; taint computed from the session's tool calls; origin reads need `read_origin`, off for every host by default; readers never modify host files. | Distillation sends condensed transcripts to the configured backend's provider, the same trust decision as consolidation. |
 
 ## 4. Privacy model
 
@@ -77,6 +78,7 @@ network access in the core.
 | Agent tool calls (orient, search, read) | Results, to the host | The host's model provider, as part of the conversation |
 | Agent-backend consolidation | The packet | The host's model provider |
 | Command-backend consolidation | The rendered prompt and packet | Whatever service the configured CLI uses (none for a local model) |
+| Harvest with distillation | Condensed turns of the selected sessions (no tool output, secrets scrubbed) | The distill preset's service; `--raw` sends nothing |
 | Bench with model backends | Synthetic scenarios only | The configured CLIs' providers |
 | Future sync | File contents | The user's own remote |
 

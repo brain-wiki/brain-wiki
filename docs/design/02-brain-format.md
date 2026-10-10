@@ -263,7 +263,7 @@ key        = "id" | "src" | "origin" | "taint" | "at" | "status" | "by"
 | Key | Meaning |
 |---|---|
 | `id` | Claim id. Present on every claim written by brain-wiki. Claims a human writes without metadata are valid; `lint --fix` can assign ids. |
-| `src` | One or more comma-separated sources: `<brain path>#L<start>-L<end>` for episode spans, or a URL. |
+| `src` | One or more comma-separated sources: `<brain path>#L<start>-L<end>` for episode spans, `<host>:<session>#T<start>-T<end>` for turns of an agent conversation, or a URL. |
 | `origin` | `owner`, `agent`, `import`, or `system`, from the source episodes. |
 | `taint` | `true` or `unknown` when any source episode was tainted or of unknown taint. Omitted when false. |
 | `at` | Date or date-time the claim was last asserted. |
@@ -444,9 +444,11 @@ id: 01JA0C5D8E2F4G6H8J0K2M4N6P
 type: episode
 agent: claude-code
 session: 5f2c9a1e-…              # host session id, if known
+origin_turns: 12-48              # turns of that session this episode covers, if known
+device: laptop                   # device the session ran on (user config name)
 origin: agent                    # owner | agent | import | system
 taint: unknown                   # true | false | unknown
-captured: mcp                    # hook | mcp | cli | import | file
+captured: mcp                    # hook | mcp | harvest | cli | import | file
 created: 2026-10-10T19:22:11Z
 topics: [search]                 # hints only
 privacy: default
@@ -469,8 +471,14 @@ Rules:
 - Episodes are **immutable**. After creation no tool edits them. Lint
   records each episode's hash in the index and reports changes.
 - `origin`, `taint`, `captured`, and `agent` are set by the code path that
-  writes the episode (hook, MCP server, CLI), never taken from model-written
-  text. See [05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint).
+  writes the episode (hook, MCP server, harvest, CLI), never taken from
+  model-written text. See [05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint).
+- `session`, `origin_turns`, and `device` point back to the conversation the
+  episode came from, so tools on that device can show it
+  ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)). They
+  never hold file paths. An episode must be understandable on its own:
+  hosts delete old transcripts, and transcripts stay on the device that
+  produced them.
 - The body is free Markdown. `## Claims`, `## Negative findings` (what was
   tried and did not work, so later agents do not repeat it), and
   `## Open questions` are suggested sections that consolidation prompts

@@ -158,6 +158,11 @@ unknown`):
 | Antigravity | `~/.gemini/AGENTS.md`, `~/.gemini/GEMINI.md`, and global rule files |
 | OpenClaw | The agent workspace's `MEMORY.md`, `USER.md`, and `memory/*.md` |
 
+`--from` brings in a host's *memory files*. A host's *conversation
+history* is read by `brain harvest` instead
+([05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions)),
+which is also the way to backfill a new brain from past sessions.
+
 Locations are taken from each host's documentation and will be verified by
 the integration tests in [08](08-agent-integrations.md); hosts change
 them, so the table lives in code with per-host overrides. Directive-like

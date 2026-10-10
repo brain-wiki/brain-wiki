@@ -142,6 +142,7 @@ restructuring it.
 | S1 | **Session start.** An agent starts in a project. | Hook or MCP call returns orientation (rules, topic map, recent changes) under a token budget. [04](04-index-and-retrieval.md), [08](08-agent-integrations.md) |
 | S2 | **Recall during a task.** The agent asks about a past decision. | `search` returns the matching notes plus every note that supersedes or conflicts with them. [04](04-index-and-retrieval.md) |
 | S3 | **Capture.** The agent learned something worth keeping. | It logs an episode (MCP or CLI), or the opt-in session-end hook writes one from the transcript. [05](05-write-path-and-consolidation.md) |
+| S3b | **Harvest and backfill.** Sessions happened without capture, or before brain-wiki existed. | `brain harvest` reads finished sessions from the hosts' own stores, routes each to a brain by project, and distills them into episodes, after a dry run. [05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions) |
 | S4 | **Consolidation.** Pending episodes are folded into topic notes. | Either the user asks their agent to consolidate (agent backend), or a scheduled job runs a headless agent CLI (command backend). [05](05-write-path-and-consolidation.md) |
 | S5 | **Human editing.** The user edits notes in Obsidian. | Edits are picked up by the next freshness check; lint reports problems. [06](06-lint-and-reports.md) |
 | S6 | **Bring an existing vault.** | `brain import --overlay` adopts a folder in place, with a dry-run report before any change. [09](09-import.md) |
@@ -160,7 +161,8 @@ restructuring it.
 | **claim** | A single bullet in a note's `## Claims` section with an id and provenance metadata. The unit consolidation operates on. |
 | **relation** | A typed, directed link written in a note's `## Relations` section, such as `depends_on [[Other note]]`. |
 | **guard relation** | `conflicts_with` and `supersedes`/`superseded_by`. Retrieving either end always retrieves the other. |
-| **episode** | An immutable inbox file holding raw observations from one agent session or one human entry. |
+| **episode** | An immutable inbox file holding raw observations from one agent session or one human entry. May point back to the conversation it came from. |
+| **harvest** | Reading finished sessions from a host's own transcript store and turning them into episodes. |
 | **rule** | A standing directive in `rules.md`, always loaded into orientation. Only added with the user's verbatim words. |
 | **consolidation run** | One pass that turns pending episodes into validated operations on notes. Has an id, a record, and an undo point. |
 | **op** | One structured edit proposed by an LLM: `add_claim`, `merge_claim`, `supersede_claim`, `add_relation`, `create_note`, `create_topic`, `skip_episode`. |

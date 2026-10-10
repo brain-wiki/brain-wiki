@@ -33,6 +33,7 @@ write       = ["episodes", "propose_rules", "consolidate"]
 | `max_privacy` | Highest privacy level this host may read. | lowest level |
 | `topics` | Topic allowlist; `"*"` means all. Notes outside topics are readable when `"*"`. | `["*"]` |
 | `write` | Subset of `episodes`, `propose_rules`, `consolidate`, `review`. | `["episodes"]` |
+| `read_origin` | May read the original agent conversations behind episodes ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)). Transcripts hold much more than the episodes kept, so this is separate from note access. | `false` |
 
 Resolution: `--host <id>` → `[agents.<id>]` → `[agents.default]` →
 built-in default. The CLI acts as `owner` (everything allowed) because the
@@ -75,6 +76,8 @@ brain consolidate [--backend agent|command] [--command PRESET] [--model M]
                   [--topic T] [--max-episodes N] [--if-pending N] [--dry-run]
 brain consolidate --prepare [--out PACKET.json]          # for external drivers
 brain consolidate --apply OPS.json --run RUN [--dry-run]
+brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw] [--dry-run | --apply]
+brain origin EPISODE [--turns A-B] [--include-tool-output]
 brain review list | show RUN | accept RUN | reject RUN
 brain runs list | show RUN
 brain undo [RUN] [--force]
@@ -191,6 +194,7 @@ host). All return structured content plus a text rendering.
 | `brain_propose_rule` | destructive, not idempotent, closed-world; `_meta["anthropic/requiresUserInteraction"] = true` | Add or replace a rule with user confirmation ([05 §6](05-write-path-and-consolidation.md#6-rules)) |
 | `brain_consolidate_prepare` | not read-only, not destructive, closed-world | Start an agent-backend run; returns instructions and packet |
 | `brain_consolidate_apply` | destructive (reversible), idempotent per run, closed-world | Validate and apply ops for a run |
+| `brain_read_origin` | read-only, idempotent, closed-world | Read a bounded window of the conversation an episode came from; requires `read_origin` ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)) |
 
 Input schemas (JSON Schema 2020-12; output schemas follow the result shapes
 in 04 and 05):
@@ -245,7 +249,15 @@ in 04 and 05):
     "properties": {
       "run":     {"type": "string", "pattern": "^run-[0-9A-HJKMNP-TV-Z]{26}$"},
       "ops":     {"type": "array", "description": "Operations, see the instructions from prepare."},
-      "dry_run": {"type": "boolean", "default": false}}}
+      "dry_run": {"type": "boolean", "default": false}}},
+
+  "brain_read_origin": {"type": "object", "additionalProperties": false, "required": ["episode"],
+    "properties": {
+      "episode":             {"type": "string", "description": "Episode id or packet handle (E1)."},
+      "turns":               {"type": "string", "pattern": "^[0-9]+-[0-9]+$",
+                              "description": "Turn range; default: the episode's range plus context."},
+      "include_tool_output": {"type": "boolean", "default": false},
+      "brain":               {"type": "string"}}}
 }
 ```
 
@@ -284,6 +296,7 @@ itself. The message starts with a stable code:
 | `budget_exceeded` | A hub or `rules.md` would exceed its budget |
 | `expired` | The run handle is older than its expiry |
 | `busy` | The brain's write lock could not be taken in time |
+| `not_available` | An episode's origin conversation is not on this device or was deleted by the host |
 
 Protocol errors (unknown tool, malformed request) are left to the SDK.
 Unexpected exceptions are logged with a trace to the log file and reported

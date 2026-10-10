@@ -17,14 +17,14 @@ when higher ones are missing.
 
 v0.1 coverage:
 
-| Host | Install | Skill | MCP | Hooks |
-|---|---|---|---|---|
-| Claude Code | Plugin marketplace (this repo) or `brain connect claude-code` | yes | yes | session start, prompt (opt-in), stop, pre-compact, session end |
-| Codex CLI and Codex in the ChatGPT desktop app | Plugin marketplace or `brain connect codex` | yes | yes | same event names as Claude Code (desktop: manual installs only) |
-| Antigravity (desktop, IDE, CLI) | `agy plugin install <repo URL>`, global plugin folder, or `brain connect antigravity` | yes | yes | first model call (as session start), post-tool (taint), stop |
-| OpenClaw | `openclaw plugins install brain-wiki --marketplace <repo>` (bundle mode) | yes | yes | none in bundle mode (Claude-format hooks are not executed there); optional hook pack (§4.4) |
-| Cursor | Loads the repo's Agent Plugins bundle (`plugin.json` + `mcp.json`), or `brain connect cursor` | yes | yes | not in v0.1 (Cursor has its own hook events; planned) |
-| Other MCP clients | `brain connect generic --print` gives a config snippet | — | yes | — |
+| Host | Install | Skill | MCP | Hooks | Harvest |
+|---|---|---|---|---|---|
+| Claude Code | Plugin marketplace (this repo) or `brain connect claude-code` | yes | yes | session start, prompt (opt-in), stop, pre-compact, session end | yes |
+| Codex CLI and Codex in the ChatGPT desktop app | Plugin marketplace or `brain connect codex` | yes | yes | same event names as Claude Code (desktop: manual installs only) | yes |
+| Antigravity (desktop, IDE, CLI) | `agy plugin install <repo URL>`, global plugin folder, or `brain connect antigravity` | yes | yes | first model call (as session start), post-tool (taint), stop | yes |
+| OpenClaw | `openclaw plugins install brain-wiki --marketplace <repo>` (bundle mode) | yes | yes | none in bundle mode (Claude-format hooks are not executed there); optional hook pack (§4.4) | after v0.1 |
+| Cursor | Loads the repo's Agent Plugins bundle (`plugin.json` + `mcp.json`), or `brain connect cursor` | yes | yes | not in v0.1 (Cursor has its own hook events; planned) | after v0.1 |
+| Other MCP clients | `brain connect generic --print` gives a config snippet | — | yes | — | — |
 
 ## 2. Host ids
 
@@ -222,10 +222,14 @@ Injected text is wrapped in markers
   exit immediately. This prevents a consolidation run from capturing
   itself.
 
-## 6. Capture
+## 6. Capture and harvest
 
-Capture turns sessions into episodes automatically. It is **off by default**
-and enabled per host:
+Capture turns sessions into episodes as they happen, through hooks.
+Harvest turns them into episodes afterwards, by reading the host's own
+session store ([05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions)).
+Both are **off by default** and enabled per host, and both use the same
+session readers (§6.4), skip rules, taint detection, and dedupe keys, so a
+session is never captured twice.
 
 ```toml
 # user config.toml
@@ -239,14 +243,31 @@ trusted_mcp_servers = ["brain-wiki"]
 
 [recall]
 on_prompt = false               # inject top matches on every prompt (costs tokens)
+
+[harvest]
+enabled = false
+hosts   = ["claude-code", "codex", "antigravity"]
+since   = "30d"                 # how far back the first run looks
+min_idle_minutes = 60           # skip sessions still in progress
+min_user_turns   = 3
+distill = "claude-code"         # command-backend preset; "raw" for no model
+[harvest.routes]                # optional: working-directory globs → brain
+"~/work/**" = "work"
+[harvest.paths]                 # optional: override where a host keeps sessions
+# claude-code = "~/.claude/projects"
 ```
 
 ### 6.1 What gets skipped
 
-- Sessions with `BRAIN_WIKI_INTERNAL=1` (brain-wiki's own runs).
+- Sessions with `BRAIN_WIKI_INTERNAL=1` (brain-wiki's own runs). Harvest
+  also skips sessions whose working directory is under brain-wiki's state
+  directory, which is where headless consolidation runs.
 - Subagent sessions, where the host distinguishes them.
 - Non-interactive (headless) sessions, unless `capture_headless = true`.
-- Sessions shorter than `min_turns` for prompted mode.
+- Sessions shorter than `min_turns` for prompted mode, or with fewer than
+  `min_user_turns` user messages for harvest.
+- For harvest: sessions still in progress, and sessions whose working
+  directory routes to no brain.
 
 ### 6.2 Modes
 
@@ -270,6 +291,25 @@ that fetch from the network (`curl`, `wget`, URLs in arguments). The
 `tool_used` hook records it immediately; raw capture also scans the
 transcript. Episodes from tainted sessions get `taint: true`; sessions
 whose tool use cannot be observed get `unknown`.
+
+### 6.4 Session readers
+
+One reader per host lists sessions and yields normalized turns
+(`index`, `role`, `text`, `tool_name`, `tool_args_summary`, `timestamp`).
+Raw capture, harvest, origin lookup, and taint detection all use it.
+
+| Host | Where sessions live (defaults) | Notes |
+|---|---|---|
+| Claude Code | `~/.claude/projects/<working-dir slug>/<session-id>.jsonl` (moves with `CLAUDE_CONFIG_DIR`) | The format is documented as internal and changes between versions. Entries carry `cwd`, `gitBranch`, `sessionId`, and `isSidechain` (subagents). Transcripts are deleted after 30 days by default (`cleanupPeriodDays`), so harvest should run at least weekly or the user should raise that setting. |
+| Codex | `$CODEX_HOME/sessions/` (default `~/.codex/sessions/`) and `archived_sessions/` | JSONL rollout files; the hook payload's `transcript_path` points at the same files. Schema to confirm (T-6). |
+| Antigravity | `<app dir>/brain/<conversation-id>/.system_generated/logs/transcript.jsonl`, where the app dir is the desktop, IDE, or CLI data folder under `~/.gemini/` | Path documented with the hook payload; line schema undocumented (T-3). CLI conversations are scoped to their working directory. |
+| OpenClaw | The agent's session transcripts | After v0.1; location to confirm. |
+| Cursor | Its own local state | After v0.1. |
+
+Readers are versioned and tested against recorded fixtures from several
+host versions. A line they cannot parse is skipped and counted; a session
+with too many unparseable lines is reported as unreadable rather than
+half-read. Readers never write to a host's files.
 
 ## 7. Headless presets for the command backend
 
@@ -358,6 +398,8 @@ Per-client tokens map to agent profiles (`chatgpt-web`, `claude-web`,
 | Prompted capture asks once | ✓ | ✓ | ✓ | — |
 | Raw capture produces one episode per compaction | ✓ | ✓ | stop only | hook pack |
 | Self-exclusion during headless consolidation | ✓ | ✓ | ✓ | — |
+| Session reader parses recorded fixtures; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
+| Origin lookup returns the right window, and `not_available` when deleted | ✓ | ✓ | ✓ | — |
 | `brain connect` and `--uninstall` round trip | ✓ | ✓ | ✓ | ✓ |
 
 Recorded hook payloads for each host and event are kept as test fixtures,
