@@ -28,28 +28,41 @@ def _newer_than(engine: Engine, node_id: str) -> list[str]:
     return [r["src"] for r in rows]
 
 
-def follow_successors(engine: Engine, node_id: str) -> tuple[str, list[str]]:
-    """From a superseding node, walk forward to the newest successor. Returns (head, via chain)."""
-    via: list[str] = []
-    current = node_id
+def successor_chain(engine: Engine, node_id: str) -> list[str]:
+    """From a superseding node, the chain forward to the newest successor (inclusive)."""
+    chain = [node_id]
     seen = {node_id}
     for _ in range(MAX_CHAIN):
-        newer = [n for n in _newer_than(engine, current) if n not in seen]
+        newer = [n for n in _newer_than(engine, chain[-1]) if n not in seen]
         if not newer:
             break
-        via.append(current)
-        current = newer[0]
-        seen.add(current)
-    return current, via
+        chain.append(newer[0])
+        seen.add(newer[0])
+    return chain
 
 
 def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]:
-    """For each hit, visible guard neighbors (capped, ordered) and counts of hidden ones."""
+    """For each hit, visible guard neighbors (capped, ordered) and counts of hidden ones.
+
+    A supersession chain resolves to its newest successor the caller may see; any newer,
+    hidden successor is counted, never named, and hidden notes never appear in `via`.
+    """
     result: dict[str, dict[str, Any]] = {
         n: {"guards": [], "hidden_guards": {}, "more_guards": 0} for n in node_ids
     }
     if not node_ids:
         return result
+    nodes: dict[str, dict[str, Any] | None] = {}
+
+    def node(node_id: str) -> dict[str, Any] | None:
+        if node_id not in nodes:
+            nodes[node_id] = _node(engine, node_id)
+        return nodes[node_id]
+
+    def visible(node_id: str) -> bool:
+        info = node(node_id)
+        return info is not None and engine.visible(info["privacy_rank"], info["topic"])
+
     placeholders = ",".join("?" * len(node_ids))
     rows = engine.db.execute(
         f"""SELECT id, src, dst, rel, verb, qualifier, note FROM edges
@@ -58,6 +71,7 @@ def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]
         (*node_ids, *node_ids),
     ).fetchall()
     per_hit: dict[str, dict[tuple[str, str], dict[str, Any]]] = defaultdict(dict)
+    hidden: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
     cap = engine.manifest.search.max_guards_per_hit
     for row in rows:
         for hit in (row["src"], row["dst"]):
@@ -71,40 +85,41 @@ def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]
                 label = "conflicts_with"
             via: list[str] = []
             if label == "superseded_by":
-                neighbor, via = follow_successors(engine, neighbor)
+                chain = successor_chain(engine, neighbor)
+                shown = [n for n in chain if visible(n)]
+                if chain[-1] not in shown:
+                    hidden[hit][label].add(chain[-1])
+                if not shown:
+                    continue
+                neighbor, via = shown[-1], shown[:-1]
+            elif not visible(neighbor):
+                hidden[hit][label].add(neighbor)
+                continue
             key = (label, neighbor)
             if key in per_hit[hit]:
                 continue
+            info = node(neighbor)
+            assert info is not None
             per_hit[hit][key] = {
                 "label": label,
                 "id": neighbor,
                 "qualifier": row["qualifier"],
                 "note": row["note"],
-                "via": via,
+                "title": info["title"],
+                "path": info["path"],
+                "status": info["status"],
+                "updated": info["updated"],
+                "via_titles": [(node(v) or {}).get("title", v) for v in via],
             }
-    for hit, entries in per_hit.items():
-        visible, hidden = [], defaultdict(int)
-        for entry in entries.values():
-            node = _node(engine, entry["id"])
-            if node is None:
-                continue
-            if not engine.visible(node["privacy_rank"], node["topic"]):
-                hidden[entry["label"]] += 1
-                continue
-            entry.update(
-                title=node["title"],
-                path=node["path"],
-                status=node["status"],
-                updated=node["updated"],
-            )
-            entry["via_titles"] = [
-                (_node(engine, v) or {}).get("title", v) for v in entry.pop("via")
-            ]
-            visible.append(entry)
-        visible.sort(key=lambda e: (_ORDER[e["label"]], -_ts(e.get("updated"))))
-        result[hit]["guards"] = visible[:cap]
-        result[hit]["more_guards"] = max(0, len(visible) - cap)
-        result[hit]["hidden_guards"] = dict(hidden)
+    for hit in result:
+        shown = sorted(
+            per_hit[hit].values(), key=lambda e: (_ORDER[e["label"]], -_ts(e.get("updated")))
+        )
+        result[hit]["guards"] = shown[:cap]
+        result[hit]["more_guards"] = max(0, len(shown) - cap)
+        result[hit]["hidden_guards"] = {
+            label: len(ids) for label, ids in hidden[hit].items() if ids
+        }
     return result
 
 

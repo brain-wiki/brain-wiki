@@ -260,6 +260,8 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
   and are cut at the first repeat.
 - **Privacy.** Neighbors with `privacy_rank > P` or a topic outside `T` are
   not returned. The hit instead carries `hidden_guards: {superseded_by: 1}`.
+  A chain resolves to the newest successor the caller may see; if a newer
+  one is hidden, it is counted, and hidden notes never appear in `via`.
   This reveals that a restricted newer or conflicting note exists, which is
   a deliberate trade: an agent that knows it is looking at possibly stale
   information can say so, while one that does not will act on it.

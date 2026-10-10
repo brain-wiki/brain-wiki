@@ -54,11 +54,6 @@ def test_retrieval_targets_hold_without_cross_level_chains(tmp_path: Path):
     assert result.status == "pass", result.details
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="product bugs: guard via_titles names a secret chain member; a visible successor "
-    "is dropped when the newest successor is hidden (index/guards.py)",
-)
 def test_retrieval_targets_hold_across_privacy_levels(tmp_path: Path):
     assert suites.retrieval(tmp_path, 200).status == "pass"
 
