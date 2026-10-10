@@ -6,12 +6,13 @@ import socket
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
-
-import tomlkit
+from typing import TYPE_CHECKING, Any
 
 from brainwiki.config.dirs import config_file
 from brainwiki.errors import FormatError
+
+if TYPE_CHECKING:
+    import tomlkit
 
 
 @dataclass
@@ -76,12 +77,16 @@ def load_user_config(path: Path | None = None) -> UserConfig:
 
 
 def _load_doc(path: Path) -> tomlkit.TOMLDocument:
+    import tomlkit
+
     if path.exists():
         return tomlkit.parse(path.read_text(encoding="utf-8"))
     return tomlkit.document()
 
 
 def _save_doc(path: Path, doc: tomlkit.TOMLDocument) -> None:
+    import tomlkit
+
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(tomlkit.dumps(doc), encoding="utf-8")
 
@@ -90,6 +95,8 @@ def register_brain(
     name: str, brain_path: Path, *, make_default: bool | None = None, path: Path | None = None
 ) -> None:
     """Add or update a brain entry, preserving the file's comments and formatting."""
+    import tomlkit
+
     path = path or config_file()
     doc = _load_doc(path)
     brains = doc.get("brains")
@@ -119,6 +126,8 @@ def unregister_brain(name: str, *, path: Path | None = None) -> bool:
 
 def set_value(dotted: str, value: Any, *, path: Path | None = None) -> None:
     """Set a dotted key such as `harvest.enabled` or `hosts.codex.brain`."""
+    import tomlkit
+
     path = path or config_file()
     doc = _load_doc(path)
     keys = dotted.split(".")

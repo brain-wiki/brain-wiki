@@ -5,14 +5,17 @@ from __future__ import annotations
 import datetime as dt
 import re
 from dataclasses import dataclass, field
+from functools import cache
 from typing import Any
 
-import yaml
 
-try:
-    _Loader: type = yaml.CSafeLoader
-except AttributeError:  # pragma: no cover - libyaml missing
-    _Loader = yaml.SafeLoader
+@cache
+def _yaml() -> tuple[Any, type]:
+    """PyYAML, imported on first use: a scan that parses nothing should not pay ~40 ms for it."""
+    import yaml
+
+    return yaml, getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
 
 MAX_FRONTMATTER_BYTES = 64 * 1024
 _KEY_RE = re.compile(r"^([A-Za-z0-9_][A-Za-z0-9_.-]*)\s*:")
@@ -56,8 +59,9 @@ def split(text: str) -> Frontmatter:
             if len(raw.encode("utf-8")) > MAX_FRONTMATTER_BYTES:
                 fm.error = "frontmatter larger than 64 KiB"
                 return fm
+            yaml, loader = _yaml()
             try:
-                loaded = yaml.load(raw, Loader=_Loader)  # noqa: S506 - safe loader
+                loaded = yaml.load(raw, Loader=loader)  # noqa: S506 - safe loader
             except yaml.YAMLError as exc:
                 fm.error = f"invalid YAML: {str(exc).splitlines()[0]}"
                 return fm
@@ -91,7 +95,9 @@ def format_value(value: Any) -> str:
         return "true" if value else "false"
     if isinstance(value, (int, float)):
         return str(value)
-    dumped = yaml.safe_dump(str(value), default_flow_style=True, allow_unicode=True, width=10_000)
+    dumped = _yaml()[0].safe_dump(
+        str(value), default_flow_style=True, allow_unicode=True, width=10_000
+    )
     dumped = dumped.strip()
     if dumped.endswith("\n..."):
         dumped = dumped[: -len("\n...")]

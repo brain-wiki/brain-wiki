@@ -8,7 +8,7 @@ import logging
 import sqlite3
 from pathlib import Path
 
-from brainwiki import __version__
+import brainwiki
 from brainwiki.config.dirs import brain_cache_dir
 from brainwiki.config.manifest import Manifest
 from brainwiki.errors import BrainError
@@ -54,7 +54,7 @@ def _create(conn: sqlite3.Connection, root: Path, manifest: Manifest) -> None:
         "brain_id": manifest.id,
         "brain_root": str(root),
         "config_hash": config_hash(manifest),
-        "engine_version": __version__,
+        "engine_version": brainwiki.__version__,
         "last_scan_ns": "0",
         "fts_trigram": "1" if trigram else "0",
     }
@@ -85,7 +85,7 @@ def open_index(
             or meta.get("config_hash") != config_hash(manifest)
             or meta.get("brain_id") != manifest.id
         )
-        if stale or conn.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+        if stale:
             conn.close()
             if meta:
                 log.info("rebuilding index for %s (schema or configuration changed)", root)
