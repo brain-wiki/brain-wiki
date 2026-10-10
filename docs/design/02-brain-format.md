@@ -106,7 +106,7 @@ profile = "strict"                          # strict | migrate (see 06)
 [consolidate]
 backend = "agent"                           # agent | command
 command = "claude"                          # preset name or full argv list, for backend = "command"
-review  = "direct"                          # direct | branch (branch requires git)
+review  = "auto"                            # auto (review only when checks trigger) | always
 max_episodes_per_run = 50
 max_supersede_ratio  = 0.25                 # above this, a run is routed to review (see 05)
 
@@ -118,7 +118,7 @@ path        = "topics/search"               # default: <topics_dir>/<slug>
 title       = "Search"
 description = "How local search works and why."
 privacy     = "default"
-review      = "branch"                      # per-topic override
+review      = "always"                      # per-topic override
 
 [agents.default]                            # profile for unknown hosts
 max_privacy = "default"
@@ -351,8 +351,12 @@ case-folded strings, `.md` optional):
 5. `t` is a note id (`[[01J9Z7Q2…]]`)
 
 Zero matches is an unresolved link; more than one match at the first
-matching step is ambiguous. Both are lint findings. Writers always emit the
-shortest form that resolves uniquely, which matches what Obsidian produces.
+matching step is ambiguous. Both are lint findings. Steps 3 to 5 are
+leniencies for hand-written and model-written links; Obsidian itself only
+resolves steps 1 and 2. Writers therefore always emit a file-name link
+(`[[file name]]`, or the shortest unique path when names collide), adding
+`|label` when the title differs, so every link they write also works in
+Obsidian.
 
 **Renames.** The index remembers each id's previous paths. When a file
 moves and links break, `brain lint --fix` rewrites the links using the id.
