@@ -24,7 +24,8 @@ v0.1 coverage:
 | Antigravity (desktop, IDE, CLI) | `agy plugin install <repo URL>`, global plugin folder, or `brain connect antigravity` | yes | yes | first model call (as session start), post-tool (taint), stop |
 | Gemini CLI | `gemini extensions install <repo URL>` or `brain connect gemini-cli` | yes | yes | session start, before agent (opt-in recall), after agent, pre-compress, session end |
 | OpenClaw | `openclaw plugins install brain-wiki --marketplace <repo>` (bundle mode) | yes | yes | none in bundle mode (Claude-format hooks are not executed there); optional hook pack (§4.5) |
-| Cursor and other MCP clients | `brain connect generic --print` gives a config snippet | — | yes | — |
+| Cursor | Loads the repo's Agent Plugins bundle (`plugin.json` + `mcp.json`), or `brain connect cursor` | yes | yes | not in v0.1 (Cursor has its own hook events; planned) |
+| Other MCP clients | `brain connect generic --print` gives a config snippet | — | yes | — |
 
 ## 2. Host ids
 
@@ -35,13 +36,17 @@ provenance, and `--host` flags:
 `generic`.
 
 When a hook or server is started without an explicit host (a shared hooks
-file read by two hosts), the host is detected in this order: the
-`BRAIN_WIKI_HOST` environment variable; host-specific environment variables
-set for hook commands (Gemini CLI sets `GEMINI_SESSION_ID`; Agent Plugins
-hosts set `PLUGIN_ROOT`; Claude Code sets `CLAUDE_PLUGIN_ROOT` and
-`CLAUDE_PROJECT_DIR`, which some other hosts also set for compatibility,
-so they are checked last); then the shape of the hook payload. An
-undetectable host is `generic`.
+file read by two hosts), the host is detected in this order:
+
+1. the `BRAIN_WIKI_HOST` environment variable;
+2. `GEMINI_SESSION_ID` (set by Gemini CLI for hook commands);
+3. the payload's `transcript_path`: under `.claude/` is Claude Code, under
+   `.codex/` is Codex (Codex session ids also start with `thr_`);
+4. `PLUGIN_ROOT` without `.claude/` paths suggests an Agent Plugins host;
+   `CLAUDE_PLUGIN_ROOT` alone suggests Claude Code. Codex sets both
+   variables for compatibility, which is why the payload check comes first.
+
+An undetectable host is `generic`.
 
 ## 3. The plugin bundle
 
@@ -105,7 +110,11 @@ body under 500 lines:
   `_meta["anthropic/maxResultSizeChars"]` and is budgeted at 15k tokens.
 - `brain_propose_rule` carries `_meta["anthropic/requiresUserInteraction"]`
   so the user approves each call.
-- Hooks: §5. The stop hook's "block with reason" output is how prompted
+- Hooks: §5. Claude Code caps each `additionalContext` string at 10,000
+  characters, so orientation for hooks is kept under 8,000. All `SessionEnd`
+  hooks share a 1.5-second budget, so capture hooks run with `async: true`.
+  The `Stop` payload includes `stop_hook_active` and
+  `last_assistant_message`; its "block with reason" output is how prompted
   capture asks the agent to log an episode (§6.2).
 - The headless preset uses `claude -p` with JSON output (§7).
 
@@ -120,6 +129,12 @@ body under 500 lines:
   the public plugin directory, which is acceptable for v0.1.
 - Codex rewrites tool names to `[A-Za-z0-9_]`, so names are snake case
   already.
+- `SessionEnd` hooks get 1 second by default (3 at most), so capture hooks
+  run with `async: true`. Codex saves `additionalContext` above a
+  configurable limit to disk and sends a preview, so orientation stays
+  compact.
+- Hook payloads carry `session_id` (`thr_…`) and a `transcript_path` to the
+  session's rollout file.
 
 ### 4.3 Antigravity (desktop, IDE, CLI)
 
@@ -168,10 +183,15 @@ body under 500 lines:
 
 ### 4.6 Cursor and generic MCP clients
 
-`brain connect generic --print` prints a stdio server entry
-(`command`, `args`, `env`) to paste into any client's MCP configuration,
-and `brain connect cursor` writes Cursor's MCP config file. A Cursor plugin
-bundle is future work.
+- Cursor loads plugins that follow the Agent Plugins specification, so the
+  repo's root `plugin.json`, `mcp.json`, and `skills/` work there. Cursor
+  does not expand the standard's `${PLUGIN_ROOT}` variables (it has its own),
+  which does not matter because brain-wiki's MCP entry uses none.
+- Cursor's own hook events (`sessionStart`, `beforeSubmitPrompt`, `stop`,
+  `preCompact`, `sessionEnd`) need a `.cursor-plugin/` manifest; they are
+  planned after v0.1.
+- `brain connect generic --print` prints a stdio server entry (`command`,
+  `args`, `env`) to paste into any client's MCP configuration.
 
 ## 5. Hooks
 
@@ -201,7 +221,7 @@ in M7.
 | `prompt` | `additionalContext` with up to 3 recalled notes and their guards (≤ 600 tokens), only above a score threshold | — |
 | `tool_used` | nothing (records session taint in state) | `{}` |
 | `stop` | prompted capture: `{"decision": "block", "reason": "<capture instruction>"}` at most once per session; otherwise nothing | `{"decision": "continue", "reason": "…"}` likewise |
-| `pre_compact`, `session_end` | nothing (raw capture happens as a side effect) | — |
+| `pre_compact`, `session_end` | nothing; raw capture runs as an async hook so it never eats the host's short session-end budget | — |
 
 Injected text is wrapped in markers
 (`<brain-wiki-context>` … `</brain-wiki-context>`) so capture can strip it
@@ -277,14 +297,19 @@ The command backend ([05 §4.4](05-write-path-and-consolidation.md#44-backends))
 runs a host CLI once per packet, prompt on stdin, in an empty temporary
 directory, with `BRAIN_WIKI_INTERNAL=1`.
 
-| Preset | Command (sketch) | Final text | Tools |
+| Preset | Command (sketch) | Final text | Isolation |
 |---|---|---|---|
-| `claude-code` | `claude -p --output-format json [--model M]` | `result` field of the JSON | Disabled with the CLI's tool allow/deny flags; empty working directory |
-| `codex` | `codex exec --json [-m M]` with a read-only sandbox | Final agent message event | Read-only sandbox, empty working directory |
-| `antigravity` | `agy -p --output-format json [--model M] [--agent brain-consolidator]` | `response` field | A custom agent with no tools if test T-5 confirms that works; otherwise headless soft-denies tools needing approval, and the empty directory leaves nothing to read |
+| `claude-code` | `claude --bare -p --output-format json --json-schema <ops schema> [--model M]` | `structured_output` (schema-constrained), else `result` | `--bare` skips hooks, plugins, MCP servers, auto memory, and instruction files; no tools are pre-approved; empty working directory |
+| `codex` | `codex exec - --json --ephemeral --skip-git-repo-check --sandbox read-only -o <file> [-m M]` | The final message written by `-o` (also the last `agent_message` event) | Read-only sandbox; nothing persisted; empty directory (not a git repo, hence the flag) |
+| `antigravity` | `agy -p --output-format json --json-schema <ops schema> [--model M] [--agent brain-consolidator]` | `structured_output`, else `response` | A custom agent with no tools if test T-5 confirms that works; otherwise headless soft-denies tools needing approval, and the empty directory leaves nothing to read |
 | `gemini-cli` | `gemini -p --output-format json [-m M]` | `response` field | Excluded tools via the run's settings |
+| `cursor` | `agent -p --output-format json [--model M]` (never `--force`) | final result | Without `--force`, file changes are only proposed, never applied |
 | `ollama` | `ollama run <model>` | stdout | No tools by construction |
 | custom | any argv | stdout, then the first JSON object with `ops` | User's responsibility |
+
+Where a CLI can constrain output to a JSON Schema, the preset passes the
+ops schema ([05 §5](05-write-path-and-consolidation.md#5-operations)), which
+removes most invalid responses before validation even runs.
 
 Exact flags live in code (`brainwiki.hosts.<host>.headless`) with tests
 against recorded outputs, because CLIs change faster than this document.
