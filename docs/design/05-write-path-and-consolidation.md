@@ -152,8 +152,9 @@ model). This is what keeps sensitive notes away from a cloud model.
 topic hints, then an FTS query over the episode text (top 5), then the
 hubs of candidate topics. Episodes with overlapping candidates form one
 packet; packets are cut to a token budget (default 30k tokens for
-`command`, 20k for `agent`, since agent tool results are size-limited by
-hosts). Leftover episodes wait for the next run.
+`command`; 15k for `agent`, because hosts cap tool results, for example
+Claude Code at 25k tokens by default; the tool raises its own cap with
+`_meta["anthropic/maxResultSizeChars"]` where supported). Leftover episodes wait for the next run.
 
 **Packet.** A JSON document that is the complete input to the LLM.
 Handles replace paths and ids so models never copy long identifiers:
@@ -346,7 +347,7 @@ session. They get the strictest path.
 | Path | Flow |
 |---|---|
 | `brain rule add "…"` | The person running the CLI is the user. Written immediately, `origin: owner`, `quote` defaults to the text. |
-| MCP `brain_propose_rule {text, user_quote, replaces?}` | Requires `propose_rules` in the profile's `write` list. If the session is known to be tainted, rejected. Otherwise the server asks the user to confirm via MCP elicitation, showing the exact rule. Confirmed → written with `origin: owner`, `via: mcp`. Declined → nothing. If the client does not support elicitation, the rule is written as a proposal (`inbox/proposals/rule-<id>.md`) and orientation shows "1 rule awaiting confirmation: `brain rule accept <id>`". |
+| MCP `brain_propose_rule {text, user_quote, replaces?}` | Requires `propose_rules` in the profile's `write` list. If the session is known to be tainted, rejected. Otherwise the server asks the user to confirm, showing the exact rule: through an input-required result carrying an elicitation request on 2026-07-28 connections, or a pushed elicitation on older sessions, whichever the client advertises. The tool is also annotated as destructive and, for hosts that honor it, as requiring user interaction (`_meta["anthropic/requiresUserInteraction"]`), so the call itself is approved by the user. Confirmed → written with `origin: owner`, `via: mcp`. Declined → nothing. If the client supports neither form of confirmation, the rule is written as a proposal (`inbox/proposals/rule-<id>.md`) and orientation shows "1 rule awaiting confirmation: `brain rule accept <id>`". |
 | Consolidation | Never. If an episode looks like a preference ("user prefers X"), the instructions say to record it as a claim in a `preferences` topic; promoting it to a rule is a separate, user-confirmed step. |
 
 Replacing a rule (`replaces: r-…`) moves the old line to `archive/rules.md`.
