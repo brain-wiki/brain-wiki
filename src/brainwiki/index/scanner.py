@@ -169,13 +169,14 @@ def scan(engine: Engine, *, force: bool = False, paths: list[str] | None = None)
     try:
         names_changed = False
         removed_ids: dict[str, str] = {}
+        orphaned: list[int] = []  # edges whose target node was deleted and maybe re-inserted
         for rel in deleted:
             node_id = known[rel]["node_id"]
             if node_id:
                 fm_id = conn.execute("SELECT fm_id FROM nodes WHERE id=?", (node_id,)).fetchone()
                 if fm_id and fm_id["fm_id"]:
                     removed_ids[fm_id["fm_id"]] = rel
-                _delete_node(conn, node_id)
+                _delete_node(conn, node_id, orphaned)
                 names_changed = True
             conn.execute("DELETE FROM files WHERE path=?", (rel,))
             conn.execute("DELETE FROM diagnostics WHERE path=?", (rel,))
@@ -188,7 +189,7 @@ def scan(engine: Engine, *, force: bool = False, paths: list[str] | None = None)
             kind = classify(engine, rel, topics)
             is_new = rel not in known
             node_id, changed_names = _index_file(
-                engine, conn, rel, data, st.mtime_ns, st.size, kind, topics
+                engine, conn, rel, data, st.mtime_ns, st.size, kind, topics, orphaned
             )
             names_changed = names_changed or changed_names
             if node_id:
@@ -212,10 +213,11 @@ def scan(engine: Engine, *, force: bool = False, paths: list[str] | None = None)
         if names_changed:
             _reresolve_all(conn)
             stats.reresolved = True
-        elif parsed_nodes:
+        elif parsed_nodes or orphaned:
             resolver = Resolver(conn)
             for node_id, rel in parsed_nodes:
                 _resolve_edges_of(conn, resolver, node_id, rel)
+            _resolve_edge_ids(conn, resolver, orphaned)
         if paths is None:
             conn.execute("UPDATE meta SET value=? WHERE key='last_scan_ns'", (str(now_ns),))
         conn.execute("COMMIT")
@@ -228,7 +230,7 @@ def scan(engine: Engine, *, force: bool = False, paths: list[str] | None = None)
     return stats
 
 
-def _delete_node(conn: sqlite3.Connection, node_id: str) -> None:
+def _delete_node(conn: sqlite3.Connection, node_id: str, orphaned: list[int] | None = None) -> None:
     row = conn.execute(
         "SELECT rowid, title, aliases, tags, headings, body, history FROM docs WHERE node_id=?",
         (node_id,),
@@ -253,6 +255,8 @@ def _delete_node(conn: sqlite3.Connection, node_id: str) -> None:
                 (row["rowid"], row["title"], row["body"]),
             )
     conn.execute("DELETE FROM nodes WHERE id=?", (node_id,))
+    if orphaned is not None:
+        orphaned += [r[0] for r in conn.execute("SELECT id FROM edges WHERE other=?", (node_id,))]
     conn.execute(
         "UPDATE edges SET other=NULL, src=CASE WHEN flip=1 THEN NULL ELSE src END, dst=CASE WHEN flip=0 THEN NULL ELSE dst END WHERE other=?",
         (node_id,),
@@ -273,6 +277,7 @@ def _index_file(
     size: int,
     kind: str,
     topics: dict[str, str],
+    orphaned: list[int] | None = None,
 ) -> tuple[str | None, bool]:
     """Index one file. Returns (node id or None, whether name keys may have changed)."""
     old = conn.execute("SELECT node_id FROM files WHERE path=?", (rel,)).fetchone()
@@ -283,7 +288,7 @@ def _index_file(
             (r["key"], r["kind"])
             for r in conn.execute("SELECT key, kind FROM names WHERE node_id=?", (old_node,))
         }
-        _delete_node(conn, old_node)
+        _delete_node(conn, old_node, orphaned)
     else:
         old_names = set()
     conn.execute("DELETE FROM diagnostics WHERE path=?", (rel,))
@@ -518,6 +523,24 @@ def _resolve_edges_of(conn: sqlite3.Connection, resolver: Resolver, node_id: str
         "SELECT id, raw_target, declared_in, flip FROM edges WHERE declared_in=?", (node_id,)
     ).fetchall():
         _apply_resolution(conn, edge, resolver, rel)
+
+
+def _resolve_edge_ids(conn: sqlite3.Connection, resolver: Resolver, edge_ids: list[int]) -> None:
+    if not edge_ids:
+        return
+    paths = {}
+    for start in range(0, len(edge_ids), 500):
+        chunk = edge_ids[start : start + 500]
+        rows = conn.execute(
+            f"SELECT id, raw_target, declared_in, flip FROM edges WHERE id IN ({','.join('?' * len(chunk))})",  # noqa: S608 - placeholders only
+            chunk,
+        ).fetchall()
+        for edge in rows:
+            declared = edge["declared_in"]
+            if declared not in paths:
+                row = conn.execute("SELECT path FROM nodes WHERE id=?", (declared,)).fetchone()
+                paths[declared] = row["path"] if row else ""
+            _apply_resolution(conn, edge, resolver, paths[declared])
 
 
 def _reresolve_all(conn: sqlite3.Connection) -> None:

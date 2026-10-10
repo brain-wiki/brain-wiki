@@ -151,3 +151,19 @@ def test_rebuild_matches_incremental(example: Path):
         eng.rebuild()
         after = sorted(tuple(r) for r in eng.db.execute("SELECT src, dst, rel FROM edges"))
         assert before == after
+
+
+def test_editing_a_note_keeps_incoming_links_resolved(example: Path):
+    with engine_for(example) as eng:
+        eng.scan(force=True)
+        note = example / "topics/search/fts5.md"
+        note.write_text(note.read_text() + "\nOne more line.\n")
+        eng.scan(paths=["topics/search/fts5.md"])
+        unresolved = eng.db.execute(
+            "SELECT raw_target FROM edges WHERE other IS NULL AND rel != 'links_to'"
+        ).fetchall()
+        assert unresolved == []
+        hub_links = eng.db.execute(
+            "SELECT other FROM edges WHERE raw_target='fts5' AND rel='links_to'"
+        ).fetchall()
+        assert hub_links and all(r["other"] for r in hub_links)
