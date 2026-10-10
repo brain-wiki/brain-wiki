@@ -61,11 +61,7 @@ def test_retrieval_targets_hold_across_privacy_levels(tmp_path: Path):
 def test_lint_suite_finds_every_planted_defect_and_fixes_safely(tmp_path: Path):
     result = suites.lint_suite(tmp_path)
     failing = [(m.case, m.metric) for m in result.metrics if m.passed is False]
-    # The only miss is the known BW701 false positive on the clean corpus (xfail below).
-    assert failing == [("BW701", "precision")], result.details["mismatches"]
-    assert result.details["mismatches"] == [
-        "clean:wikilink-after-token: unexpected ('BW701', 'topics/alpha/ingest-limits.md', 10)"
-    ]
+    assert failing == [], result.details["mismatches"]
     codes = {m.case for m in result.metrics if m.metric == "recall"}
     assert {
         "BW103",
@@ -85,9 +81,6 @@ def test_lint_suite_finds_every_planted_defect_and_fixes_safely(tmp_path: Path):
     }
 
 
-@pytest.mark.xfail(
-    strict=True, reason="product bug: BW701 reads a wikilink after 'token is' as a secret"
-)
 def test_wikilink_after_token_is_not_a_secret():
     from brainwiki.write.secrets import find_secrets
 

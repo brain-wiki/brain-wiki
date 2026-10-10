@@ -52,6 +52,8 @@ def _entropy(value: str) -> float:
 def _high_entropy(value: str) -> bool:
     if _REDACTED.fullmatch(value) or value.lower() in ("redacted", "changeme", "placeholder"):
         return False
+    if value.startswith(("[[", "[", "(", "<", "{")) or "](" in value:
+        return False  # a link or a placeholder, not a credential
     classes = sum(
         bool(re.search(p, value)) for p in (r"[a-z]", r"[A-Z]", r"[0-9]", r"[^A-Za-z0-9]")
     )
