@@ -209,12 +209,13 @@ class Manifest:
         return best[1] if best else None
 
     def is_ignored(self, rel: str) -> bool:
-        parts = rel.split("/")
-        if any(p.startswith(".") for p in parts):
+        if rel.startswith(".") or "/." in rel:
             return True
+        if not self.layout.ignore:
+            return False
+        first = rel.split("/", 1)[0]
         return any(
-            fnmatch.fnmatch(rel, pat) or fnmatch.fnmatch(parts[0], pat)
-            for pat in self.layout.ignore
+            fnmatch.fnmatch(rel, pat) or fnmatch.fnmatch(first, pat) for pat in self.layout.ignore
         )
 
     def lint_profile_for(self, rel: str) -> str:

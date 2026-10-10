@@ -1,0 +1,134 @@
+"""Index schema. Bump SCHEMA_VERSION on any change; the index is rebuilt automatically."""
+
+from __future__ import annotations
+
+SCHEMA_VERSION = 3
+
+DDL = """
+CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+
+CREATE TABLE files (
+  path         TEXT PRIMARY KEY,
+  kind         TEXT NOT NULL,
+  mtime_ns     INTEGER NOT NULL,
+  size         INTEGER NOT NULL,
+  sha256       TEXT NOT NULL,
+  node_id      TEXT,
+  parse_errors INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE nodes (
+  id           TEXT PRIMARY KEY,
+  path         TEXT NOT NULL UNIQUE,
+  kind         TEXT NOT NULL,
+  topic        TEXT,
+  title        TEXT NOT NULL,
+  type         TEXT NOT NULL DEFAULT 'note',
+  status       TEXT NOT NULL DEFAULT 'active',
+  stage        TEXT,
+  privacy      TEXT NOT NULL,
+  privacy_rank INTEGER NOT NULL,
+  created      TEXT,
+  updated      TEXT,
+  aliases      TEXT NOT NULL DEFAULT '[]',
+  tags         TEXT NOT NULL DEFAULT '[]',
+  props        TEXT NOT NULL DEFAULT '{}',
+  line_count   INTEGER NOT NULL DEFAULT 0,
+  fm_id        TEXT,
+  agent        TEXT,
+  session      TEXT,
+  origin_turns TEXT,
+  device       TEXT,
+  origin       TEXT,
+  taint        TEXT,
+  captured     TEXT
+);
+CREATE INDEX nodes_topic ON nodes(topic);
+CREATE INDEX nodes_kind ON nodes(kind, status);
+CREATE INDEX nodes_updated ON nodes(updated);
+
+CREATE TABLE names (
+  key     TEXT NOT NULL,
+  kind    TEXT NOT NULL,
+  node_id TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+  PRIMARY KEY (key, kind, node_id)
+);
+
+CREATE TABLE path_history (
+  node_id   TEXT NOT NULL,
+  path      TEXT NOT NULL,
+  last_seen TEXT NOT NULL,
+  PRIMARY KEY (node_id, path)
+);
+
+CREATE TABLE claims (
+  id            TEXT NOT NULL,
+  node_id       TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+  line          INTEGER NOT NULL,
+  text          TEXT NOT NULL,
+  status        TEXT NOT NULL,
+  superseded_by TEXT,
+  origin        TEXT,
+  taint         TEXT,
+  asserted_at   TEXT,
+  sources       TEXT NOT NULL DEFAULT '[]',
+  PRIMARY KEY (node_id, id)
+);
+CREATE INDEX claims_id ON claims(id);
+
+CREATE TABLE edges (
+  id          INTEGER PRIMARY KEY,
+  src         TEXT,
+  dst         TEXT,
+  rel         TEXT NOT NULL,
+  is_guard    INTEGER NOT NULL,
+  symmetric   INTEGER NOT NULL,
+  verb        TEXT NOT NULL,
+  written     TEXT NOT NULL,
+  qualifier   TEXT,
+  attrs       TEXT NOT NULL DEFAULT '{}',
+  note        TEXT,
+  declared_in TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+  other       TEXT,
+  flip        INTEGER NOT NULL DEFAULT 0,
+  line        INTEGER NOT NULL,
+  raw_target  TEXT NOT NULL,
+  ambiguous   INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX edges_src ON edges(src, rel);
+CREATE INDEX edges_dst ON edges(dst, rel);
+CREATE INDEX edges_declared ON edges(declared_in);
+
+CREATE TABLE docs (
+  rowid    INTEGER PRIMARY KEY,
+  node_id  TEXT NOT NULL UNIQUE REFERENCES nodes(id) ON DELETE CASCADE,
+  title    TEXT NOT NULL,
+  aliases  TEXT NOT NULL,
+  tags     TEXT NOT NULL,
+  headings TEXT NOT NULL,
+  body     TEXT NOT NULL,
+  history  TEXT NOT NULL
+);
+CREATE VIRTUAL TABLE fts USING fts5(
+  title, aliases, tags, headings, body, history,
+  content='docs', content_rowid='rowid',
+  tokenize='porter unicode61 remove_diacritics 2'
+);
+
+CREATE TABLE diagnostics (
+  path     TEXT NOT NULL,
+  line     INTEGER,
+  code     TEXT NOT NULL,
+  severity TEXT NOT NULL,
+  message  TEXT NOT NULL
+);
+CREATE INDEX diagnostics_path ON diagnostics(path);
+"""
+
+TRIGRAM_DDL = """
+CREATE VIRTUAL TABLE fts_tri USING fts5(
+  title, body,
+  content='docs', content_rowid='rowid',
+  tokenize='trigram'
+);
+"""

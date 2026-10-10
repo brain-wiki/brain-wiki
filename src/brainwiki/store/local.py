@@ -65,7 +65,10 @@ class LocalStore:
         return sha256_bytes(path.read_bytes()) if path.exists() else None
 
     def walk(self, skip: Callable[[str], bool] | None = None) -> Iterator[FileStat]:
-        stack = [self.root]
+        root = str(self.root)
+        cut = len(root) + 1
+        sep = os.sep
+        stack = [root]
         while stack:
             current = stack.pop()
             try:
@@ -75,11 +78,13 @@ class LocalStore:
             for entry in entries:
                 if entry.name.startswith("."):
                     continue
-                rel = Path(entry.path).relative_to(self.root).as_posix()
+                rel = entry.path[cut:]
+                if sep != "/":
+                    rel = rel.replace(sep, "/")
                 if skip and skip(rel):
                     continue
                 if entry.is_dir(follow_symlinks=False):
-                    stack.append(Path(entry.path))
+                    stack.append(entry.path)
                 elif entry.is_file(follow_symlinks=False):
                     st = entry.stat(follow_symlinks=False)
                     yield FileStat(rel, st.st_size, st.st_mtime_ns)

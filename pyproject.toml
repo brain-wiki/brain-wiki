@@ -55,3 +55,9 @@ ignore = ["S101", "S603", "S607", "E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "B011"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["src", "tests"]
+pythonVersion = "3.11"

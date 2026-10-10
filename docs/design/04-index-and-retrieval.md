@@ -305,7 +305,7 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
    characters. Shorter runs fall back to a bounded `LIKE` scan over
    `docs.title` and `docs.body` (trigram cannot match fewer than 3
    characters).
-5. Privacy and topic filters are part of the SQL `WHERE` clause (R3).
+5. Privacy and topic filters are applied to FTS candidates before scoring and truncation (R3). Candidates are fetched in growing batches, so restricted notes never displace visible ones and nothing about them reaches the result.
 
 ### 6.3 Ranking
 
