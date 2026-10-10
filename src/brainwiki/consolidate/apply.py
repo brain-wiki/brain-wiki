@@ -94,6 +94,7 @@ class Applier:
         self.staged = Staged(run)
         self.new_paths: dict[str, str] = {}  # new:<topic>/<slug> -> path
         self.new_topics: dict[str, tuple[str, str]] = {}  # slug -> (folder, hub path)
+        self.topic_meta: dict[str, tuple[str, str]] = {}  # slug -> (title, description)
         self.touched: set[str] = set()
         self.hubs: set[str] = set()
         manifest = engine.manifest
@@ -181,6 +182,7 @@ class Applier:
         self.run.create(hub, "\n".join(head + body))
         self.touched.add(hub)
         self.new_topics[slug] = (folder, hub)
+        self.topic_meta[slug] = (op["title"], op.get("description") or "")
         self.staged.created_topics.append(folder)
 
     def create_note(self, op: dict[str, Any], rank: int) -> None:
@@ -391,10 +393,10 @@ def stage(
     extra = [
         {
             "slug": slug,
-            "title": slug,
+            "title": applier.topic_meta[slug][0],
             "path": folder,
             "hub": hub,
-            "description": "",
+            "description": applier.topic_meta[slug][1],
             "updated": _today(),
         }
         for slug, (folder, hub) in applier.new_topics.items()

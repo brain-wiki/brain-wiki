@@ -338,3 +338,43 @@ def test_agent_memory_files_are_consolidated_and_archived(example: Path):
         assert pipeline.apply(e, packet, ops, e.profile).status == "applied"
         assert (example / "archive/agents/claude-code/memory.md").exists()
         assert not [p for p in lint(e).problems if p.path.startswith("archive/agents/")]
+
+
+def test_created_topic_keeps_agents_block_current(example: Path):
+    with eng(example) as e:
+        path = log(e, "Lumen exports notes to PDF through the print dialog.")
+        packet = pipeline.prepare(e, e.profile)
+        h = handle_for(packet, path)
+        line = packet.episodes[h].first_line
+        ops = {
+            "ops": [
+                {
+                    "op": "create_topic",
+                    "slug": "export",
+                    "title": "Export",
+                    "description": "How notes leave Lumen.",
+                },
+                {
+                    "op": "create_note",
+                    "ref": "new:export/pdf",
+                    "title": "PDF export",
+                    "claims": [
+                        {
+                            "text": "Lumen exports PDF through the print dialog.",
+                            "sources": [f"{h}#L{line}"],
+                        }
+                    ],
+                },
+            ]
+            + [
+                {"op": "skip_episode", "episode": x, "reason": "t"}
+                for x in packet.episodes
+                if x != h
+            ]
+        }
+        assert pipeline.apply(e, packet, ops, e.profile).status == "applied"
+        assert (
+            "| export | topics/export/index.md | How notes leave Lumen. |"
+            in (example / "AGENTS.md").read_text()
+        )
+        assert not [p for p in lint(e).problems if p.code == "BW408"]
