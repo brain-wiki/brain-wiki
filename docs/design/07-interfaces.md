@@ -257,7 +257,8 @@ in 04 and 05):
     "properties": {
       "run":     {"type": "string", "pattern": "^run-[0-9A-HJKMNP-TV-Z]{26}$"},
       "ops":     {"type": "array", "description": "Operations, see the instructions from prepare."},
-      "dry_run": {"type": "boolean", "default": false}}},
+      "dry_run": {"type": "boolean", "default": false},
+      "brain":   {"type": "string", "description": "Optional; the server finds the brain that holds the run."}}},
 
   "brain_read_origin": {"type": "object", "additionalProperties": false, "required": ["episode"],
     "properties": {
