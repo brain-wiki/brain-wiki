@@ -438,6 +438,9 @@ Switched the search path to FTS5 after ripgrep was too slow on 10k notes.
 - ripgrep took ~800 ms per query on the test corpus; FTS5 took ~5 ms.
 - Trigram tokenizer requires SQLite 3.34+.
 
+## Negative findings
+- Tried a pure-Python BM25 first; too slow above 2k notes.
+
 ## Open questions
 - Should CJK text use the trigram table by default?
 ```
@@ -449,9 +452,10 @@ Rules:
 - `origin`, `taint`, `captured`, and `agent` are set by the code path that
   writes the episode (hook, MCP server, CLI), never taken from model-written
   text. See [05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint).
-- The body is free Markdown. `## Claims` and `## Open questions` are
-  suggested sections that consolidation prompts look for; neither is
-  required.
+- The body is free Markdown. `## Claims`, `## Negative findings` (what was
+  tried and did not work, so later agents do not repeat it), and
+  `## Open questions` are suggested sections that consolidation prompts
+  look for; none is required.
 - Consolidation moves processed episodes to `archive/episodes/` with the
   same relative path. Archived episodes are kept as provenance: claim `src`
   references still resolve.

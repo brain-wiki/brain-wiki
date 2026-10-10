@@ -253,9 +253,19 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
   This reveals that a restricted newer or conflicting note exists, which is
   a deliberate trade: an agent that knows it is looking at possibly stale
   information can say so, while one that does not will act on it.
-- **Budget.** Guard neighbors are added on top of the result limit and are
-  never dropped for space. Each is returned compactly (title, path, status,
-  one-line note); the agent can `read` it.
+- **Budget.** Guard neighbors are added on top of the result limit. Each is
+  returned compactly (title, path, status, one-line note); the agent can
+  `read` it. To keep a heavily contested note from flooding the context,
+  each hit carries at most `search.max_guards_per_hit` neighbors (default
+  10), ordered: newest successor first, then conflicts by most recent
+  update, then history. The rest are counted (`more_guards: n`) so the agent
+  knows to look. Only true guards count against this cap: a negative causal
+  influence is a qualifier on `depends_on`, not a guard.
+- **Containment inheritance (future).** Exceptions declared on a parent
+  (a carve-out on a whole agreement, a caveat on a whole topic) could also
+  apply to its parts. A bounded option to inherit guards from `part_of`
+  ancestors (one or two hops, within the same cap) is planned once real
+  brains show the need.
 - **Notes vs claims.** Claim-level supersession needs no query: superseded
   claims are already excluded from `body` and marked in reads.
 
