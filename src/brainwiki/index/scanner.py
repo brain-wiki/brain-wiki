@@ -54,10 +54,19 @@ def discovered_topics(engine: Engine) -> dict[str, str]:
     layout = engine.manifest.layout
     topics: dict[str, str] = {}
     base = engine.brain.root / layout.topics_dir
+    reserved = {layout.inbox_dir, layout.archive_dir, layout.reports_dir}
+    prefix = "" if layout.topics_dir in (".", "") else f"{layout.topics_dir}/"
     if base.is_dir():
         for child in sorted(base.iterdir()):
-            if child.is_dir() and not child.name.startswith("."):
-                topics.setdefault(slugify(child.name), f"{layout.topics_dir}/{child.name}")
+            rel = f"{prefix}{child.name}"
+            if (
+                not child.is_dir()
+                or child.name.startswith(".")
+                or rel in reserved
+                or engine.manifest.is_ignored(rel)
+            ):
+                continue
+            topics.setdefault(slugify(child.name), rel)
     topics.update(engine.manifest.topic_paths())
     return topics
 
