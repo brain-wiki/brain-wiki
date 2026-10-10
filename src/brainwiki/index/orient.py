@@ -80,10 +80,13 @@ def pending_stats(engine: Engine) -> dict[str, Any]:
                 oldest_days, (datetime.now(UTC) - ulid_datetime(ulid)).total_seconds() / 86400
             )
     proposals = engine.store.abspath(engine.manifest.layout.proposals_dir)
+    files = sorted(proposals.glob("*.md")) if proposals.exists() else []
+    rule_ids = [p.stem[len("rule-") :] for p in files if p.name.startswith("rule-")]
     return {
         "pending": len(rows),
         "oldest_days": round(oldest_days, 1),
-        "proposals": len(list(proposals.glob("*.md"))) if proposals.exists() else 0,
+        "proposals": len(files) - len(rule_ids),
+        "rule_proposals": rule_ids,
     }
 
 
@@ -122,6 +125,12 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
     if inbox["proposals"]:
         inbox_lines.append(
             f"{inbox['proposals']} proposal(s) awaiting review (`brain review list`)."
+        )
+    if inbox["rule_proposals"]:
+        count = len(inbox["rule_proposals"])
+        inbox_lines.append(
+            f"{count} rule{'s' if count != 1 else ''} awaiting the user's confirmation: "
+            + ", ".join(f"`brain rule accept {r}`" for r in inbox["rule_proposals"][:3])
         )
     if inbox["pending"] >= 20 or inbox["oldest_days"] > 7:
         inbox_lines.append(

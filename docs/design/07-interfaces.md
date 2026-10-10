@@ -88,7 +88,7 @@ brain lint [PATH]... [--fix] [--dry-run] [--profile strict|migrate] [--select CO
 brain lint --install-hook
 brain report
 brain index [--rebuild | --status]
-brain mv SRC DST
+brain mv SRC DST [--dry-run]
 
 brain import PATH --overlay [--dry-run | --apply]
 brain import PATH --into BRAIN [--dry-run | --apply]

@@ -60,14 +60,18 @@ All writers go through one function, `write_episode()`, which:
 
 1. Mints the ULID and path (UTC year and month).
 2. Sets the provenance fields from the code path, ignoring any values the
-   model put in the text.
+   model put in the text. Privacy is the most restrictive of the requested
+   level and the levels of the hinted topics, so an episode about a
+   sensitive topic is never visible to agents that cannot read that topic.
 3. Scrubs secrets (patterns for common API keys, tokens, private key
    blocks; [10](10-security-and-privacy.md)), replacing them with
    `[REDACTED:<kind>]`.
 4. Enforces a size cap (default 64 KiB; the excess is cut and noted).
 5. Applies an idempotency key if given (`dedupe:` in frontmatter; hook
    capture uses `<host>:<session>:<turn range>`), so retries do not
-   duplicate.
+   duplicate. A marker created with `O_EXCL` in the state dir makes the
+   check atomic across processes on one device; the index catches keys
+   from episodes that arrived by sync.
 6. Writes to a temporary file in the same directory, then renames it
    atomically, then updates the index (write-through).
 

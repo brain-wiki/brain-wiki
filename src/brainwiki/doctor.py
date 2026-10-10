@@ -1,4 +1,7 @@
-"""`brain doctor`: a read-only report of configuration, brains, hosts, and SQLite (design doc 15 §3.4)."""
+"""`brain doctor`: a report of configuration, brains, hosts, and SQLite (design doc 15 §3.4).
+
+Read-only except for one repair: runs a crash left half-applied are rolled back (05 §10).
+"""
 
 from __future__ import annotations
 
@@ -79,7 +82,21 @@ def _brain_summary(name: str, path: Path) -> dict[str, Any]:
     )
     proposals = path / layout.proposals_dir
     info["open_proposals"] = sum(1 for _ in proposals.glob("*.md")) if proposals.exists() else 0
+    info.update(_runs_summary(brain))
     return info
+
+
+def _runs_summary(brain: Any) -> dict[str, Any]:
+    from brainwiki.engine import Engine
+    from brainwiki.runs.record import list_records
+    from brainwiki.runs.undo import recover
+
+    with Engine(brain) as engine:
+        recovered = recover(engine)
+    uncommitted = [
+        {"run": r.run, "error": r.git_error} for r in list_records(brain.key) if r.git_error
+    ][:10]
+    return {"recovered_runs": recovered, "uncommitted_runs": uncommitted}
 
 
 def run_doctor() -> dict[str, Any]:
@@ -99,6 +116,24 @@ def run_doctor() -> dict[str, Any]:
         summary = _brain_summary(name, path)
         summary["default"] = name == user.default
         report["brains"].append(summary)
+        for item in summary.get("recovered_runs", []):
+            report["problems"].append(
+                {
+                    "code": "run_rolled_back",
+                    "severity": "warning",
+                    "message": f"brain {name!r}: interrupted run {item.get('run')} was rolled back"
+                    + (f"; left alone: {', '.join(item['left'])}" if item.get("left") else ""),
+                }
+            )
+        for item in summary.get("uncommitted_runs", []):
+            report["problems"].append(
+                {
+                    "code": "run_not_committed",
+                    "severity": "info",
+                    "message": f"brain {name!r}: {item['run']} was applied but not committed ({item['error']})",
+                    "fix": "commit the files yourself, or fix the git hook and run `git commit`",
+                }
+            )
         if not summary["ok"]:
             report["problems"].append(
                 {
