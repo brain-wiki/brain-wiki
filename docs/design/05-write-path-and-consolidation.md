@@ -234,7 +234,7 @@ timeout_s = 600
 4. On validation failure, retry once with the errors appended. A second
    failure ends the run; episodes stay pending.
 
-Presets for Claude Code, Codex, Gemini CLI, Antigravity CLI, Cursor's CLI,
+Presets for Claude Code, Codex, Antigravity CLI, Cursor's CLI,
 and a plain local-model runner are defined in
 [08 §7](08-agent-integrations.md#7-headless-presets-for-the-command-backend).
 The backend's agent profile is the preset name (for example

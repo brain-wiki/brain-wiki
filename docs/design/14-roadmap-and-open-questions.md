@@ -51,9 +51,8 @@ result.
 | T-1 | Does Antigravity accept a root `plugin.json` that carries Agent Plugins fields (`$schema`, `version`, `extensions`)? Its published schema is closed. | `agy plugin install ./` on the repo; `agy plugin list`. Fallback: keep root `plugin.json` minimal (`name`, `description`) and put rich metadata in `.claude-plugin/` and `.codex-plugin/`. |
 | T-2 | Does Antigravity expand a plugin-root variable in plugin `mcp_config.json` and `hooks.json`, and what working directory do plugin hooks get? | Hook that writes `pwd` and its environment to a file. Default design avoids the question by calling `brain` from `PATH`. |
 | T-3 | Antigravity transcript JSONL line schema | Inspect a real transcript; the capture adapter parses defensively and falls back to `taint: unknown`. |
-| T-4 | Does any host load a plugin-root `AGENTS.md` into user sessions? | Sentinel text in `AGENTS.md`; ask the agent in each host. |
+| T-4 | Does any host load a plugin-root `AGENTS.md` (or `GEMINI.md`) into user sessions? | Sentinel text in `AGENTS.md`; ask the agent in each host. |
 | T-5 | Can an Antigravity headless run be restricted to no tools (custom agent `tools: []`)? | `agy -p … --agent <none-tools agent> --output-format stream-json`; inspect the tools list. |
-| T-6 | Does Gemini CLI tolerate Claude-schema events in an extension's `hooks/hooks.json`? | Install the extension; check warnings and which hooks fire. If not tolerated, Gemini hooks are wired by `brain connect gemini-cli` into its settings instead. |
 | T-7 | Which marketplace file does `codex plugin marketplace add` read from a repository: `.agents/plugins/marketplace.json` only, or also `.claude-plugin/marketplace.json`? | Add the repo as a marketplace in a scratch Codex config. |
 | T-8 | Which hosts support elicitation (either form) for `brain_propose_rule` confirmation? | Call the tool in each host. |
 | T-9 | Hook timeouts and output size limits per host in practice | Fixture hooks that sleep and print large outputs. |

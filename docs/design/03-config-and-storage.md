@@ -40,7 +40,7 @@ path = "~/work/brain"
 brain  = "work"                      # default brain for this host
 brains = ["work", "personal"]        # brains this host may select (default: all)
 
-[hosts.gemini-cli]
+[hosts.openclaw]
 brains = ["personal"]
 
 [capture]                            # opt-in session capture (08 §6)

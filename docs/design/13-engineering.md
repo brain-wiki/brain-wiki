@@ -13,7 +13,6 @@ brain-wiki/
 ├── mcp.json                     MCP server for Agent Plugins hosts (Codex, ChatGPT desktop, OpenClaw)
 ├── .mcp.json                    MCP server for Claude Code
 ├── mcp_config.json              MCP server for Antigravity
-├── gemini-extension.json        Gemini CLI extension manifest
 ├── server.json                  MCP Registry entry
 ├── .claude-plugin/
 │   ├── plugin.json              Claude Code plugin manifest
@@ -24,7 +23,6 @@ brain-wiki/
 ├── hooks.json                   lifecycle hooks (Antigravity schema)
 ├── rules/brain-wiki.md          Antigravity rule (trigger: model_decision)
 ├── skills/brain/SKILL.md        the one skill, shared by all hosts
-├── brain-wiki-context.md        Gemini CLI contextFileName (user-facing; never a dev guide)
 │
 ├── src/brainwiki/               the Python package (§2)
 ├── tests/                       unit, property, integration tests; synthetic fixtures
@@ -39,18 +37,17 @@ brain-wiki/
 
 **Reserved root names** (interpreted by at least one host when the repo is
 installed as a plugin): `plugin.json`, `mcp.json`, `.mcp.json`,
-`mcp_config.json`, `gemini-extension.json`, `settings.json`, `.lsp.json`,
-`GEMINI.md`, `skills/`, `agents/`, `commands/`, `hooks/`, `rules/`,
-`output-styles/`, `policies/`, `sidecars/`, `.claude-plugin/`,
-`.codex-plugin/`, `.cursor-plugin/`. Nothing else may use these names.
+`mcp_config.json`, `settings.json`, `.lsp.json`, `skills/`, `agents/`,
+`commands/`, `hooks/`, `rules/`, `output-styles/`, `sidecars/`,
+`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`. Nothing else may
+use these names.
 
-**Developer instructions must not leak into users' sessions.** Gemini CLI
-loads `GEMINI.md` from an extension root as context, so the repo has no
-`GEMINI.md` and sets `contextFileName` to the user-facing
-`brain-wiki-context.md`. Whether any host loads a plugin-root `AGENTS.md` is
-unverified; the repo's `AGENTS.md` is kept short and opens with a line
-telling any agent that is not developing brain-wiki to ignore it. Test
-item T-4 in [14](14-roadmap-and-open-questions.md#3-verification-items)
+**Developer instructions must not leak into users' sessions.** Whether any
+host loads a plugin-root `AGENTS.md` (or `GEMINI.md`, which Antigravity
+treats like `AGENTS.md` in workspaces) into a user's session is unverified.
+The repo has no `GEMINI.md`, and its `AGENTS.md` is kept short and opens
+with a line telling any agent that is not developing brain-wiki to ignore
+it. Test item T-4 in [14](14-roadmap-and-open-questions.md#3-verification-items)
 checks this.
 
 ## 2. Package structure
@@ -201,8 +198,7 @@ Until then, the same steps run locally through `uv run scripts/check.py`.
    publishing.
 3. Publish `server.json` to the MCP Registry from CI.
 4. The Claude Code and Codex marketplaces read the repository directly;
-   Antigravity installs from the repository URL; the Gemini CLI gallery
-   picks the repo up by its GitHub topic.
+   Antigravity installs from the repository URL.
 
 ## 10. Open-source hygiene
 

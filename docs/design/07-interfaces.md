@@ -150,11 +150,12 @@ MCP SDK, the visualizer, or the bench.
 
 ### 3.2 Naming and size limits
 
-- Server key `brain-wiki` in every host config. A hyphen, not an
-  underscore, because one host splits policy names on the first underscore.
+- Server key `brain-wiki` in every host config: lowercase with a hyphen,
+  which every host accepts and which keeps underscores free to separate
+  server and tool names.
 - Tool names: lowercase snake case with a `brain_` prefix, at most 26
   characters, so every host's prefixed form (`mcp__brain-wiki__brain_search`,
-  `mcp_brain-wiki_brain_search`, `brain-wiki__brain_search`) stays under
+  `mcp__plugin_brain-wiki_brain-wiki__brain_search`, `brain-wiki__brain_search`) stays under
   the 64-character limits some model APIs impose.
 - Tool descriptions put the essential sentence first and stay under 1,000
   characters; server instructions under 2,000 (one host truncates both at

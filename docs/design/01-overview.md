@@ -23,7 +23,7 @@ write to, stored as plain Markdown in a folder the user owns.
 
 ```
             ┌────────────────────── agent hosts ───────────────────────┐
-            │ Claude Code   Codex   Antigravity   Gemini CLI   OpenClaw │
+            │ Claude Code    Codex    Antigravity    OpenClaw    Cursor │
             │      any MCP client          a human in Obsidian / vim    │
             └───────┬──────────────┬──────────────────┬────────────────┘
        plugin + hooks│        MCP (stdio)│        plain files│
@@ -78,7 +78,7 @@ started by a scheduled job. brain-wiki needs no API keys.
 | ID | Goal | How we will know (v0.1) |
 |---|---|---|
 | G1 | **Files are the source of truth.** Everything the system knows is in the brain directory, readable and editable by humans with any editor, and works in Obsidian. | Deleting the index and rebuilding it loses nothing. A brain round-trips through Obsidian edits without lint errors. |
-| G2 | **Works with the agents people use.** One brain serves Claude Code, Codex, Antigravity, Gemini CLI, OpenClaw (bundle mode), and generic MCP clients. | The plugin loads in each host; `brain connect <host>` wires it; an end-to-end smoke test per host passes (see [08](08-agent-integrations.md)). |
+| G2 | **Works with the agents people use.** One brain serves Claude Code, Codex, Antigravity, OpenClaw (bundle mode), Cursor, and generic MCP clients. | The plugin loads in each host; `brain connect <host>` wires it; an end-to-end smoke test per host passes (see [08](08-agent-integrations.md)). |
 | G3 | **Code and data are separate.** The repo holds only source. Brains live at user-chosen locations; one user can have several named brains. | No brain content in the repo; config selects brains by name per project, per host, or per call. |
 | G4 | **Writes are safe.** Untrusted content cannot become a standing directive automatically; consolidation cannot silently drop information; every curated change is reversible. | Injection scenarios in the bench never reach `rules.md`; the loss checks catch planted regressions; `brain undo` restores the exact prior bytes. |
 | G5 | **Retrieval is correct about change.** When a note has been superseded or contradicted, retrieving it also retrieves the newer or conflicting note. | Guard recall is 100% on the bench retrieval suite. |
@@ -168,7 +168,7 @@ restructuring it.
 | **taint** | Whether untrusted external content (web, email, unknown tools) influenced an episode: `true`, `false`, or `unknown`. |
 | **privacy level** | An ordered label on topics and notes (default: `default` < `sensitive` < `secret`). Each agent profile has a maximum level it may see. |
 | **agent profile** | Per-brain settings for one host (e.g. `claude-code`): which privacy levels and topics it may read and what it may write. |
-| **host** | An agent application that loads brain-wiki: Claude Code, Codex, Antigravity, Gemini CLI, OpenClaw, or a generic MCP client. |
+| **host** | An agent application that loads brain-wiki: Claude Code, Codex, Antigravity, OpenClaw, Cursor, or a generic MCP client. |
 | **index** | The SQLite database derived from a brain; stored in the user cache directory, never inside the brain. |
 | **orientation** | The short, budgeted context an agent receives at session start. |
 

@@ -155,7 +155,6 @@ unknown`):
 |---|---|
 | Claude Code | Project memory directories under `~/.claude/projects/*/memory/` and user-level `CLAUDE.md` |
 | Codex | `~/.codex/memories/` and `~/.codex/AGENTS.md` |
-| Gemini CLI | `~/.gemini/GEMINI.md` |
 | Antigravity | `~/.gemini/AGENTS.md`, `~/.gemini/GEMINI.md`, and global rule files |
 | OpenClaw | The agent workspace's `MEMORY.md`, `USER.md`, and `memory/*.md` |
 

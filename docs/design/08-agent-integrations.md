@@ -22,8 +22,7 @@ v0.1 coverage:
 | Claude Code | Plugin marketplace (this repo) or `brain connect claude-code` | yes | yes | session start, prompt (opt-in), stop, pre-compact, session end |
 | Codex CLI and Codex in the ChatGPT desktop app | Plugin marketplace or `brain connect codex` | yes | yes | same event names as Claude Code (desktop: manual installs only) |
 | Antigravity (desktop, IDE, CLI) | `agy plugin install <repo URL>`, global plugin folder, or `brain connect antigravity` | yes | yes | first model call (as session start), post-tool (taint), stop |
-| Gemini CLI | `gemini extensions install <repo URL>` or `brain connect gemini-cli` | yes | yes | session start, before agent (opt-in recall), after agent, pre-compress, session end |
-| OpenClaw | `openclaw plugins install brain-wiki --marketplace <repo>` (bundle mode) | yes | yes | none in bundle mode (Claude-format hooks are not executed there); optional hook pack (§4.5) |
+| OpenClaw | `openclaw plugins install brain-wiki --marketplace <repo>` (bundle mode) | yes | yes | none in bundle mode (Claude-format hooks are not executed there); optional hook pack (§4.4) |
 | Cursor | Loads the repo's Agent Plugins bundle (`plugin.json` + `mcp.json`), or `brain connect cursor` | yes | yes | not in v0.1 (Cursor has its own hook events; planned) |
 | Other MCP clients | `brain connect generic --print` gives a config snippet | — | yes | — |
 
@@ -32,17 +31,15 @@ v0.1 coverage:
 Stable identifiers used in agent profiles, user config, episode
 provenance, and `--host` flags:
 
-`claude-code`, `codex`, `antigravity`, `gemini-cli`, `openclaw`, `cursor`,
-`generic`.
+`claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`, `generic`.
 
 When a hook or server is started without an explicit host (a shared hooks
 file read by two hosts), the host is detected in this order:
 
 1. the `BRAIN_WIKI_HOST` environment variable;
-2. `GEMINI_SESSION_ID` (set by Gemini CLI for hook commands);
-3. the payload's `transcript_path`: under `.claude/` is Claude Code, under
+2. the payload's `transcript_path`: under `.claude/` is Claude Code, under
    `.codex/` is Codex (Codex session ids also start with `thr_`);
-4. `PLUGIN_ROOT` without `.claude/` paths suggests an Agent Plugins host;
+3. `PLUGIN_ROOT` without `.claude/` paths suggests an Agent Plugins host;
    `CLAUDE_PLUGIN_ROOT` alone suggests Claude Code. Codex sets both
    variables for compatibility, which is why the payload check comes first.
 
@@ -59,12 +56,10 @@ One skill and one MCP server are described once per host format:
 | `mcp.json` | Agent Plugins hosts | `$schema` (Agent Plugins MCP 1.0), server `brain-wiki`: `type: stdio`, `command: uvx`, `args: [--from, brain-wiki==<version>, brain, mcp, --host, auto]` |
 | `.mcp.json` | Claude Code | Same server, `--host claude-code` |
 | `mcp_config.json` | Antigravity | Same server, `--host antigravity` (no `type` field in this format) |
-| `gemini-extension.json` | Gemini CLI | `name`, `version`, `description`, inline `mcpServers` (`--host gemini-cli`), `contextFileName: brain-wiki-context.md` |
 | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | Claude Code; also read by the ChatGPT desktop app as a legacy-compatible marketplace and by OpenClaw `--marketplace` | Manifest; a marketplace with one entry whose source is the repository root |
 | `hooks/hooks.json` | Claude Code, Codex (same schema) | Events → `uvx --from brain-wiki==<version> brain hook auto <event>` |
 | `hooks.json` | Antigravity | Named hook `brain-wiki` with `PreInvocation`, `PostToolUse`, `Stop` → `brain hook antigravity <event>` |
 | `rules/brain-wiki.md` | Antigravity | `trigger: model_decision` rule: a short description of when to consult the brain |
-| `brain-wiki-context.md` | Gemini CLI | Two paragraphs telling the model the brain exists and which tools to use |
 | `skills/brain/SKILL.md` | All plugin hosts | The skill (§3.1) |
 
 **Why `uvx` in plugin files.** A plugin installed from a marketplace cannot
@@ -152,22 +147,7 @@ body under 500 lines:
 - MCP tools default to "Ask" permission; users can allow read tools with
   `mcp(brain-wiki/brain_search)` style rules. The user guide shows how.
 
-### 4.4 Gemini CLI
-
-- Install with `gemini extensions install <repo URL>` or
-  `brain connect gemini-cli`. The manifest's `contextFileName` points at a
-  user-facing file, because Gemini CLI loads `GEMINI.md` from an extension
-  root as context (the repo has none).
-- Hooks: an extension's hooks live in `hooks/hooks.json`, the same path as
-  Claude Code's but with different event names and millisecond timeouts.
-  The shared file uses Claude/Codex event names and no `timeout` fields
-  (units differ). Whether Gemini CLI tolerates the unknown event names is
-  test T-6; if not, `brain connect gemini-cli` writes Gemini-specific hooks
-  into its settings instead.
-- Server key `brain-wiki` (hyphen): Gemini CLI's policy parser splits on the
-  first underscore.
-
-### 4.5 OpenClaw
+### 4.4 OpenClaw
 
 - Bundle mode: OpenClaw maps the plugin's skills and MCP servers. It
   detects but does not execute Claude-format `hooks/hooks.json`.
@@ -181,7 +161,7 @@ body under 500 lines:
 - A native memory-provider plugin (taking OpenClaw's memory slot) is future
   work; it needs the OpenClaw SDK to build and test.
 
-### 4.6 Cursor and generic MCP clients
+### 4.5 Cursor and generic MCP clients
 
 - Cursor loads plugins that follow the Agent Plugins specification, so the
   repo's root `plugin.json`, `mcp.json`, and `skills/` work there. Cursor
@@ -200,14 +180,14 @@ payload on stdin and writing the host's expected JSON on stdout.
 
 ### 5.1 Normalized events
 
-| Normalized | Claude Code | Codex | Antigravity | Gemini CLI | OpenClaw (hook pack) |
-|---|---|---|---|---|---|
-| `session_start` | `SessionStart` | `SessionStart` | `PreInvocation` with `invocationNum == 0` | `SessionStart` | `agent:bootstrap` |
-| `prompt` (opt-in recall) | `UserPromptSubmit` | `UserPromptSubmit` | — (no prompt text exposed) | `BeforeAgent` | — |
-| `tool_used` (taint) | `PostToolUse` | `PostToolUse` | `PostToolUse` | `AfterTool` | — |
-| `stop` | `Stop` | `Stop` | `Stop` | `AfterAgent` | — |
-| `pre_compact` | `PreCompact` | `PreCompact` | — | `PreCompress` | `session:compact:before` |
-| `session_end` | `SessionEnd` | `SessionEnd` | — | `SessionEnd` | `command:reset` |
+| Normalized | Claude Code | Codex | Antigravity | OpenClaw (hook pack) |
+|---|---|---|---|---|
+| `session_start` | `SessionStart` | `SessionStart` | `PreInvocation` with `invocationNum == 0` | `agent:bootstrap` |
+| `prompt` (opt-in recall) | `UserPromptSubmit` | `UserPromptSubmit` | — (no prompt text exposed) | — |
+| `tool_used` (taint) | `PostToolUse` | `PostToolUse` | `PostToolUse` | — |
+| `stop` | `Stop` | `Stop` | `Stop` | — |
+| `pre_compact` | `PreCompact` | `PreCompact` | — | `session:compact:before` |
+| `session_end` | `SessionEnd` | `SessionEnd` | — | `command:reset` |
 
 Event names for Codex are taken from its documentation's statement that
 plugin hooks share Claude Code's event schema; confirmed by host fixtures
@@ -215,7 +195,7 @@ in M7.
 
 ### 5.2 Outputs
 
-| Event | Claude Code / Codex / Gemini CLI | Antigravity |
+| Event | Claude Code / Codex | Antigravity |
 |---|---|---|
 | `session_start` | `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "<orientation>"}}` | `{"injectSteps": [{"ephemeralMessage": "<orientation>"}]}` |
 | `prompt` | `additionalContext` with up to 3 recalled notes and their guards (≤ 600 tokens), only above a score threshold | — |
@@ -302,7 +282,6 @@ directory, with `BRAIN_WIKI_INTERNAL=1`.
 | `claude-code` | `claude --bare -p --output-format json --json-schema <ops schema> [--model M]` | `structured_output` (schema-constrained), else `result` | `--bare` skips hooks, plugins, MCP servers, auto memory, and instruction files; no tools are pre-approved; empty working directory |
 | `codex` | `codex exec - --json --ephemeral --skip-git-repo-check --sandbox read-only -o <file> [-m M]` | The final message written by `-o` (also the last `agent_message` event) | Read-only sandbox; nothing persisted; empty directory (not a git repo, hence the flag) |
 | `antigravity` | `agy -p --output-format json --json-schema <ops schema> [--model M] [--agent brain-consolidator]` | `structured_output`, else `response` | A custom agent with no tools if test T-5 confirms that works; otherwise headless soft-denies tools needing approval, and the empty directory leaves nothing to read |
-| `gemini-cli` | `gemini -p --output-format json [-m M]` | `response` field | Excluded tools via the run's settings |
 | `cursor` | `agent -p --output-format json [--model M]` (never `--force`) | final result | Without `--force`, file changes are only proposed, never applied |
 | `ollama` | `ollama run <model>` | stdout | No tools by construction |
 | custom | any argv | stdout, then the first JSON object with `ops` | User's responsibility |
@@ -330,7 +309,6 @@ against recorded outputs, because CLIs change faster than this document.
 | Claude Code | Add the materialized directory as a local marketplace and install the plugin from it |
 | Codex | Add it as a local marketplace (`codex plugin marketplace add <dir>`) |
 | Antigravity | Link or copy into `~/.gemini/config/plugins/brain-wiki/` |
-| Gemini CLI | `gemini extensions link <dir>`; Gemini-specific hooks in settings if T-6 requires |
 | OpenClaw | `openclaw plugins install --link <dir>` |
 | Cursor | Add the server to Cursor's MCP config file |
 | generic | Print the snippet only |
@@ -372,15 +350,15 @@ Per-client tokens map to agent profiles (`chatgpt-web`, `claude-web`,
 
 ## 10. Test matrix
 
-| Check | Claude Code | Codex | Antigravity | Gemini CLI | OpenClaw |
-|---|---|---|---|---|---|
-| Plugin validates and loads | `claude plugin validate`, install | marketplace add, install | `agy plugin install ./` | `gemini extensions link` | `plugins install --link`, `inspect` |
-| MCP tools listed and callable | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Orientation injected at start | ✓ | ✓ | ✓ (first call only) | ✓ | hook pack |
-| Prompted capture asks once | ✓ | ✓ | ✓ | ✓ | — |
-| Raw capture produces one episode per compaction | ✓ | ✓ | stop only | ✓ | hook pack |
-| Self-exclusion during headless consolidation | ✓ | ✓ | ✓ | ✓ | — |
-| `brain connect` and `--uninstall` round trip | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Check | Claude Code | Codex | Antigravity | OpenClaw |
+|---|---|---|---|---|
+| Plugin validates and loads | `claude plugin validate`, install | marketplace add, install | `agy plugin install ./` | `plugins install --link`, `inspect` |
+| MCP tools listed and callable | ✓ | ✓ | ✓ | ✓ |
+| Orientation injected at start | ✓ | ✓ | ✓ (first call only) | hook pack |
+| Prompted capture asks once | ✓ | ✓ | ✓ | — |
+| Raw capture produces one episode per compaction | ✓ | ✓ | stop only | hook pack |
+| Self-exclusion during headless consolidation | ✓ | ✓ | ✓ | — |
+| `brain connect` and `--uninstall` round trip | ✓ | ✓ | ✓ | ✓ |
 
 Recorded hook payloads for each host and event are kept as test fixtures,
 so the adapters are tested on every change even where the host is not
