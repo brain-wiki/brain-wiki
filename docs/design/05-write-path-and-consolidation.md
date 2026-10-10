@@ -450,7 +450,9 @@ Semantics (what the deterministic writer does):
 | `skip_episode` | Nothing, except that the episode is archived with the run. |
 
 `new:<topic>/<slug>` refs let ops in one batch point at notes created in the
-same batch. Every op that changes a note also sets its `updated` field.
+same batch. Every op that changes a note also sets its `updated` field; the
+hub line `create_note` adds is bookkeeping and does not, so a hub one line
+under its budget can still take a new child note.
 
 ## 6. Rules
 

@@ -96,6 +96,7 @@ class Applier:
         self.new_topics: dict[str, tuple[str, str]] = {}  # slug -> (folder, hub path)
         self.topic_meta: dict[str, tuple[str, str]] = {}  # slug -> (title, description)
         self.touched: set[str] = set()
+        self.changed_by_ops: set[str] = set()  # files an op changed; these get `updated`
         self.hubs: set[str] = set()
         manifest = engine.manifest
         self.layout = manifest.layout
@@ -112,9 +113,11 @@ class Applier:
             raise Conflict(f"{path} no longer exists; prepare a new run")
         return text
 
-    def write(self, path: str, text: str) -> None:
+    def write(self, path: str, text: str, *, bookkeeping: bool = False) -> None:
         self.run.write(path, text)
         self.touched.add(path)
+        if not bookkeeping:
+            self.changed_by_ops.add(path)
 
     def verify_hashes(self) -> None:
         if not self.strict:
@@ -225,7 +228,11 @@ class Applier:
         self.staged.stats[path]["added"] += len(op["claims"])
         if hub:
             text = self.read(hub)
-            self.write(hub, append_to_section(text, "notes", [f"- [[{self.link_to(op['ref'])}]]"]))
+            self.write(
+                hub,
+                append_to_section(text, "notes", [f"- [[{self.link_to(op['ref'])}]]"]),
+                bookkeeping=True,
+            )
             self.hubs.add(hub)
 
     def hub_link(self, hub_path: str) -> str:
@@ -369,6 +376,14 @@ def stage(
             applier.create_note(op, ranks.get(op["ref"], 0))
         elif kind != "skip_episode":
             getattr(applier, kind)(op)
+    for path in (
+        applier.changed_by_ops
+        - set(applier.staged.created_notes)
+        - {h for _, h in applier.new_topics.values()}
+    ):
+        run.write(
+            path, set_fields(run.read(path) or "", {"updated": _today()}, order_first=_FM_ORDER)
+        )
     budget = engine.manifest.budgets.hub_max_lines
     for path in applier.touched:
         text = run.read(path) or ""
@@ -377,14 +392,6 @@ def stage(
             raise InvalidOps(
                 f"{path} would exceed hub_max_lines ({budget}); put detail in a child note"
             )
-    for path in (
-        applier.touched
-        - set(applier.staged.created_notes)
-        - {h for _, h in applier.new_topics.values()}
-    ):
-        run.write(
-            path, set_fields(run.read(path) or "", {"updated": _today()}, order_first=_FM_ORDER)
-        )
     for handle in sorted(validation.cited | validation.skipped, key=lambda h: int(h[1:])):
         episode = packet.episodes[handle]
         if run.exists(episode.path) and not run.exists(episode.archive_to):
