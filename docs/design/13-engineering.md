@@ -1,0 +1,215 @@
+# 13 · Engineering
+
+Status: draft for review
+
+## 1. Repository layout
+
+The repository root is also the plugin root for every supported host (D14),
+so some root names are reserved by hosts and must only hold plugin content.
+
+```text
+brain-wiki/
+├── plugin.json                  plugin manifest: Agent Plugins format, also read by Antigravity
+├── mcp.json                     MCP server for Agent Plugins hosts (Codex, ChatGPT desktop, OpenClaw)
+├── .mcp.json                    MCP server for Claude Code
+├── mcp_config.json              MCP server for Antigravity
+├── gemini-extension.json        Gemini CLI extension manifest
+├── server.json                  MCP Registry entry
+├── .claude-plugin/
+│   ├── plugin.json              Claude Code plugin manifest
+│   └── marketplace.json         marketplace listing this repo as one plugin
+├── .codex-plugin/plugin.json    OpenAI overlay (only if root plugin.json lacks extensions["com.openai"])
+├── hooks/
+│   └── hooks.json               lifecycle hooks (Claude Code and Codex schema)
+├── hooks.json                   lifecycle hooks (Antigravity schema)
+├── rules/brain-wiki.md          Antigravity rule (trigger: model_decision)
+├── skills/brain/SKILL.md        the one skill, shared by all hosts
+├── brain-wiki-context.md        Gemini CLI contextFileName (user-facing; never a dev guide)
+│
+├── src/brainwiki/               the Python package (§2)
+├── tests/                       unit, property, integration tests; synthetic fixtures
+├── bench/                       bench scenario definitions (generated data is not committed)
+├── docs/                        design/ (these documents) and user/ (user guide)
+├── scripts/                     maintainer scripts (version sync, vendored asset check)
+├── pyproject.toml, uv.lock
+├── README.md, LICENSE, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md
+├── AGENTS.md                    guide for coding agents working on this repo (see note)
+└── .pre-commit-hooks.yaml       exposes `brain lint` to the pre-commit framework
+```
+
+**Reserved root names** (interpreted by at least one host when the repo is
+installed as a plugin): `plugin.json`, `mcp.json`, `.mcp.json`,
+`mcp_config.json`, `gemini-extension.json`, `settings.json`, `.lsp.json`,
+`GEMINI.md`, `skills/`, `agents/`, `commands/`, `hooks/`, `rules/`,
+`output-styles/`, `policies/`, `sidecars/`, `.claude-plugin/`,
+`.codex-plugin/`, `.cursor-plugin/`. Nothing else may use these names.
+
+**Developer instructions must not leak into users' sessions.** Gemini CLI
+loads `GEMINI.md` from an extension root as context, so the repo has no
+`GEMINI.md` and sets `contextFileName` to the user-facing
+`brain-wiki-context.md`. Whether any host loads a plugin-root `AGENTS.md` is
+unverified; the repo's `AGENTS.md` is kept short and opens with a line
+telling any agent that is not developing brain-wiki to ignore it. Test
+item T-4 in [14](14-roadmap-and-open-questions.md#3-verification-items)
+checks this.
+
+## 2. Package structure
+
+```text
+src/brainwiki/
+├── cli/            argparse entry point; one module per command; lazy imports
+├── config/         user config, brain.toml, brain resolution, platform dirs
+├── format/         parsers and writers: frontmatter, claims, relations, links, episodes, rules
+├── store/          BrainStore protocol, LocalStore (atomic writes, O_EXCL creates)
+├── index/          SQLite schema, scanner, queries (search, guards, read, orient)
+├── lint/           rules, profiles, fixes, reports
+├── write/          episode writer, secret scrubber, rule writer
+├── consolidate/    selection, packets, ops schema and validator, applier, backends, prompts
+├── runs/           run records, pre-images, undo, locks, git integration
+├── importer/       overlay, into, to-episodes, from-host presets
+├── mcp/            MCP server (imports the SDK; never imported by hooks)
+├── hosts/          per-host knowledge: hook payload parsing, transcript readers, connect writers, headless presets
+├── viz/            graph export and local server; static assets
+├── bench/          suites, generators, graders, report
+└── assets/         templates (brain.toml, AGENTS.md, hub), prompts, plugin files (copied at build time)
+```
+
+Dependency direction (an arrow means "may import"):
+
+```
+cli ─► mcp, hosts, viz, bench, importer ─► consolidate, lint ─► index, write, runs ─► format, store, config
+```
+
+`format`, `store`, and `config` import nothing from the rest. The MCP SDK,
+the visualizer, and the bench are leaves: nothing in the core imports them.
+
+## 3. Dependencies
+
+| Package | Why | Notes |
+|---|---|---|
+| `mcp` (2.x) | MCP server | Pulls in pydantic, starlette, uvicorn, httpx2, jsonschema, and others. Imported only by `brainwiki.mcp`. |
+| `PyYAML` | Frontmatter parsing | `CSafeLoader` when available. Writers edit frontmatter line by line instead of dumping YAML, so formatting is preserved. |
+| `tomlkit` | Editing `config.toml` and `brain.toml` without losing comments | Reading uses stdlib `tomllib`. |
+| `filelock` | Cross-platform advisory locks | |
+| `jsonschema` | Validating ops and plugin manifests | Already required by `mcp`. |
+
+Standard library for everything else: `sqlite3`, `tomllib`, `argparse`,
+`json`, `re`, `hashlib`, `gzip`, `subprocess`, `http.server`. ULIDs are
+generated by a small internal function.
+
+Optional extras:
+
+| Extra | Adds |
+|---|---|
+| `brain-wiki[watch]` | `watchfiles` for long-running processes |
+| `brain-wiki[sync]` (future) | `fsspec`, `gcsfs`, `s3fs`, `google-cloud-storage` |
+| `brain-wiki[dev]` | `pytest`, `hypothesis`, `ruff`, `pyright`, `coverage` |
+
+Policy: a new runtime dependency needs a reason in its pull request, a
+compatible license (Apache-2.0, MIT, BSD, PSF, MPL-2.0 for tools only),
+and a lockfile pin.
+
+Supported Python: 3.11 to the latest release. Supported SQLite: 3.35+
+with FTS5; trigram (3.34+) is used when present.
+
+## 4. Packaging and distribution
+
+- Build backend: `hatchling`. The plugin files at the repo root are copied
+  into `brainwiki/assets/plugin/` at build time, so `brain connect` can
+  install exactly the same files the marketplaces serve.
+- Console scripts: `brain`, `brain-wiki` (same entry point), and
+  `brain-wiki-mcp` (equivalent to `brain mcp`, for registries and configs
+  that expect a dedicated server binary).
+- Install paths users are told about: `uv tool install brain-wiki`,
+  `pipx install brain-wiki`, or `uvx --from brain-wiki brain …` with no
+  install.
+- PyPI: `brain-wiki` is the package; `brainwiki` is published as a thin
+  alias that depends on it, so either name installs the same thing.
+- The README carries the `mcp-name:` marker the MCP Registry uses to verify
+  PyPI ownership, and `server.json` declares the PyPI package with stdio
+  transport.
+- One version number, in `pyproject.toml`. `scripts/sync_versions.py`
+  writes it into every plugin manifest and `server.json`; CI fails if they
+  disagree.
+- An npm launcher package (`npx brain-wiki`, delegating to `uvx`) is
+  deferred until there is demand.
+
+## 5. Performance budgets
+
+| Operation | Budget | Measured by |
+|---|---|---|
+| `brain hook <host> session-start` end to end (process start → output) | < 300 ms at 10k notes | bench `perf` suite |
+| `brain hook … stop` (capture) | < 500 ms, excluding transcript size beyond 5 MB | bench `perf` |
+| Freshness check, no changes, 10k notes | < 150 ms | bench `perf` |
+| Search p95, 10k notes | < 50 ms | bench `perf` |
+| Lint, whole brain, 10k notes | < 1 s | bench `perf` |
+| Full index rebuild, 10k notes | < 30 s | bench `perf` |
+| Import of the CLI module for `brain hook` | < 80 ms | `python -X importtime` check in CI |
+
+CI runs the perf suite at 1k notes on every change, with thresholds
+relaxed 2× for shared-runner noise, and at 10k nightly.
+
+## 6. Testing
+
+| Layer | What | Tools |
+|---|---|---|
+| Unit | Parsers, writers, link resolution, ops validation, profile filtering, path safety | pytest |
+| Property | Parse → write → parse round trips; writers never change untouched lines; ops never delete text | hypothesis |
+| Golden | Writer output for every op on fixture notes, compared byte for byte | pytest + committed expected files |
+| Index | Schema, freshness (edits, renames, deletes), guard queries in both directions and through chains | pytest on temp brains |
+| CLI | Every command end to end on temp brains with `BRAIN_WIKI_*_DIR` overrides | pytest + subprocess |
+| MCP | Every tool via the SDK's in-memory client; error codes; schema conformance | `mcp.Client(server)` |
+| Hooks | Recorded payload fixtures per host and event → expected output | pytest |
+| Hosts (optional) | Plugin loads and smoke flows in real hosts where installed | marked tests, run manually or in dedicated CI jobs |
+| Bench | [11](11-eval-bench.md) suites; offline suites run in CI | `brain bench` |
+
+Fixtures are synthetic: a small hand-written example brain about a
+fictional software project, plus generated brains for scale tests. No
+fixture may contain real personal data.
+
+Platforms in CI: Linux and macOS on every change; Windows best-effort
+(core tests only). Python 3.11 and the latest release.
+
+## 7. Code quality
+
+- `ruff` for linting and formatting; `pyright` in strict mode for
+  `format`, `store`, `index`, `consolidate`, and `runs`.
+- Coverage target: 90% lines for the core packages listed above.
+- No `shell=True`, no `eval`, no network access in core code; enforced by a
+  ruff rule set and a test that greps the core packages.
+
+## 8. Continuous integration
+
+When the repository is published, GitHub Actions jobs:
+
+1. Lint and type check.
+2. Tests on the platform and Python matrix.
+3. Plugin manifest validation: JSON schemas for Agent Plugins and
+   Antigravity manifests; `claude plugin validate .` when the CLI is
+   available.
+4. Vendored asset check: SHA-256 of every file under `viz/assets/vendor/`
+   matches `scripts/vendor.lock`.
+5. Version consistency (§4).
+6. Bench offline suites and the 1k perf suite.
+
+Until then, the same steps run locally through `uv run scripts/check.py`.
+
+## 9. Release
+
+1. Update `CHANGELOG.md`; bump the version; run `scripts/sync_versions.py`.
+2. Tag; CI builds the sdist and wheel and publishes to PyPI with trusted
+   publishing.
+3. Publish `server.json` to the MCP Registry from CI.
+4. The Claude Code and Codex marketplaces read the repository directly;
+   Antigravity installs from the repository URL; the Gemini CLI gallery
+   picks the repo up by its GitHub topic.
+
+## 10. Open-source hygiene
+
+- No real personal data anywhere: examples use a fictional project and
+  generic domains; docs never reference private systems.
+- Maintainers may keep a local, untracked denylist of private strings
+  (names, hosts, paths) checked by a local pre-commit hook, so private
+  context cannot slip into commits. The denylist itself never enters the
+  repository.
+- `SECURITY.md` explains how to report vulnerabilities privately.
