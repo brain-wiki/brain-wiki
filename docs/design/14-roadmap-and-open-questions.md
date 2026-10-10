@@ -57,6 +57,7 @@ result.
 | T-7 | Which marketplace file does `codex plugin marketplace add` read from a repository: `.agents/plugins/marketplace.json` only, or also `.claude-plugin/marketplace.json`? | Add the repo as a marketplace in a scratch Codex config. |
 | T-8 | Which hosts support elicitation (either form) for `brain_propose_rule` confirmation? | Call the tool in each host. |
 | T-9 | Hook timeouts and output size limits per host in practice | Fixture hooks that sleep and print large outputs. |
+| T-10 | Does `uvx --from brain-wiki==<version> brain hook …` (used by marketplace installs) fit the 300 ms hook budget once cached? | Time it on Linux and macOS. If not, plugin hooks call a small launcher that prefers `brain` on `PATH` and falls back to `uvx`. |
 
 ## 4. Future work (after v0.1)
 
