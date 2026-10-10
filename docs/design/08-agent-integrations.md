@@ -10,7 +10,7 @@ when higher ones are missing.
 | Tier | Mechanism | What the agent gains |
 |---|---|---|
 | 0 · Files | The brain's own `AGENTS.md` ([02 §11](02-brain-format.md#11-agentsmd)) | Any file-reading agent opened in the brain folder can read and log episodes. |
-| 1 · Skill | `skills/brain/SKILL.md` in the plugin | Knows when and how to use the brain, through the CLI or MCP. |
+| 1 · Skills | `skills/brain`, `skills/brain-setup`, `skills/brain-maintain` in the plugin | Knows when and how to use, set up, and maintain the brain, through the CLI or MCP ([15](15-skills-onboarding-and-routines.md)). |
 | 2 · MCP | `brain mcp --host <id>` (stdio) | Orient, search with guards, read, log, propose rules, consolidate. |
 | 3 · Hooks | `brain hook <host> <event>` | Orientation injected at session start; optional capture at stop or compaction; optional recall per prompt. |
 | 4 · Native memory | Host-specific memory APIs | Future work ([14 §4](14-roadmap-and-open-questions.md#4-future-work-after-v01)). |
@@ -60,7 +60,7 @@ One skill and one MCP server are described once per host format:
 | `hooks/hooks.json` | Claude Code, Codex (same schema) | Events → `uvx --from brain-wiki==<version> brain hook auto <event>` |
 | `hooks.json` | Antigravity | Named hook `brain-wiki` with `PreInvocation`, `PostToolUse`, `Stop` → `brain hook antigravity <event>` |
 | `rules/brain-wiki.md` | Antigravity | `trigger: model_decision` rule: a short description of when to consult the brain |
-| `skills/brain/SKILL.md` | All plugin hosts | The skill (§3.1) |
+| `skills/` (`brain`, `brain-setup`, `brain-maintain`) | All plugin hosts | The skills (§3.1) |
 
 **Why `uvx` in plugin files.** A plugin installed from a marketplace cannot
 assume `brain` is on the user's `PATH`, and some formats have no
@@ -71,29 +71,13 @@ installed `brain`, which starts faster ([§8](#8-brain-connect)). The
 version pin is written by `scripts/sync_versions.py`, so the plugin and the
 package can never disagree.
 
-### 3.1 The skill
+### 3.1 The skills
 
-`skills/brain/SKILL.md` follows the Agent Skills specification: `name:
-brain` (matching its folder), a `description` under 1,024 characters that
-front-loads the trigger ("Use the user's long-term memory (brain-wiki):
-recall past decisions and preferences, record durable learnings…"), and a
-body under 500 lines:
-
-1. What the brain is and what not to do (never edit `topics/` directly;
-   never add rules unless asked).
-2. When to search (before answering about past work, preferences,
-   decisions) and how to read guard warnings.
-3. When and how to log an episode (durable facts, decisions with reasons,
-   negative findings; not chatter), with an example.
-4. How to propose a rule (only on explicit request, with the user's words).
-5. How to consolidate when asked (the prepare → reason → apply loop, with
-   the op rules from [05 §4.5](05-write-path-and-consolidation.md#45-instruction-contract)).
-6. The harvest recipe: `brain_harvest_prepare` → distill each session →
-   `brain_harvest_apply`, repeated until done; and the fallback for hosts
-   without a session reader (read your own history only when the user asks,
-   log one episode per session with `session` and `origin_turns` hints)
-   ([05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions)).
-7. CLI equivalents, for hosts where MCP is unavailable.
+The plugin ships three skills, `brain` (everyday use), `brain-setup`
+(onboarding and reconfiguration), and `brain-maintain` (harvest,
+consolidation, review, health), plus routine templates for the hosts' own
+schedulers. Their design, the onboarding flow, and the templates are in
+[15](15-skills-onboarding-and-routines.md).
 
 ## 4. Per-host notes
 

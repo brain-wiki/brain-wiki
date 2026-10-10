@@ -20,6 +20,7 @@ Status: **draft for review**. Nothing here is implemented yet.
 | 12 | [Visualizer](12-visualizer.md) | 3D brain map |
 | 13 | [Engineering](13-engineering.md) | Repo layout, dependencies, packaging, testing, performance budgets, release |
 | 14 | [Roadmap and open questions](14-roadmap-and-open-questions.md) | Implementation milestones, future work, decisions needed |
+| 15 | [Skills, onboarding, and routines](15-skills-onboarding-and-routines.md) | The three skills, the guided setup flow, `brain doctor --json`, and routine templates for hosts' schedulers |
 
 Normative documents (02, and the schemas in 04, 05, 07) use MUST, SHOULD,
 and MAY as in RFC 2119. The others explain and justify.
@@ -52,3 +53,4 @@ considered and rejected.
 | D19 | License: Apache-2.0. | AGPL, MIT | [13](13-engineering.md) |
 | D20 | Hosts' own session stores are a second capture source (harvest, with backfill) and can be consulted during consolidation (origin lookup); both opt-in, routed by project, and never required for an episode to make sense. Distillation runs in the host agent via an MCP recipe (brain-wiki still reads, filters, routes, scrubs, and sets provenance), headless from the CLI, or raw; hosts without a reader use a self-read fallback with `taint: unknown`. | Hooks as the only capture path; agents reading raw transcripts themselves for all hosts; copying transcripts into the brain | [05 §2.2, §4.6](05-write-path-and-consolidation.md#22-harvesting-sessions), [08 §6](08-agent-integrations.md#6-capture-and-harvest) |
 | D21 | Gemini CLI is not a supported host. | Shipping a Gemini CLI extension | [08](08-agent-integrations.md) |
+| D22 | Three skills (use, setup, maintain) with a guided, resumable onboarding flow; maintenance ships as routine templates for each host's local scheduler, plus OS schedulers. | One broad skill; a terminal-only wizard; cloud schedulers | [15](15-skills-onboarding-and-routines.md) |

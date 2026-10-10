@@ -116,9 +116,10 @@ episode per session with `brain_log_episode`, passing `session` and
 `taint: unknown`, because neither routing nor tool use was checked by
 brain-wiki. They are usable knowledge but can never feed rules.
 
-**Running it periodically.** The recipe can be run by hand now and then; by
-the host's own scheduler where it has one; or headless from cron (for
-example `claude -p "/brain:harvest"`). When harvest is enabled for a host,
+**Running it periodically.** The recipe can be run by hand; as a scheduled
+task in the host's own scheduler, created from the `brain-harvest` or
+`brain-maintenance` routine template ([15 §4](15-skills-onboarding-and-routines.md#4-routines));
+or headless from an OS scheduler. When harvest is enabled for a host,
 orientation includes the number of that host's sessions not yet harvested
 (a cached count, refreshed at most hourly), which serves as the nudge.
 

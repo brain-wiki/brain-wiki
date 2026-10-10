@@ -128,7 +128,10 @@ superseded and check that the answer states the current decision; ask the
 agent to remember something and check that an episode appears with the
 right provenance; run the `harvest` recipe over fixture sessions and check
 the episodes, their turn ranges, and that taint came from the server's
-parse rather than the model. Expensive and host-dependent; run manually before
+parse rather than the model; run guided onboarding on a fresh home
+directory and check the end state and that every write was preceded by a
+dry run; check skill triggering with should-trigger and near-miss prompts
+([15 §6](15-skills-onboarding-and-routines.md#6-testing)). Expensive and host-dependent; run manually before
 releases.
 
 ## 4. Data

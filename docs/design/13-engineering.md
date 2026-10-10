@@ -22,7 +22,7 @@ brain-wiki/
 │   └── hooks.json               lifecycle hooks (Claude Code and Codex schema)
 ├── hooks.json                   lifecycle hooks (Antigravity schema)
 ├── rules/brain-wiki.md          Antigravity rule (trigger: model_decision)
-├── skills/brain/SKILL.md        the one skill, shared by all hosts
+├── skills/                      brain, brain-setup, brain-maintain (shared by all hosts; see 15)
 │
 ├── src/brainwiki/               the Python package (§2)
 ├── tests/                       unit, property, integration tests; synthetic fixtures

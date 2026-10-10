@@ -16,7 +16,7 @@ self-contained commits. Later milestones depend only on earlier ones.
 | M4 | Write path and runs | Episode writer with secret scrubbing and dedupe; `brain log`; rules via CLI; run records, pre-images, undo, locks, git integration; `brain mv`; `brain doctor` | Undo restores exact bytes; git commits contain only touched files |
 | M5 | Consolidation | Selection and packets, ops schema and validator, deterministic applier, review proposals, agent backend (prepare/apply) and command backend with presets | Golden tests per op; consolidation suite runs against at least one real preset |
 | M6 | MCP server | Ten tools, three prompts, error codes, instructions, cache hints (the harvest tools are wired in M8) | In-memory client tests for every tool and error path |
-| M7 | Agent integrations | Root plugin files for each host, `brain connect`, `brain hook` adapters, opt-in capture, recall markers | Hook fixture tests per host; plugin validation; manual smoke test in each host available on the build machine |
+| M7 | Agent integrations, skills, routines | Root plugin files for each host, `brain connect`, `brain hook` adapters, opt-in capture, recall markers; the three skills; `brain doctor --json`, `brain setup`; routine templates and `brain schedule` | Hook fixture tests per host; plugin validation; manual smoke test in each host available on the build machine |
 | M8 | Import and harvest | Overlay (phases 0–3), into, to-episodes, from-host presets; session readers for Claude Code, Codex, and Antigravity; `brain harvest` (dry run, routing, raw and distill); the in-agent recipe (`brain_harvest_prepare` / `brain_harvest_apply`, `harvest` prompt, skill section, self-read fallback); origin lookup (`brain origin`, `brain_read_origin`) | Import of a generated messy vault: phase 0 changes no existing file; each phase undoable. Harvest on recorded fixtures: correct routing and skips, one episode per session chunk, no duplicates with hook capture |
 | M9 | Bench | Generator, suites, graders, report, compare, capture | Offline suites in CI; a consolidation run across two presets produces a report |
 | M10 | Visualizer | Graph export, local server, vendored assets with lock check, static app, exports | Manual checklist on a 10k brain; escaping tests |
@@ -60,6 +60,8 @@ result.
 | T-9 | Hook timeouts and output size limits per host in practice | Fixture hooks that sleep and print large outputs. |
 | T-10 | Does `uvx --from brain-wiki==<version> brain hook …` (used by marketplace installs) fit the 300 ms hook budget once cached? | Time it on Linux and macOS. If not, plugin hooks call a small launcher that prefers `brain` on `PATH` and falls back to `uvx`. |
 | T-11 | How much does the Claude Code transcript format vary across recent versions? (Its docs call the format internal.) | Fixtures from several releases; reader tests run against all of them. |
+| T-12 | Can an agent running inside each desktop app (Claude Code, ChatGPT/Codex) create a local scheduled task with its own tools, or must the user use the app's form? | Ask the agent to create a test task; fall back to printed steps. |
+| T-13 | Antigravity `/schedule`: does it accept a full multi-line prompt, in which workspace does the scheduled run start, and does it survive restarts in the CLI as well as the desktop app? | Schedule a test routine on both surfaces. |
 
 ## 4. Future work (after v0.1)
 

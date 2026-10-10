@@ -139,6 +139,7 @@ restructuring it.
 
 | # | Scenario | Flow (details in) |
 |---|---|---|
+| S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, privacy, capture and harvest, and routines, with a dry run before every write. [15](15-skills-onboarding-and-routines.md) |
 | S1 | **Session start.** An agent starts in a project. | Hook or MCP call returns orientation (rules, topic map, recent changes) under a token budget. [04](04-index-and-retrieval.md), [08](08-agent-integrations.md) |
 | S2 | **Recall during a task.** The agent asks about a past decision. | `search` returns the matching notes plus every note that supersedes or conflicts with them. [04](04-index-and-retrieval.md) |
 | S3 | **Capture.** The agent learned something worth keeping. | It logs an episode (MCP or CLI), or the opt-in session-end hook writes one from the transcript. [05](05-write-path-and-consolidation.md) |

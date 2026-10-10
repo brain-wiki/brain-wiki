@@ -63,7 +63,8 @@ the files anyway ([10](10-security-and-privacy.md)).
 ```
 brain init [PATH] [--name NAME] [--git]
 brain brains [list | add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME]
-brain doctor
+brain doctor [--json]
+brain setup                                              # interactive onboarding wizard (15 §3)
 
 brain orient
 brain search QUERY [--limit N] [--topic T]... [--intent I] [--include archived,episodes]
@@ -94,6 +95,7 @@ brain import PATH --into BRAIN [--dry-run | --apply]
 brain import PATH --to-episodes [--agent HOST]
 
 brain connect HOST [--brain NAME] [--scope user|project] [--capture] [--dry-run] [--uninstall]
+brain schedule list | show ROUTINE --for HOST | install ROUTINE (--for HOST | --via cron|launchd|systemd) [--at HH:MM] [--dry-run | --apply] | remove ROUTINE
 brain hook HOST EVENT                                     # called by hosts; JSON on stdin
 brain mcp [--host HOST]                                   # stdio MCP server
 
@@ -336,6 +338,7 @@ itself. The message starts with a stable code:
 | `busy` | The brain's write lock could not be taken in time |
 | `not_available` | An episode's origin conversation is not on this device or was deleted by the host |
 | `unsupported_host` | brain-wiki has no session reader for the calling host; use the fallback recipe |
+| `not_configured` | No brain is set up for this host yet; the message points to the `brain-setup` skill |
 
 Protocol errors (unknown tool, malformed request) are left to the SDK.
 Unexpected exceptions are logged with a trace to the log file and reported
