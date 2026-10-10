@@ -132,3 +132,38 @@ def _check_host_limit(brain: Brain, host: str | None, allowed: list[str] | None)
         return
     if brain.name not in allowed:
         raise Forbidden(f"host {host!r} may not use brain {brain.display_name!r}")
+
+
+def route_brain(cwd: str | None, host: str, user: UserConfig) -> Brain | None:
+    """The brain a session's working directory belongs to, or None (05 §2.2, Route).
+
+    Unlike `resolve_brain`, there is no fallback to the user's default brain: a session that
+    routes nowhere is skipped, never filed into an unrelated brain.
+    """
+    import fnmatch
+
+    if not cwd:
+        return None
+    path = Path(cwd).expanduser()
+    routes = user.harvest.get("routes") or {}
+    for pattern, choice in routes.items():
+        expanded = str(Path(pattern).expanduser()) if pattern.startswith("~") else pattern
+        if fnmatch.fnmatch(str(path), expanded) or fnmatch.fnmatch(str(path) + "/", expanded):
+            brain = _from_choice(str(choice), user)
+            if brain is not None:
+                return brain
+    choice = _project_choice(path) if path.exists() else None
+    brain = _from_choice(choice, user) if choice else None
+    if brain is not None:
+        return brain
+    root = find_brain_root(path) if path.exists() else None
+    if root is not None:
+        return open_brain(root)
+    for name, brain_root in user.brains.items():
+        try:
+            path.resolve().relative_to(brain_root.resolve())
+            return open_brain(brain_root, name=name)
+        except ValueError:
+            continue
+    host_default = user.host(host).brain
+    return _from_choice(host_default, user) if host_default else None

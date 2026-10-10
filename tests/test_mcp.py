@@ -19,6 +19,9 @@ TOOLS = [
     "brain_propose_rule",
     "brain_consolidate_prepare",
     "brain_consolidate_apply",
+    "brain_read_origin",
+    "brain_harvest_prepare",
+    "brain_harvest_apply",
 ]
 
 
@@ -53,7 +56,7 @@ async def test_tool_list_contract(example: Path):
     assert len(INSTRUCTIONS) < 2000
     async with Client(build_server("claude-code")) as client:
         tools = (await client.list_tools()).tools
-        assert [t.name for t in tools][: len(TOOLS)] == TOOLS
+        assert [t.name for t in tools] == TOOLS
         for tool in tools:
             assert len(tool.name) <= 26 and len(tool.description or "") < 1000
         by_name = {t.name: t for t in tools}
@@ -63,7 +66,7 @@ async def test_tool_list_contract(example: Path):
         assert "confirmation" not in by_name["brain_propose_rule"].input_schema["properties"]
         assert by_name["brain_consolidate_prepare"].meta["anthropic/maxResultSizeChars"] > 0
         prompts = [p.name for p in (await client.list_prompts()).prompts]
-        assert {"consolidate", "capture"} <= set(prompts)
+        assert prompts == ["consolidate", "capture", "harvest"]
 
 
 @pytest.mark.anyio

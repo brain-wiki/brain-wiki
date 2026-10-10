@@ -20,6 +20,7 @@ from brainwiki.errors import Expired, NotFound
 from brainwiki.format.document import parse_document
 from brainwiki.format.relations import CANONICAL
 from brainwiki.index.scanner import discovered_topics
+from brainwiki.origin import available as origin_available
 from brainwiki.store import sha256_bytes
 
 if TYPE_CHECKING:
@@ -242,8 +243,8 @@ def pending_episodes(engine: Engine, profile: Profile, *, topic: str | None = No
     max_rank = engine.manifest.privacy_rank(profile.max_privacy)
     reserved = reserved_episodes(engine)
     rows = engine.db.execute(
-        """SELECT id, path, fm_id, agent, origin, taint, privacy_rank, props, created, session, origin_turns
-           FROM nodes WHERE kind = 'episode' ORDER BY COALESCE(fm_id, created, path)"""
+        """SELECT id, path, fm_id, agent, origin, taint, privacy_rank, props, created, session, origin_turns,
+                  device FROM nodes WHERE kind = 'episode' ORDER BY COALESCE(fm_id, created, path)"""
     ).fetchall()
     out = []
     for row in rows:
@@ -453,7 +454,7 @@ def build_packet(
             "origin": row["origin"],
             "taint": row["taint"],
             "candidates": handles,
-            "origin_available": bool(row["session"] and row["origin_turns"]),
+            "origin_available": origin_available(engine, row),
             "lines": lines,
         }
         if (row["taint"] or "unknown") != "false":
