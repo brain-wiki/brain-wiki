@@ -178,10 +178,18 @@ Notes on the schema:
   kept (each has its own `declared_in` and line) and de-duplicated at query
   time.
 - **FTS sync.** The engine writes `docs` and the FTS tables in the same
-  transaction, using the FTS5 external-content delete command
-  (`INSERT INTO fts(fts, rowid, ...) VALUES('delete', ...)`) before
-  re-inserting a changed row. No triggers, because every write already goes
-  through one code path.
+  transaction. For a changed row it first issues the FTS5 external-content
+  delete command (`INSERT INTO fts(fts, rowid, ...) VALUES('delete', ...)`)
+  with the old values read from `docs` in that transaction (FTS5 requires
+  them to match exactly what was indexed), then updates `docs`, then
+  inserts the new values. No triggers, because every write already goes
+  through one code path. If the index is ever suspected inconsistent,
+  `INSERT INTO fts(fts) VALUES('rebuild')` repairs it from `docs`.
+- **SQLite capabilities are probed, not assumed.** On open, the engine
+  creates a temporary FTS5 table with the trigram tokenizer. No FTS5 is a
+  fatal error with a clear message; no trigram sets `meta.fts_trigram = 0`.
+  Trigram options that only newer releases accept (such as
+  `remove_diacritics`) are not used.
 - **Why `history` is a separate column.** Text that was superseded should
   still be findable ("what did we used to think about X?"), but must not
   outrank current text or appear in snippets. A separate column with a low

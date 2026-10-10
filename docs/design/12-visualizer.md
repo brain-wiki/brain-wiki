@@ -37,10 +37,14 @@ browser   ─► static page (vendored JS, no build step) ─► GET /api/graph,
   read-only routes, every request must carry the session token (compared
   in constant time), strict Content-Security-Policy, exits after 30 minutes
   idle or on Ctrl-C.
-- **Client:** a vendored copy of `3d-force-graph` (which bundles three.js),
-  its 2D sibling `force-graph` for low-end machines, and a small
+- **Client:** the self-contained UMD build of `3d-force-graph` (MIT; about
+  1.4 MB, 365 KB gzipped, with three.js bundled inside), its 2D sibling
+  `force-graph` (MIT; about 170 KB) for low-end machines, and a small
   hand-written `app.js` and `app.css`. No Node toolchain, no CDN, works
-  offline.
+  offline. Labels use the library's HTML tooltips rather than custom 3D
+  text objects, which would need a second copy of three.js. The server sets
+  MIME types explicitly, because some platforms override `.js` types from
+  the system registry.
 - **Exports:** `--export brain.html` writes a single self-contained file
   (data and scripts inlined) for offline viewing; `--export graph.json` and
   `--export graph.graphml` feed other tools (Gephi, Cytoscape, scripts).
@@ -127,7 +131,10 @@ time.
   style-src 'self'; img-src 'self' data:; connect-src 'self'`. Exported
   HTML uses the same policy with hashes for its inline scripts.
 - Vendored files are pinned by version and SHA-256 in `scripts/vendor.lock`
-  and checked in CI; their licenses ship alongside them in the package.
+  and checked in CI. The minified builds drop upstream license headers, so
+  the package ships a `THIRD_PARTY_NOTICES` file with the full license text
+  of the libraries and every dependency bundled inside them (MIT, ISC, and
+  BSD-3-Clause), regenerated whenever the vendored versions change.
 
 ## 8. Testing
 
