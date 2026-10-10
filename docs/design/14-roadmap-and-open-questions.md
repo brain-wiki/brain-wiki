@@ -26,6 +26,20 @@ Order rationale: M1–M4 are the foundation everything else touches; M5 and
 M6 are the core value; M7 makes it usable in hosts; M8–M10 widen adoption
 and trust.
 
+### 1.1 Status (2026-10-10)
+
+All milestones are implemented on `main` with tests (`uv run scripts/check.py`
+runs every check). What the code does not yet prove:
+
+| Area | Gap | Covered by |
+|---|---|---|
+| Real hosts | Plugins, hooks, and MCP were tested with fixtures and the SDK's in-memory and stdio clients, not inside each host | T-1, T-2, T-4, T-7, T-8, T-9 |
+| Session readers | Claude Code and Antigravity readers were checked against local transcripts (structure only); the Codex reader follows the published source, not recorded files | T-3, T-6, T-11 |
+| Marketplace hooks | `uvx` start-up per hook, and Antigravity's `PreInvocation` spawning a process on every model call | T-10 |
+| Schedulers | Desktop-app routines are printed steps; OS schedulers were tested against stub `crontab` and file writes | T-12, T-13 |
+| Performance | Every doc 13 §5 budget passes on the bench's generated 10k brain (rebuild 24.7 s, one-file update 38 ms p95, search 25 ms p95, orientation 29.6 ms p95, warm lint 0.85 s, session-start hook 282 ms); orientation and the hook have the least margin | `brain bench perf --sizes 10k` |
+| Consolidation quality | Model-backed bench slices (A–D, H) are implemented but were not run against real models | `brain bench consolidation --backends …` |
+
 ## 2. Decisions needed from the maintainer
 
 These change the design or defaults. Each has a recommendation.
@@ -49,9 +63,9 @@ result.
 
 | # | Question | Test |
 |---|---|---|
-| T-1 | Does Antigravity accept a root `plugin.json` that carries Agent Plugins fields (`$schema`, `version`, `extensions`)? Its published schema is closed. | **Partly verified (agy 1.0.2, 2026-10-10):** `agy plugin install` accepted a full Agent Plugins manifest (`$schema`, `version`, `author`, `license`, `repository`, `keywords`, `extensions`), processed the skill, and staged the file unchanged. Still to confirm in M7: the plugin's skills and MCP server are visible to the agent at runtime. Fallback if not: keep root `plugin.json` minimal and move rich metadata to `.claude-plugin/`, `.codex-plugin/`, and `.cursor-plugin/` manifests. |
+| T-1 | Does Antigravity accept a root `plugin.json` that carries Agent Plugins fields (`$schema`, `version`, `extensions`)? Its published schema is closed. | **Partly verified (agy 1.0.2, 2026-10-10):** `agy plugin install` accepted a full Agent Plugins manifest (`$schema`, `version`, `author`, `license`, `repository`, `keywords`, `extensions`), processed the skill, and staged the file unchanged. Still to confirm in a real session: the plugin's skills and MCP server are visible to the agent at runtime. Fallback if not: keep root `plugin.json` minimal and move rich metadata to `.claude-plugin/`, `.codex-plugin/`, and `.cursor-plugin/` manifests. |
 | T-2 | Does Antigravity expand a plugin-root variable in plugin `mcp_config.json` and `hooks.json`, and what working directory do plugin hooks get? | Hook that writes `pwd` and its environment to a file. Default design avoids the question by calling `brain` from `PATH`. |
-| T-3 | Antigravity transcript JSONL line schema | Inspect a real transcript; the capture adapter parses defensively and falls back to `taint: unknown`. |
+| T-3 | Antigravity transcript JSONL line schema | **Partly verified (2026-10-10):** steps carry `step_index`, `source`, `type` (`USER_INPUT`, `PLANNER_RESPONSE` with `tool_calls[{name, args}]`, tool step types such as `VIEW_FILE`, `SEARCH_WEB`), `status`, `created_at`, `content`; no working directory, which comes from the read-only `conversation_summaries.db` (`workspace_uris`). CLI conversations had no summaries database, so they route to no brain. |
 | T-4 | Does any host load a plugin-root `AGENTS.md` (or `GEMINI.md`) into user sessions? | Sentinel text in `AGENTS.md`; ask the agent in each host. |
 | T-5 | Can an Antigravity headless run be restricted to no tools (custom agent `tools: []`)? | `agy -p … --agent <none-tools agent> --output-format stream-json`; inspect the tools list. |
 | T-6 | Codex rollout files: line schema, how a session id maps to a file, and how subagent threads are marked | Record fixtures from current Codex releases; the reader is built against them. |
