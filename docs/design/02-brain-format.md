@@ -102,13 +102,30 @@ default = "default"
 
 [lint]
 profile = "strict"                          # strict | migrate (see 06)
+stale_inbox_days = 14
+# [lint.overrides] maps path globs to a profile or "off", e.g. "Archive/**" = "migrate"
+
+[search]                                    # ranking and guard settings (see 04)
+freshness_ms       = 1000
+max_guards_per_hit = 10
+status_factor      = { active = 1.0, superseded = 0.35, archived = 0.2 }
+kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7 }
+recency_half_life_days = 180
 
 [consolidate]
 backend = "agent"                           # agent | command
-command = "claude"                          # preset name or full argv list, for backend = "command"
+command = "claude-code"                     # preset name or full argv list, for backend = "command"
+model   = ""                                # optional, for presets that accept one
+timeout_s = 600
 review  = "auto"                            # auto (review only when checks trigger) | always
+review_tainted = false                      # route runs with tainted sources to review
 max_episodes_per_run = 50
 max_supersede_ratio  = 0.25                 # above this, a run is routed to review (see 05)
+device  = ""                                # if set, scheduled runs only on this device
+
+[reports]
+after_consolidate = true
+commit = false                              # include reports/ in brain-wiki's git commits
 
 [git]
 mode = "auto"                               # auto | off ; auto = commit when the brain is a git work tree
@@ -126,13 +143,15 @@ max_privacy = "default"
 [agents.claude-code]                        # profile for one host id
 max_privacy = "sensitive"
 topics      = ["*"]                         # topic allowlist; "*" = all
-write       = ["episodes", "propose_rules", "consolidate"]
+write       = ["episodes", "propose_rules", "consolidate", "review"]
 ```
 
 Rules:
 
 - `format` and `id` are REQUIRED. Unknown keys MUST be preserved by tools
   that rewrite the file and SHOULD produce a lint warning.
+- Inline tables (`status_factor = { … }`) are TOML, not frontmatter; the
+  flat-values rule in §4 applies to note frontmatter only.
 - A topic that exists on disk but is not declared still works: its slug is
   its folder name, title is taken from the hub, privacy is the brain default.
   Declaring a topic lets the user set description, privacy, review mode, or
