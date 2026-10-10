@@ -141,6 +141,12 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         inbox_lines.append(
             "Consider consolidating (brain_consolidate_prepare) when the user agrees."
         )
+    device = engine.manifest.consolidate.device
+    if device and device != engine.user.device_name:
+        inbox_lines.append(
+            f"This device ({engine.user.device_name}) is not the consolidation device for this brain "
+            f"({device}); consolidate there."
+        )
     inbox_lines += extra_lines or []
     howto = [
         "## How to use",

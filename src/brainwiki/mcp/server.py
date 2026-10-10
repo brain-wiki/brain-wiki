@@ -79,14 +79,20 @@ class State:
     def __init__(self, host: str | None, brain: str | None):
         self.explicit_host = host if host and host != "auto" else None
         self.host = detect_host(host)
+        self.adopted = False
         self.default_brain = brain
         self.engines: dict[str, Engine] = {}
         self.lock = threading.RLock()
 
     def adopt_client(self, ctx: Context | None) -> None:
-        """Refine an undetected host from the client's self-reported name."""
-        if self.explicit_host or self.host != "generic" or ctx is None:
+        """Prefer the client's self-reported name over environment guesses when the host is auto.
+
+        The plugin's `.mcp.json` is read by Claude Code and, as a Claude-format bundle, by
+        OpenClaw, so the environment alone cannot tell them apart.
+        """
+        if self.explicit_host or self.adopted or ctx is None:
             return
+        self.adopted = True
         try:
             params = ctx.request_context.session.client_params
             name = params.client_info.name if params and params.client_info else None

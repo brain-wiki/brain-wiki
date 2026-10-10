@@ -1,0 +1,16 @@
+{
+  "name": "brain-wiki",
+  "owner": {
+    "name": "brain-wiki contributors"
+  },
+  "description": "brain-wiki: a local-first Markdown second brain shared by your AI agents.",
+  "version": "0.1.0.dev0",
+  "plugins": [
+    {
+      "name": "brain-wiki",
+      "source": "./",
+      "description": "A local-first second brain for AI agents, kept as plain Markdown that you own.",
+      "category": "productivity"
+    }
+  ]
+}

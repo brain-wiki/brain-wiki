@@ -40,6 +40,20 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/brainwiki"]
 
+# The repository root is the plugin; ship the same files so `brain connect` installs what
+# the marketplaces serve (design doc 13 §4).
+[tool.hatch.build.targets.wheel.force-include]
+"plugin.json" = "brainwiki/assets/plugin/plugin.json"
+"mcp.json" = "brainwiki/assets/plugin/mcp.json"
+".mcp.json" = "brainwiki/assets/plugin/.mcp.json"
+"mcp_config.json" = "brainwiki/assets/plugin/mcp_config.json"
+"server.json" = "brainwiki/assets/plugin/server.json"
+"hooks.json" = "brainwiki/assets/plugin/hooks.json"
+"hooks/hooks.json" = "brainwiki/assets/plugin/hooks/hooks.json"
+".claude-plugin" = "brainwiki/assets/plugin/.claude-plugin"
+"rules" = "brainwiki/assets/plugin/rules"
+"skills" = "brainwiki/assets/plugin/skills"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"

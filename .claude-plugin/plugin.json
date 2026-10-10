@@ -1,0 +1,19 @@
+{
+  "name": "brain-wiki",
+  "displayName": "brain-wiki",
+  "version": "0.1.0.dev0",
+  "description": "A local-first second brain for AI agents, kept as plain Markdown that you own.",
+  "author": {
+    "name": "brain-wiki contributors"
+  },
+  "repository": "https://github.com/Jacksunwei/brain-wiki",
+  "license": "Apache-2.0",
+  "keywords": [
+    "memory",
+    "agents",
+    "mcp",
+    "markdown",
+    "obsidian",
+    "knowledge-base"
+  ]
+}

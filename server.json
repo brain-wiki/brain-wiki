@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.jacksunwei/brain-wiki",
+  "title": "brain-wiki",
+  "description": "Local-first Markdown second brain shared by your AI agents",
+  "version": "0.1.0.dev0",
+  "websiteUrl": "https://github.com/Jacksunwei/brain-wiki",
+  "repository": {
+    "url": "https://github.com/Jacksunwei/brain-wiki",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "brain-wiki",
+      "version": "0.1.0.dev0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ]
+    }
+  ]
+}

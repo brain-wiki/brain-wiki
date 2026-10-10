@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "brain-wiki": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "brain-wiki==0.1.0.dev0",
+        "brain",
+        "mcp",
+        "--host",
+        "auto"
+      ]
+    }
+  }
+}

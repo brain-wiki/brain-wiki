@@ -1,0 +1,16 @@
+{
+  "description": "brain-wiki: add the brain's orientation at session start.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uvx --from brain-wiki==0.1.0.dev0 brain hook auto SessionStart",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

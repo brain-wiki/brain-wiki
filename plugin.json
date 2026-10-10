@@ -1,0 +1,38 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "brain-wiki",
+  "version": "0.1.0.dev0",
+  "description": "A local-first second brain for AI agents, kept as plain Markdown that you own.",
+  "author": {
+    "name": "brain-wiki contributors"
+  },
+  "repository": "https://github.com/Jacksunwei/brain-wiki",
+  "license": "Apache-2.0",
+  "keywords": [
+    "memory",
+    "agents",
+    "mcp",
+    "markdown",
+    "obsidian",
+    "knowledge-base"
+  ],
+  "extensions": {
+    "com.openai": {
+      "hooks": "./hooks/hooks.json",
+      "onboardingSkill": "./skills/brain-setup/SKILL.md",
+      "interface": {
+        "displayName": "brain-wiki",
+        "shortDescription": "Long-term memory shared by all your AI agents",
+        "longDescription": "brain-wiki keeps one durable memory for every agent you use, as a folder of plain Markdown notes you own. Agents search it before answering, record what they learn in an inbox, and a validated, undoable consolidation step folds that into notes.",
+        "developerName": "brain-wiki contributors",
+        "category": "Productivity",
+        "websiteURL": "https://github.com/Jacksunwei/brain-wiki",
+        "defaultPrompt": [
+          "Set up brain-wiki for me.",
+          "What do you remember about this project?",
+          "Harvest my recent sessions into my brain."
+        ]
+      }
+    }
+  }
+}

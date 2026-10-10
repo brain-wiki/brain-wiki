@@ -1,0 +1,11 @@
+{
+  "brain-wiki": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "uvx --from brain-wiki==0.1.0.dev0 brain hook antigravity PreInvocation",
+        "timeout": 10
+      }
+    ]
+  }
+}
