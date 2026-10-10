@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 DDL = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -123,6 +123,14 @@ CREATE TABLE diagnostics (
   message  TEXT NOT NULL
 );
 CREATE INDEX diagnostics_path ON diagnostics(path);
+
+-- First hash seen for each episode id; a later different hash is BW501 unless a run wrote it.
+CREATE TABLE episode_hashes (
+  episode_id TEXT PRIMARY KEY,
+  sha256     TEXT NOT NULL,
+  path       TEXT NOT NULL,
+  first_seen TEXT NOT NULL
+);
 """
 
 TRIGRAM_DDL = """

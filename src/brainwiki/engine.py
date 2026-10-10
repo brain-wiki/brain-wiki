@@ -30,10 +30,12 @@ class Engine:
             self._db = open_index(self.brain.key, self.brain.root, self.manifest)
         return self._db
 
-    def scan(self, *, force: bool = False, paths: list[str] | None = None):
+    def scan(
+        self, *, force: bool = False, paths: list[str] | None = None, sanctioned: bool = False
+    ):
         from brainwiki.index.scanner import scan
 
-        return scan(self, force=force, paths=paths)
+        return scan(self, force=force, paths=paths, sanctioned=sanctioned)
 
     def rebuild(self):
         from brainwiki.index.db import open_index

@@ -21,6 +21,10 @@ if TYPE_CHECKING:
 MAX_INDEX_BYTES = 2 * 1024 * 1024
 STATUSES = ("active", "superseded", "archived")
 NODE_KINDS = ("note", "hub", "episode", "archived_episode", "agent_file")
+_BASELINE_KEEP = (
+    "INSERT OR IGNORE INTO episode_hashes(episode_id, sha256, path, first_seen) VALUES (?, ?, ?, ?)"
+)
+_BASELINE_REPLACE = "INSERT OR REPLACE INTO episode_hashes(episode_id, sha256, path, first_seen) VALUES (?, ?, ?, ?)"
 
 
 @dataclass
@@ -107,8 +111,14 @@ def _as_list(value: Any) -> list[str]:
     return [str(value)]
 
 
-def scan(engine: Engine, *, force: bool = False, paths: list[str] | None = None) -> ScanStats:
-    """Bring the index up to date. With `paths`, only those files are re-checked (write-through)."""
+def scan(
+    engine: Engine, *, force: bool = False, paths: list[str] | None = None, sanctioned: bool = False
+) -> ScanStats:
+    """Bring the index up to date. With `paths`, only those files are re-checked (write-through).
+
+    `sanctioned` marks the write-through of a recorded run: episode hashes it produced become
+    the new baseline instead of counting as edits (BW501).
+    """
     started = time.monotonic()
     conn = engine.db
     stats = ScanStats()
@@ -189,7 +199,7 @@ def scan(engine: Engine, *, force: bool = False, paths: list[str] | None = None)
             kind = classify(engine, rel, topics)
             is_new = rel not in known
             node_id, changed_names = _index_file(
-                engine, conn, rel, data, st.mtime_ns, st.size, kind, topics, orphaned
+                engine, conn, rel, data, st.mtime_ns, st.size, kind, topics, sanctioned, orphaned
             )
             names_changed = names_changed or changed_names
             if node_id:
@@ -277,6 +287,7 @@ def _index_file(
     size: int,
     kind: str,
     topics: dict[str, str],
+    sanctioned: bool = False,
     orphaned: list[int] | None = None,
 ) -> tuple[str | None, bool]:
     """Index one file. Returns (node id or None, whether name keys may have changed)."""
@@ -486,6 +497,11 @@ def _index_file(
     if _has_tri(conn):
         conn.execute(
             "INSERT INTO fts_tri(rowid, title, body) VALUES (?, ?, ?)", (rowid, doc.title, body)
+        )
+    if kind in ("episode", "archived_episode") and fm_id and is_ulid(fm_id):
+        conn.execute(
+            _BASELINE_REPLACE if sanctioned else _BASELINE_KEEP,
+            (fm_id, sha, rel, _iso_from_ns(time.time_ns())),
         )
     problems = list(doc.problems)
     if decode_error:
