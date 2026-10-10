@@ -98,14 +98,38 @@ discover ─► filter ─► route ─► extract ─► distill (or raw) ─�
 | Write | Episodes with `captured: harvest`, `agent`, `session`, `origin_turns`, `device`, and the computed `taint`. The dedupe key `<host>:<session>:<turn range>` is shared with hook capture, so a session captured by a hook is not harvested again. |
 | Watermark | `<state>/harvest/<host>/<session>.json` records the last harvested turn, so a long-running session is harvested in increments. |
 
-Harvest is off by default and enabled per host. Every run starts as a dry
-run that lists the sessions it would read, the brain each routes to, and an
-estimate of tokens for distillation; `--apply` executes. Scheduling is the
-user's choice (for example `brain harvest --apply && brain consolidate
---if-pending 5` from cron). The distill backend is subject to the same
-profile check as consolidation: it only receives sessions routed to
-brains and privacy levels its profile may read; otherwise those sessions
-are harvested `--raw`.
+**Who distills.** The distill step reaches an LLM the same three ways as
+consolidation:
+
+| Backend | How | Best for |
+|---|---|---|
+| `agent` (in-session recipe) | The user runs `/brain:harvest` (the `harvest` MCP prompt, or the skill's harvest section) inside a host. The agent calls `brain_harvest_prepare`; brain-wiki discovers, filters, routes, extracts, and scrubs that host's new sessions and returns a packet of condensed turns (at most 15k tokens; call again for more). The agent distills and calls `brain_harvest_apply` with one entry per session (episode content, or `skip` with a reason). The server validates turn ranges and lengths, sets every provenance field itself (including taint computed from the parsed tool calls), writes the episodes, and advances watermarks. | Regular use: the agent the user already runs does the thinking, no extra process or credentials |
+| `command` (headless) | `brain harvest --apply` calls the configured preset per chunk. | Unattended schedules and large backfills, which would exhaust a chat session's context |
+| `raw` | No model: the episode is a condensed transcript excerpt; consolidation distills later. | No model available, or the backend's profile may not read the session's brain |
+
+**Fallback for hosts without a reader.** For hosts brain-wiki cannot read
+yet (Cursor, OpenClaw, new hosts), `brain_harvest_prepare` returns
+`unsupported_host`, and the skill's recipe lets the agent read its own
+session history with its own tools, at the user's request, and log one
+episode per session with `brain_log_episode`, passing `session` and
+`origin_turns` as hints. Those episodes are `captured: mcp` with
+`taint: unknown`, because neither routing nor tool use was checked by
+brain-wiki. They are usable knowledge but can never feed rules.
+
+**Running it periodically.** The recipe can be run by hand now and then; by
+the host's own scheduler where it has one; or headless from cron (for
+example `claude -p "/brain:harvest"`). When harvest is enabled for a host,
+orientation includes the number of that host's sessions not yet harvested
+(a cached count, refreshed at most hourly), which serves as the nudge.
+
+Harvest is off by default and enabled per host (`[harvest] hosts` in the
+user config, plus `harvest` in the host's profile `write` list for the
+agent backend). Every CLI run starts as a dry run that lists the sessions
+it would read, the brain each routes to, and an estimate of tokens for
+distillation; `--apply` executes. Every backend is subject to the same
+profile check as consolidation: it only receives sessions routed to brains
+and privacy levels its profile may read. Sessions it may not read are
+harvested `raw` by the CLI or left for another backend.
 
 ## 3. Provenance and taint
 

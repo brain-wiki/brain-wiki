@@ -88,7 +88,12 @@ body under 500 lines:
 4. How to propose a rule (only on explicit request, with the user's words).
 5. How to consolidate when asked (the prepare → reason → apply loop, with
    the op rules from [05 §4.5](05-write-path-and-consolidation.md#45-instruction-contract)).
-6. CLI equivalents, for hosts where MCP is unavailable.
+6. The harvest recipe: `brain_harvest_prepare` → distill each session →
+   `brain_harvest_apply`, repeated until done; and the fallback for hosts
+   without a session reader (read your own history only when the user asks,
+   log one episode per session with `session` and `origin_turns` hints)
+   ([05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions)).
+7. CLI equivalents, for hosts where MCP is unavailable.
 
 ## 4. Per-host notes
 
@@ -227,9 +232,11 @@ Injected text is wrapped in markers
 Capture turns sessions into episodes as they happen, through hooks.
 Harvest turns them into episodes afterwards, by reading the host's own
 session store ([05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions)).
-Both are **off by default** and enabled per host, and both use the same
-session readers (§6.4), skip rules, taint detection, and dedupe keys, so a
-session is never captured twice.
+Harvest's distillation can run inside the host itself (the `/brain:harvest`
+recipe over MCP), headless from the CLI, or not at all (`raw`). Both
+capture and harvest are **off by default** and enabled per host, and both
+use the same session readers (§6.4), skip rules, taint detection, and
+dedupe keys, so a session is never captured twice.
 
 ```toml
 # user config.toml
@@ -250,7 +257,8 @@ hosts   = ["claude-code", "codex", "antigravity"]
 since   = "30d"                 # how far back the first run looks
 min_idle_minutes = 60           # skip sessions still in progress
 min_user_turns   = 3
-distill = "claude-code"         # command-backend preset; "raw" for no model
+distill = "claude-code"         # preset for CLI harvest; "raw" for no model (the in-agent recipe needs neither)
+nudge   = true                  # show unharvested-session counts in orientation
 [harvest.routes]                # optional: working-directory globs → brain
 "~/work/**" = "work"
 [harvest.paths]                 # optional: override where a host keeps sessions

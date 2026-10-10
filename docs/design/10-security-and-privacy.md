@@ -78,7 +78,7 @@ network access in the core.
 | Agent tool calls (orient, search, read) | Results, to the host | The host's model provider, as part of the conversation |
 | Agent-backend consolidation | The packet | The host's model provider |
 | Command-backend consolidation | The rendered prompt and packet | Whatever service the configured CLI uses (none for a local model) |
-| Harvest with distillation | Condensed turns of the selected sessions (no tool output, secrets scrubbed) | The distill preset's service; `--raw` sends nothing |
+| Harvest with distillation | Condensed turns of the selected sessions (no tool output, secrets scrubbed) | The distill preset's service (CLI), or the host's model provider (in-agent recipe); `--raw` sends nothing |
 | Bench with model backends | Synthetic scenarios only | The configured CLIs' providers |
 | Future sync | File contents | The user's own remote |
 

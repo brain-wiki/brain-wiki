@@ -422,7 +422,10 @@ characters / 4, a conservative bound for English):
    "N more topics, use search".
 4. Recent changes: the last 5 `log.md` entries, one line each.
 5. Inbox status: pending episode count, oldest pending age, and a hint to
-   consolidate when it exceeds a threshold.
+   consolidate when it exceeds a threshold. When harvest is enabled for the
+   calling host, also the number of its sessions not yet harvested (a cached
+   count, refreshed at most hourly, so orientation never scans session
+   stores on the hot path).
 6. Two lines on how to write (log an episode; never edit topics directly).
 
 Everything in it is filtered by the caller's profile. The same function

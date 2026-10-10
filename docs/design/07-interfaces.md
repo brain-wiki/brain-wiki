@@ -32,7 +32,7 @@ write       = ["episodes", "propose_rules", "consolidate"]
 |---|---|---|
 | `max_privacy` | Highest privacy level this host may read. | lowest level |
 | `topics` | Topic allowlist; `"*"` means all. Notes outside topics are readable when `"*"`. | `["*"]` |
-| `write` | Subset of `episodes`, `propose_rules`, `consolidate`, `review`. | `["episodes"]` |
+| `write` | Subset of `episodes`, `propose_rules`, `consolidate`, `harvest`, `review`. | `["episodes"]` |
 | `read_origin` | May read the original agent conversations behind episodes ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)). Transcripts hold much more than the episodes kept, so this is separate from note access. | `false` |
 
 Resolution: `--host <id>` → `[agents.<id>]` → `[agents.default]` →
@@ -76,7 +76,8 @@ brain consolidate [--backend agent|command] [--command PRESET] [--model M]
                   [--topic T] [--max-episodes N] [--if-pending N] [--dry-run]
 brain consolidate --prepare [--out PACKET.json]          # for external drivers
 brain consolidate --apply OPS.json --run RUN [--dry-run]
-brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw] [--dry-run | --apply]
+brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--dry-run | --apply]
+brain harvest --status                                   # per host: unharvested sessions, last run
 brain origin EPISODE [--turns A-B] [--include-tool-output]
 brain review list | show RUN | accept RUN | reject RUN
 brain runs list | show RUN
@@ -195,6 +196,8 @@ host). All return structured content plus a text rendering.
 | `brain_consolidate_prepare` | not read-only, not destructive, closed-world | Start an agent-backend run; returns instructions and packet |
 | `brain_consolidate_apply` | destructive (reversible), idempotent per run, closed-world | Validate and apply ops for a run |
 | `brain_read_origin` | read-only, idempotent, closed-world | Read a bounded window of the conversation an episode came from; requires `read_origin` ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)) |
+| `brain_harvest_prepare` | not read-only, not destructive, closed-world | Start an agent-backend harvest of the calling host's sessions; returns instructions and a packet of condensed, scrubbed turns; requires `harvest` ([05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions)) |
+| `brain_harvest_apply` | not read-only, not destructive, idempotent per run, closed-world | Validate the agent's per-session results and write episodes with server-set provenance |
 
 Input schemas (JSON Schema 2020-12; output schemas follow the result shapes
 in 04 and 05):
@@ -229,6 +232,9 @@ in 04 and 05):
       "open_questions": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
       "topics":         {"type": "array", "maxItems": 5, "items": {"type": "string"}},
       "dedupe_key":     {"type": "string", "maxLength": 200},
+      "session":        {"type": "string", "maxLength": 200,
+                         "description": "Host session id this episode summarizes, if known (recorded as a hint)."},
+      "origin_turns":   {"type": "string", "pattern": "^[0-9]+-[0-9]+$"},
       "brain":          {"type": "string"}}},
 
   "brain_propose_rule": {"type": "object", "additionalProperties": false, "required": ["text", "user_quote"],
@@ -257,7 +263,32 @@ in 04 and 05):
       "turns":               {"type": "string", "pattern": "^[0-9]+-[0-9]+$",
                               "description": "Turn range; default: the episode's range plus context."},
       "include_tool_output": {"type": "boolean", "default": false},
-      "brain":               {"type": "string"}}}
+      "brain":               {"type": "string"}}},
+
+  "brain_harvest_prepare": {"type": "object", "additionalProperties": false,
+    "properties": {
+      "since":        {"type": "string", "pattern": "^[0-9]+[hdw]$", "default": "7d"},
+      "max_sessions": {"type": "integer", "minimum": 1, "maximum": 50, "default": 10},
+      "project":      {"type": "string", "description": "Only sessions whose working directory is under this path."},
+      "brain":        {"type": "string"}}},
+
+  "brain_harvest_apply": {"type": "object", "additionalProperties": false, "required": ["run", "sessions"],
+    "properties": {
+      "run":      {"type": "string", "pattern": "^run-[0-9A-HJKMNP-TV-Z]{26}$"},
+      "sessions": {"type": "array", "maxItems": 50, "items": {
+        "type": "object", "additionalProperties": false, "required": ["session"],
+        "properties": {
+          "session":           {"type": "string", "pattern": "^S[0-9]+$", "description": "Handle from the packet."},
+          "skip":              {"type": "boolean", "default": false},
+          "reason":            {"type": "string", "maxLength": 200},
+          "summary":           {"type": "string", "maxLength": 20000},
+          "claims":            {"type": "array", "maxItems": 50, "items": {
+                                  "type": "object", "required": ["text", "turns"],
+                                  "properties": {"text":  {"type": "string", "maxLength": 500},
+                                                 "turns": {"type": "string", "pattern": "^[0-9]+-[0-9]+$"}}}},
+          "negative_findings": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
+          "open_questions":    {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
+          "topics":            {"type": "array", "maxItems": 5, "items": {"type": "string"}}}}}}}
 }
 ```
 
@@ -266,6 +297,11 @@ Notes:
 - `brain_log_episode` assembles the episode body from `summary`, `claims`,
   and `open_questions`; the provenance fields are set by the server, never
   by arguments ([05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint)).
+- `session` and `origin_turns` on `brain_log_episode` are hints from the
+  model (used by the fallback harvest recipe); the episode records them but
+  keeps `captured: mcp` and `taint: unknown`. In `brain_harvest_apply`, by
+  contrast, every provenance field comes from the server's own parse of the
+  session.
 - `brain_consolidate_apply` validates `ops` against the schema in
   [05 §5](05-write-path-and-consolidation.md#5-operations) itself, so a
   malformed op produces a precise, model-correctable error rather than a
@@ -273,13 +309,15 @@ Notes:
 
 ### 3.5 Prompts
 
-Two MCP prompts give hosts that surface prompts as slash commands a
-one-step entry point:
+Three MCP prompts give hosts that surface prompts as slash commands a
+one-step entry point (for example `/brain:harvest`, depending on the host's
+naming):
 
 | Prompt | Does |
 |---|---|
-| `consolidate` | Asks the agent to run the agent-backend flow and report what changed. |
+| `consolidate` | Asks the agent to run the agent-backend consolidation flow and report what changed. |
 | `capture` | Asks the agent to summarize the current session's durable learnings and log them as one episode. |
+| `harvest` | Asks the agent to run the harvest recipe: prepare, distill each session, apply, repeat until no sessions remain or the user stops; fall back to the self-read recipe if the host is unsupported. |
 
 ### 3.6 Errors
 
@@ -297,6 +335,7 @@ itself. The message starts with a stable code:
 | `expired` | The run handle is older than its expiry |
 | `busy` | The brain's write lock could not be taken in time |
 | `not_available` | An episode's origin conversation is not on this device or was deleted by the host |
+| `unsupported_host` | brain-wiki has no session reader for the calling host; use the fallback recipe |
 
 Protocol errors (unknown tool, malformed request) are left to the SDK.
 Unexpected exceptions are logged with a trace to the log file and reported

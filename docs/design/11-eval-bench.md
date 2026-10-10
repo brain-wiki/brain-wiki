@@ -126,7 +126,9 @@ A few end-to-end scenarios run a host headless with the plugin installed,
 on a fixture brain: for example, ask about a decision that was later
 superseded and check that the answer states the current decision; ask the
 agent to remember something and check that an episode appears with the
-right provenance. Expensive and host-dependent; run manually before
+right provenance; run the `harvest` recipe over fixture sessions and check
+the episodes, their turn ranges, and that taint came from the server's
+parse rather than the model. Expensive and host-dependent; run manually before
 releases.
 
 ## 4. Data
