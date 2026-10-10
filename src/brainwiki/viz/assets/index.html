@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>brain viz</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/assets/app.css?t=__TOKEN__">
+</head>
+<body>
+<header id="toolbar">
+  <span id="brain-name" class="brand">brain</span>
+  <div class="search">
+    <input id="search" type="search" placeholder="Search titles and aliases" autocomplete="off" spellcheck="false" aria-label="Search notes">
+    <ul id="search-results" hidden></ul>
+  </div>
+  <button id="btn-dim" type="button" aria-pressed="false" title="Toggle 2D/3D">2D</button>
+  <button id="btn-health" type="button" aria-pressed="false" title="Show only notes with diagnostics">Health</button>
+  <button id="btn-body" type="button" aria-pressed="false" title="Show untyped body links">Body links</button>
+  <button id="btn-replay" type="button" title="Replay recent consolidation runs">Replay</button>
+  <button id="btn-motion" type="button" aria-pressed="false" title="Turn particles and camera motion off">Reduce motion</button>
+  <button id="btn-filters" type="button" aria-pressed="true" title="Show or hide filters">Filters</button>
+</header>
+<aside id="filters" aria-label="Filters"></aside>
+<main id="graph" aria-label="Brain map"></main>
+<div id="labels" aria-hidden="true"></div>
+<aside id="panel" hidden aria-live="polite">
+  <button id="panel-close" type="button" class="close" aria-label="Close">×</button>
+  <div id="panel-body"></div>
+</aside>
+<footer id="status" role="status"></footer>
+<div id="legend" aria-label="Legend"></div>
+<script src="/assets/vendor/3d-force-graph.min.js?t=__TOKEN__"></script>
+<script src="/assets/vendor/force-graph.min.js?t=__TOKEN__"></script>
+<script src="/assets/app.js?t=__TOKEN__"></script>
+</body>
+</html>
