@@ -1,0 +1,291 @@
+"""`brain.toml`: the manifest that marks a directory as a brain (design doc 02 §3)."""
+
+from __future__ import annotations
+
+import fnmatch
+import re
+import tomllib
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from brainwiki import FORMAT_VERSION
+from brainwiki.errors import FormatError
+
+MANIFEST = "brain.toml"
+SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
+WRITE_CAPABILITIES = ("episodes", "propose_rules", "consolidate", "harvest", "review")
+
+
+@dataclass
+class Layout:
+    topics_dir: str = "topics"
+    inbox_dir: str = "inbox"
+    archive_dir: str = "archive"
+    reports_dir: str = "reports"
+    hub_filename: str = "index.md"
+    ignore: list[str] = field(default_factory=list)
+
+    @property
+    def episodes_dir(self) -> str:
+        return f"{self.inbox_dir}/episodes"
+
+    @property
+    def agents_inbox_dir(self) -> str:
+        return f"{self.inbox_dir}/agents"
+
+    @property
+    def proposals_dir(self) -> str:
+        return f"{self.inbox_dir}/proposals"
+
+    @property
+    def archive_episodes_dir(self) -> str:
+        return f"{self.archive_dir}/episodes"
+
+
+@dataclass
+class Budgets:
+    hub_max_lines: int = 150
+    rules_max_lines: int = 100
+    rules_max_chars: int = 4000
+    agents_md_max_lines: int = 150
+    orient_max_tokens: int = 2000
+
+
+@dataclass
+class Privacy:
+    levels: list[str] = field(default_factory=lambda: ["default", "sensitive", "secret"])
+    default: str = "default"
+
+
+@dataclass
+class LintCfg:
+    profile: str = "strict"
+    stale_inbox_days: int = 14
+    overrides: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class SearchCfg:
+    freshness_ms: int = 1000
+    max_guards_per_hit: int = 10
+    status_factor: dict[str, float] = field(
+        default_factory=lambda: {"active": 1.0, "superseded": 0.35, "archived": 0.2}
+    )
+    kind_factor: dict[str, float] = field(
+        default_factory=lambda: {"hub": 1.15, "note": 1.0, "episode": 0.7, "archived_episode": 0.5}
+    )
+    recency_half_life_days: float = 180.0
+
+
+@dataclass
+class ConsolidateCfg:
+    backend: str = "agent"
+    command: str | list[str] = "claude-code"
+    model: str = ""
+    timeout_s: int = 600
+    review: str = "auto"
+    review_tainted: bool = False
+    max_episodes_per_run: int = 50
+    max_supersede_ratio: float = 0.25
+    device: str = ""
+    origin_context_turns: int = 0
+
+
+@dataclass
+class GitCfg:
+    mode: str = "auto"
+
+
+@dataclass
+class ReportsCfg:
+    after_consolidate: bool = True
+    commit: bool = False
+
+
+@dataclass
+class TopicCfg:
+    slug: str
+    path: str
+    title: str | None = None
+    description: str | None = None
+    privacy: str | None = None
+    review: str | None = None
+
+
+@dataclass
+class Profile:
+    name: str
+    max_privacy: str
+    topics: list[str] = field(default_factory=lambda: ["*"])
+    write: list[str] = field(default_factory=lambda: ["episodes"])
+    read_origin: bool = False
+
+    def can(self, capability: str) -> bool:
+        return capability in self.write
+
+    def topic_allowed(self, topic: str | None) -> bool:
+        if "*" in self.topics:
+            return True
+        return topic is not None and topic in self.topics
+
+
+_SECTIONS: dict[str, type] = {
+    "layout": Layout,
+    "budgets": Budgets,
+    "privacy": Privacy,
+    "lint": LintCfg,
+    "search": SearchCfg,
+    "consolidate": ConsolidateCfg,
+    "git": GitCfg,
+    "reports": ReportsCfg,
+}
+_TOP_LEVEL = {"format", "id", "name", "topics", "agents", *_SECTIONS}
+
+
+@dataclass
+class Manifest:
+    format: int
+    id: str
+    name: str | None = None
+    layout: Layout = field(default_factory=Layout)
+    budgets: Budgets = field(default_factory=Budgets)
+    privacy: Privacy = field(default_factory=Privacy)
+    lint: LintCfg = field(default_factory=LintCfg)
+    search: SearchCfg = field(default_factory=SearchCfg)
+    consolidate: ConsolidateCfg = field(default_factory=ConsolidateCfg)
+    git: GitCfg = field(default_factory=GitCfg)
+    reports: ReportsCfg = field(default_factory=ReportsCfg)
+    topics: dict[str, TopicCfg] = field(default_factory=dict)
+    agents: dict[str, dict[str, Any]] = field(default_factory=dict)
+    unknown_keys: list[str] = field(default_factory=list)
+
+    # -- privacy -------------------------------------------------------
+    def privacy_rank(self, level: str | None) -> int:
+        if level is None:
+            return self.privacy_rank(self.privacy.default)
+        try:
+            return self.privacy.levels.index(level)
+        except ValueError:
+            return len(self.privacy.levels) - 1  # unknown levels are treated as most restrictive
+
+    def is_privacy_level(self, level: str) -> bool:
+        return level in self.privacy.levels
+
+    # -- profiles ------------------------------------------------------
+    def profile(self, host: str | None) -> Profile:
+        if host in (None, "owner"):
+            return Profile(
+                name="owner",
+                max_privacy=self.privacy.levels[-1],
+                topics=["*"],
+                write=list(WRITE_CAPABILITIES),
+                read_origin=True,
+            )
+        raw = self.agents.get(host) or self.agents.get("default") or {}
+        return Profile(
+            name=host if host in self.agents else "default",
+            max_privacy=str(raw.get("max_privacy", self.privacy.levels[0])),
+            topics=[str(t) for t in raw.get("topics", ["*"])],
+            write=[str(w) for w in raw.get("write", ["episodes"])],
+            read_origin=bool(raw.get("read_origin", False)),
+        )
+
+    # -- topics --------------------------------------------------------
+    def topic_paths(self) -> dict[str, str]:
+        """Declared topics as slug -> path."""
+        return {slug: t.path for slug, t in self.topics.items()}
+
+    def topic_for_path(self, rel: str, discovered: dict[str, str] | None = None) -> str | None:
+        candidates = dict(discovered or {})
+        candidates.update(self.topic_paths())
+        best: tuple[int, str] | None = None
+        for slug, path in candidates.items():
+            prefix = path.rstrip("/") + "/"
+            if (rel.startswith(prefix) or path in (".", "")) and (
+                best is None or len(path) > best[0]
+            ):
+                best = (len(path), slug)
+        return best[1] if best else None
+
+    def is_ignored(self, rel: str) -> bool:
+        parts = rel.split("/")
+        if any(p.startswith(".") for p in parts):
+            return True
+        return any(
+            fnmatch.fnmatch(rel, pat) or fnmatch.fnmatch(parts[0], pat)
+            for pat in self.layout.ignore
+        )
+
+    def lint_profile_for(self, rel: str) -> str:
+        for pattern, profile in self.lint.overrides.items():
+            if fnmatch.fnmatch(rel, pattern):
+                return profile
+        return self.lint.profile
+
+
+def _section(cls: type, raw: Any, name: str, unknown: list[str]) -> Any:
+    if raw is None:
+        return cls()
+    if not isinstance(raw, dict):
+        raise FormatError(f"[{name}] must be a table")
+    known = set(cls.__dataclass_fields__)
+    kwargs = {}
+    for key, value in raw.items():
+        if key in known:
+            kwargs[key] = value
+        else:
+            unknown.append(f"{name}.{key}")
+    return cls(**kwargs)
+
+
+def parse_manifest(text: str) -> Manifest:
+    try:
+        data = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        raise FormatError(f"brain.toml is not valid TOML: {exc}") from exc
+    unknown = [k for k in data if k not in _TOP_LEVEL]
+    if "format" not in data or "id" not in data:
+        raise FormatError("brain.toml must define 'format' and 'id'")
+    fmt = int(data["format"])
+    sections = {
+        name: _section(cls, data.get(name), name, unknown) for name, cls in _SECTIONS.items()
+    }
+    topics: dict[str, TopicCfg] = {}
+    layout: Layout = sections["layout"]
+    for slug, raw in (data.get("topics") or {}).items():
+        if not isinstance(raw, dict):
+            raise FormatError(f"[topics.{slug}] must be a table")
+        topics[slug] = TopicCfg(
+            slug=slug,
+            path=str(raw.get("path", f"{layout.topics_dir}/{slug}")).rstrip("/"),
+            title=raw.get("title"),
+            description=raw.get("description"),
+            privacy=raw.get("privacy"),
+            review=raw.get("review"),
+        )
+    agents = {str(k): dict(v) for k, v in (data.get("agents") or {}).items() if isinstance(v, dict)}
+    manifest = Manifest(
+        format=fmt,
+        id=str(data["id"]),
+        name=data.get("name"),
+        topics=topics,
+        agents=agents,
+        unknown_keys=unknown,
+        **sections,
+    )
+    if manifest.privacy.default not in manifest.privacy.levels:
+        raise FormatError("privacy.default must be one of privacy.levels")
+    return manifest
+
+
+def load_manifest(root: Path) -> Manifest:
+    path = root / MANIFEST
+    if not path.is_file():
+        raise FormatError(f"{root} is not a brain (no {MANIFEST})")
+    manifest = parse_manifest(path.read_text(encoding="utf-8"))
+    if manifest.format > FORMAT_VERSION:
+        raise FormatError(
+            f"brain format {manifest.format} is newer than this brain-wiki supports ({FORMAT_VERSION}); upgrade brain-wiki"
+        )
+    return manifest

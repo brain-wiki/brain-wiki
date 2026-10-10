@@ -1,0 +1,57 @@
+[project]
+name = "brain-wiki"
+version = "0.1.0.dev0"
+description = "A local-first second brain for AI agents, kept as plain Markdown that you own."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "brain-wiki contributors" }]
+keywords = ["memory", "agents", "mcp", "markdown", "obsidian", "knowledge-base"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Topic :: Text Processing :: Markup :: Markdown",
+]
+dependencies = [
+  "mcp>=2.3,<3",
+  "PyYAML>=6.0",
+  "tomlkit>=0.12",
+  "filelock>=3.12",
+  "jsonschema>=4.20",
+]
+
+[project.optional-dependencies]
+watch = ["watchfiles>=1.0"]
+
+[project.scripts]
+brain = "brainwiki.cli.main:main"
+brain-wiki = "brainwiki.cli.main:main"
+brain-wiki-mcp = "brainwiki.mcp.server:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "hypothesis>=6.100", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/brainwiki"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "S"]
+ignore = ["S101", "S603", "S607", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B011"]
