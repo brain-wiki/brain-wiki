@@ -52,7 +52,7 @@ One skill and one MCP server are described once per host format:
 
 | File | Read by | Content |
 |---|---|---|
-| `plugin.json` | Codex / ChatGPT, OpenClaw (Agent Plugins format); Antigravity | `$schema` (Agent Plugins 1.0), `name: brain-wiki`, `version`, `description`, `license`, `repository`, and `extensions["com.openai"]` (display name, category, hooks path). Antigravity's published schema lists only `name` and `description`; test T-1 decides whether the shared file works or root `plugin.json` must stay minimal. |
+| `plugin.json` | Codex / ChatGPT, OpenClaw (Agent Plugins format); Antigravity | `$schema` (Agent Plugins 1.0), `name: brain-wiki`, `version`, `description`, `license`, `repository`, and `extensions["com.openai"]` (display name, category, hooks path). Antigravity's published schema lists only `name` and `description`, but `agy plugin install` accepts the full Agent Plugins manifest (test T-1; runtime loading still to confirm). |
 | `mcp.json` | Agent Plugins hosts | `$schema` (Agent Plugins MCP 1.0), server `brain-wiki`: `type: stdio`, `command: uvx`, `args: [--from, brain-wiki==<version>, brain, mcp, --host, auto]` |
 | `.mcp.json` | Claude Code | Same server, `--host claude-code` |
 | `mcp_config.json` | Antigravity | Same server, `--host antigravity` (no `type` field in this format) |

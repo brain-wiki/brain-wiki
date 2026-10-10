@@ -49,7 +49,7 @@ result.
 
 | # | Question | Test |
 |---|---|---|
-| T-1 | Does Antigravity accept a root `plugin.json` that carries Agent Plugins fields (`$schema`, `version`, `extensions`)? Its published schema is closed. | `agy plugin install ./` on the repo; `agy plugin list`. Fallback: keep root `plugin.json` minimal (`name`, `description`) and put rich metadata in `.claude-plugin/` and `.codex-plugin/`. |
+| T-1 | Does Antigravity accept a root `plugin.json` that carries Agent Plugins fields (`$schema`, `version`, `extensions`)? Its published schema is closed. | **Partly verified (agy 1.0.2, 2026-10-10):** `agy plugin install` accepted a full Agent Plugins manifest (`$schema`, `version`, `author`, `license`, `repository`, `keywords`, `extensions`), processed the skill, and staged the file unchanged. Still to confirm in M7: the plugin's skills and MCP server are visible to the agent at runtime. Fallback if not: keep root `plugin.json` minimal and move rich metadata to `.claude-plugin/`, `.codex-plugin/`, and `.cursor-plugin/` manifests. |
 | T-2 | Does Antigravity expand a plugin-root variable in plugin `mcp_config.json` and `hooks.json`, and what working directory do plugin hooks get? | Hook that writes `pwd` and its environment to a file. Default design avoids the question by calling `brain` from `PATH`. |
 | T-3 | Antigravity transcript JSONL line schema | Inspect a real transcript; the capture adapter parses defensively and falls back to `taint: unknown`. |
 | T-4 | Does any host load a plugin-root `AGENTS.md` (or `GEMINI.md`) into user sessions? | Sentinel text in `AGENTS.md`; ask the agent in each host. |
