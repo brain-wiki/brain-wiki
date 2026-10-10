@@ -488,7 +488,8 @@ Rules:
   references still resolve.
 - Files dropped into `inbox/agents/<agent>/` by host-native memory features
   are treated as episodes by consolidation without needing frontmatter.
-  Their `origin` is `agent` and their `taint` is `unknown`.
+  Their `origin` is `agent` and their `taint` is `unknown`. Consolidation
+  archives them to `archive/agents/<agent>/` unchanged.
 
 ## 10. Rules
 

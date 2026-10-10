@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
@@ -29,7 +30,9 @@ def topic_rows(engine: Engine, profile: Profile | None = None) -> list[dict[str,
         )
     }
     hubs: dict[str, Any] = {}
-    for r in conn.execute("SELECT topic, title, path FROM nodes WHERE kind='hub' ORDER BY path"):
+    for r in conn.execute(
+        "SELECT topic, title, path, props FROM nodes WHERE kind='hub' ORDER BY path"
+    ):
         hubs.setdefault(r["topic"], r)
     conflict_counts: dict[str, int] = {}
     for ta, tb, count in conn.execute(
@@ -54,6 +57,8 @@ def topic_rows(engine: Engine, profile: Profile | None = None) -> list[dict[str,
             hub["title"] if hub else slug
         )
         description = declared.description if declared and declared.description else ""
+        if not description and hub is not None:
+            description = str(json.loads(hub["props"] or "{}").get("description") or "")
         rows.append(
             {
                 "slug": slug,
@@ -194,7 +199,7 @@ def strip_markdown(text: str) -> str:
     return re.sub(r"[*_`]", "", text)
 
 
-def agents_block(engine: Engine) -> str:
+def agents_block(engine: Engine, extra: list[dict[str, Any]] | None = None) -> str:
     """The generated block of the brain's AGENTS.md, as the `default` profile sees the brain.
 
     Topics are listed alphabetically so the block only changes when topics do; when the file
@@ -204,6 +209,8 @@ def agents_block(engine: Engine) -> str:
     from brainwiki.lifecycle import default_agents_block
 
     rows = topic_rows(engine, engine.manifest.profile("default"))
+    known = {r["slug"] for r in rows}
+    rows = [r for r in extra or [] if r["slug"] not in known] + rows
     name = engine.brain.display_name
 
     def render(selected: list[dict[str, Any]], hidden: int) -> str:

@@ -84,7 +84,7 @@ def classify(engine: Engine, rel: str, topics: dict[str, str]) -> str:
         return "agent_file"
     if rel.startswith(layout.proposals_dir + "/"):
         return "proposal"
-    if rel.startswith(layout.archive_episodes_dir + "/"):
+    if rel.startswith((layout.archive_episodes_dir + "/", layout.archive_dir + "/agents/")):
         return "archived_episode"
     folder, _, filename = rel.rpartition("/")
     for path in topics.values():

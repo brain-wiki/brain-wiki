@@ -320,10 +320,10 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
 def _check_episode(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -> list[Problem]:
     doc = parse_document(rel, text)
     problems = _parse_problems(doc, rel)
-    if doc.frontmatter.error:
-        return problems
-    fm = doc.fm
     layout = ctx.manifest.layout
+    if doc.frontmatter.error or rel.startswith(layout.archive_dir + "/agents/"):
+        return problems  # archived host memory files keep their own format
+    fm = doc.fm
     base = layout.episodes_dir if kind == "episode" else layout.archive_episodes_dir
     raw_id = fm.get("id")
     values: dict[str, object] = {}

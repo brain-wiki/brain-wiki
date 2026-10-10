@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from brainwiki.errors import Conflict, InvalidOps, NotFound
-from brainwiki.ids import run_id
+from brainwiki.ids import run_id as new_run_id
 from brainwiki.runs import git
 from brainwiki.runs.lock import brain_lock
 from brainwiki.runs.record import (
@@ -87,11 +87,12 @@ class Run:
         ops: list[Any] | None = None,
         packet_sha256: str | None = None,
         undoes: str | None = None,
+        run_id: str | None = None,
     ):
         self.engine = engine
         self.store = engine.store
         self.kind = kind
-        self.id = run_id()
+        self.id = run_id or new_run_id()
         self.agent = agent or (engine.host if engine.host not in (None, "owner") else None)
         self.backend = backend
         self.model = model

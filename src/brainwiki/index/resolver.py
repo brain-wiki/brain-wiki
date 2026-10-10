@@ -87,3 +87,29 @@ def name_rows(
         if isinstance(alias, str) and alias.strip():
             rows.add((alias.strip().casefold(), "alias"))
     return [(key, kind, node_id) for key, kind in rows if key]
+
+
+class LinkNamer:
+    """How to write a wikilink to a node: its file stem when unique, else its path."""
+
+    def __init__(self, conn: sqlite3.Connection):
+        self.conn = conn
+        self._stems: dict[str, int] | None = None
+
+    def __call__(self, node_id: str) -> str:
+        if self._stems is None:
+            self._stems = {
+                r["key"]: r["c"]
+                for r in self.conn.execute(
+                    "SELECT key, COUNT(*) AS c FROM names WHERE kind='stem' GROUP BY key"
+                )
+            }
+        row = self.conn.execute("SELECT path FROM nodes WHERE id=?", (node_id,)).fetchone()
+        path = row["path"]
+        bare = path[:-3] if path.lower().endswith(".md") else path
+        stem = bare.rsplit("/", 1)[-1]
+        return stem if self._stems.get(norm_key(stem), 0) <= 1 else bare
+
+
+def link_text(conn: sqlite3.Connection, node_id: str) -> str:
+    return LinkNamer(conn)(node_id)

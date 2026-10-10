@@ -322,8 +322,9 @@ Where a CLI can constrain output to a JSON Schema, the preset passes the
 ops schema ([05 §5](05-write-path-and-consolidation.md#5-operations)), which
 removes most invalid responses before validation even runs.
 
-Exact flags live in code (`brainwiki.hosts.<host>.headless`) with tests
-against recorded outputs, because CLIs change faster than this document.
+Exact flags live in code (`brainwiki.consolidate.presets`, shared by
+consolidation and harvest distillation) with tests against recorded outputs,
+because CLIs change faster than this document.
 
 ## 8. `brain connect`
 

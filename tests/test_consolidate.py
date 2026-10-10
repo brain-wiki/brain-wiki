@@ -1,0 +1,340 @@
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+from tests.conftest import write
+
+from brainwiki.cli.main import main
+from brainwiki.config.resolve import open_brain
+from brainwiki.consolidate import pipeline
+from brainwiki.consolidate.packet import pending_episodes
+from brainwiki.engine import Engine
+from brainwiki.errors import Forbidden
+from brainwiki.format.document import parse_document
+from brainwiki.format.episode import EpisodeContent
+from brainwiki.lint import lint
+from brainwiki.runs.undo import undo
+from brainwiki.write.episode import write_episode
+
+FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
+PROFILES = """
+[agents.local]
+max_privacy = "default"
+write = ["episodes", "consolidate"]
+
+[agents.custom]
+max_privacy = "sensitive"
+write = ["episodes", "consolidate"]
+"""
+
+
+@pytest.fixture
+def example(tmp_path: Path) -> Path:
+    root = tmp_path / "example"
+    shutil.copytree(FIXTURE, root)
+    (root / "brain.toml").write_text((root / "brain.toml").read_text() + PROFILES)
+    return root
+
+
+def eng(root: Path, host: str | None = None) -> Engine:
+    return Engine(open_brain(root), host=host)
+
+
+def log(e: Engine, text: str, *, taint: str = "false", topics: list[str] | None = None) -> str:
+    return write_episode(
+        e,
+        EpisodeContent(summary=text),
+        origin="agent",
+        taint=taint,
+        captured="mcp",
+        agent="claude-code",
+        topics=topics,
+    ).path
+
+
+def handle_for(packet, path: str) -> str:
+    return next(h for h, ep in packet.episodes.items() if ep.path == path)
+
+
+def note_handle(packet, path: str) -> str:
+    return next(h for h, n in packet.notes.items() if n.path == path)
+
+
+def claim_handle(packet, text_start: str) -> str:
+    return next(h for h, c in packet.claims.items() if c.text.startswith(text_start))
+
+
+def test_packet_lines_candidates_and_privacy(example: Path):
+    with eng(example) as e:
+        path = log(e, "FTS5 search p95 is now 3 ms on 10k notes.", topics=["search"])
+        secret = log(e, "We may raise the GPU budget next quarter.", topics=["budget"])
+        packet = pipeline.prepare(e, e.profile)
+        h = handle_for(packet, path)
+        entry = next(ep for ep in packet.data["episodes"] if ep["handle"] == h)
+        text = (example / path).read_text().splitlines()
+        number, _, content = entry["lines"][0].partition("| ")
+        assert text[int(number) - 1] == content
+        assert note_handle(packet, "topics/search/fts5.md") in entry["candidates"]
+        local = eng(example, "local")
+        assert secret not in {r["path"] for r in pending_episodes(local, local.profile)}
+        with pytest.raises(Forbidden):
+            pipeline.prepare(e, e.manifest.profile("default"))
+
+
+def test_validation_errors(example: Path):
+    with eng(example) as e:
+        secret = log(e, "The GPU budget is 10k this year.", topics=["budget"])
+        public = log(e, "Search uses FTS5.")
+        packet = pipeline.prepare(e, e.profile)
+        s, p = handle_for(packet, secret), handle_for(packet, public)
+        fts5 = note_handle(packet, "topics/search/fts5.md")
+        bad = {
+            "ops": [
+                {"op": "add_claim", "note": "N99", "text": "x", "sources": [f"{p}#L1"]},
+                {
+                    "op": "add_claim",
+                    "note": fts5,
+                    "text": "GPU budget is 10k.",
+                    "sources": [f"{s}#L{packet.episodes[s].first_line}"],
+                },
+                {"op": "add_relation", "from": fts5, "verb": "frobs", "to": fts5},
+                {"op": "create_note", "ref": "new:nope/x", "title": "X", "claims": []},
+            ]
+        }
+        result = pipeline.apply(e, packet, bad, e.profile)
+        assert result.status == "invalid"
+        joined = "\n".join(result.errors)
+        assert "N99" in joined and "lines must be within" in joined
+        assert "sensitive episode content into a default note" in joined
+        assert "unknown relation verb" in joined and "unknown topic 'nope'" in joined
+        shape = pipeline.apply(e, packet, {"ops": [{"op": "add_claim", "note": fts5}]}, e.profile)
+        assert any("'text' is a required property" in err for err in shape.errors)
+
+
+def test_apply_writes_archives_logs_and_undoes(example: Path):
+    with eng(example) as e:
+        first = log(
+            e,
+            "FTS5 p95 is 3 ms at 10k notes.\nThe edges index made orientation fast.",
+            taint="unknown",
+        )
+        second = log(e, "Chatted about lunch.")
+        third = log(e, "Unrelated thought nobody cites.")
+        packet = pipeline.prepare(e, e.profile)
+        a, b = handle_for(packet, first), handle_for(packet, second)
+        start = packet.episodes[a].first_line
+        fts5 = note_handle(packet, "topics/search/fts5.md")
+        c1 = claim_handle(packet, "SQLite FTS5 is the default")
+        ops = {
+            "ops": [
+                {
+                    "op": "supersede_claim",
+                    "claim": c1,
+                    "text": "SQLite FTS5 is the default backend; p95 is 3 ms at 10k notes.",
+                    "sources": [f"{a}#L{start}"],
+                    "reason": "measured",
+                },
+                {
+                    "op": "create_note",
+                    "ref": "new:search/edges-index",
+                    "title": "Edge indexes",
+                    "claims": [
+                        {
+                            "text": "The edges index made orientation fast.",
+                            "sources": [f"{a}#L{start + 1}"],
+                        }
+                    ],
+                },
+                {
+                    "op": "add_relation",
+                    "from": "new:search/edges-index",
+                    "verb": "supports",
+                    "to": fts5,
+                },
+                {"op": "skip_episode", "episode": b, "reason": "no durable information"},
+            ]
+        }
+        before = {
+            p: (example / p).read_text()
+            for p in ("topics/search/fts5.md", "topics/search/index.md")
+        }
+        result = pipeline.apply(e, packet, ops, e.profile, agent="claude-code")
+        assert result.status == "applied", result.errors
+        assert third in result.pending and first not in result.pending
+        doc = parse_document("x", (example / "topics/search/fts5.md").read_text())
+        new = next(c for c in doc.claims if c.text.startswith("SQLite FTS5 is the default backend"))
+        assert new.meta["taint"] == "unknown" and new.meta["src"].startswith(first)
+        old = next(
+            c
+            for c in doc.claims
+            if c.struck and c.text.startswith("SQLite FTS5 is the default search")
+        )
+        assert old.meta["status"] == "superseded" and old.meta["by"] == new.id
+        assert "- [[edges-index]]" in (example / "topics/search/index.md").read_text()
+        created = (example / "topics/search/edges-index.md").read_text()
+        assert (
+            "- enables [[fts5]] (supports)" in created
+            and "part_of [[topics/search/index|Search]]" in created
+        )
+        assert (
+            not (example / first).exists()
+            and not (example / second).exists()
+            and (example / third).exists()
+        )
+        assert "· consolidate ·" in (example / "log.md").read_text()
+        assert not [p for p in lint(e).problems if p.severity == "error"]
+        undo(e, packet.run)
+        assert {p: (example / p).read_text() for p in before} == before
+        assert (example / first).exists() and not (
+            example / "topics/search/edges-index.md"
+        ).exists()
+
+
+def test_stale_note_rejects_run(example: Path):
+    with eng(example) as e:
+        path = log(e, "Something about search.")
+        packet = pipeline.prepare(e, e.profile)
+        note = example / "topics/search/fts5.md"
+        note.write_text(note.read_text() + "\nEdited by hand.\n")
+        ops = {
+            "ops": [
+                {
+                    "op": "add_claim",
+                    "note": note_handle(packet, "topics/search/fts5.md"),
+                    "text": "x y z",
+                    "sources": [
+                        f"{handle_for(packet, path)}#L{packet.episodes[handle_for(packet, path)].first_line}"
+                    ],
+                }
+            ]
+        }
+        assert pipeline.apply(e, packet, ops, e.profile).status == "stale"
+
+
+def test_review_flow(example: Path):
+    toml = example / "brain.toml"
+    toml.write_text(
+        toml.read_text().replace("[topics.search]\n", '[topics.search]\nreview = "always"\n')
+    )
+    with eng(example) as e:
+        path = log(e, "FTS5 handles prefix queries.")
+        packet = pipeline.prepare(e, e.profile)
+        h = handle_for(packet, path)
+        ops = {
+            "ops": [
+                {
+                    "op": "add_claim",
+                    "note": note_handle(packet, "topics/search/fts5.md"),
+                    "text": "FTS5 handles prefix queries.",
+                    "sources": [f"{h}#L{packet.episodes[h].first_line}"],
+                }
+            ]
+        }
+        result = pipeline.apply(e, packet, ops, e.profile, agent="codex")
+        assert result.status == "review" and result.proposal
+        assert (example / path).exists()
+        assert pipeline.prepare(e, e.profile) is None or path not in {
+            ep.path for ep in pipeline.prepare(e, e.profile).episodes.values()
+        }
+        accepted = pipeline.accept_review(e, packet.run, e.profile)
+        assert accepted.status == "applied", accepted.errors
+        assert not (example / result.proposal).exists() and not (example / path).exists()
+        assert "FTS5 handles prefix queries." in (example / "topics/search/fts5.md").read_text()
+
+
+FAKE_MODEL = """
+import json, sys
+prompt = sys.stdin.read()
+packet, _ = json.JSONDecoder().raw_decode(prompt.split("## Packet", 1)[1].strip())
+ops = [{"op": "skip_episode", "episode": ep["handle"], "reason": "test"} for ep in packet["episodes"]]
+if "previous reply was rejected" not in prompt:
+    ops.append({"op": "skip_episode", "episode": "E999", "reason": "invented"})
+print("Here you go:\\n```json\\n" + json.dumps({"ops": ops}) + "\\n```")
+"""
+
+
+def test_command_backend_retries_with_errors(example: Path, tmp_path: Path):
+    script = tmp_path / "fake_model.py"
+    script.write_text(FAKE_MODEL)
+    with eng(example) as e:
+        path = log(e, "Nothing durable here.")
+        assert (
+            pipeline.consolidate_command(e, preset=[sys.executable, str(script)], if_pending=5)
+            is None
+        )
+        result = pipeline.consolidate_command(e, preset=[sys.executable, str(script)])
+        assert result is not None and result.status == "applied", result.errors
+        assert not (example / path).exists()
+
+
+def test_cli_prepare_and_apply(example: Path, tmp_path: Path, capsys):
+    from brainwiki.config.user import register_brain
+
+    register_brain("ex", example, make_default=True)
+    with eng(example) as e:
+        path = log(e, "CLI driven consolidation works.")
+    assert main(["consolidate", "--prepare", "--json"]) == 0
+    prepared = json.loads(capsys.readouterr().out)
+    episodes = prepared["packet"]["episodes"]
+    ops = {
+        "ops": [
+            {"op": "skip_episode", "episode": ep["handle"], "reason": "test"} for ep in episodes
+        ]
+    }
+    ops_file = tmp_path / "ops.json"
+    ops_file.write_text(json.dumps(ops))
+    assert main(["consolidate", "--apply", str(ops_file), "--run", prepared["run"], "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["status"] == "applied"
+    assert not (example / path).exists()
+
+
+def test_git_commit_message(example: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    empty = tmp_path / "gitconfig"
+    empty.write_text("")
+    for var, value in {
+        "GIT_CONFIG_GLOBAL": str(empty),
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_AUTHOR_NAME": "T",
+        "GIT_AUTHOR_EMAIL": "t@example.com",
+        "GIT_COMMITTER_NAME": "T",
+        "GIT_COMMITTER_EMAIL": "t@example.com",
+    }.items():
+        monkeypatch.setenv(var, value)
+    subprocess.run(["git", "-C", str(example), "init", "-q"], check=True)
+    subprocess.run(["git", "-C", str(example), "add", "-A"], check=True)
+    subprocess.run(["git", "-C", str(example), "commit", "-qm", "init"], check=True)
+    with eng(example) as e:
+        log(e, "Skip me.")
+        packet = pipeline.prepare(e, e.profile)
+        ops = {
+            "ops": [{"op": "skip_episode", "episode": h, "reason": "t"} for h in packet.episodes]
+        }
+        result = pipeline.apply(e, packet, ops, e.profile, agent="claude-code")
+    assert result.git_commit
+    message = subprocess.run(
+        ["git", "-C", str(example), "log", "-1", "--format=%B"], capture_output=True, text=True
+    ).stdout
+    assert message.startswith("brain: consolidate") and "Brain-Agent: claude-code" in message
+    status = subprocess.run(
+        ["git", "-C", str(example), "status", "--porcelain"], capture_output=True, text=True
+    ).stdout
+    assert "inbox/episodes" not in status
+
+
+def test_agent_memory_files_are_consolidated_and_archived(example: Path):
+    write(example, "inbox/agents/claude-code/memory.md", "The user prefers dark mode in Lumen.\n")
+    with eng(example) as e:
+        packet = pipeline.prepare(e, e.profile)
+        h = handle_for(packet, "inbox/agents/claude-code/memory.md")
+        assert packet.episodes[h].taint == "unknown"
+        ops = {
+            "ops": [{"op": "skip_episode", "episode": x, "reason": "t"} for x in packet.episodes]
+        }
+        assert pipeline.apply(e, packet, ops, e.profile).status == "applied"
+        assert (example / "archive/agents/claude-code/memory.md").exists()
+        assert not [p for p in lint(e).problems if p.path.startswith("archive/agents/")]

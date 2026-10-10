@@ -77,7 +77,14 @@ def split(text: str) -> Frontmatter:
     return Frontmatter(body=text, body_start_line=1, error="frontmatter is not closed")
 
 
+_ISO_DATE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?)?$"
+)
+
+
 def format_value(value: Any) -> str:
+    if isinstance(value, str) and _ISO_DATE.match(value):
+        return value  # YAML reads it back as a date; parsing normalizes it to the same string
     if isinstance(value, list):
         return "[" + ", ".join(format_value(v) for v in value) + "]"
     if isinstance(value, bool):
