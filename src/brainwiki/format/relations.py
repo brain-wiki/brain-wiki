@@ -181,6 +181,30 @@ def parse_relation_line(text: str, line: int) -> Relation | RelationError:
     )
 
 
+def canonicalize_line(text: str) -> str | None:
+    """Rewrite an alias verb as its canonical verb, keeping the alias as the qualifier.
+
+    Only the verb (and a new qualifier) change; the target, qualifiers, and note keep their
+    exact text. Returns None when the line has no alias verb.
+    """
+    match = _LINE_RE.match(text)
+    if not match:
+        return None
+    written = match.group("verb")
+    verb, is_alias = canonical_verb(written)
+    if verb is None or not is_alias:
+        return None
+    head = text[: match.start("verb")] + verb + text[match.end("verb") : match.end("target")]
+    tail = text[match.end("target") :]
+    qual = match.group("qual")
+    if qual is None:
+        return f"{head} ({written.lower()}){tail}"
+    if parse_qualifiers(qual)[0] is None:
+        start = match.start("qual") - match.end("target")
+        return head + tail[:start] + f"{written.lower()}, " + tail[start:]
+    return head + tail
+
+
 def format_relation(
     verb: str,
     target_link: str,

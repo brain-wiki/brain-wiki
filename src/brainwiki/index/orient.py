@@ -10,33 +10,46 @@ from brainwiki.format.rules import parse_rules
 from brainwiki.ids import is_ulid, ulid_datetime
 
 if TYPE_CHECKING:
+    from brainwiki.config.manifest import Profile
     from brainwiki.engine import Engine
 
 
-def topic_rows(engine: Engine) -> list[dict[str, Any]]:
+def topic_rows(engine: Engine, profile: Profile | None = None) -> list[dict[str, Any]]:
+    """Topics visible to `profile` (default: the engine's), most recently updated first."""
     from brainwiki.index.scanner import discovered_topics
 
     conn = engine.db
+    profile = profile or engine.profile
+    max_rank = engine.manifest.privacy_rank(profile.max_privacy)
+    stats = {
+        r["topic"]: r
+        for r in conn.execute(
+            """SELECT topic, COUNT(*) AS c, MAX(updated) AS u FROM nodes
+               WHERE kind IN ('note','hub') AND topic IS NOT NULL GROUP BY topic"""
+        )
+    }
+    hubs: dict[str, Any] = {}
+    for r in conn.execute("SELECT topic, title, path FROM nodes WHERE kind='hub' ORDER BY path"):
+        hubs.setdefault(r["topic"], r)
+    conflict_counts: dict[str, int] = {}
+    for ta, tb, count in conn.execute(
+        """SELECT a.topic, b.topic, COUNT(*) FROM edges e
+           JOIN nodes a ON a.id=e.src JOIN nodes b ON b.id=e.dst
+           WHERE e.rel='conflicts_with' AND a.status='active' AND b.status='active'
+           GROUP BY a.topic, b.topic"""
+    ):
+        for topic in {ta, tb} - {None}:
+            conflict_counts[topic] = conflict_counts.get(topic, 0) + count
     rows = []
     for slug, path in sorted(discovered_topics(engine).items()):
         declared = engine.manifest.topics.get(slug)
         privacy = (
             declared.privacy if declared and declared.privacy else engine.manifest.privacy.default
         )
-        if not engine.visible(engine.manifest.privacy_rank(privacy), slug):
+        if engine.manifest.privacy_rank(privacy) > max_rank or not profile.topic_allowed(slug):
             continue
-        stats = conn.execute(
-            "SELECT COUNT(*) AS c, MAX(updated) AS u FROM nodes WHERE topic=? AND kind IN ('note','hub')",
-            (slug,),
-        ).fetchone()
-        hub = conn.execute(
-            "SELECT title, path FROM nodes WHERE topic=? AND kind='hub'", (slug,)
-        ).fetchone()
-        conflicts = conn.execute(
-            """SELECT COUNT(*) FROM edges e JOIN nodes a ON a.id=e.src JOIN nodes b ON b.id=e.dst
-               WHERE e.rel='conflicts_with' AND a.status='active' AND b.status='active' AND (a.topic=? OR b.topic=?)""",
-            (slug, slug),
-        ).fetchone()[0]
+        stat = stats.get(slug)
+        hub = hubs.get(slug)
         title = (declared.title if declared and declared.title else None) or (
             hub["title"] if hub else slug
         )
@@ -48,9 +61,9 @@ def topic_rows(engine: Engine) -> list[dict[str, Any]]:
                 "path": path,
                 "hub": hub["path"] if hub else None,
                 "description": description,
-                "notes": stats["c"],
-                "updated": (stats["u"] or "")[:10],
-                "conflicts": conflicts,
+                "notes": stat["c"] if stat else 0,
+                "updated": ((stat["u"] if stat else None) or "")[:10],
+                "conflicts": conflict_counts.get(slug, 0),
             }
         )
     rows.sort(key=lambda r: r["updated"], reverse=True)
@@ -170,3 +183,39 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
 
 def strip_markdown(text: str) -> str:
     return re.sub(r"[*_`]", "", text)
+
+
+def agents_block(engine: Engine) -> str:
+    """The generated block of the brain's AGENTS.md, as the `default` profile sees the brain.
+
+    Topics are listed alphabetically so the block only changes when topics do; when the file
+    would exceed `budgets.agents_md_max_lines`, only the most recently updated topics are kept.
+    """
+    from brainwiki.format.agents_md import extract_block
+    from brainwiki.lifecycle import default_agents_block
+
+    rows = topic_rows(engine, engine.manifest.profile("default"))
+    name = engine.brain.display_name
+
+    def render(selected: list[dict[str, Any]], hidden: int) -> str:
+        table = [
+            (r["slug"], r["hub"] or r["path"], r["description"] or r["title"])
+            for r in sorted(selected, key=lambda r: r["slug"])
+        ]
+        if hidden:
+            table.append((f"… {hidden} more", "see the hubs under topics/", ""))
+        return default_agents_block(name, table)
+
+    try:
+        current = engine.store.read_text("AGENTS.md")
+    except OSError:
+        current = ""
+    old_block = extract_block(current) or ""
+    outside = len(current.splitlines()) - (len(old_block.splitlines()) + 2 if old_block else 0)
+    budget = engine.manifest.budgets.agents_md_max_lines - max(outside, 0) - 2
+    keep = len(rows)
+    block = render(rows, 0)
+    while keep > 0 and len(block.splitlines()) > budget:
+        keep -= 1
+        block = render(rows[:keep], len(rows) - keep)
+    return block

@@ -190,6 +190,7 @@ def scan(
                 names_changed = True
             conn.execute("DELETE FROM files WHERE path=?", (rel,))
             conn.execute("DELETE FROM diagnostics WHERE path=?", (rel,))
+            conn.execute("DELETE FROM lint_cache WHERE path=?", (rel,))
             stats.removed += 1
         for rel, mtime_ns, size in touch_only:
             conn.execute("UPDATE files SET mtime_ns=?, size=? WHERE path=?", (mtime_ns, size, rel))

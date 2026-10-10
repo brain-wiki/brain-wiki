@@ -21,8 +21,8 @@ HANDLERS: dict[str, str] = {
     "mv": "brainwiki.cli.cmd_write:mv",
     "consolidate": "brainwiki.cli.cmd_consolidate:consolidate",
     "review": "brainwiki.cli.cmd_consolidate:review",
-    "runs": "brainwiki.cli.cmd_consolidate:runs",
-    "undo": "brainwiki.cli.cmd_consolidate:undo",
+    "runs": "brainwiki.cli.cmd_runs:runs",
+    "undo": "brainwiki.cli.cmd_runs:undo",
     "lint": "brainwiki.cli.cmd_lint:lint",
     "report": "brainwiki.cli.cmd_lint:report",
     "harvest": "brainwiki.cli.cmd_harvest:harvest",
@@ -145,6 +145,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--staged", action="store_true")
     p.add_argument("--changed", action="store_true")
     p.add_argument("--install-hook", action="store_true")
+    p.add_argument("--select", help="only these codes or prefixes, e.g. BW3,BW405")
+    p.add_argument("--ignore", help="skip these codes or prefixes")
 
     cmd("report", "regenerate reports/")
 

@@ -1,0 +1,7 @@
+- id: brain-lint
+  name: brain-wiki lint
+  description: Check staged brain files against the brain-wiki format.
+  entry: brain lint --staged
+  language: python
+  pass_filenames: false
+  files: '(\.md|brain\.toml)$'

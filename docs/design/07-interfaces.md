@@ -84,7 +84,7 @@ brain review list | show RUN | accept RUN | reject RUN
 brain runs list | show RUN
 brain undo [RUN] [--force]
 
-brain lint [PATH]... [--fix] [--dry-run] [--profile strict|migrate] [--staged] [--changed]
+brain lint [PATH]... [--fix] [--dry-run] [--profile strict|migrate] [--select CODES] [--ignore CODES] [--staged] [--changed]
 brain lint --install-hook
 brain report
 brain index [--rebuild | --status]

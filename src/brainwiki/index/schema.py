@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 DDL = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -98,6 +98,8 @@ CREATE TABLE edges (
 CREATE INDEX edges_src ON edges(src, rel);
 CREATE INDEX edges_dst ON edges(dst, rel);
 CREATE INDEX edges_declared ON edges(declared_in);
+CREATE INDEX edges_other ON edges(other);
+CREATE INDEX edges_rel ON edges(rel, src, dst);
 
 CREATE TABLE docs (
   rowid    INTEGER PRIMARY KEY,
@@ -130,6 +132,13 @@ CREATE TABLE episode_hashes (
   sha256     TEXT NOT NULL,
   path       TEXT NOT NULL,
   first_seen TEXT NOT NULL
+);
+
+-- File-local lint results keyed by content hash, so whole-brain lint only re-checks changed files.
+CREATE TABLE lint_cache (
+  path     TEXT PRIMARY KEY,
+  sha256   TEXT NOT NULL,
+  problems TEXT NOT NULL
 );
 """
 

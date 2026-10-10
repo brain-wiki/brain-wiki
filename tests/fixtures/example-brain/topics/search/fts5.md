@@ -13,7 +13,7 @@ We switched from shelling out to ripgrep to an FTS5 index because queries
 were too slow on large note collections.
 
 ## Claims
-- SQLite FTS5 is the default search backend for Lumen. <!-- id:c-01M4KT3JPSB7BP2SNSCAVC2SFD; src:inbox/episodes/2026/09/example.md#L3-L4; origin:agent; at:2026-09-20 -->
+- SQLite FTS5 is the default search backend for Lumen. <!-- id:c-01M4KT3JPSB7BP2SNSCAVC2SFD; src:inbox/episodes/2026/09/01M2Z44880248H248H248H248H.md#L11-L12; origin:agent; at:2026-09-20 -->
 - ~~Search shells out to ripgrep on every query.~~ <!-- id:c-01M4KT3JPSB7BP2SNSCAVC2SFE; status:superseded; by:c-01M4KT3JPSB7BP2SNSCAVC2SFD; at:2026-09-20 -->
 - The trigram tokenizer requires SQLite 3.34 or newer.
 
