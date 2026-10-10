@@ -50,7 +50,25 @@ def slugify(name: str) -> str:
 
 
 def discovered_topics(engine: Engine) -> dict[str, str]:
-    """Folders directly under the topics directory, plus declared topics."""
+    """Folders directly under the topics directory, plus declared topics.
+
+    Cached on the topics folder's modification time, which changes when a folder is added,
+    removed, or renamed, so incremental scans do not list the folder every time.
+    """
+    base = engine.brain.root / engine.manifest.layout.topics_dir
+    try:
+        stamp = base.stat().st_mtime_ns
+    except OSError:
+        stamp = None
+    cached = getattr(engine, "_topics_cache", None)
+    if cached is not None and cached[0] == stamp:
+        return dict(cached[1])
+    topics = _list_topics(engine)
+    engine._topics_cache = (stamp, topics)  # type: ignore[attr-defined]
+    return dict(topics)
+
+
+def _list_topics(engine: Engine) -> dict[str, str]:
     layout = engine.manifest.layout
     topics: dict[str, str] = {}
     base = engine.brain.root / layout.topics_dir
@@ -139,10 +157,19 @@ def scan(
     ):
         return stats
     topics = discovered_topics(engine)
-    known = {
-        row["path"]: row
-        for row in conn.execute("SELECT path, mtime_ns, size, sha256, node_id FROM files")
-    }
+    if paths is None:
+        rows = conn.execute("SELECT path, mtime_ns, size, sha256, node_id FROM files")
+    else:
+        marks = ",".join("?" * len(paths)) or "NULL"
+        rows = conn.execute(
+            f"SELECT path, mtime_ns, size, sha256, node_id FROM files WHERE path IN ({marks})",  # noqa: S608 - placeholders only
+            paths,
+        )
+    known = {row["path"]: row for row in rows}
+    if paths is not None and not known:
+        known_any = conn.execute("SELECT 1 FROM files LIMIT 1").fetchone() is not None
+    else:
+        known_any = bool(known)
     if paths is None:
         seen = {s.path: s for s in engine.store.walk(skip=engine.manifest.is_ignored)}
         candidates = list(seen)
@@ -184,6 +211,11 @@ def scan(
         stats.seconds = time.monotonic() - started
         return stats
 
+    fresh = not known_any
+    if fresh:
+        # Filling an empty index deletes nothing, so cascades have nothing to do; enforcing
+        # foreign keys here cost about a third of a 10k-note rebuild.
+        conn.execute("PRAGMA foreign_keys=OFF")
     conn.execute("BEGIN IMMEDIATE")
     try:
         names_changed = False
@@ -244,6 +276,9 @@ def scan(
     except BaseException:
         conn.execute("ROLLBACK")
         raise
+    finally:
+        if fresh:
+            conn.execute("PRAGMA foreign_keys=ON")
     if paths is None:
         engine.last_scan_ns = now_ns
     stats.seconds = time.monotonic() - started
@@ -570,7 +605,7 @@ def _resolve_edge_ids(conn: sqlite3.Connection, resolver: Resolver, edge_ids: li
 
 
 def _reresolve_all(conn: sqlite3.Connection) -> None:
-    resolver = Resolver(conn)
+    resolver = Resolver(conn, preload=True)
     paths = {row["id"]: row["path"] for row in conn.execute("SELECT id, path FROM nodes")}
     for edge in conn.execute("SELECT id, raw_target, declared_in, flip FROM edges").fetchall():
         _apply_resolution(conn, edge, resolver, paths.get(edge["declared_in"], ""))

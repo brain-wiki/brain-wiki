@@ -30,12 +30,46 @@ class Resolution:
 
 
 class Resolver:
-    """In-memory view of the `names` table for fast bulk resolution."""
+    """Resolve link targets against the `names` table.
 
-    def __init__(self, conn: sqlite3.Connection):
-        self.keys: dict[str, dict[str, set[str]]] = {k: defaultdict(set) for k in ORDER}
-        for row in conn.execute("SELECT key, kind, node_id FROM names"):
-            self.keys[row["kind"]][row["key"]].add(row["node_id"])
+    `preload=True` loads every name into memory, for bulk re-resolution; otherwise names are
+    looked up on demand, so a one-file update does not read the whole table.
+    """
+
+    def __init__(self, conn: sqlite3.Connection, *, preload: bool = False):
+        self.conn = conn
+        self.keys: dict[str, dict[str, set[str]]] | None = None
+        self._cache: dict[tuple[str, str], set[str]] = {}
+        if preload:
+            self.keys = {k: defaultdict(set) for k in ORDER}
+            for row in conn.execute("SELECT key, kind, node_id FROM names"):
+                self.keys[row["kind"]][row["key"]].add(row["node_id"])
+
+    def _lookup(self, kind: str, key: str) -> set[str]:
+        if self.keys is not None:
+            return self.keys[kind].get(key, set())
+        found = self._cache.get((kind, key))
+        if found is None:
+            found = {
+                r[0]
+                for r in self.conn.execute(
+                    "SELECT node_id FROM names WHERE key = ? AND kind = ?", (key, kind)
+                )
+            }
+            self._cache[(kind, key)] = found
+        return found
+
+    def _suffix(self, key: str) -> set[str]:
+        if self.keys is not None:
+            return {n for k, ids in self.keys["path"].items() if k.endswith("/" + key) for n in ids}
+        pattern = "%/" + key.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        return {
+            r[0]
+            for r in self.conn.execute(
+                "SELECT node_id FROM names WHERE kind = 'path' AND key LIKE ? ESCAPE '\\'",
+                (pattern,),
+            )
+        }
 
     def resolve(self, raw: str, from_path: str | None = None) -> Resolution:
         if raw.startswith("path:") or raw.startswith("id:"):
@@ -43,27 +77,25 @@ class Resolver:
         key = norm_key(raw)
         if not key:
             return Resolution(None, [])
-        lookups: list[tuple[str, str]] = []
+        lookups: list[str] = []
         if from_path:
             base = posixpath.dirname(from_path)
             joined = posixpath.normpath(posixpath.join(base, key))
             if not joined.startswith(".."):
-                lookups.append(("path", joined.casefold()))
-        lookups.append(("path", key))
-        for _, lookup in lookups:
-            hits = self.keys["path"].get(lookup)
+                lookups.append(joined.casefold())
+        lookups.append(key)
+        for lookup in lookups:
+            hits = self._lookup("path", lookup)
             if hits:
                 return Resolution(next(iter(hits)) if len(hits) == 1 else None, sorted(hits))
         if "/" in key:  # Obsidian matches partial paths by suffix
-            suffix_hits = {
-                n for k, ids in self.keys["path"].items() if k.endswith("/" + key) for n in ids
-            }
+            suffix_hits = self._suffix(key)
             if suffix_hits:
                 return Resolution(
                     next(iter(suffix_hits)) if len(suffix_hits) == 1 else None, sorted(suffix_hits)
                 )
         for kind in ("stem", "alias", "title", "id"):
-            hits = self.keys[kind].get(key)
+            hits = self._lookup(kind, key)
             if hits:
                 if len(hits) == 1:
                     return Resolution(next(iter(hits)), list(hits))

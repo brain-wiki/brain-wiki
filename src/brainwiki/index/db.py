@@ -39,6 +39,10 @@ def _connect(path: Path) -> sqlite3.Connection:
     conn.execute("PRAGMA synchronous=NORMAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.execute("PRAGMA busy_timeout=5000")
+    conn.execute(
+        "PRAGMA cache_size=-65536"
+    )  # up to 64 MB; full scans of large brains thrash the default
+    conn.execute("PRAGMA temp_store=MEMORY")
     return conn
 
 

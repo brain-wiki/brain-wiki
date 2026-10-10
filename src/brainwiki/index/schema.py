@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 7
 
 DDL = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -43,7 +43,7 @@ CREATE TABLE nodes (
   taint        TEXT,
   captured     TEXT
 );
-CREATE INDEX nodes_topic ON nodes(topic);
+CREATE INDEX nodes_topic ON nodes(topic, kind, updated);
 CREATE INDEX nodes_kind ON nodes(kind, status);
 CREATE INDEX nodes_updated ON nodes(updated);
 
@@ -53,6 +53,7 @@ CREATE TABLE names (
   node_id TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
   PRIMARY KEY (key, kind, node_id)
 );
+CREATE INDEX names_node ON names(node_id);  -- lookups and ON DELETE CASCADE from nodes
 
 CREATE TABLE path_history (
   node_id   TEXT NOT NULL,
