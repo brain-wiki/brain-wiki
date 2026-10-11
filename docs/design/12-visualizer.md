@@ -71,7 +71,11 @@ decoration for its own sake.
   running along them (prerequisite → dependent, old → new), so motion shows
   direction without breaking the line into dashes.
 - **Post-processing:** bloom, ACES tone mapping, vignette, depth fog, a
-  starfield backdrop. Camera moves are eased flights, not jumps. Bloom and
+  starfield backdrop. Camera moves are eased flights, not jumps.
+- **Navigation is a 2.5D map,** not a free 3D camera: the view keeps a fixed
+  tilt and heading, dragging pans across the galactic plane, and the wheel
+  or a pinch zooms toward the cursor. Depth still separates dense clusters,
+  but nobody gets lost upside down. Bloom and
   the constellation dust ease down at the topic and note levels, where the
   camera sits inside the glow and full strength would merge a cluster into
   one white blob.
