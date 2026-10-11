@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 
 HOST = "127.0.0.1"
 IDLE_SECONDS = 30 * 60
+MAX_MARKDOWN = 200_000
 # Read at request time, so tests can point the server at a stand-in build.
 APP_DIR: Path = export.APP_DIR
 CSP = (
@@ -133,14 +134,40 @@ class VizServer(ThreadingHTTPServer):
         return {"results": results[:MAX_SEARCH]}
 
     def note(self, node_id: str) -> dict[str, Any]:
+        from brainwiki.format.frontmatter import split
         from brainwiki.index.read import read
 
         with self.lock:
             result = read(self.engine, node_id, mode="outline")
             root = self.engine.brain.root
+            text = self.engine.store.read_text(result["path"])
+            links = self._visible_links(result["id"])
         out = {key: result.get(key) for key in _NOTE_FIELDS}
         out["abs_path"] = str(root / result["path"])
+        # The preview renders the note like Obsidian: frontmatter as properties, the body as
+        # Markdown, and wikilinks resolved only to notes this profile may see.
+        fm = split(text)
+        out["properties"] = fm.data
+        out["markdown"] = fm.body[:MAX_MARKDOWN]
+        out["links"] = links
         return out
+
+    def _visible_links(self, node_id: str) -> dict[str, dict[str, Any]]:
+        """Caller holds the lock. Link text as written -> the note it resolves to, if visible."""
+        links: dict[str, dict[str, Any]] = {}
+        rows = self.engine.db.execute(
+            """SELECT e.raw_target, n.id, n.title, n.topic, n.privacy_rank FROM edges e
+               JOIN nodes n ON n.id = e.other WHERE e.declared_in = ?""",
+            (node_id,),
+        )
+        for row in rows:
+            if self.engine.visible(row["privacy_rank"], row["topic"]):
+                links[row["raw_target"]] = {
+                    "id": row["id"],
+                    "title": row["title"],
+                    "topic": row["topic"],
+                }
+        return links
 
     def watch_idle(self, idle_seconds: float = IDLE_SECONDS, interval: float = 30.0) -> None:
         def run() -> None:

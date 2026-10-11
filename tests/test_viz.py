@@ -637,6 +637,27 @@ def test_server_api(server: VizServer):
     assert _get(server, f"/api/note/{GPU}?t={server.token}")[0] == 404
 
 
+def test_server_note_preview(server: VizServer, example: Path):
+    peek = "01M4KT3JPSB7BP2SNSCAVC2SZZ"
+    write(
+        example,
+        "topics/search/peek.md",
+        f"---\nid: {peek}\ntype: concept\ntitle: Peek\ntags: [search]\n---\n# Peek\n\n"
+        "Compare [[fts5]] with [[gpu-freeze|the freeze]] and [[missing-note]].\n",
+    )
+    server.engine.last_scan_ns = 0  # step past the scan freshness window
+    note = _api(server, f"/api/note/{peek}")
+    assert isinstance(note, dict)
+    assert note["markdown"].startswith("# Peek")
+    assert "id:" not in note["markdown"]
+    assert note["properties"]["type"] == "concept"
+    assert note["properties"]["tags"] == ["search"]
+    # Links resolve only to notes this profile may see; hidden and missing targets stay unresolved.
+    assert note["links"] == {
+        "fts5": {"id": FTS5, "title": "Use SQLite FTS5 for local search", "topic": "search"}
+    }
+
+
 def test_server_search(server: VizServer):
     assert _api(server, "/api/search?q=") == {"results": []}
     found = _api(server, "/api/search?q=FTS5")
