@@ -153,11 +153,15 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
   topics load on demand.
 - **Front end:** TypeScript, three.js, `camera-controls` for flights,
   `d3-force-3d` for per-topic layout, and Preact for the HUD, built with
-  Vite from `viz-app/` into `src/brainwiki/viz/app/`. **The built bundle is
-  committed**, so installing or running brain-wiki never needs Node; only
-  people changing the visualizer do. CI rebuilds from `package-lock.json`
-  and fails if the result differs from the committed bundle. The lockfile
-  records public registry URLs only.
+  Vite. The source is its own repository, **brain-wiki-viz**, so front-end
+  work and its Node toolchain stay out of this one. **Only the built bundle
+  is committed here**, in `src/brainwiki/viz/app/`, so installing or running
+  brain-wiki never needs Node. `BUILD_INFO.json` next to the bundle names the
+  brain-wiki-viz commit it was built from; CI rebuilds that commit from its
+  `package-lock.json` (public registry URLs only) and fails if the result
+  differs. The API in §6 is the contract between the two repositories: a
+  change to it lands here first, then in brain-wiki-viz, then as a new
+  bundle.
 - **Exports:** `--export brain.html` writes one self-contained file: the
   same app with every asset inlined (CSP hashes) and the world plus every
   topic embedded; the inspector shows what the topic data carries, without
@@ -246,8 +250,9 @@ payload, count, flow, or search result.
 - Constellations: deterministic, size limits, single constellation for
   small brains.
 - Export: titles containing HTML and script are inert; CSP hashes match.
-- Front end: type check and unit tests for layout determinism and level
-  selection (`npm test`); the bundle-matches-source check.
+- Front end (in brain-wiki-viz): type check and unit tests for layout
+  determinism and level selection (`npm run check`). Here: the bundle is
+  complete and stamped with a clean commit, and matches a rebuild of it.
 - Browser: headless Chrome screenshots of each level on the fixture and a
   generated 10k brain, interaction scripts (search, fly to a topic, select a
   note, `Esc`), and frame time.

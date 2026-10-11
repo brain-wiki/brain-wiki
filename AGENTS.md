@@ -15,5 +15,7 @@ user's brain, use the brain-wiki MCP tools or the `brain` skill.
   personal data or credential-shaped strings.
 - After editing `src/brainwiki/assets/` or the version, run
   `uv run scripts/sync_versions.py`.
-- After editing `viz-app/`, run `npm run build` there and commit the bundle
-  in `src/brainwiki/viz/app/` with the source.
+- The visualizer's source is the separate `brain-wiki-viz` repository; this
+  repository commits only its build in `src/brainwiki/viz/app/`. Rebuild there
+  (`npm run build` writes this checkout when the two are siblings), never edit
+  the bundle by hand.

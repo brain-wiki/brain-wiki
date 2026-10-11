@@ -29,7 +29,6 @@ brain-wiki/
 ├── bench/                       bench scenario definitions (generated data is not committed)
 ├── docs/                        design/ (these documents) and user/ (user guide)
 ├── scripts/                     maintainer scripts (version sync, visualizer bundle check)
-├── viz-app/                     visualizer front-end source (TypeScript, Vite; see 12 §5)
 ├── pyproject.toml, uv.lock
 ├── README.md, LICENSE, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md
 ├── AGENTS.md                    guide for coding agents working on this repo (see note)
@@ -185,10 +184,11 @@ When the repository is published, GitHub Actions jobs:
 3. Plugin manifest validation: JSON schemas for Agent Plugins and
    Antigravity manifests; `claude plugin validate .` when the CLI is
    available.
-4. Visualizer bundle check: `npm ci` in `viz-app/`, then
-   `scripts/check_viz.py` rebuilds the front end and fails if it differs
-   from the committed `src/brainwiki/viz/app/`, or if the lockfile names a
-   non-public registry. Front-end type check and unit tests
+4. Visualizer bundle check: check out brain-wiki-viz at the commit in
+   `src/brainwiki/viz/app/BUILD_INFO.json`, `npm ci`, then
+   `scripts/check_viz.py --source <checkout>` rebuilds it and fails if the
+   result differs from the committed bundle. brain-wiki-viz's own CI runs its
+   type check, unit tests, and the public-registry lockfile check
    (`npm run check`).
 5. Version consistency (§4).
 6. Bench offline suites and the 1k perf suite.

@@ -702,14 +702,29 @@ def test_server_reports_missing_build(example: Path, tmp_path: Path, monkeypatch
             thread.join(timeout=5)
 
 
-def test_committed_bundle_and_lockfile():
+def _check_viz():
     path = Path(__file__).resolve().parent.parent / "scripts" / "check_viz.py"
     spec = importlib.util.spec_from_file_location("check_viz", path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    assert module.bundle_problems() == []
-    assert module.lock_problems() == []
+    return module
+
+
+def test_committed_bundle_is_complete_and_stamped():
+    assert _check_viz().bundle_problems() == []
+
+
+def test_build_info_rejects_dirty_or_unknown_builds(tmp_path: Path):
+    check = _check_viz()
+    assert check.build_info_problems(tmp_path)  # missing
+    (tmp_path / "BUILD_INFO.json").write_text(
+        '{"source": "brain-wiki-viz", "commit": "abc", "dirty": false}'
+    )
+    assert any("commit" in p for p in check.build_info_problems(tmp_path))
+    good = '{"source": "brain-wiki-viz", "commit": "' + "a" * 40 + '", "dirty": true}'
+    (tmp_path / "BUILD_INFO.json").write_text(good)
+    assert any("uncommitted" in p for p in check.build_info_problems(tmp_path))
 
 
 def test_cli_export(
