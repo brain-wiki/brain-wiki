@@ -85,6 +85,9 @@ decoration for its own sake.
   post-processing, fewer particles), chosen from measured frame time and
   switchable in the dock. `prefers-reduced-motion` turns off flows and
   flights.
+- **No WebGL2** (hardware acceleration off, a remote desktop or VM without
+  a GPU): the stage says why the map could not start and how to check, and
+  the navigator, search, and inspector keep working without the scene.
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
   inside their constellation; notes are laid out per topic with a small
