@@ -6,7 +6,7 @@
   "author": {
     "name": "brain-wiki contributors"
   },
-  "repository": "https://github.com/Jacksunwei/brain-wiki",
+  "repository": "https://github.com/brain-wiki/brain-wiki",
   "license": "Apache-2.0",
   "keywords": [
     "memory",
@@ -26,7 +26,7 @@
         "longDescription": "brain-wiki keeps one durable memory for every agent you use, as a folder of plain Markdown notes you own. Agents search it before answering, record what they learn in an inbox, and a validated, undoable consolidation step folds that into notes.",
         "developerName": "brain-wiki contributors",
         "category": "Productivity",
-        "websiteURL": "https://github.com/Jacksunwei/brain-wiki",
+        "websiteURL": "https://github.com/brain-wiki/brain-wiki",
         "defaultPrompt": [
           "Set up brain-wiki for me.",
           "What do you remember about this project?",

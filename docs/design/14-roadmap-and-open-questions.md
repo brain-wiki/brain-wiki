@@ -52,7 +52,7 @@ These change the design or defaults. Each has a recommendation.
 | Q4 | **Hidden guard counts** reveal that a restricted superseding or conflicting note exists. | Keep counts; hide completely | Keep counts. An agent that knows its answer may be stale can say so. |
 | Q5 | **Windows support level for v0.1** | First-class; best-effort | Best-effort (core tests in CI, no hook or host guarantees). |
 | Q6 | **npm launcher** (`npx brain-wiki`) | Ship in v0.1; defer | Defer. `uvx` covers the no-install path. |
-| Q7 | **Publishing identity** | Personal GitHub account; an organization | Decide before the first push; it sets the MCP Registry namespace, the marketplace source, and the plugin manifests' repository fields. |
+| Q7 | **Publishing identity** | Personal GitHub account; an organization | **Decided (D24):** the `brain-wiki` organization, `github.com/brain-wiki/brain-wiki`; MCP Registry name `io.github.brain-wiki/brain-wiki`. |
 | Q8 | **Harvest default: distill or raw?** | Distill with the configured preset (cleaner episodes, model cost); raw (no model, verbose episodes for consolidation to distill) | Distill when a command-backend preset is configured, raw otherwise; a backfill dry run shows the token estimate before anything is spent. |
 
 ## 3. Verification items

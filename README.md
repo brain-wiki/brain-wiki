@@ -1,6 +1,6 @@
 # brain-wiki
 
-<!-- mcp-name: io.github.jacksunwei/brain-wiki -->
+<!-- mcp-name: io.github.brain-wiki/brain-wiki -->
 
 A local-first second brain for AI agents, kept as plain Markdown that you own.
 
