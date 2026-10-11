@@ -92,10 +92,10 @@ def load_record(brain_key: str, run: str) -> RunRecord:
 
 
 def list_records(brain_key: str) -> list[RunRecord]:
-    """Newest first."""
+    """Newest first. Prepared runs that were never applied (a packet, no record) are skipped."""
     records = []
     for child in sorted(runs_dir(brain_key).iterdir(), reverse=True):
-        if not is_prefixed(child.name, "run-"):
+        if not is_prefixed(child.name, "run-") or not (child / "record.json").is_file():
             continue
         try:
             records.append(load_record(brain_key, child.name))

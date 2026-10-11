@@ -82,6 +82,20 @@ def test_check_gate_blocks_and_writes_nothing(brain_dir: Path):
         assert list_records(eng.brain.key) == []
 
 
+def test_list_skips_prepared_runs_without_records(brain_dir: Path):
+    from brainwiki.runs.record import run_dir
+
+    write(brain_dir, "topics/a/one.md", "# One\n")
+    with Engine(open_brain(brain_dir)) as eng:
+        prepared = run_dir(eng.brain.key, "run-01M4NWFNC8MMSXDNYW2XXADSEN")
+        prepared.mkdir(parents=True)
+        (prepared / "packet.json").write_text("{}")  # a dry run or a rejected reply leaves this
+        run = Run(eng, "test")
+        run.write("topics/a/one.md", "# One v2\n")
+        record = run.commit()
+        assert [r.run for r in list_records(eng.brain.key)] == [record.run]
+
+
 def test_undo_refuses_after_later_edit_unless_forced(brain_dir: Path):
     write(brain_dir, "topics/a/one.md", "# One\n")
     with Engine(open_brain(brain_dir)) as eng:
