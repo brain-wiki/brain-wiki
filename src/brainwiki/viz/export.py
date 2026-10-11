@@ -1,4 +1,4 @@
-"""Graph export for the visualizer: JSON, GraphML, and a self-contained HTML page (design doc 12 §3)."""
+"""Graph export for the visualizer: JSON, GraphML, and a self-contained HTML page (design doc 12 §5)."""
 
 from __future__ import annotations
 
@@ -11,22 +11,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from brainwiki.viz.lod import group_topics, topic_colors, topic_weights
+
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
+    from brainwiki.viz.lod import Atlas
 
-ASSETS = Path(__file__).parent / "assets"
-PALETTE = (
-    "#4e79a7",
-    "#f28e2b",
-    "#59a14f",
-    "#b07aa1",
-    "#76b7b2",
-    "#edc948",
-    "#ff9da7",
-    "#9c755f",
-    "#bab0ac",
-    "#86bcb6",
-)
+APP_DIR = Path(__file__).parent / "app"
 SYMMETRIC = {"conflicts_with", "related_to"}
 MAX_RUNS = 20
 SKIP_RUN_STATUSES = {"applying", "failed"}
@@ -49,7 +40,7 @@ def build_graph(engine: Engine, *, topics: list[str] | None = None) -> dict[str,
             degree[link["source"]] = degree.get(link["source"], 0) + 1
             degree[link["target"]] = degree.get(link["target"], 0) + 1
     nodes = [_node(row, degree, flags, claims) for row in rows]
-    topic_list = _topics(topic_rows(engine), nodes, wanted)
+    topic_list = _topics(topic_rows(engine), nodes, links, wanted)
     return {
         "brain": engine.brain.display_name,
         "generated": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -205,7 +196,10 @@ def _node(
 
 
 def _topics(
-    rows: list[dict[str, Any]], nodes: list[dict[str, Any]], wanted: set[str] | None
+    rows: list[dict[str, Any]],
+    nodes: list[dict[str, Any]],
+    links: list[dict[str, Any]],
+    wanted: set[str] | None,
 ) -> list[dict[str, Any]]:
     counts: dict[str, int] = {}
     hubs: dict[str, str] = {}
@@ -214,20 +208,23 @@ def _topics(
             counts[node["topic"]] = counts.get(node["topic"], 0) + 1
         if node["kind"] == "hub" and node["topic"]:
             hubs.setdefault(node["topic"], node["id"])
-    out = []
-    for index, row in enumerate(sorted(rows, key=lambda r: r["slug"])):
-        if wanted is not None and row["slug"] not in wanted:
-            continue
-        out.append(
-            {
-                "slug": row["slug"],
-                "title": row["title"],
-                "color": PALETTE[index % len(PALETTE)],
-                "notes": counts.get(row["slug"], 0),
-                "hub": hubs.get(row["slug"]),
-            }
-        )
-    return out
+    rows = sorted(
+        (r for r in rows if wanted is None or r["slug"] in wanted), key=lambda r: r["slug"]
+    )
+    notes = [n for n in nodes if n["kind"] in ("note", "hub")]
+    groups = group_topics([r["slug"] for r in rows], topic_weights(notes, links))
+    colors = topic_colors(groups)
+    return [
+        {
+            "slug": row["slug"],
+            "title": row["title"],
+            "description": row.get("description") or "",
+            "color": colors[row["slug"]],
+            "notes": counts.get(row["slug"], 0),
+            "hub": hubs.get(row["slug"]),
+        }
+        for row in rows
+    ]
 
 
 def _runs(engine: Engine, ids: set[str]) -> list[dict[str, Any]]:
@@ -354,30 +351,75 @@ def _sha256_source(text: str) -> str:
     )
 
 
-SCRIPT_FILES = ("vendor/3d-force-graph.min.js", "vendor/force-graph.min.js", "app.js")
+_TAG_ATTR = re.compile(r'([a-zA-Z-]+)(?:=(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+)))?')
+_ASSET_TAG = re.compile(r"<script\b([^>]*)>\s*</script>|<link\b([^>]*?)/?>", re.IGNORECASE)
 
 
-def to_standalone_html(graph: dict[str, Any]) -> str:
-    template = (ASSETS / "index.html").read_text(encoding="utf-8")
-    css = (ASSETS / "app.css").read_text(encoding="utf-8")
-    scripts = [(ASSETS / name).read_text(encoding="utf-8") for name in SCRIPT_FILES]
-    for body in scripts:
+def _attrs(text: str) -> dict[str, str]:
+    return {
+        m.group(1).lower(): next((g for g in m.group(2, 3, 4) if g is not None), "")
+        for m in _TAG_ATTR.finditer(text)
+    }
+
+
+def _asset_text(app_dir: Path, url: str) -> str:
+    if not url.startswith("/assets/"):
+        raise ValueError(f"unexpected asset URL in index.html: {url!r}")
+    name = url[len("/assets/") :]
+    if "/" in name or ".." in name:
+        raise ValueError(f"unexpected asset URL in index.html: {url!r}")
+    return (app_dir / "assets" / name).read_text(encoding="utf-8")
+
+
+def to_standalone_html(atlas: Atlas, app_dir: Path | None = None) -> str:
+    """The built app with its script and style inlined, CSP-hashed, and every topic embedded."""
+    app_dir = app_dir or APP_DIR
+    html = (app_dir / "index.html").read_text(encoding="utf-8")
+    payload = {
+        "world": atlas.world(),
+        "topics": {slug: atlas.topic(slug) for slug in atlas.topics},
+        "health": atlas.health(),
+    }
+    data = f'<script type="application/json" id="brain-data">{script_json(payload)}</script>'
+    scripts: list[str] = []
+    styles: list[str] = []
+
+    def script(match: re.Match[str]) -> str:
+        attrs = _attrs(match.group(1))
+        if attrs.get("type") != "module" or "src" not in attrs:
+            return match.group(0)
+        body = _asset_text(app_dir, attrs["src"])
         if re.search(r"</script", body, re.IGNORECASE):
-            raise ValueError("an asset contains '</script' and cannot be inlined")
+            raise ValueError("the app script contains '</script' and cannot be inlined")
+        scripts.append(body)
+        return f'{data}\n<script type="module">{body}</script>'
+
+    def link(match: re.Match[str]) -> str:
+        attrs = _attrs(match.group(2))
+        rel = attrs.get("rel", "").lower().split()
+        if "modulepreload" in rel:
+            return ""
+        if "stylesheet" not in rel or "href" not in attrs:
+            return match.group(0)
+        body = _asset_text(app_dir, attrs["href"])
+        if re.search(r"</style", body, re.IGNORECASE):
+            raise ValueError("the app stylesheet contains '</style' and cannot be inlined")
+        styles.append(body)
+        return f"<style>{body}</style>"
+
+    # One pass over the original page, so text inside an inlined asset is never rewritten.
+    html = _ASSET_TAG.sub(lambda m: script(m) if m.group(1) is not None else link(m), html)
+    if len(scripts) != 1:
+        raise ValueError(f"expected one module script in index.html, found {len(scripts)}")
+    style_src = " ".join(_sha256_source(s) for s in styles) or "'none'"
     csp = (
         "default-src 'none'; "
-        f"script-src {' '.join(_sha256_source(s) for s in scripts)}; "
-        f"style-src {_sha256_source(css)}; "
+        f"script-src {_sha256_source(scripts[0])}; "
+        f"style-src {style_src}; "
         "img-src data:; connect-src 'none'"
     )
-    html = re.sub(
-        r'<link rel="stylesheet" href="/assets/app\.css\?t=__TOKEN__">',
-        lambda _: (
-            f'<meta http-equiv="Content-Security-Policy" content="{csp}">\n<style>{css}</style>'
-        ),
-        template,
-    )
-    html = re.sub(r'\s*<script src="/assets/[^"]+"></script>', "", html)
-    data = f'<script type="application/json" id="graph-data">{script_json(graph)}</script>'
-    inline = "".join(f"<script>{s}</script>\n" for s in scripts)
-    return html.replace("</body>", data + "\n" + inline + "</body>", 1)
+    meta = f'<meta http-equiv="Content-Security-Policy" content="{csp}">'
+    head = re.search(r"<head\b[^>]*>", html, re.IGNORECASE)
+    if head is None:
+        raise ValueError("index.html has no <head>")
+    return html[: head.end()] + "\n" + meta + html[head.end() :]

@@ -28,7 +28,8 @@ brain-wiki/
 ├── tests/                       unit, property, integration tests; synthetic fixtures
 ├── bench/                       bench scenario definitions (generated data is not committed)
 ├── docs/                        design/ (these documents) and user/ (user guide)
-├── scripts/                     maintainer scripts (version sync, vendored asset check)
+├── scripts/                     maintainer scripts (version sync, visualizer bundle check)
+├── viz-app/                     visualizer front-end source (TypeScript, Vite; see 12 §5)
 ├── pyproject.toml, uv.lock
 ├── README.md, LICENSE, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md
 ├── AGENTS.md                    guide for coding agents working on this repo (see note)
@@ -66,7 +67,7 @@ src/brainwiki/
 ├── importer/       overlay, into, to-episodes, from-host presets
 ├── mcp/            MCP server (imports the SDK; never imported by hooks)
 ├── hosts/          per-host knowledge: hook payload parsing, transcript readers, connect writers, headless presets
-├── viz/            graph export and local server; static assets
+├── viz/            graph export, level-of-detail API, local server; app/ is the built front end (committed)
 ├── bench/          suites, generators, graders, report
 └── assets/         templates (brain.toml, AGENTS.md, hub), prompts, plugin files (copied at build time)
 ```
@@ -184,8 +185,11 @@ When the repository is published, GitHub Actions jobs:
 3. Plugin manifest validation: JSON schemas for Agent Plugins and
    Antigravity manifests; `claude plugin validate .` when the CLI is
    available.
-4. Vendored asset check: SHA-256 of every file under `viz/assets/vendor/`
-   matches `scripts/vendor.lock`.
+4. Visualizer bundle check: `npm ci` in `viz-app/`, then
+   `scripts/check_viz.py` rebuilds the front end and fails if it differs
+   from the committed `src/brainwiki/viz/app/`, or if the lockfile names a
+   non-public registry. Front-end type check and unit tests
+   (`npm run check`).
 5. Version consistency (§4).
 6. Bench offline suites and the 1k perf suite.
 

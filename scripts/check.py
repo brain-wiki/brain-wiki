@@ -45,7 +45,7 @@ def wheel_contents() -> bool:
     required = [f"brainwiki/assets/plugin/{p}" for p in PLUGIN_FILES] + [
         "brainwiki/assets/prompts/consolidate.md",
         "brainwiki/assets/routines/brain-maintenance.md",
-        "brainwiki/viz/assets/index.html",
+        "brainwiki/viz/app/index.html",
         "brainwiki/assets/plugin/skills/brain/SKILL.md",
     ]
     missing = [r for r in required if r not in names]
@@ -60,7 +60,7 @@ def main() -> int:
         run("ruff format", python, "-m", "ruff", "format", "--check", "src", "tests", "scripts"),
         run("tests", python, "-m", "pytest", "-q"),
         run("plugin versions", python, "scripts/sync_versions.py", "--check"),
-        run("vendored assets", python, "scripts/check_vendor.py"),
+        run("visualizer bundle", python, "scripts/check_viz.py"),
         wheel_contents(),
     ]
     bench = ROOT / "src" / "brainwiki" / "bench"

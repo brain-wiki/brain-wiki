@@ -15,3 +15,5 @@ user's brain, use the brain-wiki MCP tools or the `brain` skill.
   personal data or credential-shaped strings.
 - After editing `src/brainwiki/assets/` or the version, run
   `uv run scripts/sync_versions.py`.
+- After editing `viz-app/`, run `npm run build` there and commit the bundle
+  in `src/brainwiki/viz/app/` with the source.

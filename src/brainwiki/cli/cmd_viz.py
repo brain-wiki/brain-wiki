@@ -1,4 +1,4 @@
-"""viz: open the 3D brain map, or export it."""
+"""viz: open the brain map, or export it."""
 
 from __future__ import annotations
 
@@ -38,8 +38,16 @@ def _export(args: Any, engine: Any) -> int:
             f"--export: unknown format {out.suffix or '(none)'!r}; use .html, .json or .graphml"
         )
     graph = build_graph(engine, topics=args.topic)
-    render = {"html": to_standalone_html, "json": to_json, "graphml": to_graphml}[fmt]
-    out.write_text(render(graph), encoding="utf-8")
+    if fmt == "html":
+        from brainwiki.viz.lod import Atlas
+
+        try:
+            body = to_standalone_html(Atlas(graph))
+        except FileNotFoundError as exc:
+            raise UsageError(f"--export: the visualizer app is not built ({exc.filename})") from exc
+    else:
+        body = to_json(graph) if fmt == "json" else to_graphml(graph)
+    out.write_text(body, encoding="utf-8")
     levels = privacy_levels(graph, engine.manifest.privacy.levels)
     data = {
         "path": str(out),
