@@ -67,8 +67,9 @@ decoration for its own sake.
   for all topics); stars are instanced glow points with per-star size
   (√degree), color (topic hue), brightness (recency), ghosting
   (superseded or archived), and a halo ring per health flag, all in one
-  shader. Trails are fat lines; directed relations carry a slow flow along
-  the line (prerequisite → dependent, old → new).
+  shader. Trails are solid fat lines; directed relations add slow pulses
+  running along them (prerequisite → dependent, old → new), so motion shows
+  direction without breaking the line into dashes.
 - **Post-processing:** bloom, ACES tone mapping, vignette, depth fog, a
   starfield backdrop. Camera moves are eased flights, not jumps. Bloom and
   the constellation dust ease down at the topic and note levels, where the
