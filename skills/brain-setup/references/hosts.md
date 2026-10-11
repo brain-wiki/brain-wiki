@@ -66,13 +66,25 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
   `~/.gemini/config/plugins/brain-wiki/`.
 - **Start-of-session context:** added on the first model call of each
   conversation.
-- **Permissions:** MCP tools ask by default. Allow the read tools with
-  rules such as `mcp(brain-wiki/brain_search)`, `mcp(brain-wiki/brain_read)`,
-  and `mcp(brain-wiki/brain_orient)` under `permissions.allow` in the
+- **Permissions:** MCP tools ask by default. A plugin's server is named
+  `<plugin>_<server>`, so allow the read tools with
+  `mcp(brain-wiki_brain-wiki/brain_search)`,
+  `mcp(brain-wiki_brain-wiki/brain_read)`, and
+  `mcp(brain-wiki_brain-wiki/brain_orient)` under `permissions.allow` in the
   settings file (CLI: `~/.gemini/antigravity-cli/settings.json`).
-- **Scheduler:** `/schedule "<cron>" <prompt>` in the desktop app and CLI.
-  `brain schedule show ROUTINE --for antigravity` prints the exact line to
-  run or paste.
+- **Rules:** the Antigravity CLI declares MCP forms but declines them
+  without showing the user, so `brain_propose_rule` saves a proposal in
+  every Antigravity surface; the user accepts it with
+  `brain rule accept <id>`.
+- **MCP start-up:** the plugin starts the server through `uvx`, which checks
+  the package index first and can take a minute on a slow network. If the
+  tools are missing early in a session, install the command
+  (`uv tool install brain-wiki`) and run `brain connect antigravity`.
+- **Scheduler:** `/schedule "<cron>" <prompt>`, run from a session whose
+  workspace is the brain folder. In the CLI the schedule ends when that
+  session exits; use the desktop app, or an OS scheduler via
+  `brain schedule install`, for unattended runs.
+  `brain schedule show ROUTINE --for antigravity` prints the exact line.
 
 ## OpenClaw
 

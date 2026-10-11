@@ -52,13 +52,13 @@ One skill and one MCP server are described once per host format:
 
 | File | Read by | Content |
 |---|---|---|
-| `plugin.json` | Codex / ChatGPT, OpenClaw (Agent Plugins format); Antigravity | `$schema` (Agent Plugins 1.0), `name: brain-wiki`, `version`, `description`, `license`, `repository`, and `extensions["com.openai"]` (display name, category, hooks path). Antigravity's published schema lists only `name` and `description`, but `agy plugin install` accepts the full Agent Plugins manifest (test T-1; runtime loading still to confirm). |
+| `plugin.json` | Codex / ChatGPT, OpenClaw (Agent Plugins format); Antigravity | `$schema` (Agent Plugins 1.0), `name: brain-wiki`, `version`, `description`, `license`, `repository`, and `extensions["com.openai"]` (display name, category, hooks path). Antigravity's published schema lists only `name` and `description`, but `agy` accepts the full Agent Plugins manifest and loads the plugin's skills, MCP server, rules, and hooks (T-1). |
 | `mcp.json` | Agent Plugins hosts | `$schema` (Agent Plugins MCP 1.0), server `brain-wiki`: `type: stdio`, `command: uvx`, `args: [--from, brain-wiki==<version>, brain, mcp, --host, auto]` |
 | `.mcp.json` | Claude Code; OpenClaw (which reads the repo as a Claude-format bundle) | Same server, `--host auto`; the server prefers the MCP client's self-reported name over environment guesses |
 | `mcp_config.json` | Antigravity | Same server, `--host antigravity` (no `type` field in this format) |
 | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | Claude Code; also read by the ChatGPT desktop app as a legacy-compatible marketplace and by OpenClaw `--marketplace` | Manifest; a marketplace with one entry whose source is the repository root |
-| `hooks/hooks.json` | Claude Code, Codex (same schema) | `SessionStart` → `uvx --from brain-wiki==<version> brain hook auto SessionStart` (orientation only) |
-| `hooks.json` | Antigravity | Named hook `brain-wiki` with `PreInvocation` → `brain hook antigravity PreInvocation` |
+| `hooks/hooks.json` | Claude Code, Codex (same schema) | `SessionStart` → the hook launcher for `brain-wiki hook auto SessionStart` (orientation only) |
+| `hooks.json` | Antigravity | Named hook `brain-wiki` with `PreInvocation` → the hook launcher for `brain-wiki hook antigravity PreInvocation`, 5-second timeout |
 | `rules/brain-wiki.md` | Antigravity | `trigger: model_decision` rule: a short description of when to consult the brain |
 | `skills/` (`brain`, `brain-setup`, `brain-maintain`) | All plugin hosts | The skills (§3.1) |
 
@@ -74,11 +74,31 @@ discovery.
 **Why `uvx` in plugin files.** A plugin installed from a marketplace cannot
 assume `brain` is on the user's `PATH`, and some formats have no
 plugin-root variable for paths. `uvx --from brain-wiki==<version>` runs
-the matching release with only `uv` installed, and uses its cache after the
-first run. `brain connect` instead writes the absolute path of the
-installed `brain`, which starts faster ([§8](#8-brain-connect)). The
-version pin is written by `scripts/sync_versions.py`, so the plugin and the
-package can never disagree.
+the matching release with only `uv` installed. `brain connect` instead
+writes the absolute path of the installed `brain`, which starts faster
+([§8](#8-brain-connect)). The version pin is written by
+`scripts/sync_versions.py`, so the plugin and the package can never
+disagree.
+
+**The hook launcher.** `uvx` checks the package index on every call, even
+with a warm cache: 23 seconds per call behind a slow package index (T-10), so
+an Antigravity hook with a 10-second timeout was killed before every model
+call. Plugin hooks therefore run one fixed shell line:
+
+```sh
+brain-wiki hook <host> <event> 2>/dev/null \
+  || uvx --offline -q --from brain-wiki==<version> brain-wiki hook <host> <event> 2>/dev/null \
+  || echo '{}'          # Claude Code and Codex: `|| true`
+```
+
+An installed command answers in about 0.1 s, the offline cache in about
+0.2 s, and a cold cache fails at once. The MCP server, which starts once
+per session, keeps online `uvx` and fills the cache, so a hook may miss
+orientation in the first session after an install or upgrade. It is
+`brain-wiki`, not `brain`, to avoid another tool named `brain` on `PATH`.
+The line needs a POSIX shell, which hosts use for hook commands on Linux
+and macOS (verified for Antigravity, T-2); Windows hooks are best-effort
+(Q5).
 
 ### 3.1 The skills
 
@@ -137,13 +157,35 @@ schedulers. Their design, the onboarding flow, and the templates are in
   `brain connect antigravity`.
 - There is no session-start event. The `PreInvocation` hook returns
   orientation as an ephemeral message only when `invocationNum == 0`, and
-  returns `{}` on later calls.
+  returns `{}` on later calls. It still runs before every model call (24
+  times in one observed turn), and hooks run one after another, so a slow
+  or hung hook delays each call by up to its timeout; ephemeral messages
+  are cut at about 49 KB.
+- Hooks run through a shell with the plugin folder as working directory,
+  stdin closed after the payload, the host's environment inherited, and
+  `ANTIGRAVITY_CONVERSATION_ID` set; no plugin-root variable is set (T-2).
+  The payload's `workspacePaths[0]` is the project, used to choose the
+  brain.
 - `PostToolUse` records taint for the conversation when an untrusted tool
-  ran (§6.3). `Stop` performs capture (§6).
-- The rule file (`trigger: model_decision`) adds a one-line pointer that the
-  model sees with its description and loads on demand.
-- MCP tools default to "Ask" permission; users can allow read tools with
-  `mcp(brain-wiki/brain_search)` style rules. The user guide shows how.
+  ran (§6.3); its payload carries `toolCall {name, args}`. Every MCP call
+  arrives as `call_mcp_tool` with `ServerName`, which readers and hooks
+  rename to `mcp_<server>_<tool>` before the taint rules. `Stop` performs
+  capture (§6).
+- Plugin rules load: an `always_on` plugin rule reached the model. The
+  plugin-root `AGENTS.md` does not (T-4). The rule file
+  (`trigger: model_decision`) adds a one-line pointer that the model sees
+  with its description and loads on demand.
+- MCP tools default to "Ask". A plugin's server is named
+  `<plugin>_<server>`, so allow rules read
+  `mcp(brain-wiki_brain-wiki/brain_search)`. The user guide shows how.
+- The CLI declares MCP elicitation (`form` and `url`) but declines every
+  request without showing the user, so the server treats a client named
+  `antigravity…` as having no confirmation channel: `brain_propose_rule`
+  saves a proposal for `brain rule accept` (T-8).
+- The plugin's MCP server starts through online `uvx`, which took 45 to 120
+  seconds in interactive sessions behind a slow index; until it is ready
+  the agent has no brain tools. `brain connect antigravity` (installed
+  `brain`) avoids the wait.
 
 ### 4.4 OpenClaw
 
@@ -303,7 +345,7 @@ Raw capture, harvest, origin lookup, and taint detection all use it.
 |---|---|---|
 | Claude Code | `~/.claude/projects/<working-dir slug>/<session-id>.jsonl` (moves with `CLAUDE_CONFIG_DIR`) | The format is documented as internal and changes between versions. Entries carry `cwd`, `gitBranch`, `sessionId`, and `isSidechain` (subagents). Transcripts are deleted after 30 days by default (`cleanupPeriodDays`), so harvest should run at least weekly or the user should raise that setting. |
 | Codex | `$CODEX_HOME/sessions/` (default `~/.codex/sessions/`) and `archived_sessions/` | JSONL rollout files; the hook payload's `transcript_path` points at the same files. Schema to confirm (T-6). |
-| Antigravity | `<app dir>/brain/<conversation-id>/.system_generated/logs/transcript.jsonl`, where the app dir is the desktop, IDE, or CLI data folder under `~/.gemini/` | Path documented with the hook payload; line schema undocumented (T-3). CLI conversations are scoped to their working directory. |
+| Antigravity | `<app dir>/brain/<conversation-id>/.system_generated/logs/`, where the app dir is the desktop, IDE, or CLI data folder under `~/.gemini/` | Holds `transcript.jsonl`, which cuts long steps to about 4 KB, and `transcript_full.jsonl` (the hook's `transcriptPath`), which keeps them; the full one is read when present. Line schema undocumented (T-3). The working directory comes from the app's `conversation_summaries.db`, which the CLI writes too since 1.3. |
 | OpenClaw | The agent's session transcripts | After v0.1; location to confirm. |
 | Cursor | Its own local state | After v0.1. |
 
@@ -322,14 +364,19 @@ directory, with `BRAIN_WIKI_INTERNAL=1`.
 |---|---|---|---|
 | `claude-code` | `claude --bare -p --output-format json --json-schema <ops schema> [--model M]` | `structured_output` (schema-constrained), else `result` | `--bare` skips hooks, plugins, MCP servers, auto memory, and instruction files; no tools are pre-approved; empty working directory |
 | `codex` | `codex exec - --json --ephemeral --skip-git-repo-check --sandbox read-only -o <file> [-m M]` | The final message written by `-o` (also the last `agent_message` event) | Read-only sandbox; nothing persisted; empty directory (not a git repo, hence the flag) |
-| `antigravity` | `agy -p --output-format json --json-schema <ops schema> [--model M] [--agent brain-consolidator]` | `structured_output`, else `response` | A custom agent with no tools if test T-5 confirms that works; otherwise headless soft-denies tools needing approval, and the empty directory leaves nothing to read |
+| `antigravity` | `agy --input-format stream-json --output-format stream-json --effort medium [--model M]`, the prompt as one `user` message on stdin | `response` of the last `result` event | Headless soft-denies tools needing approval, and a denied call ends the turn with no output, so every preset prompt starts by saying not to use tools; custom agents cannot drop tools (T-5) |
 | `cursor` | `agent -p --output-format json [--model M]` (never `--force`) | final result | Without `--force`, file changes are only proposed, never applied |
 | `ollama` | `ollama run <model>` | stdout | No tools by construction |
 | custom | any argv | stdout, then the first JSON object with `ops` | User's responsibility |
 
 Where a CLI can constrain output to a JSON Schema, the preset passes the
 ops schema ([05 §5](05-write-path-and-consolidation.md#5-operations)), which
-removes most invalid responses before validation even runs.
+removes most invalid responses before validation even runs. Antigravity is
+the exception: `agy --json-schema` drops every field the schema does not
+declare (each op came back as only `{"op": …}`) and forces an extra turn,
+so its preset relies on the prompt and the validator instead. Its default
+(high) effort spent 48k thinking tokens and five minutes on a one-episode
+packet; medium took 47 seconds and low 4, all with valid ops.
 
 Exact flags live in code (`brainwiki.consolidate.presets`, shared by
 consolidation and harvest distillation) with tests against recorded outputs,

@@ -93,12 +93,7 @@ class State:
         if self.explicit_host or self.adopted or ctx is None:
             return
         self.adopted = True
-        try:
-            params = ctx.request_context.session.client_params
-            name = params.client_info.name if params and params.client_info else None
-        except Exception:  # noqa: BLE001 - client info is optional
-            name = None
-        found = host_from_client_name(name)
+        found = host_from_client_name(_client_name(ctx))
         if found:
             self.host = found
 
@@ -111,9 +106,24 @@ class State:
         return engine
 
 
+def _client_name(ctx: Context) -> str | None:
+    try:
+        params = ctx.request_context.session.client_params
+        return params.client_info.name if params and params.client_info else None
+    except Exception:  # noqa: BLE001 - client info is optional
+        return None
+
+
+# Clients that declare elicitation but answer every request with "decline" without showing the
+# user anything (Antigravity CLI 1.3, test T-8). They get the proposal fallback instead.
+AUTO_DECLINE_CLIENTS = ("antigravity",)
+
+
 def ask_user(text: str, user_quote: str, ctx: Context) -> Any:
     caps = ctx.client_capabilities
     elicitation = caps.elicitation if caps is not None else None
+    if any(name in (_client_name(ctx) or "").lower() for name in AUTO_DECLINE_CLIENTS):
+        elicitation = None
     if elicitation is not None and (elicitation.form is not None or elicitation.url is None):
         return Elicit(
             f"Add this standing rule to your brain? It will be loaded into every session.\n\n"

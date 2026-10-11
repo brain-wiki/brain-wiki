@@ -77,15 +77,55 @@ def test_mcp_server_entries_per_host():
     assert "type" not in server("mcp_config.json")
 
 
+def hook_commands() -> dict[str, str]:
+    return {
+        "claude": load("hooks/hooks.json")["hooks"]["SessionStart"][0]["hooks"][0]["command"],
+        "antigravity": load("hooks.json")["brain-wiki"]["PreInvocation"][0]["command"],
+    }
+
+
 def test_default_hooks_install_orientation_only():
-    claude = load("hooks/hooks.json")["hooks"]
-    assert list(claude) == ["SessionStart"]
-    assert claude["SessionStart"][0]["hooks"][0]["command"].endswith("brain hook auto SessionStart")
-    antigravity = load("hooks.json")["brain-wiki"]
-    assert list(antigravity) == ["PreInvocation"]
-    assert antigravity["PreInvocation"][0]["command"].endswith(
-        "brain hook antigravity PreInvocation"
-    )
+    assert list(load("hooks/hooks.json")["hooks"]) == ["SessionStart"]
+    assert list(load("hooks.json")["brain-wiki"]) == ["PreInvocation"]
+    commands = hook_commands()
+    assert "brain-wiki hook auto SessionStart" in commands["claude"]
+    assert "brain-wiki hook antigravity PreInvocation" in commands["antigravity"]
+
+
+def _fake(bin_dir: Path, name: str, body: str) -> None:
+    path = bin_dir / name
+    path.write_text(f"#!/bin/sh\n{body}\n", encoding="utf-8")
+    path.chmod(0o755)
+
+
+@pytest.mark.skipif(not Path("/bin/sh").exists(), reason="needs a POSIX shell")
+@pytest.mark.parametrize("host", ["claude", "antigravity"])
+def test_hook_launcher_prefers_path_then_offline_uvx(tmp_path: Path, host: str):
+    """Online `uvx` re-resolves against the index on every call (T-10), so hooks never use it."""
+    command = hook_commands()[host]
+    runs = iter(range(100))
+
+    def run(*fakes: tuple[str, str]) -> str:
+        bin_dir = tmp_path / f"bin{next(runs)}"
+        bin_dir.mkdir()
+        for name, body in fakes:
+            _fake(bin_dir, name, body)
+        done = subprocess.run(
+            ["/bin/sh", "-c", command],
+            input="{}",
+            capture_output=True,
+            text=True,
+            env={"PATH": str(bin_dir)},
+            timeout=10,
+        )
+        assert done.returncode == 0
+        return done.stdout.strip()
+
+    assert run(("brain-wiki", 'echo "path $*"'), ("uvx", "echo uvx")).startswith("path hook ")
+    via_uvx = run(("uvx", 'echo "uvx $*"'))
+    assert via_uvx.startswith("uvx --offline ") and " brain-wiki hook " in via_uvx
+    assert run(("uvx", "exit 2")) == ("{}" if host == "antigravity" else "")
+    assert run() == ("{}" if host == "antigravity" else "")
 
 
 def test_versions_and_pins_match_pyproject():

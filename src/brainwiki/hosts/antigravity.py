@@ -1,5 +1,7 @@
-"""Antigravity session reader: `<app dir>/brain/<id>/.system_generated/logs/transcript.jsonl` (T-3).
+"""Antigravity session reader: `<app dir>/brain/<id>/.system_generated/logs/` (T-3).
 
+The logs folder holds `transcript.jsonl`, which cuts long steps to about 4 KB, and
+`transcript_full.jsonl` (same steps, kept up to about 49 KB); the full one is read when present.
 Transcripts carry no working directory; it comes from the app's `conversation_summaries.db`
 (`workspace_uris`), read-only, when that file exists.
 """
@@ -18,12 +20,14 @@ from brainwiki.hosts.sessions import (
     Transcript,
     Turn,
     is_untrusted,
+    normalize_call,
     strip_injected,
     summarize_args,
 )
 
 HOST = "antigravity"
-TRANSCRIPT = Path(".system_generated") / "logs" / "transcript.jsonl"
+LOGS = Path(".system_generated") / "logs"
+TRANSCRIPTS = ("transcript_full.jsonl", "transcript.jsonl")
 USER_STEPS = {"USER_INPUT"}
 MODEL_STEPS = {"PLANNER_RESPONSE"}
 UNTRUSTED_STEPS = {"SEARCH_WEB", "READ_URL_CONTENT", "BROWSER_ACTION"}
@@ -80,12 +84,15 @@ class AntigravityReader:
         out = []
         for app_dir in self.roots():
             summaries = _summaries(app_dir)
-            for path in (
-                (app_dir / "brain").glob(f"*/{TRANSCRIPT.as_posix()}")
+            for logs in (
+                (app_dir / "brain").glob(f"*/{LOGS.as_posix()}")
                 if (app_dir / "brain").is_dir()
                 else []
             ):
-                conversation = path.parents[2].name
+                path = next((logs / n for n in TRANSCRIPTS if (logs / n).is_file()), None)
+                if path is None:
+                    continue
+                conversation = logs.parents[1].name
                 meta = summaries.get(conversation, {})
                 st = path.stat()
                 out.append(
@@ -137,8 +144,10 @@ class AntigravityReader:
                     for call in step.get("tool_calls") or []:
                         if not isinstance(call, dict):
                             continue
-                        name = str(call.get("name") or "tool")
-                        summary = summarize_args(call.get("args"))
+                        name, args = normalize_call(
+                            HOST, str(call.get("name") or "tool"), call.get("args")
+                        )
+                        summary = summarize_args(args)
                         if is_untrusted(HOST, name, summary):
                             untrusted.append(name)
                         labels.append(f"{name}: {summary}" if summary else name)

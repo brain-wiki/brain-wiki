@@ -26,19 +26,19 @@ Order rationale: M1–M4 are the foundation everything else touches; M5 and
 M6 are the core value; M7 makes it usable in hosts; M8–M10 widen adoption
 and trust.
 
-### 1.1 Status (2026-10-10)
+### 1.1 Status (2026-10-11)
 
 All milestones are implemented on `main` with tests (`uv run scripts/check.py`
 runs every check). What the code does not yet prove:
 
 | Area | Gap | Covered by |
 |---|---|---|
-| Real hosts | Plugins, hooks, and MCP were tested with fixtures and the SDK's in-memory and stdio clients, not inside each host | T-1, T-2, T-4, T-7, T-8, T-9 |
-| Session readers | Claude Code and Antigravity readers were checked against local transcripts (structure only); the Codex reader follows the published source, not recorded files | T-3, T-6, T-11 |
-| Marketplace hooks | `uvx` start-up per hook, and Antigravity's `PreInvocation` spawning a process on every model call | T-10 |
-| Schedulers | Desktop-app routines are printed steps; OS schedulers were tested against stub `crontab` and file writes | T-12, T-13 |
+| Real hosts | The Antigravity CLI (1.3.3) was run with the plugin installed: skills, MCP, rules, orientation, taint payloads, rule proposals, and the headless preset work. Claude Code, Codex, OpenClaw, and Cursor were tested only with fixtures and the SDK's clients; the build machine has none of their CLIs | T-4, T-7, T-8, T-9 (other hosts) |
+| Session readers | Claude Code and Antigravity readers were checked against local transcripts (structure only); the Codex reader follows the published source, not recorded files | T-6, T-11 |
+| Marketplace start-up | Hooks no longer depend on online `uvx` (launcher, 08 §3); the MCP server still does, which delayed Antigravity's brain tools by up to two minutes behind a slow index | T-10 (macOS) |
+| Schedulers | Desktop-app routines are printed steps; OS schedulers were tested against stub `crontab` and file writes; Antigravity CLI schedules last only as long as the session | T-12, T-13 (desktop) |
 | Performance | Every doc 13 §5 budget passes on the bench's generated 10k brain (rebuild 24.7 s, one-file update 38 ms p95, search 25 ms p95, orientation 29.6 ms p95, warm lint 0.85 s, session-start hook 282 ms); orientation and the hook have the least margin | `brain bench perf --sizes 10k` |
-| Consolidation quality | Model-backed bench slices (A–D, H) are implemented but were not run against real models | `brain bench consolidation --backends …` |
+| Consolidation quality | One real consolidation ran through the `antigravity` preset and applied; the model-backed bench slices (A–D, H) were not run | `brain bench consolidation --backends …` |
 
 ## 2. Decisions needed from the maintainer
 
@@ -63,19 +63,19 @@ result.
 
 | # | Question | Test |
 |---|---|---|
-| T-1 | Does Antigravity accept a root `plugin.json` that carries Agent Plugins fields (`$schema`, `version`, `extensions`)? Its published schema is closed. | **Partly verified (agy 1.0.2, 2026-10-10):** `agy plugin install` accepted a full Agent Plugins manifest (`$schema`, `version`, `author`, `license`, `repository`, `keywords`, `extensions`), processed the skill, and staged the file unchanged. Still to confirm in a real session: the plugin's skills and MCP server are visible to the agent at runtime. Fallback if not: keep root `plugin.json` minimal and move rich metadata to `.claude-plugin/`, `.codex-plugin/`, and `.cursor-plugin/` manifests. |
-| T-2 | Does Antigravity expand a plugin-root variable in plugin `mcp_config.json` and `hooks.json`, and what working directory do plugin hooks get? | Hook that writes `pwd` and its environment to a file. Default design avoids the question by calling `brain` from `PATH`. |
-| T-3 | Antigravity transcript JSONL line schema | **Partly verified (2026-10-10):** steps carry `step_index`, `source`, `type` (`USER_INPUT`, `PLANNER_RESPONSE` with `tool_calls[{name, args}]`, tool step types such as `VIEW_FILE`, `SEARCH_WEB`), `status`, `created_at`, `content`; no working directory, which comes from the read-only `conversation_summaries.db` (`workspace_uris`). CLI conversations had no summaries database, so they route to no brain. |
-| T-4 | Does any host load a plugin-root `AGENTS.md` (or `GEMINI.md`) into user sessions? | Sentinel text in `AGENTS.md`; ask the agent in each host. |
-| T-5 | Can an Antigravity headless run be restricted to no tools (custom agent `tools: []`)? | `agy -p … --agent <none-tools agent> --output-format stream-json`; inspect the tools list. |
+| T-1 | Does Antigravity accept a root `plugin.json` that carries Agent Plugins fields (`$schema`, `version`, `extensions`)? Its published schema is closed. | **Verified (agy 1.3.3, 2026-10-11):** `agy plugin install` accepts the full Agent Plugins manifest, and in a session the agent lists the plugin's three skills, calls its MCP tools, gets its `always_on` rules, and runs its hooks. |
+| T-2 | Does Antigravity expand a plugin-root variable in plugin `mcp_config.json` and `hooks.json`, and what working directory do plugin hooks get? | **Verified (agy 1.3.3):** no plugin-root variable is set (`PLUGIN_ROOT`, `PLUGIN_DIR`, `PLUGIN_DATA`, `extensionPath` all unset). Hook commands run through a shell (`$HOME` and `${VAR:-x}` expand) with the plugin folder as working directory, the host's environment, `ANTIGRAVITY_CONVERSATION_ID`, and stdin closed after the payload. The project comes from the payload's `workspacePaths`, which the hook now reads. |
+| T-3 | Antigravity transcript JSONL line schema | **Verified for structure (2026-10-11):** steps carry `step_index`, `source`, `type` (`USER_INPUT`, `PLANNER_RESPONSE` with `tool_calls[{name, args}]`, `EPHEMERAL_MESSAGE`, tool step types), `status`, `created_at`, `content`. MCP calls are `call_mcp_tool` with `ServerName`, `ToolName`, `Arguments`. `transcript.jsonl` cuts long steps to about 4 KB; `transcript_full.jsonl` keeps them and is what the reader prefers. The CLI writes `conversation_summaries.db` (with `workspace_uris`) since 1.3, so its conversations route by working directory. |
+| T-4 | Does any host load a plugin-root `AGENTS.md` (or `GEMINI.md`) into user sessions? | **Antigravity CLI: no** (the same plugin's `always_on` rule did load). Other hosts not tested. |
+| T-5 | Can an Antigravity headless run be restricted to no tools (custom agent `tools: []`)? | **No (agy 1.3.3):** with `tools: []` or `tools: [finish]`, `init.tools` still listed all 59 tools. A tool call that headless mode denies ends the turn with no output, so the presets' prompt now starts with a no-tools preamble; the consolidation run then answered with ops directly. |
 | T-6 | Codex rollout files: line schema, how a session id maps to a file, and how subagent threads are marked | Record fixtures from current Codex releases; the reader is built against them. |
 | T-7 | Which marketplace file does `codex plugin marketplace add` read from a repository: `.agents/plugins/marketplace.json` only, or also `.claude-plugin/marketplace.json`? | Add the repo as a marketplace in a scratch Codex config. |
-| T-8 | Which hosts support elicitation (either form) for `brain_propose_rule` confirmation? | Call the tool in each host. |
-| T-9 | Hook timeouts and output size limits per host in practice | Fixture hooks that sleep and print large outputs. |
-| T-10 | Does `uvx --from brain-wiki==<version> brain hook …` (used by marketplace installs) fit the 300 ms hook budget once cached? | Time it on Linux and macOS. If not, plugin hooks call a small launcher that prefers `brain` on `PATH` and falls back to `uvx`. |
+| T-8 | Which hosts support elicitation (either form) for `brain_propose_rule` confirmation? | **Antigravity CLI:** declares `elicitation: {form, url}` (client `antigravity-client`, protocol 2025-11-25) but declines every request without showing anything, headless and interactive. The server now gives Antigravity clients the proposal fallback. Claude Code and Codex not tested. |
+| T-9 | Hook timeouts and output size limits per host in practice | **Antigravity:** a hook past its timeout is killed, logged, and its output dropped; the model call then proceeds. Hooks run one after another before every model call, so a slow hook delays each call. An `ephemeralMessage` is cut at about 49 KB with a notice appended. Other hosts not tested. |
+| T-10 | Does `uvx --from brain-wiki==<version> brain hook …` (used by marketplace installs) fit the 300 ms hook budget once cached? | **No (Linux, 2026-10-11):** online `uvx` revalidates the index on every call, 23 s behind a slow package index even when cached, so Antigravity killed the hook before every model call. `uvx --offline` takes 0.13–0.21 s and an installed `brain-wiki` 0.08–0.11 s. Plugin hooks now use the launcher in 08 §3. macOS not timed. |
 | T-11 | How much does the Claude Code transcript format vary across recent versions? (Its docs call the format internal.) | Fixtures from several releases; reader tests run against all of them. |
 | T-12 | Can an agent running inside each desktop app (Claude Code, ChatGPT/Codex) create a local scheduled task with its own tools, or must the user use the app's form? | Ask the agent to create a test task; fall back to printed steps. |
-| T-13 | Antigravity `/schedule`: does it accept a full multi-line prompt, in which workspace does the scheduled run start, and does it survive restarts in the CLI as well as the desktop app? | Schedule a test routine on both surfaces. |
+| T-13 | Antigravity `/schedule`: does it accept a full multi-line prompt, in which workspace does the scheduled run start, and does it survive restarts in the CLI as well as the desktop app? | **CLI (agy 1.3.3):** `/schedule "* * * * *" <prompt>` creates an in-session cron job; it ran each minute in the session's workspace and stopped when the session exited. `brain schedule show` now says so. Multi-line prompts (the printed line is one line) and the desktop app not tested. |
 
 ## 4. Future work (after v0.1)
 

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uvx --from brain-wiki==0.1.0.dev0 brain hook auto SessionStart",
+            "command": "brain-wiki hook auto SessionStart 2>/dev/null || uvx --offline -q --from brain-wiki==0.1.0.dev0 brain-wiki hook auto SessionStart 2>/dev/null || true",
             "timeout": 10
           }
         ]

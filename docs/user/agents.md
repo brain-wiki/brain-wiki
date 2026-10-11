@@ -22,7 +22,22 @@ data folder, pointing at your installed `brain` command, and registers it:
 
 You can also install the plugin straight from this repository's
 marketplace in Claude Code or Codex, or with `agy plugin install` in
-Antigravity; those installs run brain-wiki through `uvx`.
+Antigravity; those installs run brain-wiki through `uvx`, which can take a
+minute to start the server in each new session on a slow network. With
+the command installed (`uv tool install brain-wiki`), `brain connect`
+starts it at once.
+
+### Antigravity notes
+
+- To skip the approval prompt for read tools, add them to
+  `permissions.allow` in `~/.gemini/antigravity-cli/settings.json`:
+  `"mcp(brain-wiki_brain-wiki/brain_search)"`,
+  `"mcp(brain-wiki_brain-wiki/brain_read)"`,
+  `"mcp(brain-wiki_brain-wiki/brain_orient)"`.
+- Antigravity cannot show brain-wiki's confirmation form, so a rule an
+  agent proposes waits for you: `brain rule list`, then
+  `brain rule accept <id>`.
+- A `/schedule` made in the CLI (`agy`) stops when that session exits.
 
 ## What agents get
 
@@ -100,7 +115,7 @@ at least weekly.
 
 ```sh
 brain schedule show brain-maintenance --for claude-code   # fields for the desktop app's routines
-brain schedule show brain-harvest --for antigravity       # a /schedule line to paste
+brain schedule show brain-harvest --for antigravity       # a /schedule line to run in the brain folder
 brain schedule install brain-maintenance --for openclaw --apply
 brain schedule install brain-maintenance --via cron --apply   # or launchd, systemd
 brain schedule remove brain-maintenance

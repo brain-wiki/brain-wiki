@@ -187,9 +187,26 @@ def test_antigravity_reader(tmp_path: Path):
             "tool_calls": [{"name": "view_file", "args": {"path": "search.py"}}],
         },
         {"step_index": 2, "source": "MODEL", "type": "VIEW_FILE", "content": "file text"},
-        {"step_index": 3, "source": "MODEL", "type": "PLANNER_RESPONSE", "content": "Test added."},
+        {
+            "step_index": 3,
+            "source": "MODEL",
+            "type": "PLANNER_RESPONSE",
+            "content": "Test added.",
+            "tool_calls": [
+                {
+                    "name": "call_mcp_tool",
+                    "args": {
+                        "ServerName": "brain-wiki_brain-wiki",
+                        "ToolName": "brain_log_episode",
+                        "Arguments": {"summary": "added a test"},
+                    },
+                }
+            ],
+        },
     ]
-    jsonl(app / "brain" / "conv1" / ".system_generated" / "logs" / "transcript.jsonl", steps)
+    logs = app / "brain" / "conv1" / ".system_generated" / "logs"
+    jsonl(logs / "transcript_full.jsonl", steps)
+    jsonl(logs / "transcript.jsonl", steps[:1])  # the short copy truncates long steps
     db = sqlite3.connect(app / "conversation_summaries.db")
     db.execute(
         "CREATE TABLE conversation_summaries (conversation_id text, workspace_uris text, parent_conversation_id text, source text)"
@@ -201,10 +218,11 @@ def test_antigravity_reader(tmp_path: Path):
     db.close()
     reader = AntigravityReader([app])
     (info,) = reader.list_sessions()
-    assert info.cwd == "/tmp/lumen"
+    assert info.cwd == "/tmp/lumen" and info.path.name == "transcript_full.jsonl"
     read = reader.read(info)
     assert [t.role for t in read.turns] == ["user", "assistant"]
     assert read.turns[1].text == "Adding it.\nTest added." and read.taint == "false"
+    assert read.turns[1].tools[1] == "mcp_brain-wiki_brain-wiki_brain_log_episode: summary=…"
 
 
 def test_detect_host():
@@ -229,6 +247,40 @@ def test_session_start_outputs(brain_dir: Path, monkeypatch: pytest.MonkeyPatch)
     assert handle("claude-code", "SessionStart", "not json") != "x"  # never raises
     monkeypatch.setenv("BRAIN_WIKI_INTERNAL", "1")
     assert handle("claude-code", "SessionStart", payload) == ""
+
+
+def test_antigravity_routes_by_workspace_paths(
+    brain_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    from brainwiki.config.user import register_brain
+    from brainwiki.lifecycle import init_brain
+
+    register_brain("work", init_brain(tmp_path / "brains" / "work", "work"))
+    project = tmp_path / "lumen"
+    write(project, ".brain-wiki.toml", 'brain = "work"\n')
+    monkeypatch.chdir(tmp_path)  # Antigravity runs hooks from the plugin folder, not the project
+
+    def orientation(payload: dict) -> str:
+        out = json.loads(handle("antigravity", "PreInvocation", json.dumps(payload)))
+        return out["injectSteps"][0]["ephemeralMessage"]
+
+    assert "# Brain: work" in orientation({"invocationNum": 0, "workspacePaths": [str(project)]})
+    assert "# Brain: test" in orientation({"invocationNum": 0})
+
+
+def test_antigravity_tool_calls_taint(brain_dir: Path):
+    def used(session: str, name: str, args: dict) -> str:
+        payload = {"conversationId": session, "toolCall": {"name": name, "args": args}}
+        handle("antigravity", "PostToolUse", json.dumps(payload))
+        return session_state.session_taint("antigravity", session)
+
+    own = {"ServerName": "brain-wiki_brain-wiki", "ToolName": "brain_search", "Arguments": {}}
+    assert used("c-own", "call_mcp_tool", own) == "unknown"
+    assert used("c-ls", "run_command", {"CommandLine": "ls -la"}) == "unknown"
+    assert used("c-curl", "run_command", {"CommandLine": "curl https://example.com"}) == "true"
+    other = {"ServerName": "github", "ToolName": "get_issue", "Arguments": {}}
+    assert used("c-mcp", "call_mcp_tool", other) == "true"
+    assert used("c-web", "read_url_content", {"Url": "https://example.com"}) == "true"
 
 
 def test_setup_hint_only_three_times(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):

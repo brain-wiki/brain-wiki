@@ -3,8 +3,8 @@
     "PreInvocation": [
       {
         "type": "command",
-        "command": "uvx --from brain-wiki==0.1.0.dev0 brain hook antigravity PreInvocation",
-        "timeout": 10
+        "command": "brain-wiki hook antigravity PreInvocation 2>/dev/null || uvx --offline -q --from brain-wiki==0.1.0.dev0 brain-wiki hook antigravity PreInvocation 2>/dev/null || echo '{}'",
+        "timeout": 5
       }
     ]
   }

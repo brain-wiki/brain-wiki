@@ -124,6 +124,14 @@ async def test_propose_rule_paths(example: Path):
         )
     assert proposed.structured_content["status"] == "proposed"
     assert (example / proposed.structured_content["path"]).exists()
+    antigravity = Implementation(name="antigravity-client", version="v1.0.0")
+    async with Client(
+        build_server("claude-code"), elicitation_callback=decline, client_info=antigravity
+    ) as client:  # declares elicitation, then declines without showing the user anything
+        fallback = await client.call_tool(
+            "brain_propose_rule", {"text": "Use spaces.", "user_quote": "spaces"}
+        )
+    assert fallback.structured_content["status"] == "proposed"
     async with Client(build_server("codex"), elicitation_callback=accept) as client:
         forbidden = await client.call_tool("brain_propose_rule", {"text": "X.", "user_quote": "x"})
     assert forbidden.is_error and "forbidden:" in forbidden.content[0].text

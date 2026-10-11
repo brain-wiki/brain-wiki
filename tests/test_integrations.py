@@ -73,6 +73,7 @@ def test_schedule_show_for_each_host(brain_dir: Path):
         assert claude["missing_capabilities"] == ["harvest", "consolidate"]
         agy = sc.show(engine, "brain-harvest", "antigravity")
         assert agy["steps"][0].startswith('Run in Antigravity: /schedule "')
+        assert any("ends when that session exits" in step for step in agy["steps"])
         claw = sc.show(engine, "brain-maintenance", "openclaw")
         assert "openclaw automations create" in claw["steps"][0]
         with pytest.raises(Exception, match="cloud"):

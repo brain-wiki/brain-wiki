@@ -43,6 +43,16 @@ def _get(payload: dict[str, Any], *keys: str) -> Any:
     return None
 
 
+def _cwd(payload: dict[str, Any]) -> Any:
+    """The session's working directory. Antigravity sends `workspacePaths` and runs hooks from the
+    plugin folder, so the process cwd is never the project there."""
+    cwd = _get(payload, "cwd", "workspace", "working_directory")
+    paths = payload.get("workspacePaths")
+    if cwd is None and isinstance(paths, list) and paths:
+        cwd = paths[0]
+    return cwd
+
+
 def wrap(text: str) -> str:
     return f"{OPEN}\n{text}\n{CLOSE}"
 
@@ -90,7 +100,7 @@ def _dispatch(host: str, raw_event: str, event: str, payload: dict[str, Any]) ->
     session = str(
         _get(payload, "session_id", "sessionId", "conversation_id", "conversationId") or ""
     )
-    cwd = _get(payload, "cwd", "workspace", "working_directory")
+    cwd = _cwd(payload)
     if event == "session_start":
         invocation = _get(payload, "invocationNum", "invocation_num")
         if raw_event == "PreInvocation" and invocation not in (None, 0, "0"):
@@ -148,10 +158,16 @@ def _session_start(host: str, raw_event: str, cwd: Any, user: Any) -> str:
 
 def _tool_used(host: str, session: str, payload: dict[str, Any], user: Any) -> str:
     from brainwiki.hosts import session_state
-    from brainwiki.hosts.sessions import is_untrusted, summarize_args
+    from brainwiki.hosts.sessions import is_untrusted, normalize_call, summarize_args
 
-    tool = str(_get(payload, "tool_name", "toolName", "name") or "")
-    args = _get(payload, "tool_input", "toolInput", "args", "input")
+    call = payload.get("toolCall")
+    if not isinstance(call, dict):
+        call = {}
+    tool, args = normalize_call(
+        host,
+        str(_get(payload, "tool_name", "toolName", "name") or call.get("name") or ""),
+        _get(payload, "tool_input", "toolInput", "args", "input") or call.get("args"),
+    )
     if (
         session
         and tool

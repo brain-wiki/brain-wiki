@@ -112,7 +112,12 @@ def show(engine: Any, name: str, host: str, *, at: str | None = None) -> dict[st
             f"Run it once and allow: {', '.join(routine.allow_tools)}.",
         ]
     elif host == "antigravity":
-        steps = [f'Run in Antigravity: /schedule "{cron}" {" ".join(prompt.split())}']
+        steps = [
+            f'Run in Antigravity: /schedule "{cron}" {" ".join(prompt.split())}',
+            f"Run it from a session whose workspace is {brain_path}; scheduled runs start there.",
+            "In the CLI (`agy`) the schedule ends when that session exits; for unattended runs "
+            "use the desktop app, or `brain schedule install --via cron|launchd|systemd`.",
+        ]
     else:
         steps = [
             "Install with: "

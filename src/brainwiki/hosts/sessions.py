@@ -97,6 +97,18 @@ def strip_injected(text: str) -> str:
     return _HOST_INJECTED.sub("", MARKER_RE.sub("", text)).strip()
 
 
+def normalize_call(host: str, name: str, args: Any) -> tuple[str, Any]:
+    """Map a host's generic MCP call onto the `mcp_<server>_<tool>` names the taint rules use.
+
+    Antigravity reports every MCP call as `call_mcp_tool` with the server in its arguments, and
+    names plugin servers `<plugin>_<server>` (e.g. `brain-wiki_brain-wiki`).
+    """
+    if host == "antigravity" and name == "call_mcp_tool" and isinstance(args, dict):
+        server = str(args.get("ServerName") or "unknown")
+        return f"mcp_{server}_{args.get('ToolName') or 'tool'}", args.get("Arguments")
+    return name, args
+
+
 def summarize_args(args: Any, limit: int = 80) -> str:
     if isinstance(args, str):
         text = args
@@ -107,10 +119,13 @@ def summarize_args(args: Any, limit: int = 80) -> str:
                 for k in (
                     "command",
                     "cmd",
+                    "CommandLine",
                     "query",
                     "url",
+                    "Url",
                     "file_path",
                     "path",
+                    "AbsolutePath",
                     "pattern",
                     "description",
                 )

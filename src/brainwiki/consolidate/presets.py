@@ -19,12 +19,23 @@ from typing import Any
 
 from brainwiki.errors import NotAvailable, UsageError
 
+# Headless runs cannot approve tools; Antigravity ends the turn with no output after a denied
+# tool call, and its custom agents cannot drop tools (T-5), so the prompt has to say it.
+HEADLESS_PREAMBLE = (
+    "You are running headless: everything you need is in this message. Do not call tools, "
+    "load skills, or read files; reply directly.\n\n"
+)
+
 
 @dataclass
 class Call:
     model: str | None
     schema: str | None  # JSON Schema as a string, for CLIs that constrain output
     workdir: Path
+
+
+def _plain(prompt: str) -> str:
+    return prompt
 
 
 @dataclass
@@ -34,6 +45,17 @@ class Preset:
     argv: Callable[[Call], list[str]]
     extract: Callable[[str, Call], str]
     uses_schema: bool = False
+    stdin: Callable[[str], str] = _plain
+
+
+def _pick(data: dict[str, Any], keys: tuple[str, ...], fallback: str) -> str:
+    for key in keys:
+        value = data.get(key)
+        if isinstance(value, (dict, list)):
+            return json.dumps(value)
+        if isinstance(value, str) and value.strip():
+            return value
+    return fallback
 
 
 def _json_field(stdout: str, *keys: str) -> str:
@@ -41,15 +63,7 @@ def _json_field(stdout: str, *keys: str) -> str:
         data = json.loads(stdout)
     except ValueError:
         return stdout
-    if not isinstance(data, dict):
-        return stdout
-    for key in keys:
-        value = data.get(key)
-        if isinstance(value, (dict, list)):
-            return json.dumps(value)
-        if isinstance(value, str) and value.strip():
-            return value
-    return stdout
+    return _pick(data, keys, stdout) if isinstance(data, dict) else stdout
 
 
 def _claude(call: Call) -> list[str]:
@@ -91,10 +105,28 @@ def _codex_extract(stdout: str, call: Call) -> str:
 
 
 def _agy(call: Call) -> list[str]:
-    argv = ["agy", "-p", "--output-format", "json"]
-    if call.schema:
-        argv += ["--json-schema", call.schema]
+    # `agy -p` takes the prompt as its value; stream-json input keeps it on stdin and off argv.
+    # No --json-schema: agy drops fields the schema does not declare and forces an extra turn.
+    # The default (high) effort spent five minutes thinking on a one-episode packet.
+    argv = ["agy", "--input-format", "stream-json", "--output-format", "stream-json"]
+    argv += ["--effort", "medium"]
     return argv + (["--model", call.model] if call.model else [])
+
+
+def _agy_stdin(prompt: str) -> str:
+    return json.dumps({"event": "user", "message": {"content": prompt}}) + "\n"
+
+
+def _agy_extract(stdout: str, call: Call) -> str:
+    result: dict[str, Any] | None = None
+    for line in stdout.splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(event, dict) and event.get("event") == "result":
+            result = event.get("result") if isinstance(event.get("result"), dict) else None
+    return _pick(result, ("response",), stdout) if result else stdout
 
 
 PRESETS: dict[str, Preset] = {
@@ -106,13 +138,7 @@ PRESETS: dict[str, Preset] = {
         True,
     ),
     "codex": Preset("codex", "codex", _codex, _codex_extract),
-    "antigravity": Preset(
-        "antigravity",
-        "agy",
-        _agy,
-        lambda out, _: _json_field(out, "structured_output", "response", "result"),
-        True,
-    ),
+    "antigravity": Preset("antigravity", "agy", _agy, _agy_extract, stdin=_agy_stdin),
     "cursor": Preset(
         "cursor",
         "agent",
@@ -138,6 +164,8 @@ def run_command(
     """Run a preset (or a custom argv) once and return the model's final text."""
     with tempfile.TemporaryDirectory(prefix="brain-wiki-") as tmp:
         call = Call(model or None, None, Path(tmp))
+        prompt = HEADLESS_PREAMBLE + prompt
+        stdin = prompt
         if isinstance(command, list):
             if not command:
                 raise UsageError("the custom command is empty")
@@ -161,13 +189,14 @@ def run_command(
                 preset.binary,
                 preset.name,
             )
+            stdin = preset.stdin(prompt)
         if shutil.which(binary) is None:
             raise NotAvailable(f"preset {name!r} needs `{binary}` on PATH")
         env = {**os.environ, "BRAIN_WIKI_INTERNAL": "1"}
         try:
             done = subprocess.run(
                 argv,
-                input=prompt,
+                input=stdin,
                 capture_output=True,
                 text=True,
                 cwd=tmp,
