@@ -92,13 +92,17 @@ brain-wiki hook <host> <event> 2>/dev/null \
 ```
 
 An installed command answers in about 0.1 s, the offline cache in about
-0.2 s, and a cold cache fails at once. The MCP server, which starts once
-per session, keeps online `uvx` and fills the cache, so a hook may miss
-orientation in the first session after an install or upgrade. It is
-`brain-wiki`, not `brain`, to avoid another tool named `brain` on `PATH`.
-The line needs a POSIX shell, which hosts use for hook commands on Linux
-and macOS (verified for Antigravity, T-2); Windows hooks are best-effort
-(Q5).
+0.2 s, and a cold cache fails at once. The launcher calls `brain-wiki`,
+not `brain`, to avoid another tool named `brain` on `PATH`. It needs a
+POSIX shell, which hosts use for hook commands on Linux and macOS
+(verified for Antigravity, T-2); Windows hooks are best-effort (Q5).
+
+The MCP server, which starts once per session, keeps plain online `uvx`
+and fills the cache, so a hook may miss orientation in the first session
+after an install or upgrade. It is not wrapped in the launcher: MCP
+configs take a command and arguments, and `sh -c` would break the server
+on Windows (D23). Behind a slow index its start can take a minute or
+more; `brain connect` avoids the wait.
 
 ### 3.1 The skills
 

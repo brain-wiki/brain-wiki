@@ -35,7 +35,7 @@ runs every check). What the code does not yet prove:
 |---|---|---|
 | Real hosts | The Antigravity CLI (1.3.3) was run with the plugin installed: skills, MCP, rules, orientation, taint payloads, rule proposals, and the headless preset work. Claude Code, Codex, OpenClaw, and Cursor were tested only with fixtures and the SDK's clients; the build machine has none of their CLIs | T-4, T-7, T-8, T-9 (other hosts) |
 | Session readers | Claude Code and Antigravity readers were checked against local transcripts (structure only); the Codex reader follows the published source, not recorded files | T-6, T-11 |
-| Marketplace start-up | Hooks no longer depend on online `uvx` (launcher, 08 §3); the MCP server still does, which delayed Antigravity's brain tools by up to two minutes behind a slow index | T-10 (macOS) |
+| Marketplace start-up | Hooks no longer depend on online `uvx` (launcher, 08 §3). The MCP server still does, by choice (D23): it delayed Antigravity's brain tools by up to two minutes behind a slow index; `brain connect` is the fast path | T-10 (macOS) |
 | Schedulers | Desktop-app routines are printed steps; OS schedulers were tested against stub `crontab` and file writes; Antigravity CLI schedules last only as long as the session | T-12, T-13 (desktop) |
 | Performance | Every doc 13 §5 budget passes on the bench's generated 10k brain (rebuild 24.7 s, one-file update 38 ms p95, search 25 ms p95, orientation 29.6 ms p95, warm lint 0.85 s, session-start hook 282 ms); orientation and the hook have the least margin | `brain bench perf --sizes 10k` |
 | Consolidation quality | One real consolidation ran through the `antigravity` preset and applied; the model-backed bench slices (A–D, H) were not run | `brain bench consolidation --backends …` |
