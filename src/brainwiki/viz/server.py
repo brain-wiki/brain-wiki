@@ -193,7 +193,9 @@ def serve(
     server = make_server(engine, port, topics)
     server.watch_idle()
     print(f"brain viz: {server.url}")
-    print("Press Ctrl-C to stop (stops by itself after 30 minutes idle).")
+    # Flush: through a pipe (an agent's shell tool, `| tee`) the token URL would otherwise
+    # stay buffered until the server exits, and the map is unreachable without it.
+    print("Press Ctrl-C to stop (stops by itself after 30 minutes idle).", flush=True)
     if open_browser:
         webbrowser.open(server.url)
     try:

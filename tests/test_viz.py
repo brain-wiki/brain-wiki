@@ -268,6 +268,28 @@ def _get(srv: VizServer, path: str) -> tuple[int, dict[str, str], bytes]:
         conn.close()
 
 
+def test_cli_prints_url_through_a_pipe(example: Path):
+    import os
+    import select
+    import subprocess
+    import sys
+
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "brainwiki", "viz", "--brain", str(example), "--no-open"],
+        stdout=subprocess.PIPE,
+        text=True,
+        env=os.environ.copy(),
+    )
+    try:
+        ready, _, _ = select.select([proc.stdout], [], [], 30)
+        assert ready, "no output within 30 s"
+        assert proc.stdout is not None
+        assert re.match(r"brain viz: http://127\.0\.0\.1:\d+/\?t=\S+", proc.stdout.readline())
+    finally:
+        proc.terminate()
+        proc.wait(timeout=10)
+
+
 def test_server_requires_token(server: VizServer):
     assert server.server_address[0] == "127.0.0.1"
     for path in ("/", "/api/graph", "/assets/app.js", f"/api/note/{FTS5}"):
