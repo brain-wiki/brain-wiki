@@ -121,7 +121,7 @@ Glass panels over the scene, keyboard-first:
 | Right: inspector | Topic: description, counts, flag breakdown, busiest notes, strongest flows to other topics. Note: type, status and privacy chips, guard banners, claims (superseded struck through, unverified marked), relations by family, backlinks, path with copy and an `obsidian://` link |
 | Bottom left | Minimap: top-down galaxy with the current view; click to fly |
 | Bottom center | Layer dock: relation families, body links, health mode, labels, quality, reset view, help |
-| Overlays | Hover card (title, topic, status, flags); command palette with server-side search results grouped by topic; `?` shows the shortcuts |
+| Overlays | Hover card: for a star its title, topic, status, and flags; for a trail the two notes it connects, read as a sentence ("2026.9.9 supersedes 2026.9.8"), with the trail and both ends lit, and a click goes to the other end; for a flow the two topics and the link count by type. Command palette with server-side search results grouped by topic; `?` shows the shortcuts |
 
 Keys: `/` or `Ctrl/⌘-K` search, `Esc` up one level or close, `H` health
 mode, `L` labels, `[` and `]` previous and next topic, `R` reset view, `?`
