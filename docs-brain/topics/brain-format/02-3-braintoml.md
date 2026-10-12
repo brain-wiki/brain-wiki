@@ -1,0 +1,101 @@
+---
+id: 01M3250V00Z70NFDG17HJ58NZP
+type: design
+title: "`brain.toml`"
+aliases: ["02 §3"]
+tags: [brain-format]
+source: "docs/design/02-brain-format.md#3-braintoml"
+---
+# `brain.toml`
+
+The manifest identifies the brain and holds settings that must travel with
+it. Settings that belong to a user or a machine (where brains are, which
+brain is the default) live in the user config ([[config-and-storage|03]]).
+
+```toml
+format = 1                                  # format version (required)
+id = "01J9Z7M0W4K8P2R6T9V3X5Z7A1"           # brain id, a ULID (required, never changes)
+name = "personal"                           # display name (optional)
+description = "Personal notes and projects" # one line shown by brain_list (optional)
+
+[layout]                                    # all optional; defaults shown
+topics_dir   = "topics"
+inbox_dir    = "inbox"
+archive_dir  = "archive"
+reports_dir  = "reports"
+hub_filename = "index.md"                   # or "{folder}.md" for folder-note style
+ignore       = []                           # extra glob patterns, relative to the brain root
+
+[budgets]                                   # hard limits enforced by lint and writers
+hub_max_lines       = 150
+rules_max_lines     = 100
+rules_max_chars     = 4000
+agents_md_max_lines = 150
+orient_max_tokens   = 1500
+
+[privacy]
+levels  = ["default", "sensitive", "secret"]  # ascending restriction
+default = "default"
+
+[lint]
+profile = "strict"                          # strict | migrate (see 06)
+stale_inbox_days = 14
+# [lint.overrides] maps path globs to a profile or "off", e.g. "Archive/**" = "migrate"
+
+[search]                                    # ranking and guard settings (see 04)
+freshness_ms       = 1000
+max_guards_per_hit = 10
+status_factor      = { active = 1.0, superseded = 0.35, archived = 0.2 }
+kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7 }
+recency_half_life_days = 180
+
+[consolidate]
+backend = "agent"                           # agent | command
+command = "claude-code"                     # preset name or full argv list, for backend = "command"
+model   = ""                                # optional, for presets that accept one
+timeout_s = 600
+review  = "auto"                            # auto (review only when checks trigger) | always
+review_tainted = false                      # route runs with tainted sources to review
+max_episodes_per_run = 50
+max_supersede_ratio  = 0.25                 # above this, a run is routed to review (see 05)
+device  = ""                                # if set, scheduled runs only on this device
+
+[reports]
+after_consolidate = true
+commit = false                              # include reports/ in brain-wiki's git commits
+
+[git]
+mode = "auto"                               # auto | off ; auto = commit when the brain is a git work tree
+
+[topics.search]                             # one table per declared topic (optional)
+path        = "topics/search"               # default: <topics_dir>/<slug>
+title       = "Search"
+description = "How local search works and why."
+privacy     = "default"
+review      = "always"                      # per-topic override
+agent_edits = "allow"                       # allow | review | deny for checked agent edits (05 §2.3)
+
+[agents.default]                            # profile for unknown hosts
+max_privacy = "default"
+
+[agents.claude-code]                        # profile for one host id
+max_privacy = "sensitive"
+topics      = ["*"]                         # topic allowlist; "*" = all
+write       = ["episodes", "edit", "propose_rules", "consolidate", "review"]
+```
+
+Rules:
+
+- `format` and `id` are REQUIRED. Unknown keys MUST be preserved by tools
+  that rewrite the file and SHOULD produce a lint warning.
+- Inline tables (`status_factor = { … }`) are TOML, not frontmatter; the
+  flat-values rule in §4 applies to note frontmatter only.
+- A topic that exists on disk but is not declared still works: its slug is
+  its folder name, title is taken from the hub, privacy is the brain default.
+  Declaring a topic lets the user set description, privacy, review mode, or
+  a non-default path (for imported vaults).
+- Topic slugs match `^[a-z0-9][a-z0-9-]{0,63}$`.
+- Agent profile names are host ids ([[08-2-host-ids|08]]).
+
+## Relations
+- part_of [[brain-format]]

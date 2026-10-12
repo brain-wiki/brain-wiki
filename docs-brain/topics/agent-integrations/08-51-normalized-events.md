@@ -1,0 +1,25 @@
+---
+id: 01M3250V004EABFCCZSMTV4QZ8
+type: design
+title: "Normalized events"
+aliases: ["08 §5.1"]
+tags: [agent-integrations]
+source: "docs/design/08-agent-integrations.md#51-normalized-events"
+---
+# Normalized events
+
+| Normalized | Claude Code | Codex | Antigravity | OpenClaw (hook pack) |
+|---|---|---|---|---|
+| `session_start` | `SessionStart` | `SessionStart` | `PreInvocation` with `invocationNum == 0` | `agent:bootstrap` |
+| `prompt` (opt-in recall) | `UserPromptSubmit` | `UserPromptSubmit` | — (no prompt text exposed) | — |
+| `tool_used` (taint) | `PostToolUse` | `PostToolUse` | `PostToolUse` | — |
+| `stop` | `Stop` | `Stop` | `Stop` | — |
+| `pre_compact` | `PreCompact` | `PreCompact` | — | `session:compact:before` |
+| `session_end` | `SessionEnd` | `SessionEnd` | — | `command:reset` |
+
+Event names for Codex are taken from its documentation's statement that
+plugin hooks share Claude Code's event schema; confirmed by host fixtures
+in M7.
+
+## Relations
+- part_of [[08-5-hooks]]

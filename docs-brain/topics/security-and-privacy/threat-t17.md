@@ -1,0 +1,18 @@
+---
+id: 01M3250V00NQN6MJNSBCGS2XX6
+type: threat
+title: "T17: Over-reading agent transcripts"
+aliases: ["threat T17"]
+tags: [security-and-privacy]
+source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+---
+# T17: Over-reading agent transcripts
+
+**Over-reading agent transcripts.** Harvest and origin lookup read host session stores, which hold everything a session saw: other projects, secrets, tool output from untrusted sources.
+
+**Mitigations:** Off by default, enabled per host; every harvest starts as a dry run listing the sessions it would read; sessions route to a brain by working directory and unrouted sessions are skipped; tool output bodies are dropped (origin lookup can include them only on request, wrapped as untrusted); secrets scrubbed before anything is written or sent; taint computed from the session's tool calls; origin reads need `read_origin`, off for every host by default; readers never modify host files.
+
+**Residual risk:** Distillation sends condensed transcripts to the configured backend's provider, the same trust decision as consolidation.
+
+## Relations
+- part_of [[10-3-threats-and-mitigations]]

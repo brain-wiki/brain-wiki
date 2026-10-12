@@ -1,0 +1,89 @@
+---
+id: 01M3250V00D6FNR7PDSPBTD68F
+type: design
+title: "Operations"
+aliases: ["05 §5"]
+tags: [write-path-and-consolidation]
+source: "docs/design/05-write-path-and-consolidation.md#5-operations"
+---
+# Operations
+
+The response schema (JSON Schema 2020-12, abbreviated):
+
+```json
+{
+  "type": "object",
+  "required": ["ops"],
+  "properties": {
+    "ops": {"type": "array", "maxItems": 200, "items": {"oneOf": [
+      {"$ref": "#/$defs/add_claim"},      {"$ref": "#/$defs/merge_claim"},
+      {"$ref": "#/$defs/supersede_claim"},{"$ref": "#/$defs/retract_claim"},
+      {"$ref": "#/$defs/add_relation"},   {"$ref": "#/$defs/create_note"},
+      {"$ref": "#/$defs/create_topic"},   {"$ref": "#/$defs/skip_episode"}
+    ]}}
+  },
+  "$defs": {
+    "src":  {"type": "string", "pattern": "^E[0-9]+#L[0-9]+(-L[0-9]+)?$"},
+    "srcs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/src"}},
+    "note_ref": {"type": "string", "pattern": "^(N[0-9]+|new:[a-z0-9-]+/[a-z0-9-]+)$"},
+    "text": {"type": "string", "minLength": 1, "maxLength": 500},
+
+    "add_claim":       {"required": ["op","note","text","sources"],
+                        "properties": {"op": {"const": "add_claim"}, "note": {"$ref": "#/$defs/note_ref"},
+                                       "text": {"$ref": "#/$defs/text"}, "sources": {"$ref": "#/$defs/srcs"}}},
+    "merge_claim":     {"required": ["op","claim","sources"],
+                        "properties": {"op": {"const": "merge_claim"}, "claim": {"pattern": "^C[0-9]+$"},
+                                       "sources": {"$ref": "#/$defs/srcs"}}},
+    "supersede_claim": {"required": ["op","claim","text","sources","reason"],
+                        "properties": {"op": {"const": "supersede_claim"}, "claim": {"pattern": "^C[0-9]+$"},
+                                       "text": {"$ref": "#/$defs/text"}, "sources": {"$ref": "#/$defs/srcs"},
+                                       "reason": {"type": "string", "maxLength": 300}}},
+    "retract_claim":   {"required": ["op","claim","sources","reason"],
+                        "properties": {"op": {"const": "retract_claim"}, "claim": {"pattern": "^C[0-9]+$"},
+                                       "sources": {"$ref": "#/$defs/srcs"},
+                                       "reason": {"type": "string", "maxLength": 300}}},
+    "add_relation":    {"required": ["op","from","verb","to"],
+                        "properties": {"op": {"const": "add_relation"}, "from": {"$ref": "#/$defs/note_ref"},
+                                       "verb": {"type": "string"}, "to": {"$ref": "#/$defs/note_ref"},
+                                       "qualifier": {"type": "string", "maxLength": 60},
+                                       "attrs": {"type": "object"}, "comment": {"type": "string", "maxLength": 200},
+                                       "sources": {"$ref": "#/$defs/srcs"}}},
+    "create_note":     {"required": ["op","ref","title","claims"],
+                        "properties": {"op": {"const": "create_note"},
+                                       "ref": {"pattern": "^new:[a-z0-9-]+/[a-z0-9-]+$"},
+                                       "title": {"type": "string", "maxLength": 200},
+                                       "type": {"type": "string"}, "summary": {"type": "string", "maxLength": 1500},
+                                       "claims": {"type": "array", "items": {
+                                         "required": ["text","sources"],
+                                         "properties": {"text": {"$ref": "#/$defs/text"},
+                                                        "sources": {"$ref": "#/$defs/srcs"}}}}}},
+    "create_topic":    {"required": ["op","slug","title"],
+                        "properties": {"op": {"const": "create_topic"}, "slug": {"pattern": "^[a-z0-9][a-z0-9-]{0,63}$"},
+                                       "title": {"type": "string"}, "description": {"type": "string", "maxLength": 300}}},
+    "skip_episode":    {"required": ["op","episode","reason"],
+                        "properties": {"op": {"const": "skip_episode"}, "episode": {"pattern": "^E[0-9]+$"},
+                                       "reason": {"type": "string", "maxLength": 200}}}
+  }
+}
+```
+
+Semantics (what the deterministic writer does):
+
+| Op | Effect on disk |
+|---|---|
+| `add_claim` | Appends `- text <!-- id; src; origin; taint; at -->` to the note's `## Claims` (creating the section above `## Relations`, or at the end). |
+| `merge_claim` | Adds the new sources to the claim's `src` and updates `at`. The text is unchanged. |
+| `supersede_claim` | Inserts the new claim directly above the old one; rewrites the old one as `- ~~old text~~ <!-- id; status:superseded; by:<new id>; … -->`. |
+| `retract_claim` | Strikes the claim through with `status:retracted` and the reason, citing sources that show it was wrong. |
+| `add_relation` | Appends a canonical relation line to `## Relations` of the `from` note. `supersedes` also sets the target note's `status: superseded`. A relation that already exists becomes a no-op. |
+| `create_note` | Creates `topics/<topic>/<slug>.md` with frontmatter (new id, type, privacy inherited from the topic), `# title`, summary, claims, and `- part_of [[hub]]`; adds a line to the hub's `## Notes`. |
+| `create_topic` | Creates the folder and a hub; adds the topic to the `AGENTS.md` block. Allowed only when the profile's `topics` is `*`. |
+| `skip_episode` | Nothing, except that the episode is archived with the run. |
+
+`new:<topic>/<slug>` refs let ops in one batch point at notes created in the
+same batch. Every op that changes a note also sets its `updated` field; the
+hub line `create_note` adds is bookkeeping and does not, so a hub one line
+under its budget can still take a new child note.
+
+## Relations
+- part_of [[write-path-and-consolidation]]

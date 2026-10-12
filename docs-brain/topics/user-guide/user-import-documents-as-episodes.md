@@ -1,0 +1,19 @@
+---
+id: 01M3250V00XXH57YT1AEMBWY5N
+type: guide
+title: "Documents as episodes"
+tags: [user-guide]
+source: "docs/user/import.md#documents-as-episodes"
+---
+# Documents as episodes
+
+```sh
+brain import meeting-notes/ --to-episodes --apply
+brain import clippings/ --to-episodes --untrusted --apply
+```
+
+Documents are split on headings into episodes for consolidation to fold
+into notes. Use `--untrusted` for text you did not write.
+
+## Relations
+- part_of [[user-import]]

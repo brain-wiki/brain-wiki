@@ -1,0 +1,28 @@
+---
+id: 01M3250V002BRBGKM7NA60XQ02
+type: design
+title: "Test matrix"
+aliases: ["08 §10"]
+tags: [agent-integrations]
+source: "docs/design/08-agent-integrations.md#10-test-matrix"
+---
+# Test matrix
+
+| Check | Claude Code | Codex | Antigravity | OpenClaw |
+|---|---|---|---|---|
+| Plugin validates and loads | `claude plugin validate`, install | marketplace add, install | `agy plugin install ./` | `plugins install --link`, `inspect` |
+| MCP tools listed and callable | ✓ | ✓ | ✓ | ✓ |
+| Orientation injected at start | ✓ | ✓ | ✓ (first call only) | hook pack |
+| Prompted capture asks once | ✓ | ✓ | ✓ | — |
+| Raw capture produces one episode per compaction | ✓ | ✓ | stop only | hook pack |
+| Self-exclusion during headless consolidation | ✓ | ✓ | ✓ | — |
+| Session reader parses recorded fixtures; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
+| Origin lookup returns the right window, and `not_available` when deleted | ✓ | ✓ | ✓ | — |
+| `brain connect` and `--uninstall` round trip | ✓ | ✓ | ✓ | ✓ |
+
+Recorded hook payloads for each host and event are kept as test fixtures,
+so the adapters are tested on every change even where the host is not
+installed.
+
+## Relations
+- part_of [[agent-integrations]]

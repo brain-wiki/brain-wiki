@@ -1,0 +1,41 @@
+---
+id: 01M3250V00QNFFF4KJ3CC1DAV2
+type: design
+title: "Orientation (the briefing)"
+aliases: ["04 §8"]
+tags: [index-and-retrieval]
+source: "docs/design/04-index-and-retrieval.md#8-orientation-the-briefing"
+---
+# Orientation (the briefing)
+
+`orient(profile)` returns one brain's briefing. Agents fetch it with
+`brain_orient` when a task may depend on the user's knowledge (the static
+instruction block tells them to, [[08-32-the-static-instruction-block|08 §3.2]]);
+an optional session-start hook can inject it instead. It is assembled in
+priority order and cut to `budgets.orient_max_tokens` (default 1,500,
+estimated as characters / 4, so about 6,000 characters), with rules always
+included in full:
+
+1. Header: brain name, date, note count, the span of `updated` dates, and
+   pending episodes.
+2. `rules.md`, all of it (budgeted separately, so it always fits).
+3. **What's in this brain:** note counts by type (largest first), the
+   largest topics, the topics that hold people or meetings when notes of
+   those types exist, and open issues (active conflicts, unverified claims).
+4. Topic table: slug, title, one-line description, note count, last update,
+   number of active conflicts. Most recently active first; truncated with a
+   pointer to browsing (`brain_search("", topic=[…])`).
+5. Recent changes: the last 5 `log.md` entries, one line each, and the number
+   of notes updated in the last 7 days.
+6. Inbox status: pending episode count, oldest pending age, and a hint to
+   consolidate when it exceeds a threshold (plus unharvested sessions when
+   harvest is enabled for the caller, from a cached count).
+7. How to query: three example calls built from this brain's own topics and
+   types (a keyword search, a typed "latest" lookup, and a `why` search).
+
+Everything in it is filtered by the caller's profile, so hidden notes are
+never counted or named. The same function generates the managed block of
+`AGENTS.md`, with the profile `default`.
+
+## Relations
+- part_of [[index-and-retrieval]]

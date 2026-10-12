@@ -1,0 +1,22 @@
+---
+id: 01M3250V00XSH16502Y7TJ7AMR
+type: design
+title: "Exit codes"
+aliases: ["07 §2.3"]
+tags: [interfaces]
+source: "docs/design/07-interfaces.md#23-exit-codes"
+---
+# Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | The command ran and found problems (lint errors, invalid ops, review required) |
+| 2 | Usage error |
+| 3 | Not found (brain, note, run) |
+| 4 | Conflict (stale packet, files changed since run, lock timeout) |
+| 5 | Forbidden by profile or host limits |
+| 10 | Internal error (bug) |
+
+## Relations
+- part_of [[07-2-cli]]

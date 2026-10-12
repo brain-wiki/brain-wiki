@@ -173,3 +173,11 @@ def test_health_routine_reads_only():
 def test_prompts_end_with_payload_heading(name, trailer):
     text = (ROOT / "src/brainwiki/assets/prompts" / name).read_text(encoding="utf-8")
     assert text.rstrip().splitlines()[-1] == trailer
+
+
+def test_docs_brain_is_a_clean_brain(capsys):
+    """docs-brain/ is generated from docs/ (scripts/build_docs_brain.py) and passes strict lint."""
+    from brainwiki.cli.main import main
+
+    assert main(["lint", "--brain", str(ROOT / "docs-brain")]) == 0
+    assert "No problems" in capsys.readouterr().out

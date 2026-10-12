@@ -58,6 +58,7 @@ def main() -> int:
         run("ruff format", python, "-m", "ruff", "format", "--check", "src", "tests", "scripts"),
         run("tests", python, "-m", "pytest", "-q"),
         run("plugin versions", python, "scripts/sync_versions.py", "--check"),
+        run("docs brain", python, "scripts/build_docs_brain.py", "--check"),
         run("visualizer bundle", python, "scripts/check_viz.py"),
         wheel_contents(),
     ]
