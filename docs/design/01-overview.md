@@ -49,6 +49,22 @@ A **brain** is a directory of Markdown files with a small manifest. It holds:
   (or the user) during work.
 - **Rules**: a short list of standing directives from the user.
 
+### 2.1 Two uses
+
+A brain serves two uses, and one brain can serve both:
+
+| Use | Who writes most of it | What agents do with it | What matters most |
+|---|---|---|---|
+| **The user's second brain, as context** | The user: notes in Obsidian or any editor, an imported vault | Read it at session start and during tasks; propose additions only through the inbox | The user's words stay authoritative and are never rewritten silently |
+| **The agents' own memory of the world** | Agents: what they observe and learn while working, captured as episodes and consolidated into notes | Log what they learn, consolidate it, recall it later, across hosts | Every claim traceable to its source; unverified knowledge marked; world facts kept current as the world changes |
+
+Provenance keeps the two apart where they meet: every claim records its
+`origin` (`owner`, `agent`, `import`, `system`) and `taint`, and only the
+user can add rules. A user who wants a hard line keeps them in separate
+named brains. Open decisions about how far to separate and trust
+agent-learned knowledge are Q9–Q12 in
+[14 §2](14-roadmap-and-open-questions.md#2-decisions-needed-from-the-maintainer).
+
 Agents interact through three surfaces, each optional:
 
 1. **Files.** Any agent that can read files can use a brain directly; the
@@ -133,9 +149,10 @@ started by a scheduled job. brain-wiki needs no API keys.
 ## 6. Users and scenarios
 
 Primary user: an individual who works with two or more AI agents and wants
-them to share durable, correct, inspectable memory. Secondary: an Obsidian
-user who wants their existing vault to become agent-readable without
-restructuring it.
+them to share durable, correct, inspectable memory: both the user's own
+knowledge as context and what the agents learn on their own (§2.1).
+Secondary: an Obsidian user who wants their existing vault to become
+agent-readable without restructuring it.
 
 | # | Scenario | Flow (details in) |
 |---|---|---|
@@ -151,6 +168,7 @@ restructuring it.
 | S8 | **A bad consolidation.** | `brain undo <run>` restores the prior state exactly. [05](05-write-path-and-consolidation.md) |
 | S9 | **Inspect the brain.** | `brain viz` opens a 3D map of topics, notes, and relations. [12](12-visualizer.md) |
 | S10 | **Compare models.** | `brain bench` runs the same consolidation scenarios through several headless CLIs and reports validity and agreement. [11](11-eval-bench.md) |
+| S11 | **An agent builds its own knowledge.** A long-running assistant learns how the user's tools, services, and projects behave. | It logs episodes as it works; a scheduled routine consolidates them unattended into agent-origin claims, marked unverified when web or tool output influenced them; later sessions on any host recall them with their sources. [05](05-write-path-and-consolidation.md), [15](15-skills-onboarding-and-routines.md) |
 
 ## 7. Glossary
 

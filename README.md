@@ -2,11 +2,20 @@
 
 <!-- mcp-name: io.github.brain-wiki/brain-wiki -->
 
-A local-first second brain for AI agents, kept as plain Markdown that you own.
+A local-first brain for you and your AI agents, kept as plain Markdown that
+you own. A brain serves two uses, alone or together:
+
+- **Your second brain, as context for agents.** Notes you write or already
+  keep (an Obsidian vault, project notes) become context every agent can
+  search and cite. Your words stay authoritative.
+- **Your agents' own memory of the world.** What agents learn while working
+  (how a codebase behaves, what a decision was, which API changed) is
+  captured, checked, and consolidated into notes they recall later, with
+  every claim traced to where it came from.
 
 brain-wiki gives every agent you use (Claude Code, Codex and the ChatGPT
 desktop app, Antigravity, OpenClaw, Cursor, and any MCP client) one shared,
-durable memory:
+durable brain:
 
 - **Plain files.** A brain is a folder of Markdown notes you can read, edit,
   diff, and sync like any other folder. It opens in Obsidian.
