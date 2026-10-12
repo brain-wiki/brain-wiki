@@ -22,6 +22,7 @@ from mcp_types import CallToolResult, TextContent, ToolAnnotations
 from pydantic import BaseModel, Field
 
 from brainwiki import __version__
+from brainwiki.config.resolve import Brain as BrainRef
 from brainwiki.config.resolve import resolve_brain
 from brainwiki.config.user import load_user_config
 from brainwiki.engine import Engine
@@ -99,10 +100,14 @@ class State:
 
     def engine(self, brain: str | None) -> Engine:
         user = load_user_config()
-        resolved = resolve_brain(brain or self.default_brain, host=self.host, user=user)
+        return self.engine_for(
+            resolve_brain(brain or self.default_brain, host=self.host, user=user)
+        )
+
+    def engine_for(self, resolved: BrainRef) -> Engine:
         engine = self.engines.get(resolved.key)
         if engine is None:
-            engine = self.engines[resolved.key] = Engine(resolved, host=self.host, user=user)
+            engine = self.engines[resolved.key] = Engine(resolved, host=self.host)
         return engine
 
 
@@ -184,6 +189,21 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             )
 
     # -- read -----------------------------------------------------------
+    @mcp.tool(
+        name="brain_list",
+        title="List the user's brains",
+        annotations=READ,
+        description="List the brains you may use: name, what each is for, topic and note counts, "
+        "last update, and which one is the default here. Call first, then brain_orient for the "
+        "brain that fits the task.",
+    )
+    @guard
+    def brain_list(ctx: Context | None = None) -> CallToolResult:
+        from brainwiki.index.brains import format_brain_list, list_brains
+
+        result = list_brains(state.host, explicit=state.default_brain, engine_for=state.engine_for)
+        return _result(format_brain_list(result), result)
+
     @mcp.tool(
         name="brain_orient",
         title="Orient in the user's brain",

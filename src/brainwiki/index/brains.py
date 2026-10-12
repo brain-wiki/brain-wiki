@@ -1,0 +1,133 @@
+"""Which brains a host may use, and what each holds (design doc 04 §9.1)."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
+
+from brainwiki.config.resolve import Brain, open_brain, resolve_brain
+from brainwiki.config.user import UserConfig, load_user_config
+from brainwiki.engine import Engine
+from brainwiki.errors import BrainError
+
+
+def brain_stats(engine: Engine) -> dict[str, Any]:
+    """Counts over what the engine's profile may see."""
+    from brainwiki.index.orient import topic_rows
+
+    engine.scan()
+    notes = pending = 0
+    updated = ""
+    for row in engine.db.execute(
+        "SELECT kind, topic, updated FROM nodes WHERE kind IN ('note','hub','episode') "
+        "AND privacy_rank <= ?",
+        (engine.max_rank,),
+    ):
+        if not engine.profile.topic_allowed(row["topic"]):
+            continue
+        if row["kind"] == "episode":
+            pending += 1
+        else:
+            notes += 1
+            updated = max(updated, (row["updated"] or "")[:10])
+    return {
+        "topics": len(topic_rows(engine)),
+        "notes": notes,
+        "updated": updated or None,
+        "pending": pending,
+    }
+
+
+def list_brains(
+    host: str | None = None,
+    *,
+    explicit: str | None = None,
+    cwd: Path | None = None,
+    user: UserConfig | None = None,
+    engine_for: Callable[[Brain], Engine] | None = None,
+) -> dict[str, Any]:
+    """Every brain `host` may use. `path` is withheld unless its profile reads everything.
+
+    `engine_for` lets a long-running caller reuse its engines; otherwise each brain gets a
+    short-lived one.
+    """
+    user = user or load_user_config()
+    allowed = user.host(host).brains if host else None
+    try:
+        here: Brain | None = resolve_brain(explicit, host=host, cwd=cwd, user=user)
+    except BrainError:
+        here = None
+    candidates: list[tuple[str, Path, str | None]] = [
+        (name, path, name) for name, path in sorted(user.brains.items())
+    ]
+    if here is not None and not any(path.resolve() == here.root for _, path, _ in candidates):
+        candidates.append((here.display_name, here.root, None))  # found from the cwd, unregistered
+    entries: list[dict[str, Any]] = []
+    for name, path, registered in candidates:
+        if allowed is not None and name not in allowed:
+            continue
+        entry: dict[str, Any] = {"name": name}
+        if host is None:
+            entry["default"] = name == user.default
+        try:
+            brain = open_brain(path, name=registered)
+        except BrainError as exc:
+            entry.update(ok=False, description="", default_here=False, error=exc.message)
+            if host is None:
+                entry["path"] = str(path)
+            entries.append(entry)
+            continue
+        engine = engine_for(brain) if engine_for else Engine(brain, host=host, user=user)
+        try:
+            stats = brain_stats(engine)
+            reads_everything = engine.reads_everything
+        finally:
+            if engine_for is None:
+                engine.close()
+        entry.update(
+            ok=True,
+            description=brain.manifest.description or "",
+            default_here=here is not None and brain.root == here.root,
+            **stats,
+        )
+        if reads_everything:
+            entry["path"] = str(brain.root)
+        entries.append(entry)
+    return {"brains": entries}
+
+
+def format_brain_list(result: dict[str, Any], *, owner: bool = False) -> str:
+    rows = result["brains"]
+    if not rows:
+        return (
+            "No brains registered. Create one with `brain init <path>`."
+            if owner
+            else "No brains are available to this host."
+        )
+    width = max(len(r["name"]) for r in rows)
+    desc_width = min(max(len(r.get("description") or "") for r in rows), 48)
+    lines = []
+    for r in rows:
+        mark = "*" if r.get("default_here") else " "
+        if not r["ok"]:
+            lines.append(f"{mark} {r['name']:<{width}}  (missing: {r.get('error', 'unreadable')})")
+            continue
+        description = (r["description"] or "")[:desc_width]
+        stats = [
+            f"{r['topics']} topics",
+            f"{r['notes']:,} notes",
+            f"updated {r['updated'] or 'never'}",
+        ]
+        if r["pending"]:
+            stats.append(f"{r['pending']} pending")
+        line = f"{mark} {r['name']:<{width}}  "
+        if desc_width:
+            line += f"{description:<{desc_width}}  "
+        line += " · ".join(stats)
+        if r.get("path"):
+            line += f"  {r['path']}"
+        if r.get("default_here"):
+            line += "  (default here)"
+        lines.append(line.rstrip())
+    return "\n".join(lines)

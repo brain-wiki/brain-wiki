@@ -17,6 +17,7 @@ BRAIN_TOML_TEMPLATE = """\
 format = {format}
 id = "{id}"
 name = "{name}"
+# description = "What this brain is for, in one line (shown by `brain list`)"
 
 [privacy]
 # Ordered from least to most restrictive. Everything is "default" unless a topic
@@ -37,7 +38,7 @@ write       = ["episodes"]
 # Example of a profile for one agent:
 # [agents.claude-code]
 # max_privacy = "sensitive"
-# write       = ["episodes", "propose_rules", "consolidate", "harvest"]
+# write       = ["episodes", "edit", "propose_rules", "consolidate", "harvest"]
 """
 
 LOG_HEADER = "# Log\n\nChanges made by brain-wiki, newest at the bottom.\n"

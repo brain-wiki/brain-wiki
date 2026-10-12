@@ -63,6 +63,12 @@ class Engine:
     def visible(self, privacy_rank: int, topic: str | None) -> bool:
         return privacy_rank <= self.max_rank and self.profile.topic_allowed(topic)
 
+    @property
+    def reads_everything(self) -> bool:
+        """The profile sees every privacy level and topic, so reading the files bypasses nothing."""
+        levels = self.manifest.privacy.levels
+        return self.max_rank >= len(levels) - 1 and "*" in self.profile.topics
+
     def __enter__(self) -> Engine:
         return self
 

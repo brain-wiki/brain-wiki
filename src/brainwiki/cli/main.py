@@ -9,6 +9,7 @@ import sys
 HANDLERS: dict[str, str] = {
     "version": "brainwiki.cli.cmd_core:version",
     "init": "brainwiki.cli.cmd_core:init",
+    "list": "brainwiki.cli.cmd_core:list_",
     "brains": "brainwiki.cli.cmd_core:brains",
     "doctor": "brainwiki.cli.cmd_core:doctor",
     "setup": "brainwiki.cli.cmd_core:setup",
@@ -60,6 +61,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--name")
     p.add_argument("--git", action="store_true", help="also run git init")
     p.add_argument("--no-register", action="store_true", help="do not add it to the user config")
+
+    cmd("list", "brains this host may use, and what each holds")
 
     p = cmd("brains", "list and manage registered brains")
     p.add_argument(

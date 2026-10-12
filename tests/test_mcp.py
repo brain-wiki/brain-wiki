@@ -12,6 +12,7 @@ from brainwiki.mcp.server import INSTRUCTIONS, build_server
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 TOOLS = [
+    "brain_list",
     "brain_orient",
     "brain_search",
     "brain_read",
@@ -79,6 +80,11 @@ async def test_read_tools_and_errors(example: Path):
         assert "supersed" in found.content[0].text.lower()
         missing = await client.call_tool("brain_read", {"target": "no such note"})
         assert missing.is_error and "not_found:" in missing.content[0].text
+        listed = await client.call_tool("brain_list", {})
+    [entry] = listed.structured_content["brains"]
+    assert entry["name"] == "ex" and entry["default_here"] and entry["notes"] > 0
+    assert "path" not in entry  # claude-code reads only up to "sensitive" here
+    assert listed.content[0].text.startswith("* ex")
 
 
 @pytest.mark.anyio
@@ -187,4 +193,4 @@ async def test_stdio_entry_point(example: Path):
     async with Client(params) as client:
         names = [t.name for t in (await client.list_tools()).tools]
         result = await client.call_tool("brain_orient", {})
-    assert names[0] == "brain_orient" and not result.is_error
+    assert names[0] == "brain_list" and not result.is_error

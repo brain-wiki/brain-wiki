@@ -1,4 +1,4 @@
-"""version, init, brains, doctor, setup."""
+"""version, init, list, brains, doctor, setup."""
 
 from __future__ import annotations
 
@@ -48,25 +48,20 @@ def init(args: Any) -> int:
     return 0
 
 
+def list_(args: Any) -> int:
+    from brainwiki.index.brains import format_brain_list, list_brains
+
+    host = getattr(args, "as_host", None)
+    result = list_brains(host, explicit=args.brain)
+    emit(args, result, format_brain_list(result, owner=host is None))
+    return 0
+
+
 def brains(args: Any) -> int:
     user = load_user_config()
     action, rest = args.action, args.args
     if action == "list":
-        rows = []
-        for name, path in sorted(user.brains.items()):
-            ok = (path / "brain.toml").is_file()
-            rows.append(
-                {"name": name, "path": str(path), "default": name == user.default, "ok": ok}
-            )
-        text = (
-            "\n".join(
-                f"{'*' if r['default'] else ' '} {r['name']:<16} {r['path']}{'' if r['ok'] else '  (missing)'}"
-                for r in rows
-            )
-            or "No brains registered. Create one with `brain init <path>`."
-        )
-        emit(args, rows, text)
-        return 0
+        return list_(args)
     if action == "add":
         if len(rest) != 2:
             raise UsageError("usage: brain brains add NAME PATH")

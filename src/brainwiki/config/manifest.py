@@ -14,7 +14,8 @@ from brainwiki.errors import FormatError
 
 MANIFEST = "brain.toml"
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
-WRITE_CAPABILITIES = ("episodes", "propose_rules", "consolidate", "harvest", "review")
+WRITE_CAPABILITIES = ("episodes", "edit", "propose_rules", "consolidate", "harvest", "review")
+AGENT_EDITS = ("allow", "review", "deny")
 
 
 @dataclass
@@ -49,7 +50,7 @@ class Budgets:
     rules_max_lines: int = 100
     rules_max_chars: int = 4000
     agents_md_max_lines: int = 150
-    orient_max_tokens: int = 2000
+    orient_max_tokens: int = 1500
 
 
 @dataclass
@@ -111,6 +112,7 @@ class TopicCfg:
     description: str | None = None
     privacy: str | None = None
     review: str | None = None
+    agent_edits: str = "allow"  # values outside AGENT_EDITS act as "deny" and are a lint warning
 
 
 @dataclass
@@ -140,7 +142,7 @@ _SECTIONS: dict[str, type] = {
     "git": GitCfg,
     "reports": ReportsCfg,
 }
-_TOP_LEVEL = {"format", "id", "name", "topics", "agents", *_SECTIONS}
+_TOP_LEVEL = {"format", "id", "name", "description", "topics", "agents", *_SECTIONS}
 
 
 @dataclass
@@ -148,6 +150,7 @@ class Manifest:
     format: int
     id: str
     name: str | None = None
+    description: str | None = None
     layout: Layout = field(default_factory=Layout)
     budgets: Budgets = field(default_factory=Budgets)
     privacy: Privacy = field(default_factory=Privacy)
@@ -264,12 +267,14 @@ def parse_manifest(text: str) -> Manifest:
             description=raw.get("description"),
             privacy=raw.get("privacy"),
             review=raw.get("review"),
+            agent_edits=str(raw.get("agent_edits", "allow")),
         )
     agents = {str(k): dict(v) for k, v in (data.get("agents") or {}).items() if isinstance(v, dict)}
     manifest = Manifest(
         format=fmt,
         id=str(data["id"]),
         name=data.get("name"),
+        description=str(data["description"]) if data.get("description") else None,
         topics=topics,
         agents=agents,
         unknown_keys=unknown,
