@@ -175,6 +175,11 @@ class Manifest:
     def is_privacy_level(self, level: str) -> bool:
         return level in self.privacy.levels
 
+    def reads_everything(self, profile: Profile) -> bool:
+        """The profile sees every privacy level and topic, so reading the files bypasses nothing."""
+        top = len(self.privacy.levels) - 1
+        return self.privacy_rank(profile.max_privacy) >= top and "*" in profile.topics
+
     # -- profiles ------------------------------------------------------
     def profile(self, host: str | None) -> Profile:
         if host in (None, "owner"):

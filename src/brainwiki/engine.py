@@ -65,9 +65,7 @@ class Engine:
 
     @property
     def reads_everything(self) -> bool:
-        """The profile sees every privacy level and topic, so reading the files bypasses nothing."""
-        levels = self.manifest.privacy.levels
-        return self.max_rank >= len(levels) - 1 and "*" in self.profile.topics
+        return self.manifest.reads_everything(self.profile)
 
     def __enter__(self) -> Engine:
         return self

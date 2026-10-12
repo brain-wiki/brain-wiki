@@ -278,3 +278,48 @@ def test_neighbors_count_hidden_and_reject_bad_input(example: Path):
 def test_cli_neighbors(example: Path, capsys: pytest.CaptureFixture[str]):
     assert main(["neighbors", "fts5", "--rel", "part_of", "--direction", "out", "--paths"]) == 0
     assert capsys.readouterr().out.split() == ["topics/search/index.md"]
+
+
+# -- the briefing (04 §8) ---------------------------------------------------------------
+
+
+def test_briefing_describes_the_brain_for_the_caller(example: Path):
+    from brainwiki.index.orient import orient
+
+    with _engine(example) as owner, _engine(example, "some-host") as host:
+        mine = orient(owner)
+        theirs = orient(host)
+    assert "## What's in this brain" in mine["text"] and "decision" in mine["text"]
+    assert "Open issues: " in mine["text"] and "active conflicts" in mine["text"]
+    assert theirs["notes"] < mine["notes"] and "**budget**" not in theirs["text"]
+    assert "## How to query" in mine["text"] and 'brain_search("", type=[' in mine["text"]
+    assert mine["contents"]["span"][0] <= mine["contents"]["span"][1]
+
+
+def test_briefing_truncates_topics_with_a_browse_pointer(example: Path):
+    from brainwiki.index.orient import orient
+
+    with _engine(example) as eng:
+        eng.manifest.budgets.orient_max_tokens = 250
+        text = orient(eng)["text"]
+    assert 'more topics; list one with brain_search("", topic=[' in text
+    assert len(text) <= 250 * 4
+
+
+def test_instructions_follow_the_host_profile(example: Path):
+    from brainwiki.hosts.instructions import Access, host_access, marked_block, server_instructions
+
+    (example / "brain.toml").write_text(
+        (example / "brain.toml").read_text()
+        + '\n[agents.claude-code]\nmax_privacy = "sensitive"\nwrite = ["episodes", "edit"]\n'
+    )
+    assert host_access("codex") == Access(files=True, edit=False)
+    assert host_access("claude-code") == Access(files=False, edit=True)
+    assert host_access(None) == Access(files=True, edit=True)
+    restricted = server_instructions(Access())
+    assert "Markdown files directly" not in restricted and "do not edit" in restricted
+    assert "brain_check" not in restricted and "Details: the `brain` skill" not in restricted
+    full = marked_block(Access(files=True, edit=True))
+    assert full.startswith("<!-- brain-wiki:begin v1 -->\n## brain-wiki")
+    assert full.rstrip().endswith("<!-- brain-wiki:end -->") and "brain_check" in full
+    assert len(server_instructions(Access(files=True, edit=True))) < 2000

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import UTC, datetime
+from collections import Counter
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from brainwiki.format.rules import parse_rules
@@ -75,10 +76,27 @@ def topic_rows(engine: Engine, profile: Profile | None = None) -> list[dict[str,
     return rows
 
 
-def pending_stats(engine: Engine) -> dict[str, Any]:
-    rows = engine.db.execute("SELECT id, fm_id FROM nodes WHERE kind='episode'").fetchall()
+def visible_nodes(engine: Engine, profile: Profile | None = None) -> list[Any]:
+    """Notes, hubs, and pending episodes `profile` may see (default: the engine's)."""
+    profile = profile or engine.profile
+    max_rank = engine.manifest.privacy_rank(profile.max_privacy)
+    return [
+        row
+        for row in engine.db.execute(
+            "SELECT id, kind, type, topic, status, updated, fm_id FROM nodes "
+            "WHERE kind IN ('note','hub','episode') AND privacy_rank <= ?",
+            (max_rank,),
+        )
+        if profile.topic_allowed(row["topic"])
+    ]
+
+
+def pending_stats(engine: Engine, nodes: list[Any] | None = None) -> dict[str, Any]:
+    episodes = [
+        r for r in (nodes if nodes is not None else visible_nodes(engine)) if r["kind"] == "episode"
+    ]
     oldest_days = 0.0
-    for row in rows:
+    for row in episodes:
         ulid = row["fm_id"] or ""
         if is_ulid(ulid):
             oldest_days = max(
@@ -88,7 +106,7 @@ def pending_stats(engine: Engine) -> dict[str, Any]:
     files = sorted(proposals.glob("*.md")) if proposals.exists() else []
     rule_ids = [p.stem[len("rule-") :] for p in files if p.name.startswith("rule-")]
     return {
-        "pending": len(rows),
+        "pending": len(episodes),
         "oldest_days": round(oldest_days, 1),
         "proposals": len(files) - len(rule_ids),
         "rule_proposals": rule_ids,
@@ -104,6 +122,74 @@ def recent_changes(engine: Engine, count: int = 5) -> list[str]:
     return entries[-count:][::-1]
 
 
+def open_issues(engine: Engine) -> dict[str, int]:
+    """Active conflicts between visible notes, and unverified claims in visible notes."""
+    conflicts = 0
+    for row in engine.db.execute(
+        """SELECT a.privacy_rank AS ar, a.topic AS at, b.privacy_rank AS br, b.topic AS bt
+           FROM edges e JOIN nodes a ON a.id = e.src JOIN nodes b ON b.id = e.dst
+           WHERE e.rel = 'conflicts_with' AND a.status = 'active' AND b.status = 'active'
+           GROUP BY e.src, e.dst"""
+    ):
+        if engine.visible(row["ar"], row["at"]) and engine.visible(row["br"], row["bt"]):
+            conflicts += 1
+    unverified = 0
+    for row in engine.db.execute(
+        """SELECT n.privacy_rank, n.topic, COUNT(*) AS c FROM claims c JOIN nodes n ON n.id = c.node_id
+           WHERE c.status = 'active' AND c.taint IN ('true', 'unknown') AND n.kind IN ('note','hub')
+           GROUP BY n.id"""
+    ):
+        if engine.visible(row["privacy_rank"], row["topic"]):
+            unverified += row["c"]
+    return {"conflicts": conflicts, "unverified_claims": unverified}
+
+
+_PEOPLE_TYPES = {"person": "People", "meeting": "Meetings"}
+
+
+def contents(engine: Engine, nodes: list[Any], topics: list[dict[str, Any]]) -> dict[str, Any]:
+    """What the brain holds, for the briefing's overview section."""
+    notes = [r for r in nodes if r["kind"] in ("note", "hub")]
+    types = Counter(r["type"] for r in notes if r["kind"] == "note")
+    dates = sorted((r["updated"] or "")[:10] for r in notes if r["updated"])
+    week_ago = (datetime.now(UTC) - timedelta(days=7)).strftime("%Y-%m-%d")
+    homes: dict[str, list[tuple[str, int]]] = {}
+    for kind in _PEOPLE_TYPES:
+        where = Counter(r["topic"] for r in notes if r["type"] == kind and r["topic"])
+        if where:
+            homes[kind] = where.most_common(2)
+    return {
+        "notes": len(notes),
+        "types": dict(types.most_common()),
+        "span": (dates[0], dates[-1]) if dates else None,
+        "updated_7d": sum(1 for d in dates if d >= week_ago),
+        "largest_topics": [
+            (t["slug"], t["notes"]) for t in sorted(topics, key=lambda t: -t["notes"])[:5]
+        ],
+        "homes": homes,
+        **open_issues(engine),
+    }
+
+
+def query_examples(info: dict[str, Any], topics: list[dict[str, Any]]) -> list[str]:
+    """Three calls built from this brain's own topics and types."""
+    by_size = sorted(topics, key=lambda t: -t["notes"])
+    subject = (by_size[0]["title"] if by_size else "") or "the project"
+    other = by_size[1]["title"] if len(by_size) > 1 else subject
+    note_types = [t for t in info["types"] if t not in ("note", "person", "meeting")]
+    latest = note_types[0] if note_types else next(iter(info["types"]), None)
+    lines = [f'- `brain_search("{subject}")`: notes about a subject; open one with `brain_read`.']
+    if latest:
+        lines.append(
+            f'- `brain_search("", type=["{latest}"], sort="recent", limit=3)`: the latest {latest} notes.'
+        )
+    why_type = ', type=["decision"]' if "decision" in info["types"] else ""
+    lines.append(
+        f'- `brain_search("{other}"{why_type}, intent="why")`: why it is this way, with prerequisites.'
+    )
+    return lines
+
+
 def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str, Any]:
     engine.scan()
     name = engine.brain.display_name
@@ -112,16 +198,43 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
     except OSError:
         rules_text = ""
     rules, _ = parse_rules(rules_text)
+    nodes = visible_nodes(engine)
     topics = topic_rows(engine)
-    inbox = pending_stats(engine)
-    notes = engine.db.execute("SELECT COUNT(*) FROM nodes WHERE kind IN ('note','hub')").fetchone()[
-        0
-    ]
+    inbox = pending_stats(engine, nodes)
+    info = contents(engine, nodes, topics)
     today = datetime.now(UTC).strftime("%Y-%m-%d")
     budget_chars = engine.manifest.budgets.orient_max_tokens * 4
 
-    header = f"# Brain: {name} · {today} · {notes} notes · {inbox['pending']} pending episodes"
+    span = f" ({info['span'][0]} to {info['span'][1]})" if info["span"] else ""
+    header = (
+        f"# Brain: {name} · {today} · {info['notes']} notes{span} · "
+        f"{inbox['pending']} pending episodes"
+    )
     rule_lines = ["## Rules"] + ([f"- {r.text}" for r in rules] or ["(none)"])
+    content_lines = ["## What's in this brain"]
+    if info["types"]:
+        content_lines.append(
+            "- Types: " + ", ".join(f"{t} {c}" for t, c in list(info["types"].items())[:8])
+        )
+    if info["largest_topics"]:
+        content_lines.append(
+            "- Largest topics: " + ", ".join(f"{s} ({c})" for s, c in info["largest_topics"])
+        )
+    for kind, label in _PEOPLE_TYPES.items():
+        if kind in info["homes"]:
+            content_lines.append(
+                f"- {label}: "
+                + ", ".join(f"topic {s} ({c} {kind} notes)" for s, c in info["homes"][kind])
+            )
+    issues = []
+    if info["conflicts"]:
+        issues.append(f"{info['conflicts']} active conflicts")
+    if info["unverified_claims"]:
+        issues.append(f"{info['unverified_claims']} unverified claims")
+    if issues:
+        content_lines.append("- Open issues: " + ", ".join(issues))
+    if len(content_lines) == 1:
+        content_lines.append("(empty so far)")
     inbox_lines = [
         "## Inbox",
         f"{inbox['pending']} pending episodes"
@@ -148,13 +261,13 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
             f"({device}); consolidate there."
         )
     inbox_lines += extra_lines or []
-    howto = [
-        "## How to use",
-        "- Search (brain_search) before answering about past decisions, preferences, or project history.",
-        "- Record durable learnings with brain_log_episode. Never edit brain files directly; never add rules unless asked.",
-    ]
+    howto = ["## How to query", *query_examples(info, topics)]
     changes = recent_changes(engine)
-    change_lines = (["## Recent changes"] + [f"- {c}" for c in changes]) if changes else []
+    change_lines = ["## Recent changes"] + [f"- {c}" for c in changes]
+    if info["updated_7d"]:
+        change_lines.append(f"{info['updated_7d']} notes updated in the last 7 days.")
+    if len(change_lines) == 1:
+        change_lines = []
 
     def topic_line(t: dict[str, Any]) -> str:
         bits = [f"- **{t['slug']}**: {t['title']}"]
@@ -167,10 +280,15 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         )
         return " ".join(bits)
 
-    fixed = [header, "", *rule_lines, "", *inbox_lines, "", *howto]
-    fixed_len = sum(len(line) + 1 for line in fixed) + sum(len(line) + 1 for line in change_lines)
+    def size(lines: list[str]) -> int:
+        return sum(len(line) + 1 for line in lines) + 1
+
+    fixed = [header, *rule_lines, *content_lines, *inbox_lines, *howto]
+    used = size(fixed) + 8
+    if change_lines and used + size(change_lines) + 200 > budget_chars:
+        change_lines = []  # keep room for at least a few topics
+    used += size(change_lines) + size(["## Topics"]) + 80
     topic_lines = ["## Topics"]
-    used = fixed_len + 20
     shown = 0
     for t in topics:
         line = topic_line(t)
@@ -180,11 +298,14 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         used += len(line) + 1
         shown += 1
     if shown < len(topics):
-        topic_lines.append(f"- … {len(topics) - shown} more topics; use brain_search.")
+        rest = topics[shown]
+        topic_lines.append(
+            f'- … {len(topics) - shown} more topics; list one with brain_search("", topic=["{rest["slug"]}"]).'
+        )
     if not topics:
         topic_lines.append("(no topics yet)")
-    parts = [header, "", *rule_lines, "", *topic_lines, ""]
-    if change_lines and used + sum(len(line) + 1 for line in change_lines) <= budget_chars:
+    parts = [header, "", *rule_lines, "", *content_lines, "", *topic_lines, ""]
+    if change_lines:
         parts += [*change_lines, ""]
     parts += [*inbox_lines, "", *howto]
     text = "\n".join(parts)
@@ -195,9 +316,11 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         "text": text,
         "rules": [r.text for r in rules],
         "topics": topics,
+        "contents": {k: v for k, v in info.items() if k != "span"}
+        | {"span": list(info["span"]) if info["span"] else None},
         "pending_episodes": inbox["pending"],
         "open_proposals": inbox["proposals"],
-        "notes": notes,
+        "notes": info["notes"],
     }
 
 

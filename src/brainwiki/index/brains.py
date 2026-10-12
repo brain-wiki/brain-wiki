@@ -14,28 +14,16 @@ from brainwiki.errors import BrainError
 
 def brain_stats(engine: Engine) -> dict[str, Any]:
     """Counts over what the engine's profile may see."""
-    from brainwiki.index.orient import topic_rows
+    from brainwiki.index.orient import topic_rows, visible_nodes
 
     engine.scan()
-    notes = pending = 0
-    updated = ""
-    for row in engine.db.execute(
-        "SELECT kind, topic, updated FROM nodes WHERE kind IN ('note','hub','episode') "
-        "AND privacy_rank <= ?",
-        (engine.max_rank,),
-    ):
-        if not engine.profile.topic_allowed(row["topic"]):
-            continue
-        if row["kind"] == "episode":
-            pending += 1
-        else:
-            notes += 1
-            updated = max(updated, (row["updated"] or "")[:10])
+    nodes = visible_nodes(engine)
+    notes = [r for r in nodes if r["kind"] != "episode"]
     return {
         "topics": len(topic_rows(engine)),
-        "notes": notes,
-        "updated": updated or None,
-        "pending": pending,
+        "notes": len(notes),
+        "updated": max(((r["updated"] or "")[:10] for r in notes), default="") or None,
+        "pending": len(nodes) - len(notes),
     }
 
 
