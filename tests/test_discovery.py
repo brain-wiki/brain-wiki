@@ -350,3 +350,8 @@ def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
     assert run("unresolved").strip() == "Every link resolves."
     assert "topics/search/vector-only.md" not in run("orphans", "--paths")
     assert run("links", "fts5", "--limit", "1").rstrip().endswith("(--cursor 1)")
+
+
+def test_global_options_work_before_the_command(example: Path, capsys: pytest.CaptureFixture[str]):
+    assert main(["--json", "--brain", str(example), "list"]) == 0
+    assert '"brains"' in capsys.readouterr().out

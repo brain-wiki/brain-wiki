@@ -50,16 +50,27 @@ HANDLERS: dict[str, str] = {
 }
 
 
-def build_parser() -> argparse.ArgumentParser:
+def _common(*, suppress: bool) -> argparse.ArgumentParser:
+    """Global options. Subcommands suppress their defaults, so `brain --brain X orient` keeps
+    the X given before the subcommand instead of resetting it."""
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--brain", help="brain name or path")
-    common.add_argument("--as", dest="as_host", metavar="HOST", help="act with HOST's profile")
-    common.add_argument("--json", action="store_true", help="machine-readable output")
-    common.add_argument("-q", "--quiet", action="store_true")
-    common.add_argument("-v", "--verbose", action="store_true")
+    extra = {"default": argparse.SUPPRESS} if suppress else {}
+    common.add_argument("--brain", help="brain name or path", **extra)
+    common.add_argument(
+        "--as", dest="as_host", metavar="HOST", help="act with HOST's profile", **extra
+    )
+    common.add_argument("--json", action="store_true", help="machine-readable output", **extra)
+    common.add_argument("-q", "--quiet", action="store_true", **extra)
+    common.add_argument("-v", "--verbose", action="store_true", **extra)
+    return common
 
+
+def build_parser() -> argparse.ArgumentParser:
+    common = _common(suppress=True)
     parser = argparse.ArgumentParser(
-        prog="brain", description="A local-first second brain for AI agents.", parents=[common]
+        prog="brain",
+        description="A local-first second brain for AI agents.",
+        parents=[_common(suppress=False)],
     )
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
 
