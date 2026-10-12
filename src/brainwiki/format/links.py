@@ -49,6 +49,7 @@ def extract_links(
             label = None
             if "|" in inner:
                 inner, label = inner.split("|", 1)
+                inner = inner.removesuffix("\\")  # `[[a\|b]]`: Obsidian's escaped pipe in tables
             heading = None
             if "#" in inner:
                 inner, heading = inner.split("#", 1)

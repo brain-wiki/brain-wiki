@@ -3,7 +3,7 @@ from __future__ import annotations
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from brainwiki.format.claims import format_claim, parse_claim_block
+from brainwiki.format.claims import clean_claim_text, format_claim, parse_claim_block
 from brainwiki.format.document import parse_document
 from brainwiki.format.edit import append_to_section
 from brainwiki.format.frontmatter import set_fields, split
@@ -110,6 +110,8 @@ def test_links_skip_code_and_capture_md_and_embeds():
         ("B", None, True, "wiki"),
         ("notes/C d.md", "c", False, "md"),
     ]
+    in_table = extract_links([r"| [[A\|label]] | x |"])
+    assert [(lk.target, lk.label) for lk in in_table] == [("A", "label")]
 
 
 def test_meta_quotes_and_roundtrip():
@@ -156,7 +158,9 @@ def test_set_fields_never_touches_body(body_lines, value):
 
 @settings(max_examples=150)
 @given(
-    st.text(min_size=1, max_size=120).filter(lambda s: s.strip() and "~~" not in s), st.booleans()
+    # A claim has words once comment markers are removed; writers never emit an empty one.
+    st.text(min_size=1, max_size=120).filter(lambda s: clean_claim_text(s) and "~~" not in s),
+    st.booleans(),
 )
 def test_claim_roundtrip(text, struck):
     line = format_claim(
