@@ -51,10 +51,16 @@ decoration for its own sake.
   camera is; labels appear the same way, by priority (hubs, then flagged,
   then high-degree notes), with collision culling. At most 12 topics are
   revealed at once (nearest first); others fade back to nebulae.
-- **Focus is separate from zoom.** Clicking selects a constellation, topic,
-  or note: the camera flies there, the breadcrumb and inspector follow, and
-  `Esc` goes up one level. Zooming out past a level's range also pops the
-  focus up.
+- **Zooming changes the level, like a map.** Scrolling in on a
+  constellation enters it once it fills about a quarter of the screen;
+  scrolling in on a topic enters it at about a fifth; scrolling out leaves
+  below a smaller size (hysteresis, so the level does not flicker); panning
+  to a neighbor at the same zoom switches to it. The breadcrumb, inspector,
+  flows, and rendering follow, the camera stays where the user put it, and
+  the change replaces the current history entry instead of adding one.
+  Clicking still selects directly: the camera flies there and a history
+  entry is added. A selected note stays selected while its topic is on
+  screen. `Esc` goes up one level.
 - **Constellations** come from the topic hierarchy once nested topics exist
   (the topic hierarchy design). For flat brains the server groups topics by their
   typed links (modularity clustering, deterministic), aiming for about
@@ -86,10 +92,11 @@ decoration for its own sake.
   topics turn grey and faint, flows fade, unflagged stars dim, and flagged
   stars show their halo rings. A legend explains the ramp, and the minimap
   uses the same colors.
-- **Quality:** *High* (bloom, particles, flows) and *Low* (no
-  post-processing, fewer particles), chosen from measured frame time and
-  switchable in the dock. `prefers-reduced-motion` turns off flows and
-  flights.
+- **Graphics:** *High* adds bloom, the vignette, and grain; *Low* draws the
+  same scene without them. *Auto* (the default) skips the first 1.5 s after
+  load (shader compiles, topic loads), samples 2.5 s of frames, and picks
+  Low when the median frame takes longer than 1/30 s. The choice lives in
+  the dock's ⋯ menu. `prefers-reduced-motion` turns off flows and flights.
 - **No WebGL2** (hardware acceleration off, a remote desktop or VM without
   a GPU): the stage says why the map could not start and how to check, and
   the navigator, search, and inspector keep working without the scene.
@@ -103,12 +110,12 @@ decoration for its own sake.
 
 | Relation | Trail |
 |---|---|
-| `part_of` | Faint, toward the hub |
+| `part_of` | Faint, toward the hub; hidden by default, since stars already cluster around their hub |
 | `depends_on` | Blue, flowing prerequisite → dependent |
 | `conflicts_with` | Red, always shown when either end is visible |
 | `supersedes` | Amber, flowing old → new |
 | `related_to` | Faint violet |
-| Body links (`links_to`) | Hidden by default; a dock toggle |
+| Wikilinks (`links_to`) | Hidden by default; a dock toggle |
 
 ## 4. HUD and navigation
 
@@ -116,17 +123,17 @@ Glass panels over the scene, keyboard-first:
 
 | Region | Contents |
 |---|---|
-| Top bar | Brain name and profile; back, forward, and a history list of everything opened in this tab; the breadcrumb (Galaxy › constellation › topic › note); search (`/` or `Ctrl/⌘-K`); totals (notes, links, flagged, inbox) |
+| Top bar | Brain name and profile; back, forward, and a history list of everything opened in this tab; the breadcrumb (Galaxy › constellation › topic › note); search (`/` or `Ctrl/⌘-K`); totals (notes, links, flagged, inbox), where *flagged* opens the Health tab and *inbox* says what is pending |
 | Left: navigator | Tabs: **Atlas** (constellations → topics tree with counts, health badges and recency bars; filter and sort by size, health, recency, name), **Health** (flagged notes grouped by flag, counts first), **Changes** (recent runs; selecting one highlights what it touched) |
 | Right: inspector | Topic: description, counts, flag breakdown, busiest notes, strongest flows to other topics. Note: type, status and privacy chips, guard banners, claims (superseded struck through, unverified marked), relations by family, backlinks, path with copy and an `obsidian://` link |
 | Right: note preview | Clicking a note (a star, a row, a search result, a wikilink) also opens its preview over the inspector: the note rendered like Obsidian's reading view, with properties from the frontmatter, then the body (headings, lists and tasks, tables, code, callouts, highlights, tags, footnotes). Wikilinks open the linked note and move the map with it; links the viewer may not see show as unresolved. `Esc` closes it, `P` toggles it |
-| Bottom left | Minimap: top-down galaxy with the current view; click to fly |
-| Bottom center | Layer dock: relation families, body links, health mode, labels, quality, reset view, help |
+| Bottom left | Minimap: top-down galaxy with the current view; click to fly. Beside it, the level ladder: Galaxy, Constellation, Topic, Note, with the current level and its place named, a marker that creeps toward the next level as you scroll, and earlier levels clickable |
+| Bottom center | Layer dock: one chip per relation family (the legend and the filter; a hidden family shows a hollow swatch and a struck label), health mode, a ⋯ menu (labels, Graphics: Auto, High, Low), and help. Going back to the overview is the breadcrumb's first crumb or `R` |
 | Overlays | Hover card: for a star its title, topic, status, and flags; for a trail the two notes it connects, read as a sentence ("2026.9.9 supersedes 2026.9.8"), with the trail and both ends lit, and a click goes to the other end; for a flow the two topics and the link count by type. Command palette with server-side search results grouped by topic; `?` shows the shortcuts |
 
 Keys: `/` or `Ctrl/⌘-K` search, `Esc` up one level or close, `H` health
 mode, `L` labels, `P` note preview, `[` and `]` previous and next topic,
-`R` reset view, `?` help. The URL hash records the focus (`#/c/<id>`,
+`R` back to the overview, `?` help. The URL hash records the focus (`#/c/<id>`,
 `#/t/<slug>`, `#/t/<slug>/n/<id>`), so a view can be reopened. Every place
 opened becomes a browser history entry tagged with its position in the tab's
 trail, so the top bar's back and forward buttons, the history list, `Alt-←`
