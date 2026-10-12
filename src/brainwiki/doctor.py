@@ -59,6 +59,22 @@ def host_connection(host: str) -> dict[str, Any] | None:
     return None
 
 
+def missing_instructions(connection: dict[str, Any]) -> list[str]:
+    """Instruction files `brain connect` wrote that no longer carry the block (08 §3.2)."""
+    from brainwiki.hosts.instructions import find_block
+
+    missing = []
+    for item in connection.get("instructions", []):
+        path = Path(item.get("written") or item["path"])
+        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        if item.get("plugin"):
+            if "trigger: always_on" not in text:
+                missing.append(str(path))
+        elif find_block(text) is None:
+            missing.append(str(path))
+    return missing
+
+
 def _brain_summary(name: str, path: Path) -> dict[str, Any]:
     from brainwiki.config.resolve import open_brain
 
@@ -172,6 +188,19 @@ def run_doctor() -> dict[str, Any]:
         }
         if connection:
             entry.update({k: connection.get(k) for k in ("plugin", "capture") if k in connection})
+            missing = missing_instructions(connection)
+            entry["instructions"] = not missing
+            for path in missing:
+                report["problems"].append(
+                    {
+                        "code": "instructions_missing",
+                        "severity": "warning",
+                        "host": host,
+                        "message": f"{host} will not see brain-wiki's instructions: {path} has no "
+                        "brain-wiki block",
+                        "fix": f"brain connect {host}",
+                    }
+                )
         entry["harvest"] = user.harvest_enabled(host)
         entry["capture"] = user.capture_enabled(host)
         report["hosts"].append(entry)

@@ -15,8 +15,6 @@ PLUGIN_FILES = (
     ".mcp.json",
     "mcp_config.json",
     "server.json",
-    "hooks.json",
-    "hooks/hooks.json",
 )
 
 

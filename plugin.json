@@ -18,7 +18,6 @@
   ],
   "extensions": {
     "com.openai": {
-      "hooks": "./hooks/hooks.json",
       "onboardingSkill": "./skills/brain-setup/SKILL.md",
       "interface": {
         "displayName": "brain-wiki",

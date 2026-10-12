@@ -1,11 +1,12 @@
 """`brain connect <host>`: wire a host to the locally installed brain-wiki (design doc 08 §8).
 
-1. Materialize a host-specific copy of the plugin under `<data dir>/plugin/<host>/`, with MCP and
-   hook commands pointing at the installed `brain` (faster than `uvx`), `--host <id>`, and an
-   optional `--brain`; `--capture` adds the capture hooks.
+1. Materialize a host-specific copy of the plugin under `<data dir>/plugin/<host>/`, with MCP
+   commands pointing at the installed `brain` (faster than `uvx`), `--host <id>`, and an optional
+   `--brain`. Hooks only on request: `--briefing-hook` and `--capture`.
 2. Register it the way the host expects, preferring the host's own CLI.
-3. Record every change (commands, files, backups) in `<state>/connect/<host>.json`, so
-   `--uninstall` restores exactly what was there.
+3. Write the static instruction block into the file the host loads in every session (08 §3.2).
+4. Record every change (commands, files, backups, block hashes) in `<state>/connect/<host>.json`,
+   so `--uninstall` undoes exactly what was done.
 """
 
 from __future__ import annotations
@@ -23,7 +24,8 @@ from pathlib import Path
 from typing import Any
 
 from brainwiki.config.dirs import data_dir, state_dir
-from brainwiki.errors import NotAvailable, UnsupportedHost, UsageError
+from brainwiki.errors import Conflict, NotAvailable, UnsupportedHost, UsageError
+from brainwiki.hosts import instructions as ins
 
 HOSTS = ("claude-code", "codex", "antigravity", "openclaw", "cursor", "generic")
 MARKETPLACE = "brain-wiki-local"
@@ -32,13 +34,23 @@ PLUGIN_FILES = (
     "mcp.json",
     ".mcp.json",
     "mcp_config.json",
-    "hooks.json",
-    "hooks/hooks.json",
     ".claude-plugin",
     "rules",
     "skills",
 )
 UNTRUSTED_MATCHER = "WebFetch|WebSearch|mcp__.*"
+
+
+@dataclass
+class Instruction:
+    """An instruction file to write: `path` as named, `written` after following symlinks."""
+
+    path: Path
+    written: Path
+    before: str
+    after: str
+    whole: bool
+    created: bool
 
 
 @dataclass
@@ -49,6 +61,7 @@ class Plan:
     commands: list[list[str]] = field(default_factory=list)
     edits: list[tuple[Path, str, str]] = field(default_factory=list)  # (file, before, after)
     links: list[tuple[Path, Path]] = field(default_factory=list)  # (link, target)
+    instructions: list[Instruction] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     verify: list[str] | None = None
 
@@ -56,7 +69,8 @@ class Plan:
         lines = [f"Plugin copy: {self.plugin_dir} ({len(self.files)} files)"]
         for link, target in self.links:
             lines.append(f"Link: {link} -> {target}")
-        for path, before, after in self.edits:
+        edits = [*self.edits, *((i.written, i.before, i.after) for i in self.instructions)]
+        for path, before, after in edits:
             lines.append(f"Edit {path}:")
             lines += [
                 "  " + line.rstrip("\n")
@@ -108,8 +122,19 @@ def _mcp_entry(brain: str, host: str, brain_name: str | None, *, typed: bool) ->
     return entry
 
 
-def materialize(host: str, *, capture: bool, brain_name: str | None) -> dict[str, str]:
-    """The plugin files for this host, rewritten to use the installed `brain`."""
+def materialize(
+    host: str,
+    *,
+    capture: bool,
+    brain_name: str | None,
+    briefing_hook: bool = False,
+    access: ins.Access | None = None,
+) -> dict[str, str]:
+    """The plugin files for this host, rewritten to use the installed `brain`.
+
+    No hooks unless asked for (08 §3): agents learn the brains from the instruction block and
+    `brain_list`; `briefing_hook` injects the briefing at session start, `capture` records.
+    """
     source = plugin_source()
     brain = brain_executable()
     files: dict[str, str] = {}
@@ -126,76 +151,53 @@ def materialize(host: str, *, capture: bool, brain_name: str | None) -> dict[str
             data = json.loads(files[name])
             data["mcpServers"]["brain-wiki"] = _mcp_entry(brain, host, brain_name, typed=typed)
             files[name] = json.dumps(data, indent=2) + "\n"
+    files["rules/brain-wiki.md"] = ins.antigravity_rule(access or ins.Access())
     hook_host = host if host != "generic" else "auto"
-    claude_hooks: dict[str, Any] = {
-        "SessionStart": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": _command(brain, "hook", hook_host, "SessionStart"),
-                        "timeout": 10,
-                    }
-                ]
-            }
-        ]
-    }
+
+    def claude_hook(event: str, *, timeout: int = 10, matcher: str | None = None) -> dict[str, Any]:
+        hook: dict[str, Any] = {
+            "type": "command",
+            "command": _command(brain, "hook", hook_host, event),
+            "timeout": timeout,
+        }
+        if event in ("PreCompact", "SessionEnd"):
+            hook["async"] = True
+        entry: dict[str, Any] = {"hooks": [hook]}
+        if matcher:
+            entry = {"matcher": matcher, **entry}
+        return entry
+
+    claude_hooks: dict[str, Any] = {}
+    if briefing_hook:
+        claude_hooks["SessionStart"] = [claude_hook("SessionStart")]
     if capture:
-        claude_hooks["PostToolUse"] = [
-            {
-                "matcher": UNTRUSTED_MATCHER,
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": _command(brain, "hook", hook_host, "PostToolUse"),
-                        "timeout": 10,
-                    }
-                ],
-            }
-        ]
-        claude_hooks["Stop"] = [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": _command(brain, "hook", hook_host, "Stop"),
-                        "timeout": 10,
-                    }
-                ]
-            }
-        ]
+        claude_hooks["PostToolUse"] = [claude_hook("PostToolUse", matcher=UNTRUSTED_MATCHER)]
+        claude_hooks["Stop"] = [claude_hook("Stop")]
         for event in ("PreCompact", "SessionEnd"):
-            claude_hooks[event] = [
-                {
-                    "hooks": [
-                        {
-                            "type": "command",
-                            "command": _command(brain, "hook", hook_host, event),
-                            "timeout": 60,
-                            "async": True,
-                        }
-                    ]
-                }
-            ]
-    files["hooks/hooks.json"] = (
-        json.dumps(
-            {
-                "description": "brain-wiki: orientation" + (" and capture" if capture else ""),
-                "hooks": claude_hooks,
-            },
-            indent=2,
+            claude_hooks[event] = [claude_hook(event, timeout=60)]
+    if claude_hooks:
+        what = [w for w, on in (("briefing", briefing_hook), ("capture", capture)) if on]
+        files["hooks/hooks.json"] = (
+            json.dumps(
+                {"description": "brain-wiki: " + " and ".join(what), "hooks": claude_hooks},
+                indent=2,
+            )
+            + "\n"
         )
-        + "\n"
-    )
-    antigravity: dict[str, Any] = {
-        "PreInvocation": [
+        manifest = json.loads(files["plugin.json"])
+        manifest.setdefault("extensions", {}).setdefault("com.openai", {})["hooks"] = (
+            "./hooks/hooks.json"  # replaces Codex's default hook discovery, so name it
+        )
+        files["plugin.json"] = json.dumps(manifest, indent=2) + "\n"
+    antigravity: dict[str, Any] = {}
+    if briefing_hook:
+        antigravity["PreInvocation"] = [
             {
                 "type": "command",
                 "command": _command(brain, "hook", "antigravity", "PreInvocation"),
                 "timeout": 10,
             }
         ]
-    }
     if capture:
         for event in ("PostToolUse", "Stop"):
             antigravity[event] = [
@@ -205,7 +207,8 @@ def materialize(host: str, *, capture: bool, brain_name: str | None) -> dict[str
                     "timeout": 30,
                 }
             ]
-    files["hooks.json"] = json.dumps({"brain-wiki": antigravity}, indent=2) + "\n"
+    if antigravity:
+        files["hooks.json"] = json.dumps({"brain-wiki": antigravity}, indent=2) + "\n"
     marketplace = json.loads(files[".claude-plugin/marketplace.json"])
     marketplace["name"] = MARKETPLACE
     files[".claude-plugin/marketplace.json"] = json.dumps(marketplace, indent=2) + "\n"
@@ -231,13 +234,71 @@ def _cursor_config(scope: str) -> Path:
     )
 
 
+def _plan_instructions(
+    host: str, scope: str, access: ins.Access, *, force: bool
+) -> tuple[list[Instruction], list[str]]:
+    """The instruction files to write, refusing to overwrite a block the user edited."""
+    targets, notes = ins.targets(host, scope, access)
+    record = load_record(host) or {}
+    recorded = {item["path"]: item.get("sha256") for item in record.get("instructions", [])}
+    out = []
+    for target in targets:
+        written = target.path.resolve() if target.path.is_symlink() else target.path
+        if written != target.path:
+            notes.append(f"{target.path} is a symlink; writing to {written}")
+        before = written.read_text(encoding="utf-8") if written.is_file() else ""
+        current = ins.find_block(before)
+        if target.whole and before and current is None:
+            current = before  # brain-wiki's own file, but rewritten without the markers
+        wanted = ins.find_block(target.content) or target.content
+        if (
+            current is not None
+            and current != wanted
+            and ins.block_hash(current) != recorded.get(str(target.path))
+            and not force
+        ):
+            raise Conflict(
+                f"the brain-wiki instructions in {written} were edited since `brain connect` "
+                "wrote them; rerun with --force to replace them"
+            )
+        after = target.content if target.whole else ins.put_block(before, target.content)
+        if target.cap and len(after.encode("utf-8")) > target.cap * 0.9:
+            notes.append(
+                f"warning: {written} is {len(after.encode('utf-8')):,} bytes, close to what "
+                f"{host} loads ({target.cap:,}); trim it so the block is not cut off"
+            )
+        out.append(
+            Instruction(target.path, written, before, after, target.whole, not written.exists())
+        )
+    return out, notes
+
+
 def plan(
-    host: str, *, scope: str = "user", capture: bool = False, brain_name: str | None = None
+    host: str,
+    *,
+    scope: str = "user",
+    capture: bool = False,
+    brain_name: str | None = None,
+    briefing_hook: bool = False,
+    force: bool = False,
 ) -> Plan:
     if host not in HOSTS:
         raise UnsupportedHost(f"unknown host {host!r}; use one of {', '.join(HOSTS)}")
     plugin_dir = data_dir() / "plugin" / host
-    result = Plan(host, plugin_dir, materialize(host, capture=capture, brain_name=brain_name))
+    access = ins.host_access(host)
+    result = Plan(
+        host,
+        plugin_dir,
+        materialize(
+            host,
+            capture=capture,
+            brain_name=brain_name,
+            briefing_hook=briefing_hook,
+            access=access,
+        ),
+    )
+    result.instructions, notes = _plan_instructions(host, scope, access, force=force)
+    result.notes += notes
     if host == "claude-code":
         if shutil.which("claude"):
             result.commands += [
@@ -279,15 +340,22 @@ def plan(
         )
         result.edits.append((config, before, json.dumps(data, indent=2) + "\n"))
     else:
-        entry = {
-            "mcpServers": {
-                "brain-wiki": _mcp_entry(brain_executable(), "generic", brain_name, typed=True)
-            }
-        }
-        result.notes.append(
-            "Add this to your MCP client's configuration:\n" + json.dumps(entry, indent=2)
-        )
+        result.notes.append(print_text(host, brain_name, access))
     return result
+
+
+def print_text(host: str, brain_name: str | None, access: ins.Access | None = None) -> str:
+    """The MCP entry and the instruction block, for hosts brain-wiki cannot configure itself."""
+    access = access or ins.host_access(host)
+    entry = {
+        "mcpServers": {"brain-wiki": _mcp_entry(brain_executable(), host, brain_name, typed=True)}
+    }
+    return (
+        "Add this to your MCP client's configuration:\n"
+        + json.dumps(entry, indent=2)
+        + "\n\nAnd add these instructions where your agent reads them in every session:\n\n"
+        + ins.block_text(access)
+    )
 
 
 def apply(result: Plan, *, capture: bool, brain_name: str | None, scope: str) -> dict[str, Any]:
@@ -320,6 +388,29 @@ def apply(result: Plan, *, capture: bool, brain_name: str | None, scope: str) ->
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(after, encoding="utf-8")
         record["files"].append({"path": str(path), "backup": str(backup) if backup else None})
+    record["instructions"] = []
+    for item in result.instructions:
+        backup = None
+        if item.before:
+            backups.mkdir(parents=True, exist_ok=True)
+            backup = backups / f"{item.written.name}.before"
+            backup.write_text(item.before, encoding="utf-8")
+        item.written.parent.mkdir(parents=True, exist_ok=True)
+        item.written.write_text(item.after, encoding="utf-8")
+        body = ins.find_block(item.after) or item.after
+        record["instructions"].append(
+            {
+                "path": str(item.path),
+                "written": str(item.written),
+                "sha256": ins.block_hash(body),
+                "whole": item.whole,
+                "created": item.created,
+                "backup": str(backup) if backup else None,
+            }
+        )
+    if result.host == "antigravity":
+        rule = result.plugin_dir / "rules" / "brain-wiki.md"
+        record["instructions"].append({"path": str(rule), "plugin": True})
     for link, target in result.links:
         if link.is_symlink() or link.exists():
             if not (link.is_symlink() and link.resolve() == target.resolve()):
@@ -376,6 +467,25 @@ def uninstall(host: str, *, dry_run: bool = False) -> list[str]:
         steps.append("Run: " + shlex.join(command))
         if not dry_run:
             subprocess.run(command, capture_output=True, text=True, check=False, timeout=120)
+    for item in record.get("instructions", []):
+        if item.get("plugin"):
+            continue
+        path = Path(item.get("written") or item["path"])
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if ins.find_block(text) is None:
+            steps.append(f"Leave {path} (no brain-wiki block in it)")
+            continue
+        remaining = "" if item.get("whole") else ins.drop_block(text)
+        if not remaining.strip() and (item.get("whole") or item.get("created")):
+            steps.append(f"Delete {path}")
+            if not dry_run:
+                path.unlink()
+        else:
+            steps.append(f"Remove the brain-wiki block from {path}")
+            if not dry_run:
+                path.write_text(remaining, encoding="utf-8")
     for link in record.get("links", []):
         steps.append(f"Remove link {link}")
         if not dry_run and Path(link).is_symlink():

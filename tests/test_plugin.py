@@ -19,15 +19,16 @@ JSON_FILES = [
     ".mcp.json",
     "mcp_config.json",
     "server.json",
-    "hooks.json",
-    "hooks/hooks.json",
     ".claude-plugin/plugin.json",
     ".claude-plugin/marketplace.json",
 ]
 TOOLS = {
+    "brain_list",
     "brain_orient",
     "brain_search",
     "brain_read",
+    "brain_neighbors",
+    "brain_check",
     "brain_log_episode",
     "brain_propose_rule",
     "brain_consolidate_prepare",
@@ -77,55 +78,15 @@ def test_mcp_server_entries_per_host():
     assert "type" not in server("mcp_config.json")
 
 
-def hook_commands() -> dict[str, str]:
-    return {
-        "claude": load("hooks/hooks.json")["hooks"]["SessionStart"][0]["hooks"][0]["command"],
-        "antigravity": load("hooks.json")["brain-wiki"]["PreInvocation"][0]["command"],
-    }
-
-
-def test_default_hooks_install_orientation_only():
-    assert list(load("hooks/hooks.json")["hooks"]) == ["SessionStart"]
-    assert list(load("hooks.json")["brain-wiki"]) == ["PreInvocation"]
-    commands = hook_commands()
-    assert "brain-wiki hook auto SessionStart" in commands["claude"]
-    assert "brain-wiki hook antigravity PreInvocation" in commands["antigravity"]
-
-
-def _fake(bin_dir: Path, name: str, body: str) -> None:
-    path = bin_dir / name
-    path.write_text(f"#!/bin/sh\n{body}\n", encoding="utf-8")
-    path.chmod(0o755)
-
-
-@pytest.mark.skipif(not Path("/bin/sh").exists(), reason="needs a POSIX shell")
-@pytest.mark.parametrize("host", ["claude", "antigravity"])
-def test_hook_launcher_prefers_path_then_offline_uvx(tmp_path: Path, host: str):
-    """Online `uvx` re-resolves against the index on every call (T-10), so hooks never use it."""
-    command = hook_commands()[host]
-    runs = iter(range(100))
-
-    def run(*fakes: tuple[str, str]) -> str:
-        bin_dir = tmp_path / f"bin{next(runs)}"
-        bin_dir.mkdir()
-        for name, body in fakes:
-            _fake(bin_dir, name, body)
-        done = subprocess.run(
-            ["/bin/sh", "-c", command],
-            input="{}",
-            capture_output=True,
-            text=True,
-            env={"PATH": str(bin_dir)},
-            timeout=10,
-        )
-        assert done.returncode == 0
-        return done.stdout.strip()
-
-    assert run(("brain-wiki", 'echo "path $*"'), ("uvx", "echo uvx")).startswith("path hook ")
-    via_uvx = run(("uvx", 'echo "uvx $*"'))
-    assert via_uvx.startswith("uvx --offline ") and " brain-wiki hook " in via_uvx
-    assert run(("uvx", "exit 2")) == ("{}" if host == "antigravity" else "")
-    assert run() == ("{}" if host == "antigravity" else "")
+def test_bundle_ships_no_hooks_and_an_always_on_rule():
+    """Agents learn the brains from the instruction block and brain_list (08 §3); hooks are
+    opt-in through `brain connect`, which writes them with the installed `brain`."""
+    assert not (ROOT / "hooks.json").exists() and not (ROOT / "hooks").exists()
+    assert "hooks" not in load("plugin.json")["extensions"]["com.openai"]
+    meta, body = frontmatter(ROOT / "rules/brain-wiki.md")
+    assert meta["trigger"] == "always_on"
+    assert "brain_list" in body and "brain_neighbors" in body
+    assert "brain_check" not in body  # a marketplace install knows nothing of the profile
 
 
 def test_versions_and_pins_match_pyproject():
@@ -143,20 +104,22 @@ def test_sync_check_reports_drift(tmp_path):
         *JSON_FILES,
         "src/brainwiki/assets/prompts/consolidate.md",
         "src/brainwiki/assets/prompts/harvest.md",
+        "src/brainwiki/hosts/instructions.py",
+        "rules/brain-wiki.md",
     ]:
         (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
         (tmp_path / rel).write_bytes((ROOT / rel).read_bytes())
     (tmp_path / "src/brainwiki/assets/routines").mkdir()
-    pin = (tmp_path / "hooks.json").read_text(encoding="utf-8")
-    (tmp_path / "hooks.json").write_text(
-        re.sub(r"brain-wiki==\S+?(?= )", "brain-wiki==9.9.9", pin), encoding="utf-8"
+    pin = (tmp_path / "mcp.json").read_text(encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(
+        re.sub(r"brain-wiki==[^\"]+", "brain-wiki==9.9.9", pin), encoding="utf-8"
     )
     script = [sys.executable, str(ROOT / "scripts/sync_versions.py"), "--root", str(tmp_path)]
 
     drift = subprocess.run([*script, "--check"], capture_output=True, text=True)
     assert drift.returncode == 1
-    assert "out of sync: hooks.json" in drift.stdout
-    assert "9.9.9" in (tmp_path / "hooks.json").read_text(encoding="utf-8")
+    assert "out of sync: mcp.json" in drift.stdout
+    assert "9.9.9" in (tmp_path / "mcp.json").read_text(encoding="utf-8")
 
     assert subprocess.run(script, capture_output=True).returncode == 0
     assert subprocess.run([*script, "--check"], capture_output=True).returncode == 0

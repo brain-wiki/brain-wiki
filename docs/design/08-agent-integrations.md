@@ -81,28 +81,16 @@ writes the absolute path of the installed `brain`, which starts faster
 `scripts/sync_versions.py`, so the plugin and the package can never
 disagree.
 
-**The hook launcher.** `uvx` checks the package index on every call, even
-with a warm cache: 23 seconds per call behind a slow package index (T-10), so
-an Antigravity hook with a 10-second timeout was killed before every model
-call. Plugin hooks therefore run one fixed shell line:
+**Hooks come only from `brain connect`.** It writes them with the absolute
+path of the installed `brain`, which answers in about 0.1 s. Marketplace
+copies cannot do that, and online `uvx` re-resolves against the package
+index on every call (23 seconds per call behind a slow package index, T-10),
+which a hook that runs before every model call cannot afford; that is one
+more reason the bundle ships none.
 
-```sh
-brain-wiki hook <host> <event> 2>/dev/null \
-  || uvx --offline -q --from brain-wiki==<version> brain-wiki hook <host> <event> 2>/dev/null \
-  || echo '{}'          # Claude Code and Codex: `|| true`
-```
-
-An installed command answers in about 0.1 s, the offline cache in about
-0.2 s, and a cold cache fails at once. The launcher calls `brain-wiki`,
-not `brain`, to avoid another tool named `brain` on `PATH`. It needs a
-POSIX shell, which hosts use for hook commands on Linux and macOS
-(verified for Antigravity, T-2); Windows hooks are best-effort (Q5).
-
-The MCP server, which starts once per session, keeps plain online `uvx`
-and fills the cache, so a hook may miss orientation in the first session
-after an install or upgrade. It is not wrapped in the launcher: MCP
-configs take a command and arguments, and `sh -c` would break the server
-on Windows (D23). Behind a slow index its start can take a minute or
+The MCP server, which starts once per session, keeps plain online `uvx`:
+MCP configs take a command and arguments, and wrapping it in `sh -c` would
+break the server on Windows (D23). Behind a slow index its start can take a minute or
 more; `brain connect` avoids the wait.
 
 ### 3.1 The skills
@@ -173,7 +161,7 @@ Details: the `brain` skill.
 | Codex CLI / ChatGPT desktop | A managed block in the global file Codex reads: `$CODEX_HOME/AGENTS.override.md` if it is non-empty, else `$CODEX_HOME/AGENTS.md` (Codex reads one global file and has no includes) | Not offered: the repository's `AGENTS.md` is shared with the team, and a project-level override would replace it |
 | Antigravity | The plugin's `rules/brain-wiki.md` (`trigger: always_on`, verified to reach the model, T-4); no user file is edited | Same |
 | Cursor | Cursor keeps user rules in its settings, so `connect` prints the block for Settings → Rules | `.cursor/rules/brain-wiki.mdc` with `alwaysApply: true` |
-| OpenClaw | A managed block in the workspace `AGENTS.md` | Same |
+| OpenClaw | A managed block in the workspace `AGENTS.md`, resolved as OpenClaw does: `OPENCLAW_WORKSPACE_DIR`, then the `OPENCLAW_PROFILE` workspace, then `agents.defaults.workspace` in `openclaw.json`, then `<state dir>/workspace` (default `~/.openclaw/workspace`). OpenClaw injects at most 20,000 characters per file | Same |
 | generic | `brain connect generic --print` prints the block | — |
 
 **Managed blocks** (Codex, OpenClaw), used only where a host reads a single
@@ -227,7 +215,9 @@ skill offers to run `brain connect` with the user's approval.
 - Install by adding this repository as a marketplace, or with
   `brain connect codex`. Codex reads the portable `plugin.json` and
   `mcp.json`; `extensions["com.openai"]` supplies display metadata.
-- Hooks use the same event schema as Claude Code, from `hooks/hooks.json`.
+- Hooks (only from `brain connect --briefing-hook` or `--capture`) use the
+  same event schema as Claude Code, from `hooks/hooks.json`, which the
+  materialized `plugin.json` names in `extensions["com.openai"].hooks`.
   In the ChatGPT desktop app they run only for manually installed plugins
   and must be trusted by the user; plugins with hooks are not eligible for
   the public plugin directory, which is acceptable for v0.1.

@@ -1,8 +1,9 @@
-"""Write the pyproject version into the plugin files and regenerate the skill references.
+"""Write the pyproject version into the plugin files and regenerate the generated plugin files.
 
 The version in pyproject.toml is the only one maintained by hand. This script copies it into
-every plugin manifest and every `brain-wiki==<version>` pin, and regenerates the skill
-references that mirror src/brainwiki/assets/ (design docs 13 §4 and 15 §2).
+every plugin manifest and every `brain-wiki==<version>` pin, regenerates the skill references
+that mirror src/brainwiki/assets/, and writes Antigravity's always-on rule from the static
+instruction block in src/brainwiki/hosts/instructions.py (design docs 08 §3.2, 13 §4, 15 §2).
 
     python scripts/sync_versions.py           # write changes
     python scripts/sync_versions.py --check   # change nothing; exit 1 on drift (for CI)
@@ -33,7 +34,8 @@ VERSION_FIELDS: dict[str, list[tuple[str | int, ...]]] = {
     "server.json": [("version",), ("packages", 0, "version")],
 }
 # Files whose commands run a pinned release; each must hold at least one pin.
-PIN_FILES = ["mcp.json", ".mcp.json", "mcp_config.json", "hooks/hooks.json", "hooks.json"]
+PIN_FILES = ["mcp.json", ".mcp.json", "mcp_config.json"]
+RULE = Path("rules/brain-wiki.md")
 JSON_FILES = list(VERSION_FIELDS) + PIN_FILES
 
 
@@ -99,7 +101,28 @@ def expected(root: Path, version: str) -> tuple[dict[Path, str], list[str]]:
             problems.append(f"missing: {source.as_posix()}")
             continue
         out[target] = _header(source) + (root / source).read_text(encoding="utf-8")
+    rule = _rule(root)
+    if rule is None:
+        problems.append("missing: src/brainwiki/hosts/instructions.py")
+    else:
+        out[RULE] = rule
     return out, problems
+
+
+def _rule(root: Path) -> str | None:
+    """Antigravity's rule for a marketplace install: the block for a profile that may not
+    read files directly or edit notes, since nothing is known about the user's profile yet."""
+    import importlib.util
+
+    source = root / "src/brainwiki/hosts/instructions.py"
+    if not source.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("_brainwiki_instructions", source)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module  # dataclasses resolve annotations through sys.modules
+    spec.loader.exec_module(module)
+    return module.antigravity_rule(module.Access())
 
 
 def stale(root: Path, managed: dict[Path, str]) -> list[Path]:

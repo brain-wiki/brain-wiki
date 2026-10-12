@@ -33,7 +33,7 @@ def test_connect_materializes_with_installed_brain(brain_dir: Path):
         "test",
     ]
     hooks = json.loads(files["hooks/hooks.json"])["hooks"]
-    assert set(hooks) == {"SessionStart", "PostToolUse", "Stop", "PreCompact", "SessionEnd"}
+    assert set(hooks) == {"PostToolUse", "Stop", "PreCompact", "SessionEnd"}
     assert hooks["SessionEnd"][0]["hooks"][0]["async"] is True
     assert (
         "uvx" not in files["hooks.json"]
@@ -42,7 +42,100 @@ def test_connect_materializes_with_installed_brain(brain_dir: Path):
     assert json.loads(files[".claude-plugin/marketplace.json"])["name"] == cn.MARKETPLACE
     assert "skills/brain/SKILL.md" in files
     plain = cn.materialize("codex", capture=False, brain_name=None)
-    assert list(json.loads(plain["hooks/hooks.json"])["hooks"]) == ["SessionStart"]
+    assert "hooks/hooks.json" not in plain and "hooks.json" not in plain
+    assert "hooks" not in json.loads(plain["plugin.json"])["extensions"]["com.openai"]
+    briefing = cn.materialize("codex", capture=False, brain_name=None, briefing_hook=True)
+    assert list(json.loads(briefing["hooks/hooks.json"])["hooks"]) == ["SessionStart"]
+    assert json.loads(briefing["plugin.json"])["extensions"]["com.openai"]["hooks"]
+    assert list(json.loads(briefing["hooks.json"])["brain-wiki"]) == ["PreInvocation"]
+
+
+@pytest.fixture
+def no_host_clis(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Never run a real host CLI (claude, codex, openclaw) from a test."""
+    import shutil
+
+    real = shutil.which
+    monkeypatch.setattr(
+        cn.shutil,
+        "which",
+        lambda name: None if name in ("claude", "codex", "openclaw") else real(name),
+    )
+
+
+def test_connect_writes_the_instruction_block_and_uninstall_removes_it(
+    brain_dir: Path, no_host_clis: None
+):
+    from brainwiki.errors import Conflict
+    from brainwiki.hosts.instructions import BEGIN
+
+    rules = Path.home() / ".claude" / "rules" / "brain-wiki.md"
+    assert main(["connect", "claude-code"]) == 0
+    text = rules.read_text()
+    assert text.startswith(BEGIN) and "brain_list" in text and "brain_check" not in text
+    assert main(["connect", "claude-code"]) == 0  # unchanged block: rewritten quietly
+    rules.write_text(text.replace("once per session", "twice per session"))
+    with pytest.raises(Conflict):
+        cn.plan("claude-code")
+    assert main(["connect", "claude-code"]) == 4
+    assert main(["connect", "claude-code", "--force"]) == 0
+    assert "once per session" in rules.read_text()
+    main(["connect", "claude-code", "--uninstall"])
+    assert not rules.exists()
+
+
+def test_codex_block_joins_the_users_file_and_leaves_it_on_uninstall(
+    brain_dir: Path, no_host_clis: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    home = tmp_path / "codex-home"
+    home.mkdir()
+    monkeypatch.setenv("CODEX_HOME", str(home))
+    real = tmp_path / "dotfiles" / "AGENTS.md"
+    real.parent.mkdir()
+    real.write_text("# My rules\n\nUse tabs.\n")
+    (home / "AGENTS.md").symlink_to(real)
+    assert main(["connect", "codex"]) == 0
+    text = real.read_text()
+    assert text.startswith("# My rules\n\nUse tabs.\n\n<!-- brain-wiki:begin v1 -->")
+    assert (home / "AGENTS.md").is_symlink()
+    (home / "AGENTS.override.md").write_text("# Override\n")
+    assert main(["connect", "codex"]) == 0
+    assert "brain-wiki:begin" in (home / "AGENTS.override.md").read_text()
+    main(["connect", "codex", "--uninstall"])
+    assert (home / "AGENTS.override.md").read_text() == "# Override\n"
+    assert main(["connect", "codex", "--scope", "project", "--dry-run"]) == 0
+
+
+def test_openclaw_cursor_project_and_print(
+    brain_dir: Path,
+    no_host_clis: None,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    workspace = tmp_path / "claw"
+    monkeypatch.setenv("OPENCLAW_WORKSPACE_DIR", str(workspace))
+    assert main(["connect", "openclaw"]) == 0
+    assert "brain-wiki:begin" in (workspace / "AGENTS.md").read_text()
+    project = tmp_path / "proj"
+    project.mkdir()
+    monkeypatch.chdir(project)
+    assert main(["connect", "cursor", "--scope", "project"]) == 0
+    mdc = (project / ".cursor" / "rules" / "brain-wiki.mdc").read_text()
+    assert "alwaysApply: true" in mdc and "brain_search" in mdc
+    capsys.readouterr()
+    assert main(["connect", "codex", "--print"]) == 0
+    printed = capsys.readouterr().out
+    assert '"mcpServers"' in printed and "## brain-wiki: the user's long-term memory" in printed
+
+
+def test_doctor_reports_a_missing_instruction_block(brain_dir: Path, no_host_clis: None):
+    from brainwiki.doctor import run_doctor
+
+    assert main(["connect", "claude-code"]) == 0
+    (Path.home() / ".claude" / "rules" / "brain-wiki.md").unlink()
+    problems = [p["code"] for p in run_doctor()["problems"]]
+    assert "instructions_missing" in problems
 
 
 def test_connect_antigravity_and_cursor_with_uninstall(
@@ -52,6 +145,9 @@ def test_connect_antigravity_and_cursor_with_uninstall(
     assert main(["connect", "antigravity"]) == 0
     link = Path.home() / ".gemini" / "config" / "plugins" / "brain-wiki"
     assert link.is_symlink() and (link / "plugin.json").is_file()
+    rule = (link / "rules" / "brain-wiki.md").read_text()
+    assert "trigger: always_on" in rule and "brain_check" not in rule
+    assert not (link / "hooks.json").exists()
     assert cn.load_record("antigravity")["links"] == [str(link)]
     cursor = Path.home() / ".cursor" / "mcp.json"
     cursor.parent.mkdir(parents=True)

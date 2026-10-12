@@ -205,7 +205,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = cmd("connect", "wire an agent host to brain-wiki")
     p.add_argument("host")
     p.add_argument("--scope", choices=["user", "project"], default="user")
+    p.add_argument(
+        "--briefing-hook", action="store_true", help="inject the briefing at session start"
+    )
     p.add_argument("--capture", action="store_true")
+    p.add_argument("--force", action="store_true", help="replace an edited instruction block")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--uninstall", action="store_true")
     p.add_argument("--print", dest="print_only", action="store_true")

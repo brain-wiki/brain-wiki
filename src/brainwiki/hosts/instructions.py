@@ -8,10 +8,20 @@ the same on every host.
 from __future__ import annotations
 
 import contextlib
+import hashlib
+import json
+import os
+import re
 from dataclasses import dataclass
+from pathlib import Path
 
 BEGIN = "<!-- brain-wiki:begin v1 -->"
 END = "<!-- brain-wiki:end -->"
+_BLOCK_RE = re.compile(
+    r"<!-- brain-wiki:begin v\d+ -->\n?(?P<body>.*?)<!-- brain-wiki:end -->\n?", re.S
+)
+CODEX_CAP = 32 * 1024  # bytes Codex reads across its instruction files
+OPENCLAW_CAP = 20_000  # characters OpenClaw injects per bootstrap file
 
 _HEAD = """## brain-wiki: the user's long-term memory
 
@@ -100,3 +110,126 @@ def host_access(host: str | None) -> Access:
         files=any(m.reads_everything(p) for m, p in profiles),
         edit=any(p.can("edit") for _, p in profiles),
     )
+
+
+def antigravity_rule(access: Access) -> str:
+    """The plugin's always-on rule (08 §3.2): Antigravity loads it in every conversation."""
+    return (
+        "---\ntrigger: always_on\ndescription: How to consult, explore, and add to the user's "
+        "long-term memory in brain-wiki.\n---\n" + block_text(access)
+    )
+
+
+def cursor_rule(access: Access) -> str:
+    return (
+        "---\ndescription: The user's long-term memory (brain-wiki)\nalwaysApply: true\n---\n"
+        + marked_block(access)
+    )
+
+
+# -- managed blocks ----------------------------------------------------------------------
+
+
+def find_block(text: str) -> str | None:
+    """The block's body (between the markers), if the text has one."""
+    match = _BLOCK_RE.search(text)
+    return match.group("body") if match else None
+
+
+def block_hash(body: str) -> str:
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()
+
+
+def put_block(text: str, block: str) -> str:
+    """Replace the block in `text`, or append it after the user's content."""
+    if _BLOCK_RE.search(text):
+        return _BLOCK_RE.sub(lambda _: block, text, count=1)
+    if not text.strip():
+        return block
+    return text.rstrip("\n") + "\n\n" + block
+
+
+def drop_block(text: str) -> str:
+    """`text` without the block and the blank line put before it."""
+    match = _BLOCK_RE.search(text)
+    if not match:
+        return text
+    head = text[: match.start()].rstrip("\n")
+    tail = text[match.end() :].lstrip("\n")
+    joined = head + ("\n\n" if head and tail else "\n" if head else "") + tail
+    return joined if joined.strip() else ""
+
+
+# -- where each host reads its instructions --------------------------------------------------
+
+
+@dataclass
+class Target:
+    """One instruction file to write. `whole` files belong to brain-wiki; others get a block."""
+
+    path: Path
+    content: str  # the whole file for `whole`, else the marked block
+    whole: bool
+    cap: int | None = None  # warn when the file nears what the host loads
+
+
+def codex_home() -> Path:
+    return Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
+
+
+def codex_instructions() -> Path:
+    """The one global file Codex reads: a non-empty override wins over AGENTS.md."""
+    override = codex_home() / "AGENTS.override.md"
+    if override.is_file() and override.read_text(encoding="utf-8").strip():
+        return override
+    return codex_home() / "AGENTS.md"
+
+
+def openclaw_workspace() -> Path:
+    """OpenClaw's workspace, resolved the way OpenClaw documents it."""
+    if os.environ.get("OPENCLAW_WORKSPACE_DIR"):
+        return Path(os.environ["OPENCLAW_WORKSPACE_DIR"]).expanduser()
+    profile = os.environ.get("OPENCLAW_PROFILE")
+    if profile and profile != "default":
+        return Path.home() / f".openclaw-{profile}" / "workspace"
+    state = Path(os.environ.get("OPENCLAW_STATE_DIR") or Path.home() / ".openclaw").expanduser()
+    try:  # openclaw.json is JSON5; plain JSON configs are read, others keep the default
+        config = json.loads((state / "openclaw.json").read_text(encoding="utf-8"))
+        configured = config["agents"]["defaults"]["workspace"]
+        if isinstance(configured, str) and configured:
+            return Path(configured).expanduser()
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    return state / "workspace"
+
+
+def targets(
+    host: str, scope: str, access: Access, cwd: Path | None = None
+) -> tuple[list[Target], list[str]]:
+    """Instruction files `brain connect` writes for `host`, and notes for the user."""
+    cwd = cwd or Path.cwd()
+    notes: list[str] = []
+    if host == "claude-code":
+        base = cwd / ".claude" if scope == "project" else Path.home() / ".claude"
+        return [Target(base / "rules" / "brain-wiki.md", marked_block(access), True)], notes
+    if host == "codex":
+        if scope == "project":
+            notes.append(
+                "Codex instructions: not written for --scope project, because a repository's "
+                "AGENTS.md is shared with its team; the user-level block covers every project."
+            )
+            return [], notes
+        return [Target(codex_instructions(), marked_block(access), False, CODEX_CAP)], notes
+    if host == "openclaw":
+        target = openclaw_workspace() / "AGENTS.md"
+        return [Target(target, marked_block(access), False, OPENCLAW_CAP)], notes
+    if host == "cursor":
+        if scope == "project":
+            path = cwd / ".cursor" / "rules" / "brain-wiki.mdc"
+            return [Target(path, cursor_rule(access), True)], notes
+        notes.append(
+            "Cursor keeps user rules in its settings: paste this into Settings → Rules, or run "
+            "`brain connect cursor --scope project` in a project.\n\n" + block_text(access)
+        )
+        return [], notes
+    return [], notes  # antigravity carries the rule in its plugin; generic prints the block

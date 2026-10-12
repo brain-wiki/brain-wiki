@@ -18,10 +18,7 @@ brain-wiki/
 │   ├── plugin.json              Claude Code plugin manifest
 │   └── marketplace.json         marketplace listing this repo as one plugin
 ├── .codex-plugin/plugin.json    OpenAI overlay (only if root plugin.json lacks extensions["com.openai"])
-├── hooks/
-│   └── hooks.json               lifecycle hooks (Claude Code and Codex schema)
-├── hooks.json                   lifecycle hooks (Antigravity schema)
-├── rules/brain-wiki.md          Antigravity rule (trigger: model_decision)
+├── rules/brain-wiki.md          Antigravity rule (trigger: always_on), generated from the static instruction block
 ├── skills/                      brain, brain-setup, brain-maintain (shared by all hosts; see 15)
 │
 ├── src/brainwiki/               the Python package (§2)
