@@ -134,9 +134,19 @@ def _ts(value: Any) -> float:
         return 0.0
 
 
-def banners(guard_info: dict[str, Any]) -> list[str]:
+BANNER_LIMIT = 3
+
+
+def banners(
+    guard_info: dict[str, Any], target: str | None = None, limit: int = BANNER_LIMIT
+) -> list[str]:
+    """Warning lines for a hit or read: the first `limit` guards in full, then a count.
+
+    Guards arrive newest successor first, so a superseded note always shows what replaced it.
+    """
+    guards = guard_info.get("guards", [])
     lines = []
-    for g in guard_info.get("guards", []):
+    for g in guards[:limit]:
         if g["label"] == "superseded_by":
             via = f" (via {', '.join(g['via_titles'])})" if g.get("via_titles") else ""
             lines.append(f'⚠ SUPERSEDED by "{g["title"]}" ({g["path"]}){via}: prefer it.')
@@ -152,8 +162,12 @@ def banners(guard_info: dict[str, Any]) -> list[str]:
         lines.append(
             f"⚠ {count} restricted note(s) {label.replace('_', ' ')} this one; you cannot read them."
         )
-    if guard_info.get("more_guards"):
-        lines.append(
-            f"… {guard_info['more_guards']} more related guard notes; use brain_read on this note."
+    more = max(0, len(guards) - limit) + guard_info.get("more_guards", 0)
+    if more:
+        pointer = (
+            f'brain_neighbors("{target}", relations=["conflicts_with", "supersedes"]) lists them'
+            if target
+            else "brain_neighbors lists them"
         )
+        lines.append(f"… {more} more conflicting or replaced notes; {pointer}.")
     return lines

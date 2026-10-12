@@ -622,7 +622,7 @@ def format_search_text(result: dict[str, Any], fmt: str = "text") -> str:
             tag += f" · {str(r['updated'])[:10]}"
         via = f" (via {r['via']['relation']})" if r.get("via") else ""
         lines.append(f"{i}. {r['title']}  [{tag}]{via}")
-        for banner in banners(r):
+        for banner in banners(r, r["path"]):
             lines.append(f"   {banner}")
         if r.get("snippet"):
             snippet = " ".join(str(r["snippet"]).split())

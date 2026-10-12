@@ -1,4 +1,4 @@
-"""orient, search, read, index."""
+"""orient, search, read, neighbors, index."""
 
 from __future__ import annotations
 
@@ -73,6 +73,28 @@ def read(args: Any) -> int:
     with _engine(args) as engine:
         result = run(engine, args.target, mode=args.mode, section=args.section)
     emit(args, result, format_read_text(result))
+    return 0
+
+
+def neighbors(args: Any) -> int:
+    from brainwiki.index.neighbors import format_neighbors_text
+    from brainwiki.index.neighbors import neighbors as run
+
+    with _engine(args) as engine:
+        result = run(
+            engine,
+            args.target,
+            relations=args.relations,
+            direction=args.direction,
+            depth=args.depth,
+            limit=args.limit,
+        )
+    text = (
+        "\n".join(n["path"] for n in result["nodes"][1:])
+        if args.paths
+        else format_neighbors_text(result)
+    )
+    emit(args, result, text)
     return 0
 
 

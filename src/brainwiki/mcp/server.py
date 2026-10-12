@@ -310,6 +310,42 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         result = read(state.engine(brain), target, mode=mode, section=section)
         return _result(format_read_text(result), result)
 
+    @mcp.tool(
+        name="brain_neighbors",
+        title="Follow a note's relations",
+        annotations=READ,
+        description="Follow a note's typed relations without reading bodies: what a release "
+        "shipped (depends_on, out), what depends on a decision (depends_on, in), how a fact "
+        "evolved (supersedes, depth 3). Returns the neighbors with their paths, the handles for "
+        "brain_read. Body wikilinks (links_to) only when asked for.",
+    )
+    @guard
+    def brain_neighbors(
+        target: Annotated[str, Field(description="id, path, file name, alias, or title")],
+        relations: list[
+            Literal[
+                "part_of", "depends_on", "conflicts_with", "supersedes", "related_to", "links_to"
+            ]
+        ]
+        | None = None,
+        direction: Literal["out", "in", "both"] = "both",
+        depth: Annotated[int, Field(ge=1, le=3)] = 1,
+        limit: Annotated[int, Field(ge=1, le=100)] = 30,
+        brain: Brain = None,
+        ctx: Context | None = None,
+    ) -> CallToolResult:
+        from brainwiki.index.neighbors import format_neighbors_text, neighbors
+
+        result = neighbors(
+            state.engine(brain),
+            target,
+            relations=list(relations) if relations else None,
+            direction=direction,
+            depth=depth,
+            limit=limit,
+        )
+        return _result(format_neighbors_text(result), result)
+
     # -- write ----------------------------------------------------------
     @mcp.tool(
         name="brain_log_episode",

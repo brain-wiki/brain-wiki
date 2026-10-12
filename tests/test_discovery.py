@@ -201,3 +201,80 @@ def test_cli_search_flags(brain_dir: Path, capsys: pytest.CaptureFixture[str]):
     )
     assert capsys.readouterr().out.split() == ["topics/releases/r10.md", "topics/releases/r12.md"]
     assert main(["search", "--where", "nope"]) == 2
+
+
+# -- read handles and neighbors (04 §7, §9.2) ------------------------------------------
+
+
+def test_read_gives_a_handle_for_every_relation_and_backlink(example: Path):
+    from brainwiki.index.read import format_read_text, read
+
+    with _engine(example) as eng:
+        outline = read(eng, "fts5", mode="outline")
+        full = read(eng, "fts5")
+    relation = next(r for r in outline["relations"] if r["verb"] == "depends_on")
+    assert relation["path"] == "topics/storage/sqlite-version-policy.md" and relation["id"]
+    text = format_read_text(outline)
+    assert '- depends_on "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in text
+    assert '- enables "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in text
+    assert outline["backlinks_total"] >= 1 and outline["backlinks"][0]["id"]
+    assert full["content"].rstrip().endswith(")") and "Linked from:" in full["content"]
+
+
+def test_read_hides_handles_of_restricted_targets(example: Path):
+    from brainwiki.index.read import read
+
+    with _engine(example, "some-host") as eng:
+        outline = read(eng, "vector-only", mode="outline")
+    assert all("budget" not in (b["path"] or "") for b in outline["backlinks"])
+    assert any("restricted" in line for line in outline["banners"])
+
+
+def test_banners_show_three_then_point_to_neighbors():
+    from brainwiki.index.guards import banners
+
+    guards = [
+        {"label": "conflicts_with", "title": f"Bug {i}", "path": f"t/bug{i}.md"} for i in range(7)
+    ]
+    lines = banners({"guards": guards, "more_guards": 2}, "t/release.md")
+    assert len(lines) == 4 and lines[2].startswith('⚠ CONFLICTS WITH "Bug 2"')
+    assert lines[3].startswith("… 6 more") and 'brain_neighbors("t/release.md"' in lines[3]
+
+
+def test_neighbors_follow_typed_edges_by_direction_and_depth(example: Path):
+    from brainwiki.index.neighbors import format_neighbors_text, neighbors
+
+    with _engine(example) as eng:
+        out = neighbors(eng, "fts5", relations=["depends_on"], direction="out")
+        into = neighbors(eng, "sqlite-version-policy", relations=["depends_on"], direction="in")
+        history = neighbors(eng, "ripgrep", relations=["supersedes"], depth=3)
+        hub = neighbors(eng, "Search", relations=["part_of"], limit=2)
+    assert [n["title"] for n in out["nodes"]] == [
+        "Use SQLite FTS5 for local search",
+        "SQLite version policy",
+    ]
+    assert into["nodes"][1]["via"]["relation"] == "enables"
+    assert out["edges"] == [{"rel": "depends_on", "src": out["root"], "dst": out["nodes"][1]["id"]}]
+    assert history["nodes"][1]["via"]["relation"] == "superseded_by"
+    assert "conflict" in history["nodes"][1]["flags"]
+    assert hub["truncated"] and len(hub["nodes"]) == 3
+    assert "has_part" in format_neighbors_text(hub)
+
+
+def test_neighbors_count_hidden_and_reject_bad_input(example: Path):
+    from brainwiki.errors import NotFound, UsageError
+    from brainwiki.index.neighbors import neighbors
+
+    with _engine(example, "some-host") as eng:
+        result = neighbors(eng, "vector-only", relations=["conflicts_with"])
+        assert result["hidden"] == 1  # the budget note is above this host's privacy level
+        assert all("budget" not in n["path"] for n in result["nodes"])
+        with pytest.raises(NotFound):
+            neighbors(eng, "gpu-freeze")
+        with pytest.raises(UsageError):
+            neighbors(eng, "fts5", relations=["likes"])
+
+
+def test_cli_neighbors(example: Path, capsys: pytest.CaptureFixture[str]):
+    assert main(["neighbors", "fts5", "--rel", "part_of", "--direction", "out", "--paths"]) == 0
+    assert capsys.readouterr().out.split() == ["topics/search/index.md"]

@@ -16,6 +16,7 @@ TOOLS = [
     "brain_orient",
     "brain_search",
     "brain_read",
+    "brain_neighbors",
     "brain_log_episode",
     "brain_propose_rule",
     "brain_consolidate_prepare",

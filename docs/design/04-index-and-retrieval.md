@@ -437,9 +437,14 @@ Linked from:
 - related_to "Kai Keller" (topics/people/person-kai-keller.md)
 ```
 
+`full` mode appends the same handles after the note, below a `---` line,
+since the file's own wikilinks carry no paths. Backlinks list typed
+relations before plain links, at most 10, with a count and a pointer to
+`brain_neighbors` for the rest.
+
 Guard banners show at most three in full, then a count with a pointer to
 `brain_neighbors` for the rest, so a note with many conflicts does not bury
-its own content.
+its own content. Search results render their banners the same way.
 
 Every mode except `raw` starts with banners computed by §5:
 
@@ -524,11 +529,21 @@ small subgraph:
 
 ```json
 {"root": "01J9…",
- "nodes": [{"id": "…", "path": "…", "title": "…", "type": "…", "topic": "…",
-            "status": "active", "flags": ["conflict"], "depth": 1}],
- "edges": [{"rel": "depends_on", "src": "…", "dst": "…"}],
+ "nodes": [{"id": "01J9…", "title": "…", "depth": 0, "…": "…"},
+           {"id": "…", "path": "…", "title": "…", "type": "…", "topic": "…",
+            "status": "active", "flags": ["conflict"], "depth": 1,
+            "via": {"from": "01J9…", "relation": "has_part"}}],
+ "edges": [{"rel": "part_of", "src": "…", "dst": "01J9…"}],
  "hidden": 0, "truncated": false}
 ```
+
+The root comes first, at depth 0. `via.relation` reads from the node it was
+reached from, so an incoming `part_of` reads `has_part`, an incoming
+`depends_on` reads `enables`, and an incoming body link reads `linked_from`;
+`edges` keep the stored direction. Within a depth, guards come first, then
+dependencies, containment, and plain links, newest first, so `limit` keeps
+what matters. `flags` mark nodes in an active conflict and active nodes that a
+newer note supersedes.
 
 Typical uses: what a release shipped (`depends_on`, `out`), what depends on
 a decision (`depends_on`, `in`), how a fact evolved (`supersedes`, `both`,

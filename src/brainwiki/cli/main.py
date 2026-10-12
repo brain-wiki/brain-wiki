@@ -16,6 +16,7 @@ HANDLERS: dict[str, str] = {
     "orient": "brainwiki.cli.cmd_read:orient",
     "search": "brainwiki.cli.cmd_read:search",
     "read": "brainwiki.cli.cmd_read:read",
+    "neighbors": "brainwiki.cli.cmd_read:neighbors",
     "index": "brainwiki.cli.cmd_read:index",
     "log": "brainwiki.cli.cmd_write:log",
     "rule": "brainwiki.cli.cmd_write:rule",
@@ -102,6 +103,19 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("target")
     p.add_argument("--mode", choices=["outline", "full", "section", "raw"])
     p.add_argument("--section")
+
+    p = cmd("neighbors", "follow a note's relations")
+    p.add_argument("target")
+    p.add_argument(
+        "--rel",
+        dest="relations",
+        action="append",
+        choices=["part_of", "depends_on", "conflicts_with", "supersedes", "related_to", "links_to"],
+    )
+    p.add_argument("--direction", choices=["out", "in", "both"], default="both")
+    p.add_argument("--depth", type=int, default=1)
+    p.add_argument("--limit", type=int, default=30)
+    p.add_argument("--paths", action="store_true", help="one path per line")
 
     p = cmd("index", "inspect or rebuild the index")
     p.add_argument("--rebuild", action="store_true")

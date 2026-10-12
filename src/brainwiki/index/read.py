@@ -90,7 +90,7 @@ def read(
         "updated": node["updated"],
         "privacy": node["privacy"],
         "mode": mode,
-        "banners": banners(guard_info),
+        "banners": banners(guard_info, node["path"]),
         **guard_info,
     }
     if kind in ("episode", "archived_episode"):
@@ -121,7 +121,7 @@ def read(
             if c.status == "active"
         ]
         result["relations"] = _relations(engine, node["id"])
-        result["backlinks"] = _backlinks(engine, node["id"])
+        result["backlinks"], result["backlinks_total"] = _backlinks(engine, node["id"])
         summary = next(
             (
                 p.strip()
@@ -135,6 +135,10 @@ def read(
     else:
         result["content"] = _render_full(engine, text)
         result["relations"] = _relations(engine, node["id"])
+        result["backlinks"], result["backlinks_total"] = _backlinks(engine, node["id"])
+        handles = _handle_lines(result)
+        if handles and kind in ("note", "hub"):
+            result["content"] += "\n\n---\n" + "\n".join(handles)
     if kind in ("episode", "archived_episode"):
         result["content"] = (
             f'<untrusted-episode agent="{node["agent"] or "unknown"}" taint="{node["taint"] or "unknown"}">\n'
@@ -149,18 +153,20 @@ def _relations(engine: Engine, node_id: str) -> list[dict[str, Any]]:
         "SELECT verb, raw_target, other, qualifier, note FROM edges WHERE declared_in=? AND rel != 'links_to' ORDER BY line",
         (node_id,),
     ):
-        title = None
+        title = path = other_id = None
         if row["other"]:
             other = engine.db.execute(
-                "SELECT title, privacy_rank, topic FROM nodes WHERE id=?", (row["other"],)
+                "SELECT id, title, path, privacy_rank, topic FROM nodes WHERE id=?", (row["other"],)
             ).fetchone()
             if other and engine.visible(other["privacy_rank"], other["topic"]):
-                title = other["title"]
+                title, path, other_id = other["title"], other["path"], other["id"]
         out.append(
             {
                 "verb": row["verb"],
                 "target": row["raw_target"],
                 "title": title,
+                "id": other_id,
+                "path": path,
                 "resolved": row["other"] is not None,
                 "qualifier": row["qualifier"],
                 "note": row["note"],
@@ -169,17 +175,56 @@ def _relations(engine: Engine, node_id: str) -> list[dict[str, Any]]:
     return out
 
 
-def _backlinks(engine: Engine, node_id: str, limit: int = 10) -> list[dict[str, Any]]:
+def _backlinks(engine: Engine, node_id: str, limit: int = 10) -> tuple[list[dict[str, Any]], int]:
+    """Visible notes that link here, typed relations first, and how many there are in all."""
     rows = engine.db.execute(
-        """SELECT DISTINCT n.id, n.title, n.path, n.privacy_rank, n.topic, e.rel FROM edges e JOIN nodes n ON n.id = e.declared_in
-           WHERE e.other=? AND e.declared_in != ?""",
+        """SELECT n.id, n.title, n.path, n.privacy_rank, n.topic, e.rel, e.verb, e.flip
+           FROM edges e JOIN nodes n ON n.id = e.declared_in
+           WHERE e.other=? AND e.declared_in != ?
+           ORDER BY e.rel = 'links_to', n.updated DESC""",
         (node_id, node_id),
     ).fetchall()
-    return [
-        {"title": r["title"], "path": r["path"], "relation": r["rel"]}
-        for r in rows
-        if engine.visible(r["privacy_rank"], r["topic"])
-    ][:limit]
+    seen: dict[str, dict[str, Any]] = {}
+    for r in rows:
+        if r["id"] in seen or not engine.visible(r["privacy_rank"], r["topic"]):
+            continue
+        seen[r["id"]] = {
+            "id": r["id"],
+            "title": r["title"],
+            "path": r["path"],
+            "relation": r["rel"],
+            "verb": r["verb"],
+        }
+    links = list(seen.values())
+    return links[:limit], len(links)
+
+
+def _relation_line(r: dict[str, Any]) -> str:
+    if r.get("path"):
+        line = f'- {r["verb"]} "{r["title"]}" ({r["path"]})'
+    else:
+        line = f"- {r['verb']} {r['target']}" + ("" if r["resolved"] else " (unresolved)")
+    if r.get("qualifier"):
+        line += f" ({r['qualifier']})"
+    return line
+
+
+def _handle_lines(result: dict[str, Any]) -> list[str]:
+    """Relations and backlinks with the path to open next (04 §7)."""
+    lines: list[str] = []
+    if result.get("relations"):
+        lines += ["Relations:"] + [_relation_line(r) for r in result["relations"]]
+    backlinks = result.get("backlinks") or []
+    if backlinks:
+        lines += ["Linked from:"] + [
+            f'- {b["verb"]} "{b["title"]}" ({b["path"]})' for b in backlinks
+        ]
+        more = result.get("backlinks_total", len(backlinks)) - len(backlinks)
+        if more:
+            lines.append(
+                f'- … {more} more; brain_neighbors("{result["path"]}", direction="in") lists them'
+            )
+    return lines
 
 
 def _outline_text(result: dict[str, Any]) -> str:
@@ -188,16 +233,11 @@ def _outline_text(result: dict[str, Any]) -> str:
         lines += ["", result["summary"]]
     if result.get("claims"):
         lines += ["", "Claims:"] + [f"- {c['text']}" for c in result["claims"]]
-    if result.get("relations"):
-        lines += ["", "Relations:"] + [
-            f"- {r['verb']} {r['title'] or r['target']}"
-            + ("" if r["resolved"] else " (unresolved)")
-            for r in result["relations"]
-        ]
     if result.get("headings"):
         lines += ["", "Sections: " + ", ".join(result["headings"])]
-    if result.get("backlinks"):
-        lines += ["", "Linked from: " + ", ".join(b["title"] for b in result["backlinks"])]
+    handles = _handle_lines(result)
+    if handles:
+        lines += ["", *handles]
     return "\n".join(lines)
 
 
