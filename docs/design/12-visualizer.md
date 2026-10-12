@@ -92,11 +92,12 @@ decoration for its own sake.
   topics turn grey and faint, flows fade, unflagged stars dim, and flagged
   stars show their halo rings. A legend explains the ramp, and the minimap
   uses the same colors.
-- **Graphics:** *High* adds bloom, the vignette, and grain; *Low* draws the
-  same scene without them. *Auto* (the default) skips the first 1.5 s after
-  load (shader compiles, topic loads), samples 2.5 s of frames, and picks
-  Low when the median frame takes longer than 1/30 s. The choice lives in
-  the dock's ⋯ menu. `prefers-reduced-motion` turns off flows and flights.
+- **Graphics:** *Low* (the default) draws the scene without post-processing;
+  *High* adds bloom, the vignette, and grain; *Auto* skips the first 1.5 s
+  after load (shader compiles, topic loads), samples 2.5 s of frames, and
+  picks Low when the median frame takes longer than 1/30 s. The choice lives
+  in the dock's ⋯ menu and is remembered by the browser; `?quality=` in the
+  URL overrides it. `prefers-reduced-motion` turns off flows and flights.
 - **No WebGL2** (hardware acceleration off, a remote desktop or VM without
   a GPU): the stage says why the map could not start and how to check, and
   the navigator, search, and inspector keep working without the scene.
