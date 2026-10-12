@@ -323,3 +323,30 @@ def test_instructions_follow_the_host_profile(example: Path):
     assert full.startswith("<!-- brain-wiki:begin v1 -->\n## brain-wiki")
     assert full.rstrip().endswith("<!-- brain-wiki:end -->") and "brain_check" in full
     assert len(server_instructions(Access(files=True, edit=True))) < 2000
+
+
+# -- Obsidian-style browsing commands (07 §2) -------------------------------------------
+
+
+def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
+    def run(*argv: str) -> str:
+        assert main(list(argv)) == 0
+        return capsys.readouterr().out
+
+    assert run("notes", "--topic", "search", "--type", "decision", "--paths").split() == [
+        "topics/search/fts5.md",
+        "topics/search/ripgrep.md",
+    ]
+    assert "- Claims  (line" in run("outline", "fts5")
+    links = run("links", "fts5")
+    assert '- depends_on "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in links
+    assert run("backlinks", "fts5", "--paths").split() == [
+        "topics/storage/sqlite-version-policy.md",  # typed relations first
+        "topics/search/index.md",
+    ]
+    assert "decision  3" in run("types", "--counts")
+    assert run("tags", "--count").strip() == "2"
+    assert run("recent", "--limit", "1", "--paths").count("\n") == 1
+    assert run("unresolved").strip() == "Every link resolves."
+    assert "topics/search/vector-only.md" not in run("orphans", "--paths")
+    assert run("links", "fts5", "--limit", "1").rstrip().endswith("(--cursor 1)")

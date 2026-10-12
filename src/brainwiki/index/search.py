@@ -174,7 +174,7 @@ def _age_days(updated: str | None) -> float:
     return max(0.0, (datetime.now(UTC) - when).total_seconds() / 86400)
 
 
-def _filters(
+def node_filters(
     engine: Engine,
     kinds: list[str],
     statuses: list[str],
@@ -312,7 +312,7 @@ def search(
         + (["archived_episode"] if include_archived_episodes else [])
     )
     statuses = ["active", "superseded"] + (["archived"] if include_archived else [])
-    where_sql, params = _filters(
+    where_sql, params = node_filters(
         engine,
         kinds,
         statuses,

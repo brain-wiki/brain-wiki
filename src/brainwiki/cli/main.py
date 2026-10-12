@@ -17,6 +17,15 @@ HANDLERS: dict[str, str] = {
     "search": "brainwiki.cli.cmd_read:search",
     "read": "brainwiki.cli.cmd_read:read",
     "neighbors": "brainwiki.cli.cmd_read:neighbors",
+    "notes": "brainwiki.cli.cmd_browse:notes",
+    "outline": "brainwiki.cli.cmd_browse:outline",
+    "links": "brainwiki.cli.cmd_browse:links",
+    "backlinks": "brainwiki.cli.cmd_browse:backlinks",
+    "tags": "brainwiki.cli.cmd_browse:tags",
+    "types": "brainwiki.cli.cmd_browse:types",
+    "recent": "brainwiki.cli.cmd_browse:recent",
+    "orphans": "brainwiki.cli.cmd_browse:orphans",
+    "unresolved": "brainwiki.cli.cmd_browse:unresolved",
     "index": "brainwiki.cli.cmd_read:index",
     "log": "brainwiki.cli.cmd_write:log",
     "rule": "brainwiki.cli.cmd_write:rule",
@@ -118,6 +127,38 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--depth", type=int, default=1)
     p.add_argument("--limit", type=int, default=30)
     p.add_argument("--paths", action="store_true", help="one path per line")
+
+    def listing(p: argparse.ArgumentParser, limit: int | None = None) -> None:
+        p.add_argument("--limit", type=int, default=limit)
+        p.add_argument("--cursor")
+        p.add_argument("--count", action="store_true", help="print only the total")
+        p.add_argument("--paths", action="store_true", help="one path per line")
+
+    p = cmd("notes", "list notes (search with an empty query)")
+    p.add_argument("--topic", action="append")
+    p.add_argument("--type", dest="types", action="append", metavar="TYPE")
+    p.add_argument("--tag", dest="tags", action="append", metavar="TAG")
+    p.add_argument("--sort", choices=["recent", "title"], default="recent")
+    p.add_argument("--facets", action="store_true", help="counts by type, topic, and tag")
+    listing(p, 50)
+    p = cmd("outline", "a note's headings")
+    p.add_argument("target")
+    for name, help_text in (
+        ("links", "what a note links to"),
+        ("backlinks", "what links to a note"),
+    ):
+        p = cmd(name, help_text)
+        p.add_argument("target")
+        listing(p)
+    for name, help_text in (("tags", "tags in use"), ("types", "note types in use")):
+        p = cmd(name, help_text)
+        p.add_argument("--counts", action="store_true", help="show how many notes use each")
+        listing(p)
+    p = cmd("recent", "recently updated notes")
+    p.add_argument("--since", help="YYYY-MM-DD, or 7d, 4w, 3m")
+    listing(p, 20)
+    listing(cmd("orphans", "notes nothing links to"))
+    listing(cmd("unresolved", "links that resolve to no note"))
 
     p = cmd("index", "inspect or rebuild the index")
     p.add_argument("--rebuild", action="store_true")

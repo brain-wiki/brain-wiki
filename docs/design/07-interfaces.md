@@ -74,11 +74,11 @@ brain search [QUERY] [--limit N] [--topic T]... [--type T]... [--tag T]... [--wh
 brain read TARGET [--mode outline|full|section|raw] [--section HEADING]
 brain neighbors TARGET [--rel R]... [--direction out|in|both] [--depth N] [--limit N]
 
-brain notes [--topic T] [--type T] [--sort recent|title]  # browse (search with an empty query)
+brain notes [--topic T] [--type T] [--tag T] [--sort recent|title] [--facets]  # browse
 brain outline TARGET                                     # headings
 brain links TARGET | backlinks TARGET                    # one hop out / in
 brain tags [--counts] | types [--counts] | recent [--since D]
-brain orphans | unresolved                               # graph hygiene
+brain orphans | unresolved                               # notes nothing links to; dead links
 
 brain check [PATH]... [--adopt] [--allow-shrink]         # validate and record direct edits (05 §2.3)
 brain restore PATH                                       # put back the last recorded version
