@@ -43,10 +43,18 @@ class _Entry:
     deleted: bool = False
     moved_to: str | None = None
     append_only: bool = False
+    # A change already made on disk (a checked agent edit): `base` is the last recorded version,
+    # `observed` what the file held when the run read it.
+    adopted: bool = False
+    observed: bytes | None = None
 
     @property
     def base_sha(self) -> str | None:
         return sha256_bytes(self.base) if self.base is not None else None
+
+    @property
+    def observed_sha(self) -> str | None:
+        return sha256_bytes(self.observed) if self.observed is not None else None
 
     @property
     def final(self) -> bytes | None:
@@ -148,6 +156,17 @@ class Run:
         if self.exists(rel):
             raise Conflict(f"{rel} already exists")
         self.write(rel, content)
+
+    def adopt(self, rel: str, base: bytes | None, final: bytes | None) -> None:
+        """Record a change already on disk, with `base` (the last recorded version) as its
+        pre-image. `final` is what the file should hold: what is on disk, plus any stamps."""
+        if rel in self._entries:
+            raise Conflict(f"{rel} is already staged in this run")
+        path = self.store.abspath(rel)
+        observed = path.read_bytes() if path.is_file() else None
+        self._entries[rel] = _Entry(
+            rel, base, data=final, deleted=final is None, adopted=True, observed=observed
+        )
 
     def delete(self, rel: str) -> None:
         entry = self._ensure(rel)
@@ -274,6 +293,8 @@ class Run:
             for entry in self.entries:
                 if entry.base is not None:
                     save_preimage(key, self.id, entry.base, entry.base_sha or "")
+                if entry.adopted and entry.observed is not None:
+                    save_preimage(key, self.id, entry.observed, entry.observed_sha or "")
             save_record(key, record)
             try:
                 self._apply()
@@ -298,7 +319,7 @@ class Run:
         for entry in self.entries:
             path = self.store.abspath(entry.path)
             current = sha256_bytes(path.read_bytes()) if path.is_file() else None
-            if current != entry.base_sha:
+            if current != (entry.observed_sha if entry.adopted else entry.base_sha):
                 raise Conflict(f"{entry.path} changed since this run read it; re-run")
             if entry.moved_to and self.store.abspath(entry.moved_to).exists():
                 raise Conflict(f"{entry.moved_to} already exists")
@@ -314,6 +335,8 @@ class Run:
                     after=sha256_bytes(final) if final is not None else None,
                     moved_to=entry.moved_to,
                     append_only=entry.append_only,
+                    observed=entry.observed_sha if entry.adopted else None,
+                    adopted=entry.adopted,
                 )
             )
         return RunRecord(
@@ -334,6 +357,13 @@ class Run:
 
     def _apply(self) -> None:
         for entry in self.entries:
+            if entry.adopted:
+                if entry.final is None:
+                    if self.store.exists(entry.path):
+                        self.store.delete(entry.path)
+                elif entry.final != entry.observed:
+                    self.store.write_bytes(entry.path, entry.final, expect_sha=entry.observed_sha)
+                continue
             if entry.deleted:
                 self.store.delete(entry.path)
                 continue
@@ -365,6 +395,16 @@ def rollback(engine: Engine, record: RunRecord) -> tuple[list[str], list[str]]:
     for change in reversed(record.files):
         final = change.final_path
         current = store.sha(final)
+        if change.adopted:  # put back what the agent left on disk, never the older version
+            if current == change.after and current != change.observed:
+                if change.observed is None:
+                    store.delete(final)
+                else:
+                    store.write_bytes(
+                        final, load_preimage(engine.brain.key, record.run, change.observed)
+                    )
+                restored.append(final)
+            continue
         if current != change.after:
             at_source = store.sha(change.path)
             if at_source == change.before and (not change.moved_to or current is None):

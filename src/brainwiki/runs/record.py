@@ -25,6 +25,10 @@ class FileChange:
     after: str | None  # sha256 after the run; None when the run deleted it
     moved_to: str | None = None
     append_only: bool = False  # log.md: never rolled back, the undo appends its own entry
+    observed: str | None = None  # adopted changes: sha256 of what was on disk when the run began
+    adopted: bool = (
+        False  # the change was already on disk (a checked edit); undo still restores `before`
+    )
 
     @property
     def final_path(self) -> str:

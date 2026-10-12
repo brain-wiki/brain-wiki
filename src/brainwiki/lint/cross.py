@@ -10,7 +10,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from brainwiki.config.manifest import SLUG_RE
+from brainwiki.config.manifest import AGENT_EDITS, SLUG_RE
 from brainwiki.format.agents_md import extract_block, replace_block
 from brainwiki.format.document import parse_document
 from brainwiki.format.edit import append_to_section
@@ -60,6 +60,16 @@ def _manifest_checks(engine: Engine) -> list[Problem]:
         Problem("BW409", "brain.toml", None, f"topic slug {slug!r} must match [a-z0-9][a-z0-9-]*")
         for slug in engine.manifest.topics
         if not SLUG_RE.match(slug)
+    ]
+    out += [
+        Problem(
+            "BW109",
+            "brain.toml",
+            None,
+            f"topics.{slug}.agent_edits must be allow, review, or deny (now treated as deny)",
+        )
+        for slug, topic in engine.manifest.topics.items()
+        if topic.agent_edits not in AGENT_EDITS
     ]
     return out
 

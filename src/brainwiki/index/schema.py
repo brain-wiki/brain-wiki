@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 DDL = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -133,6 +133,16 @@ CREATE TABLE episode_hashes (
   sha256     TEXT NOT NULL,
   path       TEXT NOT NULL,
   first_seen TEXT NOT NULL
+);
+
+-- The last recorded version of each note (05 §2.3): what a run last wrote, what `brain check`
+-- last recorded, or the file as a fresh index first saw it. A NULL sha256 records the note as
+-- absent, so a note created outside brain-wiki after the index was built is a pending creation.
+CREATE TABLE baselines (
+  path    TEXT PRIMARY KEY,
+  sha256  TEXT,
+  content BLOB,
+  since   TEXT NOT NULL
 );
 
 -- File-local lint results keyed by content hash, so whole-brain lint only re-checks changed files.

@@ -21,6 +21,8 @@ HANDLERS: dict[str, str] = {
     "log": "brainwiki.cli.cmd_write:log",
     "rule": "brainwiki.cli.cmd_write:rule",
     "mv": "brainwiki.cli.cmd_write:mv",
+    "check": "brainwiki.cli.cmd_write:check",
+    "restore": "brainwiki.cli.cmd_write:restore",
     "consolidate": "brainwiki.cli.cmd_consolidate:consolidate",
     "review": "brainwiki.cli.cmd_consolidate:review",
     "runs": "brainwiki.cli.cmd_runs:runs",
@@ -133,6 +135,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("value", nargs="?")
     p.add_argument("--quote")
     p.add_argument("--replaces")
+
+    p = cmd("check", "validate and record direct edits of notes; no paths lists pending edits")
+    p.add_argument("paths", nargs="*")
+    p.add_argument("--adopt", action="store_true", help="record as your own edit despite problems")
+    p.add_argument("--allow-shrink", action="store_true", help="allow removing most of a note")
+
+    p = cmd("restore", "put back a note's last recorded version")
+    p.add_argument("path")
 
     p = cmd("mv", "move a note and rewrite links to it")
     p.add_argument("src")

@@ -17,6 +17,7 @@ TOOLS = [
     "brain_search",
     "brain_read",
     "brain_neighbors",
+    "brain_check",
     "brain_log_episode",
     "brain_propose_rule",
     "brain_consolidate_prepare",
@@ -86,6 +87,15 @@ async def test_read_tools_and_errors(example: Path):
     assert entry["name"] == "ex" and entry["default_here"] and entry["notes"] > 0
     assert "path" not in entry  # claude-code reads only up to "sensitive" here
     assert listed.content[0].text.startswith("* ex")
+
+
+@pytest.mark.anyio
+async def test_check_needs_the_edit_capability(example: Path):
+    async with Client(build_server("claude-code")) as client:
+        pending = await client.call_tool("brain_check", {})
+        refused = await client.call_tool("brain_check", {"paths": ["topics/search/fts5.md"]})
+    assert not pending.is_error and pending.structured_content["status"] == "pending"
+    assert refused.is_error and "forbidden:" in refused.content[0].text
 
 
 @pytest.mark.anyio

@@ -6,6 +6,7 @@ import json
 import re
 import sqlite3
 import time
+import zlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
@@ -25,6 +26,23 @@ _BASELINE_KEEP = (
     "INSERT OR IGNORE INTO episode_hashes(episode_id, sha256, path, first_seen) VALUES (?, ?, ?, ?)"
 )
 _BASELINE_REPLACE = "INSERT OR REPLACE INTO episode_hashes(episode_id, sha256, path, first_seen) VALUES (?, ?, ?, ?)"
+_NOTE_BASE = "INSERT OR {mode} INTO baselines(path, sha256, content, since) VALUES (?, ?, ?, ?)"
+NOTE_KINDS = ("note", "hub")
+
+
+def set_baseline(
+    conn: sqlite3.Connection, rel: str, data: bytes | None, *, keep: bool = False
+) -> None:
+    """Record `data` (None: absent) as the note's last recorded version; `keep` leaves an existing one."""
+    conn.execute(
+        _NOTE_BASE.format(mode="IGNORE" if keep else "REPLACE"),
+        (
+            rel,
+            sha256_bytes(data) if data is not None else None,
+            zlib.compress(data) if data is not None else None,
+            _iso_from_ns(time.time_ns()),
+        ),
+    )
 
 
 @dataclass
@@ -188,11 +206,14 @@ def scan(
 
     to_parse: list[tuple[str, bytes]] = []
     touch_only: list[tuple[str, int, int]] = []
+    rebase: list[str] = []  # unchanged notes a recorded run vouches for (a checked agent edit)
     for rel in candidates:
         st = seen[rel]
         row = known.get(rel)
         if row and row["mtime_ns"] == st.mtime_ns and row["size"] == st.size:
             stats.unchanged += 1
+            if sanctioned:
+                rebase.append(rel)
             continue
         try:
             data = engine.store.read_bytes(rel)
@@ -201,10 +222,14 @@ def scan(
         if row and row["sha256"] == sha256_bytes(data):
             touch_only.append((rel, st.mtime_ns, st.size))
             stats.unchanged += 1
+            if sanctioned:
+                rebase.append(rel)
             continue
         to_parse.append((rel, data))
+    if sanctioned and paths is not None:
+        rebase += [p for p in paths if p not in seen]  # deleted by the run: forget its baseline
 
-    if not to_parse and not deleted and not touch_only:
+    if not to_parse and not deleted and not touch_only and not rebase:
         if paths is None:
             engine.last_scan_ns = now_ns
             conn.execute("UPDATE meta SET value=? WHERE key='last_scan_ns'", (str(now_ns),))
@@ -222,6 +247,8 @@ def scan(
         removed_ids: dict[str, str] = {}
         orphaned: list[int] = []  # edges whose target node was deleted and maybe re-inserted
         for rel in deleted:
+            if sanctioned:
+                conn.execute("DELETE FROM baselines WHERE path=?", (rel,))
             node_id = known[rel]["node_id"]
             if node_id:
                 fm_id = conn.execute("SELECT fm_id FROM nodes WHERE id=?", (node_id,)).fetchone()
@@ -235,6 +262,11 @@ def scan(
             stats.removed += 1
         for rel, mtime_ns, size in touch_only:
             conn.execute("UPDATE files SET mtime_ns=?, size=? WHERE path=?", (mtime_ns, size, rel))
+        for rel in rebase:
+            if rel not in seen:
+                conn.execute("DELETE FROM baselines WHERE path=?", (rel,))
+            elif classify(engine, rel, topics) in NOTE_KINDS:
+                set_baseline(conn, rel, engine.store.read_bytes(rel))
         parsed_nodes: list[tuple[str, str]] = []
         for rel, data in to_parse:
             st = seen[rel]
@@ -243,6 +275,11 @@ def scan(
             node_id, changed_names = _index_file(
                 engine, conn, rel, data, st.mtime_ns, st.size, kind, topics, sanctioned, orphaned
             )
+            if kind in NOTE_KINDS:
+                if sanctioned or fresh:
+                    set_baseline(conn, rel, data, keep=not sanctioned)
+                else:  # changed outside a run: keep the recorded version; a new file was absent
+                    set_baseline(conn, rel, None, keep=True)
             names_changed = names_changed or changed_names
             if node_id:
                 parsed_nodes.append((node_id, rel))
@@ -257,6 +294,11 @@ def scan(
                 stats.renamed += 1
                 stats.removed -= 1
                 stats.added = max(0, stats.added - 1)
+                if not sanctioned:  # a rename by hand carries the recorded version along
+                    conn.execute(
+                        "UPDATE OR REPLACE baselines SET path=? WHERE path=?",
+                        (row["path"], old_path),
+                    )
             target_id = row["id"] if row else fm_id
             conn.execute(
                 "INSERT OR REPLACE INTO path_history(node_id, path, last_seen) VALUES (?, ?, ?)",

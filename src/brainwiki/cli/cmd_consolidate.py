@@ -99,6 +99,22 @@ def review(args: Any) -> int:
             return 0
         if not args.run:
             raise UsageError(f"brain review {args.action} needs a run id")
+        from brainwiki.write import edits
+
+        if edits.is_edit_proposal(engine, args.run):
+            if args.action == "show":
+                text = engine.store.read_text(
+                    f"{engine.manifest.layout.proposals_dir}/{args.run}.md"
+                )
+                emit(args, {"run": args.run, "type": "edit-proposal"}, text)
+                return 0
+            if args.action == "accept":
+                record = edits.accept_proposal(engine, args.run)
+                emit(args, record.to_json(), f"Accepted {args.run} as {record.run}.")
+                return 0
+            record = edits.reject_proposal(engine, args.run)
+            emit(args, record.to_json(), f"Rejected {args.run}; the note is unchanged.")
+            return 0
         if args.action == "show":
             _, ops, agent, text = load_proposal(engine, args.run)
             emit(args, {"run": args.run, "agent": agent, "ops": ops}, text)

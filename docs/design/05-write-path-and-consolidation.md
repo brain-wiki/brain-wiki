@@ -183,13 +183,27 @@ recorded version.
 
 **The last recorded version.** The index keeps, for each note, the content
 it had when a run last wrote it, when `brain check` last recorded it, or
-when the index first saw it. A note whose file differs from that version
-has a *pending edit*. `brain check` with no paths lists pending edits with
-their diffs; `brain check --adopt PATH` records a pending edit as the
-user's (author `owner`), which is how hand edits made outside brain-wiki can
-be given an undo point. Pending edits are not lint errors: humans edit
-their notes freely, and nothing nags them. A rebuilt index starts over from
-the files as they are.
+when the index was first built. A note created outside brain-wiki after
+that is recorded as absent, so it shows as a pending creation. A note whose
+file differs from its recorded version has a *pending edit*. `brain check`
+with no paths lists pending edits with their diffs; `brain check --adopt
+PATH` records a pending edit as the user's (author `owner`) even when checks
+report problems, which is how hand edits made outside brain-wiki can be
+given an undo point. Pending edits are not lint errors: humans edit their
+notes freely, and nothing nags them. A rename by hand carries the recorded
+version to the new path. The recorded versions survive index rebuilds,
+since they are the only record of unchecked edits; only a lost index starts
+over from the files as they are.
+
+**Review.** An edit to a topic with `agent_edits = "review"` becomes a
+proposal in `inbox/proposals/` holding the diff and the new content, and the
+file is put back. `brain review accept RUN` applies it as an `edit` run if
+the note has not changed since; `brain review reject RUN` drops it.
+
+**Recovery.** The run records each edited file's on-disk version as well as
+its pre-image. A crash or failed write rolls back only what the run itself
+wrote (the claim stamps), never the agent's edit; `brain undo` restores the
+pre-image.
 
 Agents without file tools can still update notes through episodes and
 consolidation; a combined edit-and-check tool is future work.

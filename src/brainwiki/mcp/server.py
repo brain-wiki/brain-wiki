@@ -346,6 +346,41 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
 
     # -- write ----------------------------------------------------------
     @mcp.tool(
+        name="brain_check",
+        title="Check and record note edits",
+        annotations=ToolAnnotations(
+            read_only_hint=False,
+            destructive_hint=False,
+            idempotent_hint=True,
+            open_world_hint=False,
+        ),
+        description="After editing notes' Markdown files directly, validate and record the edits: "
+        "pass the paths you changed. Problems come back with their lines; nothing is recorded "
+        "until all errors are fixed. Claims change only by superseding (strike the old one "
+        "through, add the new one). With no paths, lists notes with unrecorded edits.",
+    )
+    @guard
+    def brain_check(
+        paths: Annotated[
+            list[str],
+            Field(
+                max_length=50,
+                description="Brain-relative paths you edited; empty lists pending edits without recording.",
+            ),
+        ] = [],  # noqa: B006
+        allow_shrink: bool = False,
+        brain: Brain = None,
+        ctx: Context | None = None,
+    ) -> CallToolResult:
+        from brainwiki.write.edits import check_edits, format_check_text
+
+        engine = state.engine(brain)
+        if paths:
+            need(engine, "edit")
+        result = check_edits(engine, list(paths), allow_shrink=allow_shrink)
+        return _result(format_check_text(result), result)
+
+    @mcp.tool(
         name="brain_log_episode",
         title="Record a learning",
         annotations=ToolAnnotations(
