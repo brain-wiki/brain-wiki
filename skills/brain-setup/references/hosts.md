@@ -1,24 +1,30 @@
 # Agent apps: connecting, permissions, and schedulers
 
 `brain connect HOST` writes a copy of the plugin for that app, pointing at
-the installed `brain` command, and registers it the way the app expects.
-Always run it with `--dry-run` first. Every change is recorded with backups,
-so `brain connect HOST --uninstall` restores what was there.
+the installed `brain` command, registers it the way the app expects, and
+writes a short instruction block into the file the app loads in every
+session, so agents know to call `brain_list` and `brain_orient`. Always run
+it with `--dry-run` first. Every change is recorded with backups, so
+`brain connect HOST --uninstall` undoes it, removing only brain-wiki's block
+from shared instruction files.
 
 Options: `--brain NAME` (pin this app to one brain), `--scope user|project`,
-`--capture` (also save sessions at their end).
+`--briefing-hook` (inject the briefing at session start, where the app has
+such an event), `--capture` (also save sessions at their end), `--print`
+(show the MCP entry and the instruction block without changing anything),
+`--force` (replace an instruction block the user edited).
 
 Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 `generic`.
 
-| App | Tools | Start-of-session context | Capture | Harvest | Local scheduler |
-|---|---|---|---|---|---|
-| Claude Code | yes | yes | yes | yes | desktop app |
-| Codex / ChatGPT desktop | yes | yes | yes | yes | desktop app |
-| Antigravity | yes | yes | yes | yes | `/schedule` |
-| OpenClaw | yes | optional add-on | not yet | not yet | automations |
-| Cursor | yes | not yet | not yet | not yet | none (cloud only) |
-| Other MCP apps | yes | no | no | no | none |
+| App | Tools | Instructions | Briefing hook | Capture | Harvest | Local scheduler |
+|---|---|---|---|---|---|---|
+| Claude Code | yes | `~/.claude/rules/brain-wiki.md` | yes | yes | yes | desktop app |
+| Codex / ChatGPT desktop | yes | block in `~/.codex/AGENTS.md` (or a non-empty `AGENTS.override.md`) | yes | yes | yes | desktop app |
+| Antigravity | yes | always-on plugin rule | yes | yes | yes | `/schedule` |
+| OpenClaw | yes | block in the workspace `AGENTS.md` | optional add-on | not yet | not yet | automations |
+| Cursor | yes | printed for Settings → Rules; `.cursor/rules/` with `--scope project` | not yet | not yet | not yet | none (cloud only) |
+| Other MCP apps | yes | printed by `--print` | no | no | no | none |
 
 ## Claude Code
 
@@ -29,7 +35,8 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 - **Permissions:** plugin tools are named
   `mcp__plugin_brain-wiki_brain-wiki__<tool>`. To stop prompts for the read
   tools, add `mcp__plugin_brain-wiki_brain-wiki__brain_search` (and
-  `…__brain_read`, `…__brain_orient`) to `permissions.allow` in the user's
+  `…__brain_list`, `…__brain_orient`, `…__brain_read`, `…__brain_neighbors`)
+  to `permissions.allow` in the user's
   settings, or choose "always allow" when asked. `brain_propose_rule` always
   asks the user; that is intended.
 - **Session history:** Claude Code deletes transcripts after 30 days by
@@ -48,7 +55,7 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 - **Connect:** add the brain-wiki repository as a plugin marketplace and
   install the plugin, or `brain connect codex`, which runs
   `codex plugin marketplace add` on the local copy.
-- **Start-of-session context:** plugin hooks run only after the user reviews
+- **Hooks** (`--briefing-hook`, `--capture`) run only after the user reviews
   and trusts them (in `/hooks`). In the desktop app, hooks run only for
   manually installed plugins.
 - **Permissions:** approval per tool is set in `~/.codex/config.toml` under
@@ -64,8 +71,9 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 - **Connect:** `agy plugin install <brain-wiki repository URL>`, or
   `brain connect antigravity`, which links the plugin into
   `~/.gemini/config/plugins/brain-wiki/`.
-- **Start-of-session context:** added on the first model call of each
-  conversation.
+- **Briefing hook:** with `--briefing-hook`, the briefing is added on the
+  first model call of each conversation. The hook runs before every model
+  call, so it stays off by default.
 - **Permissions:** MCP tools ask by default. A plugin's server is named
   `<plugin>_<server>`, so allow the read tools with
   `mcp(brain-wiki_brain-wiki/brain_search)`,
@@ -106,8 +114,9 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 
 ## Other MCP apps
 
-`brain connect generic --print` prints a server entry (`command`, `args`,
-`env`) to paste into the app's MCP settings.
+`brain connect generic` prints a server entry (`command`, `args`) to paste
+into the app's MCP settings, and the instruction block to add wherever the
+app keeps instructions it loads in every session.
 
 ## OS schedulers (no agent needed)
 

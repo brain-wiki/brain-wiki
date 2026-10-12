@@ -80,8 +80,9 @@ Then run `brain init ~/brains/personal --name personal --git`.
 2. Ask which ones to connect.
 3. For each: run `brain connect HOST --dry-run`, show the change, and after
    a yes run `brain connect HOST`.
-4. Report what `connect` found when it checked the agent app. Tell the user
-   to start a new session in that app to pick it up.
+4. Report what `connect` found when it checked the agent app, and where it
+   wrote the instruction block. Tell the user to start a new session in that
+   app to pick it up.
 
 Per-app notes (permissions, what to expect): [references/hosts.md](references/hosts.md).
 

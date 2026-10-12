@@ -12,9 +12,14 @@ command's options.
 | `brain brains [list \| add NAME PATH \| remove NAME \| rename OLD NEW \| default NAME]` | Manage registered brains |
 | `brain doctor` | Check configuration, brains, SQLite, and agents |
 | `brain setup` | Interactive onboarding |
-| `brain orient` | Orientation text, as agents see it |
-| `brain search QUERY [--limit N] [--topic T] [--intent why\|history\|impact\|related]` | Search |
+| `brain list` | Brains you (or `--as HOST`) may use, with what each holds |
+| `brain orient` | The briefing, as agents see it |
+| `brain search [QUERY] [--topic T] [--type T] [--tag T] [--where K=V] [--since D] [--until D] [--sort relevance\|recent\|title] [--intent …] [--count] [--facets] [--paths] [--limit N] [--cursor C]` | Search, or browse with an empty query |
 | `brain read TARGET [--mode outline\|full\|section\|raw] [--section H]` | Read a note, hub, or episode |
+| `brain neighbors TARGET [--rel R] [--direction out\|in\|both] [--depth N] [--limit N]` | Follow a note's relations |
+| `brain notes`, `outline`, `links`, `backlinks`, `tags`, `types`, `recent`, `orphans`, `unresolved` | Quick browsing; listings take `--count`, `--paths`, `--limit`, `--cursor` |
+| `brain check [PATH…] [--adopt] [--allow-shrink]` | Validate and record direct edits; no paths lists pending edits |
+| `brain restore PATH` | Put a note back to its last recorded version |
 | `brain index [--rebuild \| --status]` | Inspect or rebuild the index |
 | `brain log [TEXT \| -] [--topic T] [--claim C] [--agent HOST] [--taint …]` | Write an episode |
 | `brain rule add TEXT [--quote Q] [--replaces ID] \| list \| accept ID \| reject ID` | Rules |
@@ -27,7 +32,7 @@ command's options.
 | `brain mv SRC DST [--dry-run]` | Move a note and rewrite links |
 | `brain harvest [--from HOST] [--since 30d] [--project P] [--raw \| --distill PRESET] [--apply] [--status]` | Harvest sessions |
 | `brain origin EPISODE [--turns A-B]` | Show an episode's original conversation |
-| `brain connect HOST [--capture] [--scope user\|project] [--dry-run] [--uninstall] [--print]` | Connect an agent |
+| `brain connect HOST [--scope user\|project] [--briefing-hook] [--capture] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent |
 | `brain schedule list \| show R --for HOST \| install R (--for openclaw \| --via cron\|launchd\|systemd) [--at HH:MM] [--apply] \| remove R` | Routines |
 | `brain import PATH (--overlay [--phase N] \| --into BRAIN \| --to-episodes) [--apply]`, `brain import --from HOST` | Import |
 | `brain viz [--topic T] [--export FILE.html\|.json\|.graphml]` | The brain map |

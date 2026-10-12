@@ -37,12 +37,13 @@ memorable commands.
 and when):
 
 > **brain**: Use the user's long-term memory (brain-wiki), shared across
-> their AI agents. Search it before answering questions about past
-> decisions, preferences, project history, or anything the user expects you
-> to remember. Record durable learnings (decisions with reasons, facts,
-> things that failed) when meaningful work ends or the user says
-> "remember". Read supersede and conflict warnings in results and prefer
-> current notes. Never write rules unless the user explicitly asks.
+> their AI agents. Consult it before answering questions about past
+> decisions, preferences, project history, people, or anything the user
+> expects you to remember; explore it step by step from brain_list and
+> brain_orient. Record durable learnings when meaningful work ends or the
+> user says "remember", and correct notes directly with brain_check
+> afterwards. Prefer current notes over superseded or conflicting ones.
+> Never write rules unless the user explicitly asks.
 
 > **brain-setup**: Set up, connect, or reconfigure brain-wiki: install the
 > CLI, create a brain or adopt an existing Obsidian or Markdown vault,

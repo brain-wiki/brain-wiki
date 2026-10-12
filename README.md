@@ -24,15 +24,16 @@ durable brain:
   When a note is superseded or contradicted, search returns the note that
   qualifies it together with it.
 - **Safe writes.** Agents append raw observations to an inbox. Consolidation
-  folds them into curated notes through small, validated operations. Every
-  change is recorded and can be undone.
+  folds them into curated notes through small, validated operations, and
+  direct corrections pass `brain check` first. Every change is recorded and
+  can be undone.
 - **Your agents do the thinking.** Consolidation and harvesting run inside
   the agent you already use, or headless through its CLI. No API keys.
 
 ```
  agents ──log──► inbox/episodes ──consolidate (validated ops)──► topics/<topic>/*.md
    ▲                                                                    │
-   └──────── orient · search · read (with supersede/conflict warnings) ─┘
+   └── list · orient · search · read · neighbors (with supersede/conflict warnings) ─┘
 ```
 
 ## Status
@@ -68,9 +69,10 @@ through the same steps, showing a dry run before every change.
 
 Then, from any connected agent:
 
-- the agent gets an orientation at the start of a session (your rules,
-  topics, recent changes);
-- it searches the brain before answering about past decisions;
+- the agent knows the brain is there from a short instruction block that
+  `brain connect` writes, and fetches a briefing (your rules, what the brain
+  holds, recent changes) when a task may depend on it;
+- it searches and browses the brain before answering about past decisions;
 - it records what it learns with `brain_log_episode`;
 - "consolidate my brain" folds the inbox into notes.
 
@@ -78,9 +80,9 @@ Then, from any connected agent:
 
 | Task | Command |
 |---|---|
-| Create, adopt, list brains | `brain init`, `brain import PATH --overlay`, `brain brains` |
-| Read | `brain orient`, `brain search`, `brain read` |
-| Write | `brain log`, `brain rule add` |
+| Create, adopt, list brains | `brain init`, `brain import PATH --overlay`, `brain list`, `brain brains` |
+| Read | `brain orient`, `brain search`, `brain read`, `brain neighbors`, `brain notes` |
+| Write | `brain log`, `brain check`, `brain rule add` |
 | Curate | `brain consolidate`, `brain review`, `brain mv`, `brain undo` |
 | Check | `brain lint [--fix]`, `brain report`, `brain doctor` |
 | Agents | `brain connect`, `brain harvest`, `brain schedule`, `brain mcp` |

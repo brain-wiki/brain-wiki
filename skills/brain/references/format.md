@@ -1,7 +1,8 @@
-# brain-wiki file format (for hand edits)
+# brain-wiki file format (for direct edits)
 
-Use this only when the user asks you to edit a brain file by hand. After
-editing, run `brain lint PATH` and fix what it reports.
+Use this when you edit a note directly. Afterwards run `brain_check` (or
+`brain check PATH`) on what you changed and fix what it reports. Never edit
+rules, episodes, or log.md.
 
 ## Notes
 
@@ -48,7 +49,7 @@ One list item under `## Claims` per fact:
 
 | Key | Meaning |
 |---|---|
-| `id` | Claim id, `c-` plus a ULID. A claim you add by hand may omit the comment; `brain lint --fix` can assign an id. |
+| `id` | Claim id, `c-` plus a ULID. A claim you add may omit the comment; `brain_check` adds one marking it as yours and unverified. |
 | `src` | Sources, comma-separated: `<brain path>#L<start>-L<end>` for episode lines, `<host>:<session>#T<start>-T<end>` for turns of an agent conversation, or a URL. |
 | `origin` | `owner`, `agent`, `import`, or `system`. |
 | `taint` | `true` or `unknown` when a source was untrusted or unchecked; omitted when false. |
