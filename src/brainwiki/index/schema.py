@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 DDL = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -46,6 +46,8 @@ CREATE TABLE nodes (
 CREATE INDEX nodes_topic ON nodes(topic, kind, updated);
 CREATE INDEX nodes_kind ON nodes(kind, status);
 CREATE INDEX nodes_updated ON nodes(updated);
+-- Covers the briefing's single pass over visible notes (orient.brief_stats).
+CREATE INDEX nodes_brief ON nodes(kind, topic, type, privacy_rank, updated);
 
 CREATE TABLE names (
   key     TEXT NOT NULL,
@@ -76,6 +78,8 @@ CREATE TABLE claims (
   PRIMARY KEY (node_id, id)
 );
 CREATE INDEX claims_id ON claims(id);
+-- The briefing counts unverified claims; few claims are, so scanning only them is cheap.
+CREATE INDEX claims_unverified ON claims(node_id) WHERE status = 'active' AND taint IN ('true', 'unknown');
 
 CREATE TABLE edges (
   id          INTEGER PRIMARY KEY,

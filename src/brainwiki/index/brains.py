@@ -14,16 +14,15 @@ from brainwiki.errors import BrainError
 
 def brain_stats(engine: Engine) -> dict[str, Any]:
     """Counts over what the engine's profile may see."""
-    from brainwiki.index.orient import topic_rows, visible_nodes
+    from brainwiki.index.orient import brief_stats, topic_rows
 
     engine.scan()
-    nodes = visible_nodes(engine)
-    notes = [r for r in nodes if r["kind"] != "episode"]
+    stats = brief_stats(engine)
     return {
-        "topics": len(topic_rows(engine)),
-        "notes": len(notes),
-        "updated": max(((r["updated"] or "")[:10] for r in notes), default="") or None,
-        "pending": len(nodes) - len(notes),
+        "topics": len(topic_rows(engine, stats=stats)),
+        "notes": stats["notes"],
+        "updated": stats["span"][1] if stats["span"] else None,
+        "pending": stats["pending"],
     }
 
 

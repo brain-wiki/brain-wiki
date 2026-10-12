@@ -417,10 +417,20 @@ def _query(
             (match, *params),
         ).fetchone()[0]
 
+    def total_of(match: str, table: str, seen: int | None) -> int:
+        """`seen` when the fetch already saw every match; otherwise count them."""
+        if seen is not None:
+            return seen
+        try:
+            return count(match, table)
+        except Exception:  # noqa: BLE001 - see run()
+            return 0
+
     def run(
         match: str, table: str = "fts", weights: tuple[float, ...] = WEIGHTS, snippet_col: int = 4
-    ) -> None:
-        """Rank inside FTS, filter by profile in growing batches, then build snippets for the winners only."""
+    ) -> int | None:
+        """Rank inside FTS, filter by profile in growing batches, then build snippets for the
+        winners only. Returns how many nodes match when every candidate was seen, else None."""
         sources.append(
             (
                 f"SELECT d.node_id FROM {table} JOIN docs d ON d.rowid = {table}.rowid WHERE {table} MATCH ?",  # noqa: S608
@@ -428,7 +438,7 @@ def _query(
             )
         )
         bm25 = f"bm25({table}, {','.join(str(w) for w in weights)})"
-        batch, offset_, found = max(fetch, 50), 0, []
+        batch, offset_, found, exhausted = max(fetch, 50), 0, [], False
         while len(found) < fetch:
             try:
                 cand = conn.execute(
@@ -437,8 +447,9 @@ def _query(
                 ).fetchall()
             except Exception:  # an FTS syntax edge case must never fail a search
                 sources.pop()
-                return
+                return 0
             if not cand:
+                exhausted = True
                 break
             ranks = {c["rid"]: c["rank"] for c in cand}
             marks = ",".join("?" * len(ranks))
@@ -447,28 +458,27 @@ def _query(
             for row in conn.execute(sql, (*ranks, *params)):
                 found.append((ranks[row["rid"]], row))
             if len(cand) < batch:
+                exhausted = True
                 break
             offset_ += batch
             batch *= 2
         found.sort(key=lambda item: item[0])
         top = found[:fetch]
-        if not top:
-            return
-        snippets = _snippets(conn, match, table, snippet_col, [row["rid"] for _, row in top])
-        for rank, row in top:
-            if row["id"] not in rows:
-                rows[row["id"]] = (row, -rank, snippets.get(row["rid"]))
+        if top:
+            snippets = _snippets(conn, match, table, snippet_col, [row["rid"] for _, row in top])
+            for rank, row in top:
+                if row["id"] not in rows:
+                    rows[row["id"]] = (row, -rank, snippets.get(row["rid"]))
+        return len(found) if exhausted else None
 
-    strict, strict_total = "", 0
+    total = 0
     if tokens:
         strict = _fts_query(tokens, any_=False)
-        try:
-            strict_total = count(strict, "fts")
-        except Exception:  # noqa: BLE001 - see run()
-            strict_total = 0
-        run(strict)
-        if strict_total < limit and len(tokens) > 1:
-            run(_fts_query(tokens, any_=True))
+        total = total_of(strict, "fts", run(strict))
+        if total < limit and len(tokens) > 1:  # every strict match also matches the OR query
+            loose = _fts_query(tokens, any_=True)
+            total = total_of(loose, "fts", run(loose))
+    fts_only = len(sources)
     if (cjk_runs or not rows) and has_trigram(conn):
         long_runs = [r for r in (cjk_runs or tokens) if len(r) >= 3]
         if long_runs:
@@ -497,9 +507,7 @@ def _query(
         f"SELECT n.id FROM nodes n WHERE n.id IN ({union}) AND {where_sql}",  # noqa: S608
         [*union_params, *params],
     )
-    if len(sources) == 1 and tokens and sources[0][1] == [strict]:
-        total = strict_total
-    else:
+    if len(sources) > fts_only:  # trigram or LIKE matches may add nodes the token queries missed
         total = conn.execute(f"SELECT COUNT(*) FROM ({matched[0]})", matched[1]).fetchone()[0]  # noqa: S608
     if count_only:
         return [], total, matched
