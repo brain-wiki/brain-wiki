@@ -76,10 +76,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     cmd("orient", "print orientation for an agent")
 
-    p = cmd("search", "search the brain")
-    p.add_argument("query")
+    p = cmd("search", "search the brain, or browse it with an empty query")
+    p.add_argument("query", nargs="?", default="")
     p.add_argument("--limit", type=int, default=8)
     p.add_argument("--topic", action="append")
+    p.add_argument("--type", dest="types", action="append", metavar="TYPE")
+    p.add_argument("--tag", dest="tags", action="append", metavar="TAG")
+    p.add_argument("--where", action="append", default=[], metavar="KEY=VALUE")
+    p.add_argument("--since", help="YYYY-MM-DD, or 7d, 4w, 3m")
+    p.add_argument("--until")
+    p.add_argument("--sort", choices=["relevance", "recent", "title"])
+    p.add_argument("--cursor")
     p.add_argument(
         "--intent",
         default="context",
@@ -87,6 +94,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--include", default="", help="comma list: archived,episodes,archived_episodes")
     p.add_argument("--no-episodes", action="store_true")
+    p.add_argument("--count", action="store_true", help="print only the number of matches")
+    p.add_argument("--facets", action="store_true", help="counts by type, topic, and tag")
+    p.add_argument("--paths", action="store_true", help="one path per line")
 
     p = cmd("read", "read a note, hub, or episode")
     p.add_argument("target")

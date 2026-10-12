@@ -69,8 +69,8 @@ brain setup                                              # interactive onboardin
 brain list                                               # brains this host may use (04 §9.1)
 brain orient
 brain search [QUERY] [--limit N] [--topic T]... [--type T]... [--tag T]... [--where KEY=VALUE]...
-             [--since D] [--until D] [--sort relevance|recent] [--cursor C] [--intent I]
-             [--include archived,episodes] [--count] [--facets] [--paths] [--context]
+             [--since D] [--until D] [--sort relevance|recent|title] [--cursor C] [--intent I]
+             [--include archived,episodes] [--count] [--facets] [--paths]
 brain read TARGET [--mode outline|full|section|raw] [--section HEADING]
 brain neighbors TARGET [--rel R]... [--direction out|in|both] [--depth N] [--limit N]
 
@@ -245,7 +245,7 @@ in 04 and 05):
       "facets": {"type": "boolean", "default": false},
       "format": {"enum": ["text", "paths"], "default": "text"},
       "intent": {"enum": ["none", "context", "why", "impact", "history", "related"], "default": "context"},
-      "include_episodes": {"type": "boolean", "default": true},
+      "include_episodes": {"type": "boolean", "description": "Default: on for a query, off when browsing."},
       "include_archived": {"type": "boolean", "default": false},
       "brain":  {"type": "string"}}},
 

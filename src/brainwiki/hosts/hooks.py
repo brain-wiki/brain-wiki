@@ -191,7 +191,7 @@ def _recall(host: str, cwd: Any, prompt: str, user: Any) -> str:
     with _engine(host, cwd) as engine:
         result = search(engine, prompt, limit=3, include_episodes=False)
     threshold = float(user.recall.get("min_score", 0.3))
-    hits = [r for r in result["results"] if r["score"] >= threshold]
+    hits = [r for r in result["results"] if r["score"] is not None and r["score"] >= threshold]
     if not hits:
         return ""
     lines = [

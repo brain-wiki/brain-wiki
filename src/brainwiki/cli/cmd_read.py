@@ -6,6 +6,7 @@ from typing import Any
 
 from brainwiki.cli.output import emit
 from brainwiki.engine import open_engine
+from brainwiki.errors import UsageError
 
 
 def _engine(args: Any):
@@ -32,13 +33,37 @@ def search(args: Any) -> int:
             args.query,
             limit=args.limit,
             topics=args.topic,
+            types=args.types,
+            tags=args.tags,
+            where=parse_where(args.where),
+            since=args.since,
+            until=args.until,
+            sort=args.sort,
+            cursor=args.cursor,
+            count_only=args.count,
+            facets=args.facets,
             intent=args.intent,
-            include_episodes=not args.no_episodes,
+            include_episodes=True
+            if "episodes" in include
+            else (False if args.no_episodes else None),
             include_archived="archived" in include,
             include_archived_episodes="archived_episodes" in include,
         )
-    emit(args, result, format_search_text(result))
+    if args.count and not args.json and not args.facets:
+        print(result["total"])
+        return 0
+    emit(args, result, format_search_text(result, "paths" if args.paths else "text"))
     return 0
+
+
+def parse_where(items: list[str]) -> dict[str, str]:
+    where = {}
+    for item in items or []:
+        key, sep, value = item.partition("=")
+        if not sep or not key.strip():
+            raise UsageError(f"--where takes KEY=VALUE, not {item!r}")
+        where[key.strip()] = value.strip()
+    return where
 
 
 def read(args: Any) -> int:

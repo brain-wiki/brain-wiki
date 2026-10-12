@@ -67,3 +67,137 @@ def test_cli_list_and_brains_list_agree(example: Path, capsys: pytest.CaptureFix
     assert main(["brains", "list"]) == 0
     assert capsys.readouterr().out == listed
     assert listed.startswith("* ex") and "Lumen design notes" in listed
+
+
+# -- search filters and browse (04 §6) -------------------------------------------------
+
+
+def _engine(root: Path, host: str | None = None):
+    from brainwiki.config.resolve import open_brain
+    from brainwiki.engine import Engine
+
+    return Engine(open_brain(root), host=host)
+
+
+def _releases(brain_dir: Path, count: int = 12) -> None:
+    from tests.conftest import write
+
+    for i in range(1, count + 1):
+        write(
+            brain_dir,
+            f"topics/releases/r{i:02}.md",
+            f"---\ntype: release\ntitle: Lumen 1.{i}\ntags: [ship, desktop/mac]\n"
+            f"channel: {'beta' if i % 2 else 'stable'}\nupdated: 2026-09-{i:02}\n---\n"
+            f"# Lumen 1.{i}\n\nShips the sync engine rewrite part {i}.\n",
+        )
+    write(
+        brain_dir,
+        "topics/releases/plan.md",
+        "---\ntype: decision\nstatus: open\nupdated: 2026-08-01\n---\n# Release plan\n\nShip monthly.\n",
+    )
+
+
+def test_browse_lists_recent_notes_without_episodes(brain_dir: Path):
+    from brainwiki.index.search import search
+
+    _releases(brain_dir)
+    from brainwiki.write.episode import EpisodeContent, write_episode
+
+    with _engine(brain_dir) as eng:
+        write_episode(
+            eng,
+            EpisodeContent(summary="Shipped Lumen 1.13 to beta."),
+            origin="owner",
+            taint="false",
+            captured="cli",
+            topics=["releases"],
+        )
+        listed = search(eng, "", topics=["releases"], limit=5)
+        assert [r["title"] for r in listed["results"]][:2] == ["Lumen 1.12", "Lumen 1.11"]
+        assert all(r["kind"] != "episode" for r in listed["results"])
+        assert listed["total"] == 13 and listed["next_cursor"] == "5"
+        page2 = search(eng, "", topics=["releases"], limit=5, cursor=listed["next_cursor"])
+        assert not {r["id"] for r in page2["results"]} & {r["id"] for r in listed["results"]}
+        with_episodes = search(eng, "", limit=50, include_episodes=True)
+        assert any(r["kind"] == "episode" for r in with_episodes["results"])
+
+
+def test_filters_narrow_before_ranking(brain_dir: Path):
+    from brainwiki.index.search import search
+
+    _releases(brain_dir)
+    with _engine(brain_dir) as eng:
+        latest = search(eng, "", types=["release"], sort="recent", limit=1)
+        assert latest["results"][0]["title"] == "Lumen 1.12" and latest["total"] == 12
+        assert search(eng, "sync", types=["decision"])["total"] == 0
+        assert search(eng, "", tags=["desktop"], count_only=True)["total"] == 12  # nested tag
+        assert search(eng, "", tags=["#SHIP"], count_only=True)["total"] == 12
+        assert search(eng, "", where={"channel": "beta"}, count_only=True)["total"] == 6
+        assert search(eng, "", where={"status": "open"}, count_only=True)["total"] == 1
+        window = search(eng, "", since="2026-09-10", until="2026-09-11", limit=10)
+        assert sorted(r["title"] for r in window["results"]) == ["Lumen 1.10", "Lumen 1.11"]
+        recent = search(eng, "sync engine", sort="recent", limit=2)
+        assert [r["title"] for r in recent["results"]] == ["Lumen 1.12", "Lumen 1.11"]
+        assert recent["results"][0]["snippet"]
+
+
+def test_relative_dates_and_bad_input():
+    from datetime import date
+
+    from brainwiki.errors import UsageError
+    from brainwiki.index.search import date_bound, parse_cursor
+
+    today = date(2026, 10, 12)
+    assert date_bound("7d", today=today) == "2026-10-05"
+    assert date_bound("2w", today=today) == "2026-09-28"
+    assert date_bound("2026-10-01T10:00:00", today=today) == "2026-10-01"
+    with pytest.raises(UsageError):
+        date_bound("last week")
+    with pytest.raises(UsageError):
+        parse_cursor("abc")
+
+
+def test_question_ranks_by_its_content_words(example: Path):
+    from brainwiki.index.search import content_tokens, search
+
+    assert content_tokens("why did we pick FTS5?") == ["pick", "fts5"]
+    assert content_tokens("what is it") == ["what", "is", "it"]  # nothing but filler: keep it
+    with _engine(example) as eng:
+        found = search(eng, "why did we switch from ripgrep?", intent="none")
+    titles = [r["title"] for r in found["results"]]
+    assert titles[0] == "Use SQLite FTS5 for local search"
+    assert "Vector-only search proposal" not in titles  # shares only filler words ("with")
+
+
+def test_facets_and_counts_respect_privacy(example: Path):
+    from brainwiki.index.search import search
+
+    with _engine(example) as owner, _engine(example, "some-host") as host:
+        mine = search(owner, "", facets=True)
+        theirs = search(host, "", facets=True)
+    assert "budget" in mine["facets"]["topic"] and "budget" not in theirs["facets"]["topic"]
+    assert theirs["total"] < mine["total"]
+    assert mine["facets"]["type"]["decision"] >= 2
+
+
+def test_text_and_paths_formats(example: Path):
+    from brainwiki.index.search import format_search_text, search
+
+    with _engine(example) as eng:
+        result = search(eng, "search", limit=2, intent="none")
+    text = format_search_text(result)
+    assert "topics/search/" in text and "next page: cursor=2" in text
+    paths = format_search_text(result, "paths").splitlines()
+    assert len(paths) == 2 and all(p.startswith("topics/") for p in paths)
+
+
+def test_cli_search_flags(brain_dir: Path, capsys: pytest.CaptureFixture[str]):
+    _releases(brain_dir)
+    assert main(["search", "--type", "release", "--count"]) == 0
+    assert capsys.readouterr().out.strip() == "12"
+    assert (
+        main(["search", "--where", "channel=stable", "--sort", "title", "--paths", "--limit", "2"])
+        == 0
+    )
+    assert capsys.readouterr().out.split() == ["topics/releases/r10.md", "topics/releases/r12.md"]
+    assert main(["search", "--where", "nope"]) == 2

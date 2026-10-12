@@ -293,11 +293,11 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
 | `type` | any | Restrict to note types (`decision`, `release`, `person`…), as in frontmatter. |
 | `tag` | any | Restrict to notes carrying all of these tags. |
 | `where` | none | Frontmatter property equality, e.g. `{"stage": "open"}`; values compare as strings, lists match any item. |
-| `kinds` | `note, hub, episode` | Pending episodes are searchable; archived episodes only on request. |
+| `kinds` | `note, hub, episode` (browse: `note, hub`) | Pending episodes are searchable; a browse lists curated notes unless episodes are asked for; archived episodes only on request. |
 | `status` | `active, superseded` | `archived` notes only on request. |
 | `intent` | `context` | Graph expansion, §6.4. |
 | `since`, `until` | none | Only nodes updated on or after / on or before a date. Relative forms `7d`, `4w`, `3m` are accepted. |
-| `sort` | `relevance` (`recent` when the query is empty) | `relevance` or `recent` (newest `updated` first; ties by relevance). |
+| `sort` | `relevance` (`recent` when the query is empty) | `relevance`, `recent` (newest `updated` first), or `title` (CLI only, for listings). |
 | `cursor` | none | Opaque handle from a previous result's `next_cursor`, for the next page. |
 | `count_only` | false | Return only `total`: how many nodes match, before any limit. |
 | `facets` | false | Add counts of the matching nodes by `type`, `topic`, and `tag` (top 10 each), so the caller can narrow before reading. |
@@ -307,12 +307,13 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
 
 1. Tokenize the query with the same Unicode rules as the index; drop FTS5
    syntax characters so user text can never be interpreted as operators.
-2. Build `"tok1" "tok2" "tok3"*` (implicit AND, prefix match on the last
-   token, since queries are often typed incrementally by hooks).
-3. If that returns fewer than `limit` rows, retry with OR between tokens,
-   leaving out filler words ("the", "did", "why", "what", "how", "we"…)
-   when any content words remain, so a question phrased as a sentence ranks
-   by its content words instead of matching every note that says "the".
+2. Drop filler words ("the", "did", "why", "what", "how", "we"…) when any
+   content word remains, so a question phrased as a sentence matches by what
+   it is about. Build `"tok1" "tok2" "tok3"*` from what is left (implicit
+   AND, prefix match on the last token, since queries are often typed
+   incrementally by hooks).
+3. If fewer than `limit` nodes match, retry with OR between the same
+   tokens.
 4. If the query contains CJK or other unsegmented script, or the token
    query found nothing, also query `fts_tri` (trigram) with each run of 3+
    characters. Shorter runs fall back to a bounded `LIKE` scan over
@@ -392,7 +393,8 @@ Structured result (MCP `structuredContent`; JSON from the CLI with
 ```
 
 `total` counts every match before `limit`. `next_cursor` is present when
-more results follow. `facets` appears only when requested.
+more results follow. `facets` appears only when requested. `score` is null
+when results are ordered by date or title instead of relevance.
 
 The text form (MCP text content, CLI default) shows each hit's path, which is
 the handle for the next call, and puts guard warnings first:
