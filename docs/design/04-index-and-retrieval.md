@@ -287,13 +287,21 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| `query` | required | Free text. |
+| `query` | `""` | Free text. **Empty means browse**: no text matching, results ordered by `sort` (default `recent`) within the filters. |
 | `limit` | 8 | Primary results, before expansion and guards. Max 50. |
 | `topic` | all allowed | Restrict to one or more topics. |
+| `type` | any | Restrict to note types (`decision`, `release`, `person`…), as in frontmatter. |
+| `tag` | any | Restrict to notes carrying all of these tags. |
+| `where` | none | Frontmatter property equality, e.g. `{"stage": "open"}`; values compare as strings, lists match any item. |
 | `kinds` | `note, hub, episode` | Pending episodes are searchable; archived episodes only on request. |
 | `status` | `active, superseded` | `archived` notes only on request. |
 | `intent` | `context` | Graph expansion, §6.4. |
-| `since` | none | Only nodes updated on or after a date. |
+| `since`, `until` | none | Only nodes updated on or after / on or before a date. Relative forms `7d`, `4w`, `3m` are accepted. |
+| `sort` | `relevance` (`recent` when the query is empty) | `relevance` or `recent` (newest `updated` first; ties by relevance). |
+| `cursor` | none | Opaque handle from a previous result's `next_cursor`, for the next page. |
+| `count_only` | false | Return only `total`: how many nodes match, before any limit. |
+| `facets` | false | Add counts of the matching nodes by `type`, `topic`, and `tag` (top 10 each), so the caller can narrow before reading. |
+| `format` | `text` | Text rendering style: `text` (default), or `paths` (one brain-relative path per line, for handing to file tools). The structured result is the same either way. |
 
 ### 6.2 Matching
 
@@ -301,13 +309,22 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
    syntax characters so user text can never be interpreted as operators.
 2. Build `"tok1" "tok2" "tok3"*` (implicit AND, prefix match on the last
    token, since queries are often typed incrementally by hooks).
-3. If that returns fewer than `limit` rows, retry with OR between tokens.
+3. If that returns fewer than `limit` rows, retry with OR between tokens,
+   leaving out filler words ("the", "did", "why", "what", "how", "we"…)
+   when any content words remain, so a question phrased as a sentence ranks
+   by its content words instead of matching every note that says "the".
 4. If the query contains CJK or other unsegmented script, or the token
    query found nothing, also query `fts_tri` (trigram) with each run of 3+
    characters. Shorter runs fall back to a bounded `LIKE` scan over
    `docs.title` and `docs.body` (trigram cannot match fewer than 3
    characters).
-5. Privacy and topic filters are applied to FTS candidates before scoring and truncation (R3). Candidates are fetched in growing batches, so restricted notes never displace visible ones and nothing about them reaches the result.
+5. Privacy, topic, type, tag, property, and date filters are applied to FTS
+   candidates before scoring and truncation (R3). Candidates are fetched in
+   growing batches, so restricted notes never displace visible ones and
+   nothing about them reaches the result.
+6. An empty query skips steps 1–4: it selects the filtered nodes directly and
+   orders them by `sort`, which is how an agent lists a topic or asks for the
+   latest release.
 
 ### 6.3 Ranking
 
@@ -367,11 +384,18 @@ Structured result (MCP `structuredContent`; JSON from the CLI with
       "hidden_guards": {}
     }
   ],
-  "truncated": false
+  "truncated": false,
+  "total": 37,
+  "next_cursor": "8",
+  "facets": {"type": {"decision": 21, "fix": 9}, "topic": {"search": 30}, "tag": {}}
 }
 ```
 
-The text form (MCP text content, CLI default) puts guard warnings first:
+`total` counts every match before `limit`. `next_cursor` is present when
+more results follow. `facets` appears only when requested.
+
+The text form (MCP text content, CLI default) shows each hit's path, which is
+the handle for the next call, and puts guard warnings first:
 
 ```
 1. Use SQLite FTS5 for local search  [decision · active · topics/search/fts5.md]
@@ -396,7 +420,24 @@ guessing.
 | `outline` (default for hubs) | Frontmatter summary, headings, active claims, relations with resolved titles |
 | `full` (default for notes) | The whole file, with metadata comments removed and superseded claims marked |
 | `section` | One heading's content |
-| `raw` | The file exactly as on disk (for agents that will propose edits) |
+| `raw` | The file exactly as on disk (for agents about to edit it, [05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits)) |
+
+Every relation and backlink in the result carries its handle: `id` and
+`path` in the structured result, and the path after the title in the text,
+so the next call is exact:
+
+```
+Relations:
+- part_of "Gateway" (topics/gateway/index.md)
+- depends_on "Upgrade bundled npm to 12.1.0" (topics/install/pr-…md)
+
+Linked from:
+- related_to "Kai Keller" (topics/people/person-kai-keller.md)
+```
+
+Guard banners show at most three in full, then a count with a pointer to
+`brain_neighbors` for the rest, so a note with many conflicts does not bury
+its own content.
 
 Every mode except `raw` starts with banners computed by §5:
 
@@ -411,37 +452,86 @@ error as a missing note, so existence is not revealed by reads.
 Claims whose `taint` is `true` or `unknown` are shown with an
 `[unverified]` marker, so an agent can weigh them accordingly.
 
-## 8. Orientation
+## 8. Orientation (the briefing)
 
-`orient(profile)` is what a host injects at session start. It is assembled
-in priority order and cut to `budgets.orient_max_tokens` (estimated as
-characters / 4, a conservative bound for English):
+`orient(profile)` returns one brain's briefing. Agents fetch it with
+`brain_orient` when a task may depend on the user's knowledge (the static
+instruction block tells them to, [08 §3.2](08-agent-integrations.md#32-the-static-instruction-block));
+an optional session-start hook can inject it instead. It is assembled in
+priority order and cut to `budgets.orient_max_tokens` (default 1,500,
+estimated as characters / 4, so about 6,000 characters), with rules always
+included in full:
 
-1. One header line: brain name, date, counts.
-2. `rules.md`, all of it (it is budgeted separately, so it always fits).
-3. Topic table: slug, title, one-line description, note count, last update,
-   number of active conflicts. Most recently updated first; truncated with
-   "N more topics, use search".
-4. Recent changes: the last 5 `log.md` entries, one line each.
-5. Inbox status: pending episode count, oldest pending age, and a hint to
-   consolidate when it exceeds a threshold. When harvest is enabled for the
-   calling host, also the number of its sessions not yet harvested (a cached
-   count, refreshed at most hourly, so orientation never scans session
-   stores on the hot path).
-6. Two lines on how to write (log an episode; never edit topics directly).
+1. Header: brain name, date, note count, the span of `updated` dates, and
+   pending episodes.
+2. `rules.md`, all of it (budgeted separately, so it always fits).
+3. **What's in this brain:** note counts by type (largest first), the
+   largest topics, the topics that hold people or meetings when notes of
+   those types exist, and open issues (active conflicts, unverified claims).
+4. Topic table: slug, title, one-line description, note count, last update,
+   number of active conflicts. Most recently active first; truncated with a
+   pointer to browsing (`brain_search("", topic=[…])`).
+5. Recent changes: the last 5 `log.md` entries, one line each, and the number
+   of notes updated in the last 7 days.
+6. Inbox status: pending episode count, oldest pending age, and a hint to
+   consolidate when it exceeds a threshold (plus unharvested sessions when
+   harvest is enabled for the caller, from a cached count).
+7. How to query: three example calls built from this brain's own topics and
+   types (a keyword search, a typed "latest" lookup, and a `why` search).
 
-Everything in it is filtered by the caller's profile. The same function
-generates the managed block of `AGENTS.md`, with the profile `default`.
+Everything in it is filtered by the caller's profile, so hidden notes are
+never counted or named. The same function generates the managed block of
+`AGENTS.md`, with the profile `default`.
 
 ## 9. Other queries
 
 | Query | Used by | Notes |
 |---|---|---|
-| Backlinks of a node | read (`outline`), lint orphans | All edges with `dst = node` |
+| Backlinks of a node | read (`outline`), neighbors, lint orphans | All edges with `dst = node` |
+| Facet counts | orientation, search `facets`, `brain tags`, `brain types` | Counts by type, topic, tag, and property over visible nodes |
+| Orphans, dead ends, unresolved links | `brain orphans`, `brain unresolved`, reports | Nodes without incoming edges; nodes without outgoing edges; links that resolve to nothing |
 | Neighborhood graph | visualizer | Nodes plus edges filtered by profile; see [12](12-visualizer.md) |
 | Stale dependents | reports | Nodes that `depends_on` a superseded or archived node |
 | Open conflicts | orientation, reports | `conflicts_with` edges between two active nodes |
 | Pending episodes | consolidation gate | `kind = 'episode'`, ordered by id |
+
+### 9.1 Brain list
+
+`brain_list` (CLI `brain list`) answers "which brains exist, and what is
+each for?" for the calling host:
+
+| Field | Source |
+|---|---|
+| `name`, `description` | Registration, and the optional one-line `description` in `brain.toml` |
+| `default_here` | Brain resolution for the current project and host ([03 §3](03-config-and-storage.md#3-choosing-a-brain)) |
+| `topics`, `notes`, `updated`, `pending` | The index, filtered by the host's profile for that brain |
+| `path` | The brain folder, **only** when the host's profile may read every privacy level and topic in the brain; omitted otherwise |
+
+Brains outside the host's limits are not listed. The path is withheld from
+restricted profiles because reading files directly would bypass the privacy
+filters; privacy levels filter what the tools return and are not a sandbox
+([10](10-security-and-privacy.md)).
+
+### 9.2 Neighbors
+
+`neighbors(target, relations, direction, depth, limit)` follows a node's
+typed edges without reading bodies: `relations` defaults to every typed
+family, `direction` is `out`, `in`, or `both` (default `both`), `depth` is
+1–3 (default 1), and `limit` caps nodes (default 30, max 100). It returns a
+small subgraph:
+
+```json
+{"root": "01J9…",
+ "nodes": [{"id": "…", "path": "…", "title": "…", "type": "…", "topic": "…",
+            "status": "active", "flags": ["conflict"], "depth": 1}],
+ "edges": [{"rel": "depends_on", "src": "…", "dst": "…"}],
+ "hidden": 0, "truncated": false}
+```
+
+Typical uses: what a release shipped (`depends_on`, `out`), what depends on
+a decision (`depends_on`, `in`), how a fact evolved (`supersedes`, `both`,
+depth 3). Privacy filtering applies to every node; hidden neighbors are
+counted, not named, as in §5.
 
 ## 10. Performance budgets
 

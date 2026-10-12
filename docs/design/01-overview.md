@@ -75,7 +75,7 @@ Agents interact through three surfaces, each optional:
    skill, the MCP server, and optional hooks that inject orientation at
    session start and capture episodes at session end.
 
-Writes take one of two paths:
+Writes take one of three paths:
 
 - **Inbox (any agent, any time):** append a new episode file. Nothing is
   overwritten, so concurrent agents and devices never conflict.
@@ -84,6 +84,9 @@ Writes take one of two paths:
   claim, add a relation, create a note). The engine validates them
   deterministically, applies them, lints the result, records an undo point,
   and commits if the brain is a git repo.
+- **Checked edits (agents with `edit`):** an agent edits a note directly,
+  for example a person's role, then runs `brain check`, which validates the
+  change and records it with an undo point like any other run.
 
 The LLM that proposes operations is whatever the user already runs: the
 host agent itself (through MCP tools and a skill) or a headless agent CLI
@@ -157,8 +160,9 @@ agent-readable without restructuring it.
 | # | Scenario | Flow (details in) |
 |---|---|---|
 | S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, privacy, capture and harvest, and routines, with a dry run before every write. [15](15-skills-onboarding-and-routines.md) |
-| S1 | **Session start.** An agent starts in a project. | Hook or MCP call returns orientation (rules, topic map, recent changes) under a token budget. [04](04-index-and-retrieval.md), [08](08-agent-integrations.md) |
-| S2 | **Recall during a task.** The agent asks about a past decision. | `search` returns the matching notes plus every note that supersedes or conflicts with them. [04](04-index-and-retrieval.md) |
+| S1 | **Session start.** An agent starts in a project. | The static block `brain connect` wrote tells it to call `brain_list` and `brain_orient` when the task may depend on the user's knowledge; the briefing (what the brain holds, rules, topics, recent changes) fits a fixed budget. [04](04-index-and-retrieval.md), [08 §3.2](08-agent-integrations.md#32-the-static-instruction-block) |
+| S2 | **Recall during a task.** The agent asks about a past decision. | `search` returns the matching notes plus every note that supersedes or conflicts with them; the agent opens one with `read` and follows its relations with `neighbors`, or reads files directly when allowed. [04](04-index-and-retrieval.md) |
+| S2b | **An agent updates a note.** The user says "Maya moved to the platform team." | The agent edits the person's note and runs `brain check`, which validates and records the edit. [05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits) |
 | S3 | **Capture.** The agent learned something worth keeping. | It logs an episode (MCP or CLI), or the opt-in session-end hook writes one from the transcript. [05](05-write-path-and-consolidation.md) |
 | S3b | **Harvest and backfill.** Sessions happened without capture, or before brain-wiki existed. | `brain harvest` reads finished sessions from the hosts' own stores, routes each to a brain by project, and distills them into episodes, after a dry run. [05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions) |
 | S4 | **Consolidation.** Pending episodes are folded into topic notes. | Either the user asks their agent to consolidate (agent backend), or a scheduled job runs a headless agent CLI (command backend). [05](05-write-path-and-consolidation.md) |

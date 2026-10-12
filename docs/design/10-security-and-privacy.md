@@ -29,9 +29,11 @@ Status: draft for review
   host's model receive brain content. Profiles limit what each gets.
 - **File access bypasses brain-wiki.** Any program running as the user can
   read and write the brain directly. Profiles and privacy levels govern
-  brain-wiki's interfaces only. Real separation from a host that has file
-  access means keeping the brain where that host cannot reach, or a
-  separate brain.
+  brain-wiki's interfaces only: they filter what the tools return and are
+  not a sandbox. Real separation from a host that has file access means
+  keeping the brain where that host cannot reach, or a separate brain. For
+  the same reason `brain_list` gives a brain's folder path only to profiles
+  that may already read everything in it ([04 §9.1](04-index-and-retrieval.md#91-brain-list)).
 
 ## 3. Threats and mitigations
 
@@ -54,6 +56,7 @@ Status: draft for review
 | T15 | **Name leakage through links.** A `default` note links to `[[Secret project]]`. | Lint BW312 warns; guard results hide the target. | The link text in the source note is visible to whoever may read that note. |
 | T16 | **Impersonating plugins.** A fake "brain-wiki" plugin in a marketplace. | Document the official sources (repository, PyPI, registry name); the plugin manifests point to the official package. | Users must install from the official source. |
 | T18 | **Unattended routines act without the user watching.** | Routines use only brain-wiki tools the user pre-approved for that task; they never propose rules (that tool always needs a person); consolidation results that trip a check go to review; every run is logged, committed, and undoable; one consolidation device. | A pre-approved routine can still consolidate tainted episodes into claims marked unverified, the same as an interactive run. |
+| T19 | **A direct agent edit damages a note.** A manipulated or careless agent rewrites a note, drops claims, or lowers its privacy. | Only profiles with `edit`, and only in topics whose `agent_edits` allows it; `brain check` refuses deleted or reworded claims (they must be superseded), lowered privacy, protected files, and large deletions; every recorded edit is a run with an undo point and a git commit; claims an agent adds are marked unverified ([05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits)). | An agent can skip `brain check`: the change then shows as a pending edit with its diff until it is adopted or restored, but nothing blocks the write itself, because files are the user's. |
 | T17 | **Over-reading agent transcripts.** Harvest and origin lookup read host session stores, which hold everything a session saw: other projects, secrets, tool output from untrusted sources. | Off by default, enabled per host; every harvest starts as a dry run listing the sessions it would read; sessions route to a brain by working directory and unrouted sessions are skipped; tool output bodies are dropped (origin lookup can include them only on request, wrapped as untrusted); secrets scrubbed before anything is written or sent; taint computed from the session's tool calls; origin reads need `read_origin`, off for every host by default; readers never modify host files. | Distillation sends condensed transcripts to the configured backend's provider, the same trust decision as consolidation. |
 
 ## 4. Privacy model

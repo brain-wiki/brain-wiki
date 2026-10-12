@@ -21,6 +21,7 @@ self-contained commits. Later milestones depend only on earlier ones.
 | M9 | Bench | Generator, suites, graders, report, compare, capture | Offline suites in CI; a consolidation run across two presets produces a report |
 | M10 | Visualizer | Graph export, local server, vendored assets with lock check, static app, exports | Manual checklist on a 10k brain; escaping tests |
 | M11 | Release readiness | User guide, README, CONTRIBUTING, SECURITY, CHANGELOG, version sync, registry files | `scripts/check.py` runs every check; a fresh machine can install and connect one host following the guide |
+| M12 | Agent context and discovery (D25–D28) | Static instruction block written by `brain connect` per host; `brain_list`; briefing with "what's in this brain"; search filters, browse, counts, facets, paths output; handles in reads; `brain_neighbors`; Obsidian-style CLI commands; checked agent edits (`brain check`, pending edits, `brain restore`, `edit` capability, topic `agent_edits`) | Unit and MCP tests per tool; connect writes and uninstalls the block for every host in fixtures; edits that delete a claim, lower privacy, or touch protected files are refused; the retrieval failures found on the OpenClaw sample ("latest release", "what changed last week", sentence queries) pass as typed calls |
 
 Order rationale: M1–M4 are the foundation everything else touches; M5 and
 M6 are the core value; M7 makes it usable in hosts; M8–M10 widen adoption

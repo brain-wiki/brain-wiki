@@ -80,6 +80,7 @@ brain is the default) live in the user config ([03](03-config-and-storage.md)).
 format = 1                                  # format version (required)
 id = "01J9Z7M0W4K8P2R6T9V3X5Z7A1"           # brain id, a ULID (required, never changes)
 name = "personal"                           # display name (optional)
+description = "Personal notes and projects" # one line shown by brain_list (optional)
 
 [layout]                                    # all optional; defaults shown
 topics_dir   = "topics"
@@ -94,7 +95,7 @@ hub_max_lines       = 150
 rules_max_lines     = 100
 rules_max_chars     = 4000
 agents_md_max_lines = 150
-orient_max_tokens   = 2000
+orient_max_tokens   = 1500
 
 [privacy]
 levels  = ["default", "sensitive", "secret"]  # ascending restriction
@@ -136,6 +137,7 @@ title       = "Search"
 description = "How local search works and why."
 privacy     = "default"
 review      = "always"                      # per-topic override
+agent_edits = "allow"                       # allow | review | deny for checked agent edits (05 §2.3)
 
 [agents.default]                            # profile for unknown hosts
 max_privacy = "default"
@@ -143,7 +145,7 @@ max_privacy = "default"
 [agents.claude-code]                        # profile for one host id
 max_privacy = "sensitive"
 topics      = ["*"]                         # topic allowlist; "*" = all
-write       = ["episodes", "propose_rules", "consolidate", "review"]
+write       = ["episodes", "edit", "propose_rules", "consolidate", "review"]
 ```
 
 Rules:

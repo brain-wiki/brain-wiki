@@ -266,17 +266,29 @@ schedulers) and prints steps for the ones it cannot (desktop apps).
 
 **`brain`**
 
-1. What the brain is (shared memory, plain files) and the two rules: never
-   edit brain files directly; never add rules unless the user explicitly
-   asks.
-2. When to search, how to phrase queries, and how to read results: warnings
-   for superseded or conflicting notes come first; prefer current notes;
-   say so when relying on an unverified claim.
-3. When to record and what makes a good episode (decisions with reasons,
+1. What the brain is (shared memory, plain files) and the rules: never add
+   rules unless the user explicitly asks; edit notes only with a `brain
+   check` afterwards, and never rules, episodes, or `log.md`.
+2. Start with `brain_list`, then `brain_orient` for the brain that fits.
+3. Explore step by step: search or browse (an empty query with filters),
+   read the outline, follow relations with `brain_neighbors`, or read files
+   directly when `brain_list` gives a path. A query recipe table maps
+   questions to calls (why → intent `why`; latest X → `type` and
+   `sort: recent`; what changed → `since`; who → the people topic; what
+   depends on X → `brain_neighbors`; exact strings across many notes →
+   grep). How to read results: warnings for superseded or conflicting notes
+   come first; prefer current notes; say so when relying on an unverified
+   claim.
+4. When to record and what makes a good episode (decisions with reasons,
    facts, negative findings, open questions; not chatter), with one example.
-4. Proposing a rule: only on an explicit request, with the user's exact
+5. Editing a note directly: when it fits (a correction or update to an
+   existing note, not new knowledge), supersede claims instead of deleting
+   them, then `brain_check` and fix what it reports.
+6. Proposing a rule: only on an explicit request, with the user's exact
    words; expect a confirmation prompt.
-5. If brain-wiki says it is not configured: hand over to `brain-setup`.
+7. If brain-wiki says it is not configured: hand over to `brain-setup`,
+   which also offers `brain connect` to add the static instruction block
+   ([08 §3.2](08-agent-integrations.md#32-the-static-instruction-block)).
 
 **`brain-maintain`**
 

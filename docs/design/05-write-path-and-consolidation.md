@@ -13,7 +13,7 @@ Status: draft for review · Schemas in §4.3 and §5 are normative for v0.1
 | W5 | Every run is reproducible from its record: inputs, proposals, decisions, outputs. | Debugging and multi-model comparison (G8). |
 | W6 | Any LLM the user already runs can do the proposing, with no API keys. | D8; G6. |
 
-## 2. The two write paths
+## 2. The write paths
 
 ```
                      PATH 1: inbox (append-only, any agent)
@@ -26,15 +26,20 @@ Status: draft for review · Schemas in §4.3 and §5 are normative for v0.1
         ─► apply + lint + undo record + git commit ─► episodes move to archive/
                      (or ─► proposal file for human review)
 
+                     PATH 3: checked edits (agents with `edit`)
+  agent edits a note ─► brain check <paths> ─► validate (schema, links, claims,
+        privacy, protected files, loss guard) ─► record as a run (undo, log.md, git)
+                     (or ─► errors, nothing recorded; fix, or brain restore)
+
   rules.md ◄── only: user via CLI, or agent via MCP with user confirmation (§6)
   any file ◄── a human with an editor (first-class, picked up by freshness + lint)
 ```
 
 Agents with file tools can technically write anywhere. The sanctioned paths
-are what the skill, `AGENTS.md`, and MCP tools teach, and lint makes
-deviations visible (an episode that changed, a claim without provenance, a
-curated note edited outside any run in a git history). Human edits are
-always allowed: it is the user's brain.
+are what the static instruction block, the skill, `AGENTS.md`, and MCP tools
+teach, and the engine makes deviations visible (an episode that changed, a
+claim without provenance, a note changed since its last recorded version).
+Human edits are always allowed: it is the user's brain.
 
 ### 2.1 Ways an episode is written
 
@@ -135,6 +140,59 @@ distillation; `--apply` executes. Every backend is subject to the same
 profile check as consolidation: it only receives sessions routed to brains
 and privacy levels its profile may read. Sessions it may not read are
 harvested `raw` by the CLI or left for another backend.
+
+### 2.3 Checked agent edits
+
+Some updates are not new knowledge but corrections to a note: a person's new
+role, a line added to a meeting note, a wrong fact fixed. Consolidation ops
+cannot express prose or property changes, and routing them through episodes
+is slow and lossy. Agents whose profile has `edit` may edit notes directly
+and then run `brain check` (MCP `brain_check`) on what they changed.
+
+**Who may edit what:**
+
+| Control | Default |
+|---|---|
+| Profile capability `edit` ([07 §1](07-interfaces.md#1-agent-profiles)) | On for the owner profile; off unless listed in `write` for other profiles |
+| Topic policy `[topics.<slug>] agent_edits = "allow" \| "review" \| "deny"` ([02 §3](02-brain-format.md#3-braintoml)) | `allow`. `review` turns a checked edit into a proposal for the user (§7.2) and restores the file; `deny` refuses it |
+| Protected files | Never editable this way: `rules.md` (§6), inbox and archived episodes, `log.md`, `reports/`, the managed block of `AGENTS.md`, `brain.toml` |
+
+**What `brain check` validates,** for each changed note against its last
+recorded version:
+
+| Check | Fails when |
+|---|---|
+| Schema | Frontmatter is not valid YAML, a required key is missing, `status` or `privacy` has an unknown value, or an `id` was changed or duplicated (lint BW1xx) |
+| Links and relations | A `## Relations` line does not parse (error) or a new link does not resolve (warning) |
+| Claims | Claim metadata comments are broken, or a claim was deleted or reworded in place. Claims change only by superseding (strike through, add the new claim), so a fact's history is never lost |
+| Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` |
+| Privacy | A note's privacy was lowered, or the note is above what the caller's profile may read |
+| Protected files | Any of the files above changed |
+| Budgets | A hub went over its line budget |
+| Sync debris | Merge-conflict markers or sync-conflict copies |
+
+**Recording.** A clean check records the change as a run of kind `edit`
+(§7.3): the last recorded version is the pre-image, so `brain undo` restores
+it; `log.md` gains a line; the brain's git repo, if any, gets a commit;
+author `agent:<host>`. Claims the edit added get `origin: agent` and
+`taint: unknown` (hosts without hooks cannot report taint), so they show as
+unverified until consolidation or the user confirms them. A failed check
+records nothing and returns every problem with its line; the agent fixes
+the file and checks again, or `brain restore <path>` puts back the last
+recorded version.
+
+**The last recorded version.** The index keeps, for each note, the content
+it had when a run last wrote it, when `brain check` last recorded it, or
+when the index first saw it. A note whose file differs from that version
+has a *pending edit*. `brain check` with no paths lists pending edits with
+their diffs; `brain check --adopt PATH` records a pending edit as the
+user's (author `owner`), which is how hand edits made outside brain-wiki can
+be given an undo point. Pending edits are not lint errors: humans edit
+their notes freely, and nothing nags them. A rebuilt index starts over from
+the files as they are.
+
+Agents without file tools can still update notes through episodes and
+consolidation; a combined edit-and-check tool is future work.
 
 ## 3. Provenance and taint
 
