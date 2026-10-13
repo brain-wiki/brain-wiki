@@ -14,6 +14,7 @@ bw-part_of:
 |---|---|
 | The first design: one 3D force graph of everything (`3d-force-graph`) | Did not scale: global layout and payload, hairball, no navigation. |
 | A force layout per topic, seeded by its folder tree (strong tree springs, sub-folders in random directions) | Deep or lopsided folder trees crossed themselves: 77 of 175 tree lines crossed on a 176-note topic five folders deep, and the 3D scatter hid how deep a folder sat. |
+| A radial tree per topic (a slice per folder, a line per note) | No crossings, but a line per note turned a folder of 200 dailies into a spiky ball, lines routed along rings to avoid crossings read as bent polylines, and nothing showed how much a note holds. |
 | 2.5D terrain atlas (topics as territories, notes as towns) | Easiest to navigate, but the galaxy keeps depth for separating dense clusters and matches the brain metaphor; both use the same levels and API. |
 | No build step (vendored ES modules, hand-written JS) | Keeps contributors off Node, but a HUD of this size and custom shaders are much harder to maintain without types and a bundler; committing the bundle keeps users off Node anyway. |
 | React | Preact gives the same model at a fraction of the size. |

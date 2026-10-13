@@ -12,7 +12,8 @@ bw-part_of:
 
 - **three.js on WebGL2.** Nebulae are additive glow particles (one draw call
   for all topics); stars are instanced glow points with per-star size
-  (√degree), color (topic hue), brightness (recency), ghosting
+  (how much the note holds: the fourth root of its lines), color (topic
+  hue), brightness (recency), ghosting
   (superseded or archived), and a halo ring per health flag, all in one
   shader. Trails are solid fat lines; directed relations add slow pulses
   running along them (prerequisite → dependent, old → new), so motion shows
@@ -45,16 +46,17 @@ bw-part_of:
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
   inside their constellation, a parent topic at the center of the
-  constellation its sub-topics form; notes are laid out per topic as a
-  radial tree of its folders, facing the camera: the topic index at the
-  center, each folder in a slice of the circle sized by the notes below it,
-  its sub-folders splitting that slice, and its own notes fanned out just
-  beyond its star (in rows when there are many). Because every folder stays
-  in its slice, tree lines never cross. Nesting reads as distance twice over:
-  each level sits one ring farther out and one tier farther back from the
-  camera, straight along the view, so depth never moves a star on screen.
-  Typed links are drawn but do not move stars. The same brain always produces
-  the same map, and no layout ever spans the whole brain.
+  constellation its sub-topics form; notes are packed per topic as nested
+  circles of its folders, facing the camera: each folder is a circle holding
+  its notes and its sub-folders' circles, so containment shows the hierarchy
+  and the tree needs no lines. A folder's own notes pack as one cluster
+  beside its sub-folders, with the folder note (and, at the top, the topic
+  index) first. A note's room grows with its length (radius with the fourth
+  root of its lines), so dense notes stand out. Each nesting level sits one
+  tier farther back from the camera, straight along the view, so depth never
+  moves a star on screen. Typed links are drawn but do not move stars. The
+  same brain always produces the same map, and no layout ever spans the
+  whole brain.
 - **Labels say what things are.** The galaxy is the look, not the vocabulary:
   the interface says Overview, Group (of topics), Topic, and Note, never
   galaxy or constellation; *issues*, not flags; *session captures*, not
@@ -63,8 +65,9 @@ bw-part_of:
   Replaces, Replaced by, Related to), and every number names its unit.
 - **The hierarchy follows the folders.** Inside a topic, the map's tree is
   the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
-  folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is the branch's star;
-  a folder without one is still a branch, drawn as a label. A folder's label
+  folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) sits at the heart of
+  its circle; a folder without one is still a circle. Each circle is labeled
+  at its top. A folder's label
   drops the leading ` · ` parts its parent folders' titles already say
   ("Lumen guide · Sync · Conflicts" reads "Conflicts"). A written `part_of` that
   points elsewhere is a relation, not the note's place.
@@ -72,7 +75,7 @@ bw-part_of:
 
 | Relation | Trail |
 |---|---|
-| `part_of` | The folder tree (the dock's **Folders** chip, on by default): faint lines from each folder to the one above, running along the parent's ring and then straight out, and from each note straight to its folder's star (along the ring too when the folder's notes fan wide); notes directly in the topic draw none, so flat topics stay clean |
+| `part_of` | The folder tree (the dock's **Folders** chip, on by default): each folder's faint circle; a note's place in its circle says which folder holds it, so notes draw no lines |
 | `depends_on` | Blue, flowing prerequisite → dependent |
 | `conflicts_with` | Red, always shown when either end is visible |
 | `supersedes` | Amber, flowing old → new |
