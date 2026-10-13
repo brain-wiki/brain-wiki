@@ -257,3 +257,22 @@ def test_cli_lint_exit_codes_and_staged(
     assert "topics/a/staged.md" in out and "topics/a/no-id.md" not in out
     assert main(["lint", "--brain", str(brain_dir), "--install-hook"]) == 0
     assert (brain_dir / ".git/hooks/pre-commit").read_text().startswith("#!/bin/sh")
+
+
+def test_notes_nested_under_listed_notes_need_no_hub_line(brain_dir: Path):
+    from brainwiki.ids import new_ulid
+
+    ids = {k: new_ulid() for k in "habc"}
+    note(brain_dir, "topics/a/index.md", ids["h"], "A", "## Notes\n- [[section]]")
+    note(brain_dir, "topics/a/section.md", ids["a"], "Section", "body")
+    note(
+        brain_dir,
+        "topics/a/deep/child.md",
+        ids["b"],
+        "Child",
+        "## Relations\n- part_of [[section]]",
+    )
+    note(brain_dir, "topics/a/stray.md", ids["c"], "Stray", "body")
+    with eng(brain_dir) as e:
+        found = codes(lint(e, select=["BW405"]))
+    assert found["BW405"] == ["topics/a/stray.md"]

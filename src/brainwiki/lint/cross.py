@@ -484,8 +484,9 @@ def _structure_checks(
             )
             continue
         listed = _hub_listing(engine, conn, hub["id"], hub["path"])
+        reached = _reaches_hub(conn, [n["id"] for n in notes], hub["id"], listed)
         for note in notes:
-            if note["id"] in listed:
+            if note["id"] in listed or note["id"] in reached:
                 continue
             line = f"- [[{namer(note['id'])}]]"
             out.append(
@@ -555,6 +556,36 @@ def _structure_checks(
                 Problem("BW408", "AGENTS.md", None, "managed block is out of date", fix=regenerate)
             )
     return out
+
+
+def _reaches_hub(
+    conn: sqlite3.Connection, note_ids: list[str], hub_id: str, listed: set[str]
+) -> set[str]:
+    """Notes whose `part_of` chain leads to the hub or to a note the hub lists, so a topic can
+    nest notes under section notes instead of listing every note in one long hub."""
+    parents: dict[str, list[str]] = {}
+    for start in range(0, len(note_ids), 500):
+        chunk = note_ids[start : start + 500]
+        for row in conn.execute(
+            f"SELECT src, dst FROM edges WHERE rel = 'part_of' AND dst IS NOT NULL "  # noqa: S608
+            f"AND src IN ({','.join('?' * len(chunk))})",
+            chunk,
+        ):
+            parents.setdefault(row["src"], []).append(row["dst"])
+    anchors = listed | {hub_id}
+    found: dict[str, bool] = {}
+
+    def reaches(node: str, seen: frozenset[str]) -> bool:
+        if node in found:
+            return found[node]
+        result = any(
+            parent in anchors or (parent not in seen and reaches(parent, seen | {parent}))
+            for parent in parents.get(node, [])
+        )
+        found[node] = result
+        return result
+
+    return {n for n in note_ids if reaches(n, frozenset({n}))}
 
 
 def _hub_listing(engine: Engine, conn: sqlite3.Connection, hub_id: str, hub_path: str) -> set[str]:
