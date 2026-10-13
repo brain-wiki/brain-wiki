@@ -29,12 +29,11 @@ How local search works in this project and why.
 - [[SQLite version policy]]: minimum versions and fallbacks
 ```
 
-- Hubs MUST stay within `budgets.hub_max_lines`. When consolidation would
-  push a hub over budget, it must create a child note
-  (`bw-part_of: "[[hub]]"`) instead, and the hub gains one link line.
+- Hubs have no length limit. Detail belongs in notes
+  (`bw-part_of: "[[hub]]"`); the hub links them, one line each.
 - A parent topic's hub need not list its sub-topics: the folder makes each
-  sub-topic's hub `part_of` it (§2). Splitting a crowded topic into
-  sub-topics is how a hub stays within budget as a topic grows.
+  sub-topic's hub `part_of` it (§2). A crowded topic splits into
+  sub-topics.
 - `## Notes` lists the topic's notes with a short gloss. It stays in the
   body because it is navigation people read, not data. `brain lint --fix`
   can add missing entries; it never removes lines a person wrote.

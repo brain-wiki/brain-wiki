@@ -85,8 +85,8 @@ Semantics (what the deterministic writer does):
 
 `new:<topic>/<slug>` refs let ops in one batch point at notes created in the
 same batch. Every op that changes a note also sets its `updated` field; the
-hub line `create_note` adds is bookkeeping and does not, so a hub one line
-under its budget can still take a new child note. An op that edits a format 1
+hub line `create_note` adds is bookkeeping and does not, so a hub's
+`updated` still dates its own text. An op that edits a format 1
 note first converts it to format 2 in the same run
 ([[02-13-format-versioning|02 §13]]), and a run that writes
 format 2 files into a brain that declares format 1 raises the declaration.

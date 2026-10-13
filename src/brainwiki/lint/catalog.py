@@ -54,7 +54,6 @@ _RULES = [
     RuleInfo("BW310", "warning", "info", True, "body link does not resolve"),
     RuleInfo("BW311", "error", "warning", False, "more than one ## Relations section"),
     RuleInfo("BW312", "warning", "warning", False, "link to a note with a higher privacy level"),
-    RuleInfo("BW401", "error", "warning", False, "hub exceeds hub_max_lines"),
     RuleInfo("BW402", "error", "error", False, "rules.md exceeds its budget"),
     RuleInfo("BW403", "error", "warning", True, "AGENTS.md exceeds its budget"),
     RuleInfo("BW404", "warning", "info", True, "topic folder has no hub"),

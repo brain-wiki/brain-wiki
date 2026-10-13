@@ -506,7 +506,6 @@ def build_packet(
         "instructions_version": INSTRUCTIONS_VERSION,
         "limits": {
             "max_ops": min(MAX_OPS, 10 * len(packet.episodes) + 20),
-            "hub_max_lines": manifest.budgets.hub_max_lines,
             "claim_max_chars": CLAIM_MAX_CHARS,
         },
         "relations": list(CANONICAL),

@@ -1,4 +1,4 @@
-"""Deterministic checks on proposed ops (design doc 05 §7.1, V1–V11; V7 and V12 run in apply)."""
+"""Deterministic checks on proposed ops (design doc 05 §7.1, V1–V10; V11 runs in apply)."""
 
 from __future__ import annotations
 

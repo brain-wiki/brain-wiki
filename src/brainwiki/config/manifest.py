@@ -46,7 +46,6 @@ class Layout:
 
 @dataclass
 class Budgets:
-    hub_max_lines: int = 150
     rules_max_lines: int = 100
     rules_max_chars: int = 4000
     agents_md_max_lines: int = 150

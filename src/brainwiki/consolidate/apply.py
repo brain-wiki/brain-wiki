@@ -104,7 +104,6 @@ class Applier:
         self.topic_meta: dict[str, tuple[str, str, str | None]] = {}  # title, description, parent
         self.touched: set[str] = set()
         self.changed_by_ops: set[str] = set()  # files an op changed; these get `updated`
-        self.hubs: set[str] = set()
         manifest = engine.manifest
         self.layout = manifest.layout
 
@@ -249,7 +248,6 @@ class Applier:
                 append_to_section(text, "notes", [f"- [[{self.link_to(op['ref'])}]]"]),
                 bookkeeping=True,
             )
-            self.hubs.add(hub)
 
     def hub_link(self, hub_path: str) -> str:
         """Hubs share a file name (index.md), so they are usually linked by path, labeled by title."""
@@ -398,14 +396,6 @@ def stage(
         run.write(
             path, set_fields(run.read(path) or "", {"updated": _today()}, order_first=_FM_ORDER)
         )
-    budget = engine.manifest.budgets.hub_max_lines
-    for path in applier.touched:
-        text = run.read(path) or ""
-        is_hub = path in applier.hubs or path in {t.hub_path for t in packet.topics.values()}
-        if is_hub and len(text.splitlines()) > budget:
-            raise InvalidOps(
-                f"{path} would exceed hub_max_lines ({budget}); put detail in a child note"
-            )
     for handle in sorted(validation.cited | validation.skipped, key=lambda h: int(h[1:])):
         episode = packet.episodes[handle]
         if run.exists(episode.path) and not run.exists(episode.archive_to):

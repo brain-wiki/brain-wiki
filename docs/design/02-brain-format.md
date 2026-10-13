@@ -30,7 +30,7 @@ Default layout (every path is configurable in `[layout]`, see §3):
 ├── log.md                      append-only human-readable change log
 ├── topics/
 │   └── <topic>/
-│       ├── index.md            hub page for the topic (budgeted)
+│       ├── index.md            hub page for the topic
 │       ├── <note>.md           curated notes
 │       ├── <subfolder>/…       further organization inside the topic
 │       └── <sub-topic>/        a folder with its own hub is a topic too, at any depth
@@ -124,7 +124,6 @@ hub_filename = "index.md"                   # or "{folder}.md" for folder-note s
 ignore       = []                           # extra glob patterns, relative to the brain root
 
 [budgets]                                   # hard limits enforced by lint and writers
-hub_max_lines       = 150
 rules_max_lines     = 100
 rules_max_chars     = 4000
 agents_md_max_lines = 150
@@ -488,12 +487,11 @@ How local search works in this project and why.
 - [[SQLite version policy]]: minimum versions and fallbacks
 ```
 
-- Hubs MUST stay within `budgets.hub_max_lines`. When consolidation would
-  push a hub over budget, it must create a child note
-  (`bw-part_of: "[[hub]]"`) instead, and the hub gains one link line.
+- Hubs have no length limit. Detail belongs in notes
+  (`bw-part_of: "[[hub]]"`); the hub links them, one line each.
 - A parent topic's hub need not list its sub-topics: the folder makes each
-  sub-topic's hub `part_of` it (§2). Splitting a crowded topic into
-  sub-topics is how a hub stays within budget as a topic grows.
+  sub-topic's hub `part_of` it (§2). A crowded topic splits into
+  sub-topics.
 - `## Notes` lists the topic's notes with a short gloss. It stays in the
   body because it is navigation people read, not data. `brain lint --fix`
   can add missing entries; it never removes lines a person wrote.

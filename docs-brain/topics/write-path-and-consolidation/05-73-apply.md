@@ -17,7 +17,7 @@ bw-part_of:
    gets a `stale` error and re-prepares; the command backend re-prepares
    once.
 3. Compute new contents for every touched file in memory; keep pre-images.
-4. Lint the new contents (V12).
+4. Lint the new contents (V11).
 5. Write each file atomically (temporary file, `fsync`, rename); move
    episodes to `archive/` with the same relative path; regenerate hub
    `## Notes` lines for created notes and the `AGENTS.md` block; append to

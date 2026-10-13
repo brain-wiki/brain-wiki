@@ -141,10 +141,6 @@ def test_health_flags(example: Path):
         "## Relations\n- depends_on [[ripgrep]]\n",
     )
     write(example, "topics/search/broken.md", "---\ntitle: [unclosed\n---\n# Broken\n")
-    hub = (
-        "---\ntitle: Storage\ntype: hub\n---\n# Storage\n\n## Notes\n- [[sqlite-version-policy]]\n"
-    )
-    write(example, "topics/storage/index.md", hub + "".join(f"\nline {i}" for i in range(160)))
     with engine_for(example) as eng:
         graph = build_graph(eng)
     legacy = _node(graph, "01M4KT3JPSB7BP2SNSCAVC2SFC")
@@ -152,9 +148,6 @@ def test_health_flags(example: Path):
     assert legacy["unverified_claims"] == 1
     broken = next(n for n in graph["nodes"] if n["path"] == "topics/search/broken.md")
     assert "lint_error" in broken["flags"]
-    storage = next(n for n in graph["nodes"] if n["path"] == "topics/storage/index.md")
-    assert "over_budget" in storage["flags"]
-    assert "over_budget" not in _node(graph, FTS5)["flags"]
 
 
 def test_runs_from_records(example: Path):

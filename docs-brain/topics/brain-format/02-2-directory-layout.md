@@ -21,7 +21,7 @@ Default layout (every path is configurable in `[layout]`, see §3):
 ├── log.md                      append-only human-readable change log
 ├── topics/
 │   └── <topic>/
-│       ├── index.md            hub page for the topic (budgeted)
+│       ├── index.md            hub page for the topic
 │       ├── <note>.md           curated notes
 │       ├── <subfolder>/…       further organization inside the topic
 │       └── <sub-topic>/        a folder with its own hub is a topic too, at any depth

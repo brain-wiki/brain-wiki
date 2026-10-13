@@ -252,7 +252,7 @@ at most 200 per flag.
 
 `flags` come from the same queries as the reports
 ([06 §7](06-lint-and-reports.md#7-reports)): `conflict`, `stale`, `orphan`,
-`unverified`, `over_budget`, `lint_error`. Hidden notes never appear in any
+`unverified`, `lint_error`. Hidden notes never appear in any
 payload, count, flow, or search result.
 
 ## 7. Budgets

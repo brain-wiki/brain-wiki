@@ -232,9 +232,6 @@ BASE_EXTRA = """
 [git]
 mode = "off"
 
-[budgets]
-hub_max_lines = 40
-
 [topics.alpha]
 title = "Alpha"
 description = "Core services of the fictional Kestrel project."
@@ -515,12 +512,6 @@ def _bw311(root: Path) -> Expect:
     return [("BW311", IL, None), ("BW116", IL, None)], None
 
 
-@_case("BW401")
-def _bw401(root: Path) -> Expect:
-    _insert(root, HUB, "\n## Notes", "Detail line.\n" * 30)
-    return [("BW401", HUB, None)], None
-
-
 @_case("BW402")
 def _bw402(root: Path) -> Expect:
     _append(root, "rules.md", "Background paragraph.\n" * 100)
@@ -778,64 +769,6 @@ def _slice_injection(root: Path) -> dict[str, bool]:
     return checks
 
 
-def _slice_budgets(root: Path) -> dict[str, bool]:
-    from brainwiki.consolidate import pipeline
-
-    budget = 40
-    hub = root / HUB
-    _insert(
-        root,
-        HUB,
-        "\n## Notes",
-        "Context line.\n" * (budget - 1 - len(hub.read_text().splitlines())),
-    )
-    checks: dict[str, bool] = {
-        "hub starts one line under budget": len(hub.read_text().splitlines()) == budget - 1
-    }
-    with _engine(root) as engine:
-        episode = _log(
-            engine, "Producers retry with 200 ms of jitter.\nConsumers ack after the write lands."
-        )
-        packet = pipeline.prepare(engine, engine.profile)
-        handle, first = _handles(packet, episode)
-
-        def create(slug: str, line: int) -> dict[str, Any]:
-            claims = [{"text": f"Fact about {slug}.", "sources": [f"{handle}#L{line}"]}]
-            return {
-                "op": "create_note",
-                "ref": f"new:alpha/{slug}",
-                "title": slug.title(),
-                "claims": claims,
-            }
-
-        before = hub.read_text()
-        two = pipeline.apply(
-            engine,
-            packet,
-            {"ops": [create("retry-jitter", first), create("ack-timing", first + 1)]},
-            engine.profile,
-        )
-        checks["ops that would exceed hub_max_lines are rejected"] = (
-            two.status == "invalid" and any("hub_max_lines" in e for e in two.errors)
-        )
-        checks["a rejected batch writes nothing"] = (
-            hub.read_text() == before and not (root / "topics/alpha/retry-jitter.md").exists()
-        )
-        one = pipeline.apply(
-            engine, packet, {"ops": [create("retry-jitter", first)]}, engine.profile
-        )
-        checks["one new note within budget applies"] = one.status == "applied"
-        if one.status != "applied":
-            checks["errors: " + "; ".join(one.errors)[:300]] = False
-        lines = len(hub.read_text().splitlines())
-        checks["the hub gains at most one line"] = lines <= budget
-        created = root / "topics/alpha/retry-jitter.md"
-        checks["the new note is part_of the hub"] = (
-            created.exists() and "bw-part_of:" in created.read_text()
-        )
-    return checks
-
-
 def _slice_completeness(root: Path) -> dict[str, bool]:
     from brainwiki.consolidate import pipeline
 
@@ -1005,8 +938,7 @@ def consolidation(work: Path, backends: list[str]) -> SuiteResult:
     res = SuiteResult("consolidation")
     for name, run in (
         ("E-injection", _slice_injection),
-        ("F-budgets", _slice_budgets),
-        ("G-completeness", _slice_completeness),
+        ("F-completeness", _slice_completeness),
     ):
         checks = run(base_brain(work / f"consolidation-{name}"))
         failed = [k for k, ok in checks.items() if not ok]
@@ -1016,7 +948,7 @@ def consolidation(work: Path, backends: list[str]) -> SuiteResult:
         _model_slices(res, work, backends)
     else:
         res.details["model_slices"] = "skipped: pass --backends (e.g. claude-code,codex) to run A-D"
-    res.details["not_implemented"] = "slice H (harvest distillation) and the optional --judge"
+    res.details["not_implemented"] = "slice G (harvest distillation) and the optional --judge"
     return res
 
 

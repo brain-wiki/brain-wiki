@@ -371,16 +371,6 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                 fix=Fix("convert to format 2", to_format2),
             )
         )
-    is_hub = kind == "hub" or str(fm.get("type") or "") == "hub"
-    if is_hub and doc.line_count > manifest.budgets.hub_max_lines:
-        problems.append(
-            Problem(
-                "BW401",
-                rel,
-                None,
-                f"hub has {doc.line_count} lines (budget {manifest.budgets.hub_max_lines}); move detail to child notes",
-            )
-        )
     return problems
 
 
@@ -492,7 +482,7 @@ GATED_KINDS = (*NOTE_KINDS, *EPISODE_KINDS, "rules")
 
 
 def run_gate(engine: Engine) -> Callable[[Run], list[Problem]]:
-    """The V12 check for runs: strict errors a change introduces in the files it touches.
+    """The V11 check for runs: strict errors a change introduces in the files it touches.
 
     Errors already present before the change do not block it, so one broken note written by
     hand cannot stall every later run that touches it.

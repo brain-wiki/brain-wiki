@@ -97,11 +97,6 @@ def test_completeness_slice_keeps_uncited_episodes_pending(tmp_path: Path):
     assert all(checks.values()), checks
 
 
-def test_budget_slice_allows_one_line_under_budget(tmp_path: Path):
-    checks = suites._slice_budgets(suites.base_brain(tmp_path / "brain"))
-    assert all(checks.values()), checks
-
-
 def test_missing_model_backend_is_skipped(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("PATH", str(tmp_path))
     result = suites.SuiteResult("consolidation")

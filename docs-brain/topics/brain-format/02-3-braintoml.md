@@ -29,7 +29,6 @@ hub_filename = "index.md"                   # or "{folder}.md" for folder-note s
 ignore       = []                           # extra glob patterns, relative to the brain root
 
 [budgets]                                   # hard limits enforced by lint and writers
-hub_max_lines       = 150
 rules_max_lines     = 100
 rules_max_chars     = 4000
 agents_md_max_lines = 150

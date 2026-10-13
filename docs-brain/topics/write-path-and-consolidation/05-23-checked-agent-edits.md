@@ -35,7 +35,6 @@ recorded version:
 | Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` |
 | Privacy | A note's privacy was lowered, or the note is above what the caller's profile may read |
 | Protected files | Any of the files above changed |
-| Budgets | A hub went over its line budget |
 | Sync debris | Merge-conflict markers or sync-conflict copies |
 
 **Recording.** A clean check records the change as a run of kind `edit`

@@ -46,7 +46,6 @@ def build_graph(engine: Engine, *, topics: list[str] | None = None) -> dict[str,
         "generated": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "profile": engine.profile.name,
         "privacy": privacy_levels({"nodes": nodes}, engine.manifest.privacy.levels),
-        "budgets": {"hub_max_lines": engine.manifest.budgets.hub_max_lines},
         "topics": topic_list,
         "nodes": nodes,
         "links": links,
@@ -108,7 +107,6 @@ def _links(engine: Engine, ids: set[str]) -> list[dict[str, Any]]:
 
 def _flags(engine: Engine) -> dict[str, list[str]]:
     conn = engine.db
-    budget = engine.manifest.budgets.hub_max_lines
     queries = {
         "conflict": (
             """SELECT a.id, b.id FROM edges e JOIN nodes a ON a.id=e.src JOIN nodes b ON b.id=e.dst
@@ -132,7 +130,6 @@ def _flags(engine: Engine) -> dict[str, list[str]]:
                WHERE status='active' AND taint IN ('true','unknown')""",
             (),
         ),
-        "over_budget": ("SELECT id FROM nodes WHERE kind='hub' AND line_count > ?", (budget,)),
         "lint_error": (
             "SELECT DISTINCT n.id FROM nodes n JOIN diagnostics d ON d.path = n.path",
             (),

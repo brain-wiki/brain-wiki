@@ -11,7 +11,6 @@ bw-part_of:
 
 | Code | Rule | Severity | Fix |
 |---|---|---|---|
-| BW401 | Hub exceeds `hub_max_lines`. | error / warning | — |
 | BW402 | `rules.md` exceeds its line or character budget. | error / error | — |
 | BW403 | `AGENTS.md` exceeds its budget. | error / warning | regenerate the block |
 | BW404 | A top-level topic folder has no hub. (A deeper folder without a hub is not a topic, 02 §2.) | warning / info | create a hub |

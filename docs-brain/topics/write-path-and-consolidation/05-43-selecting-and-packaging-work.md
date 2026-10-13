@@ -32,7 +32,7 @@ Handles replace paths and ids so models never copy long identifiers:
   "run": "run-01JA0D7F9G1H3J5K7M9N1P3Q5R",
   "brain": "personal",
   "instructions_version": 1,
-  "limits": {"max_ops": 60, "hub_max_lines": 150, "claim_max_chars": 500},
+  "limits": {"max_ops": 60, "claim_max_chars": 500},
   "relations": ["part_of", "has_part", "depends_on", "enables",
                 "conflicts_with", "supersedes", "superseded_by", "related_to"],
   "topics": [
