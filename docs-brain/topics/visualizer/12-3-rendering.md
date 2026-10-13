@@ -45,11 +45,16 @@ bw-part_of:
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
   inside their constellation, a parent topic at the center of the
-  constellation its sub-topics form; notes are laid out per topic by its
-  folder tree (hub fixed at the center, each sub-folder in its own direction
-  with its folder note as its star, notes around their folder; strong tree
-  springs, weak typed-link springs, seeded by note id). The same brain always
-  produces the same map, and no layout ever spans the whole brain.
+  constellation its sub-topics form; notes are laid out per topic as a
+  radial tree of its folders, facing the camera: the topic index at the
+  center, each folder in a slice of the circle sized by the notes below it,
+  its sub-folders splitting that slice, and its own notes fanned out just
+  beyond its star (in rows when there are many). Because every folder stays
+  in its slice, tree lines never cross. Nesting reads as distance twice over:
+  each level sits one ring farther out and one tier farther back from the
+  camera, straight along the view, so depth never moves a star on screen.
+  Typed links are drawn but do not move stars. The same brain always produces
+  the same map, and no layout ever spans the whole brain.
 - **Labels say what things are.** The galaxy is the look, not the vocabulary:
   the interface says Overview, Group (of topics), Topic, and Note, never
   galaxy or constellation; *issues*, not flags; *session captures*, not
@@ -59,13 +64,15 @@ bw-part_of:
 - **The hierarchy follows the folders.** Inside a topic, the map's tree is
   the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
   folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is the branch's star;
-  a folder without one is still a branch, drawn as a label. A written
-  `part_of` that points elsewhere is a relation, not the note's place.
+  a folder without one is still a branch, drawn as a label. A folder's label
+  drops the leading ` · ` parts its parent folders' titles already say
+  ("Lumen guide · Sync · Conflicts" reads "Conflicts"). A written `part_of` that
+  points elsewhere is a relation, not the note's place.
 - **Encoding of relations:**
 
 | Relation | Trail |
 |---|---|
-| `part_of` | The folder tree (the dock's **Folders** chip, on by default): faint lines from each note to its folder's star and from each folder to the one above; notes directly in the topic draw none, so flat topics stay clean |
+| `part_of` | The folder tree (the dock's **Folders** chip, on by default): faint lines from each folder to the one above, running along the parent's ring and then straight out, and from each note straight to its folder's star (along the ring too when the folder's notes fan wide); notes directly in the topic draw none, so flat topics stay clean |
 | `depends_on` | Blue, flowing prerequisite → dependent |
 | `conflicts_with` | Red, always shown when either end is visible |
 | `supersedes` | Amber, flowing old → new |

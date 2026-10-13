@@ -30,9 +30,8 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
   world the page loaded. The world payload stays small
   (topics, constellations, flows, totals: about 170 KB at 10k notes);
   topics load on demand.
-- **Front end:** TypeScript, three.js, `camera-controls` for flights,
-  `d3-force-3d` for per-topic layout, and Preact for the HUD, built with
-  Vite. The source is its own repository, **brain-wiki-viz**, so front-end
+- **Front end:** TypeScript, three.js, `camera-controls` for flights, and
+  Preact for the HUD, built with Vite. The source is its own repository, **brain-wiki-viz**, so front-end
   work and its Node toolchain stay out of this one. **Only the built bundle
   is committed here**, in `src/brainwiki/viz/app/`, so installing or running
   brain-wiki never needs Node. `BUILD_INFO.json` next to the bundle names the

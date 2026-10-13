@@ -104,11 +104,16 @@ decoration for its own sake.
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
   inside their constellation, a parent topic at the center of the
-  constellation its sub-topics form; notes are laid out per topic by its
-  folder tree (hub fixed at the center, each sub-folder in its own direction
-  with its folder note as its star, notes around their folder; strong tree
-  springs, weak typed-link springs, seeded by note id). The same brain always
-  produces the same map, and no layout ever spans the whole brain.
+  constellation its sub-topics form; notes are laid out per topic as a
+  radial tree of its folders, facing the camera: the topic index at the
+  center, each folder in a slice of the circle sized by the notes below it,
+  its sub-folders splitting that slice, and its own notes fanned out just
+  beyond its star (in rows when there are many). Because every folder stays
+  in its slice, tree lines never cross. Nesting reads as distance twice over:
+  each level sits one ring farther out and one tier farther back from the
+  camera, straight along the view, so depth never moves a star on screen.
+  Typed links are drawn but do not move stars. The same brain always produces
+  the same map, and no layout ever spans the whole brain.
 - **Labels say what things are.** The galaxy is the look, not the vocabulary:
   the interface says Overview, Group (of topics), Topic, and Note, never
   galaxy or constellation; *issues*, not flags; *session captures*, not
@@ -118,13 +123,15 @@ decoration for its own sake.
 - **The hierarchy follows the folders.** Inside a topic, the map's tree is
   the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
   folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is the branch's star;
-  a folder without one is still a branch, drawn as a label. A written
-  `part_of` that points elsewhere is a relation, not the note's place.
+  a folder without one is still a branch, drawn as a label. A folder's label
+  drops the leading ` · ` parts its parent folders' titles already say
+  ("Lumen guide · Sync · Conflicts" reads "Conflicts"). A written `part_of` that
+  points elsewhere is a relation, not the note's place.
 - **Encoding of relations:**
 
 | Relation | Trail |
 |---|---|
-| `part_of` | The folder tree (the dock's **Folders** chip, on by default): faint lines from each note to its folder's star and from each folder to the one above; notes directly in the topic draw none, so flat topics stay clean |
+| `part_of` | The folder tree (the dock's **Folders** chip, on by default): faint lines from each folder to the one above, running along the parent's ring and then straight out, and from each note straight to its folder's star (along the ring too when the folder's notes fan wide); notes directly in the topic draw none, so flat topics stay clean |
 | `depends_on` | Blue, flowing prerequisite → dependent |
 | `conflicts_with` | Red, always shown when either end is visible |
 | `supersedes` | Amber, flowing old → new |
@@ -145,9 +152,11 @@ Glass panels over the scene, keyboard-first:
 | Bottom center | Layer dock: one chip per relation family (the legend and the filter; a hidden family shows a hollow swatch and a struck label), health mode, a ⋯ menu (labels, Graphics: Auto, High, Low), and help. Going back to the overview is the breadcrumb's first crumb or `R` |
 | Overlays | Hover card: for a star its title, topic, status, and flags; for a trail the two notes it connects, read as a sentence ("2026.9.9 supersedes 2026.9.8"), with the trail and both ends lit, and a click goes to the other end; for a flow the two topics and the link count by type. Command palette with server-side search results grouped by topic; `?` shows the shortcuts |
 
-Keys: `/` or `Ctrl/⌘-K` search, `Esc` up one level or close, `H` health
-mode, `L` labels, `P` note preview, `[` and `]` previous and next topic,
-`R` back to the overview, `?` help. The URL hash records the focus (`#/c/<id>`,
+Keys: `/` or `Ctrl/⌘-K` search, `Esc` up one level or close, `Alt-↑` and
+`Alt-↓` up and down one nesting level (note, folder, topic, parent topic,
+group, overview; down retraces the way up, else enters the biggest place
+inside), `H` health mode, `L` labels, `P` note preview, `[` and `]` previous
+and next topic, `R` back to the overview, `?` help. The URL hash records the focus (`#/c/<id>`,
 `#/t/<slug>`, `#/t/<slug>/n/<id>`), so a view can be reopened. Every place
 opened becomes a browser history entry tagged with its position in the tab's
 trail, so the top bar's back and forward buttons, the history list, `Alt-←`
@@ -176,9 +185,8 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
   world the page loaded. The world payload stays small
   (topics, constellations, flows, totals: about 170 KB at 10k notes);
   topics load on demand.
-- **Front end:** TypeScript, three.js, `camera-controls` for flights,
-  `d3-force-3d` for per-topic layout, and Preact for the HUD, built with
-  Vite. The source is its own repository, **brain-wiki-viz**, so front-end
+- **Front end:** TypeScript, three.js, `camera-controls` for flights, and
+  Preact for the HUD, built with Vite. The source is its own repository, **brain-wiki-viz**, so front-end
   work and its Node toolchain stay out of this one. **Only the built bundle
   is committed here**, in `src/brainwiki/viz/app/`, so installing or running
   brain-wiki never needs Node. `BUILD_INFO.json` next to the bundle names the
@@ -298,6 +306,7 @@ at most 200 per flag.
 | Option | Why not |
 |---|---|
 | The first design: one 3D force graph of everything (`3d-force-graph`) | Did not scale: global layout and payload, hairball, no navigation. |
+| A force layout per topic, seeded by its folder tree (strong tree springs, sub-folders in random directions) | Deep or lopsided folder trees crossed themselves: 77 of 175 tree lines crossed on a 176-note topic five folders deep, and the 3D scatter hid how deep a folder sat. |
 | 2.5D terrain atlas (topics as territories, notes as towns) | Easiest to navigate, but the galaxy keeps depth for separating dense clusters and matches the brain metaphor; both use the same levels and API. |
 | No build step (vendored ES modules, hand-written JS) | Keeps contributors off Node, but a HUD of this size and custom shaders are much harder to maintain without types and a bundler; committing the bundle keeps users off Node anyway. |
 | React | Preact gives the same model at a fraction of the size. |
