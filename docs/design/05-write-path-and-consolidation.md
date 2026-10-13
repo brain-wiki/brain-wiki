@@ -287,7 +287,7 @@ money and attention, and the user should choose when.
 `inbox/agents/`), oldest first, up to `max_episodes_per_run`. The backend's
 model provider sees every episode and candidate note in the packet; keeping
 a body of notes away from a cloud model means keeping it in a separate
-brain ([16](16-privacy.md)).
+brain ([privacy proposal](../proposals/privacy.md)).
 
 **Grouping.** For each episode, the engine finds candidate notes:
 topic hints, then an FTS query over the episode text (top 5), then the
@@ -382,9 +382,6 @@ and a plain local-model runner are defined in
 [08 §7](08-agent-integrations.md#7-headless-presets-for-the-command-backend).
 The backend's agent profile is the preset name (for example
 `[agents.claude-code]`).
-
-**Future `api` backend.** Direct provider calls behind the same packet →
-ops interface. Not in v0.1.
 
 ### 4.5 Instruction contract
 

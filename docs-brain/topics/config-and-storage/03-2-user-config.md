@@ -49,7 +49,7 @@ enabled = false
 - The config holds **locations and per-user choices only**. Everything that
   must travel with a brain (topics, agent profiles, budgets) is in
   that brain's `brain.toml` ([[02-3-braintoml|02 §3]]).
-- No credentials are ever stored here. Future remote backends use the
-  platform's own credential chains (§6.6).
+- No credentials are ever stored here. Proposed remote backends use the
+  platform's own credential chains ([[proposal-remote-sync|remote sync]]).
 - The file is created by `brain init` and edited by `brain brains add |
   remove | default`, which preserve comments and formatting.

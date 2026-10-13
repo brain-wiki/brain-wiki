@@ -12,7 +12,7 @@ bw-part_of:
 
 A profile decides what one host may do in one brain. Every host that may
 use a brain reads all of it; privacy inside a brain is being redesigned
-([[privacy|16]]). Profiles live in `brain.toml` because they travel
+([[proposal-privacy|proposal]]). Profiles live in `brain.toml` because they travel
 with the brain ([[02-3-braintoml|02 §3]]).
 
 ```toml

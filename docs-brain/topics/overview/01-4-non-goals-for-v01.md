@@ -13,8 +13,8 @@ bw-part_of:
 - **Hosted service or multi-user collaboration.** A brain belongs to one
   person. Sharing happens through the user's own sync (git, a cloud drive).
 - **Remote MCP for chat apps** (ChatGPT web, claude.ai, the Gemini app). The
-  design is in [[08-9-future-remote-mcp-for-chat-apps|08 §9]];
-  the implementation is not in v0.1.
+  design is a [[proposal-remote-mcp|proposal]]; the implementation is
+  not in v0.1.
 - **Built-in LLM API clients.** Consolidation goes through the host agent or
   a headless agent CLI. A direct-API backend is a later addition behind the
   same interface.

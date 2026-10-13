@@ -40,4 +40,4 @@ they may be stored, and which models may process them. Separate brains
 make that boundary a directory boundary, which every tool understands,
 and keep relations from crossing it. Every host that may use a brain reads
 all of it; finer-grained privacy inside a brain is being redesigned
-([[privacy|16]]).
+([[proposal-privacy|proposal]]).

@@ -1,4 +1,4 @@
-"""Brain file storage behind a narrow interface (design doc 03 §6.7)."""
+"""Brain file storage: path safety, atomic writes, exclusive creates (design doc 03 §6.4)."""
 
 from brainwiki.store.local import FileStat, LocalStore, sha256_bytes, sha256_text
 

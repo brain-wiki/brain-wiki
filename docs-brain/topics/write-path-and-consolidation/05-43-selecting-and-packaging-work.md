@@ -14,7 +14,7 @@ bw-part_of:
 `inbox/agents/`), oldest first, up to `max_episodes_per_run`. The backend's
 model provider sees every episode and candidate note in the packet; keeping
 a body of notes away from a cloud model means keeping it in a separate
-brain ([[privacy|16]]).
+brain ([[proposal-privacy|privacy proposal]]).
 
 **Grouping.** For each episode, the engine finds candidate notes:
 topic hints, then an FTS query over the episode text (top 5), then the

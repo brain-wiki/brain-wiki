@@ -56,6 +56,3 @@ and a plain local-model runner are defined in
 [[08-7-headless-presets-for-the-command-backend|08 §7]].
 The backend's agent profile is the preset name (for example
 `[agents.claude-code]`).
-
-**Future `api` backend.** Direct provider calls behind the same packet →
-ops interface. Not in v0.1.

@@ -15,19 +15,8 @@ Obsidian), and the index needs local files to stay fast. So every device
 that uses a brain has a **local working copy**: a normal folder. That
 folder is the only thing the engine reads and writes.
 
-Remote storage, when added, is a **replica** of that folder, kept in step
-by a sync component. The engine never reads from a network filesystem on
-the hot path.
-
-```
-   engine (index, search, consolidate) ──reads/writes──► local working copy
-                                                             │
-                                          ┌──────────────────┼──────────────────┐
-                                          ▼                  ▼                  ▼
-                                   v0.1: nothing,      future: git        future: object
-                                   or the user's own   remote replicator  store replicator
-                                   sync tool / git                        (fsspec: GCS, S3)
-```
-
-The exception is a future stateless server ([[03-67-future-server-mode-reading-object-storage|§6.7]]),
-which has no local copy by design.
+Remote storage is the user's own sync tool or git in v0.1. Any remote
+brain-wiki adds will be a **replica** of that folder, kept in step by a
+sync component; the engine never reads from a network filesystem on the hot
+path. Git and object-storage replicas, and a server mode with no local
+copy, are a [[proposal-remote-sync|proposal]].

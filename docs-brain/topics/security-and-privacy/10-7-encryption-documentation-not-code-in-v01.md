@@ -13,5 +13,5 @@ bw-part_of:
 | Need | Recommendation |
 |---|---|
 | Laptop theft | Full-disk encryption (the OS default on most platforms). |
-| Hosting on a remote you do not fully trust | A remote helper that encrypts the whole git repository, or object storage with client-side encryption (future replicator option, [[03-66-future-object-storage-through-fsspec-gcs-s3\|03 §6.6]]). |
+| Hosting on a remote you do not fully trust | A remote helper that encrypts the whole git repository, or object storage with client-side encryption (a proposed replicator option, [[proposal-remote-sync-3-object-storage-through-fsspec-gcs-s3\|remote sync]]). |
 | Per-file encryption inside the brain | Not recommended: agents and editors cannot read encrypted files, and per-file git filters leak file names and cannot revoke access. |

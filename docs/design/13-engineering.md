@@ -96,7 +96,6 @@ Optional extras:
 | Extra | Adds |
 |---|---|
 | `brain-wiki[watch]` | `watchfiles` for long-running processes |
-| `brain-wiki[sync]` (future) | `fsspec`, `gcsfs`, `s3fs`, `google-cloud-storage` |
 | `brain-wiki[dev]` | `pytest`, `hypothesis`, `ruff`, `pyright`, `coverage` |
 
 Policy: a new runtime dependency needs a reason in its pull request, a

@@ -15,7 +15,6 @@ bw-part_of:
 | Episode creation | `O_EXCL` create of a unique name; no lock |
 | Curated writes (apply, fix, rule, review accept, mv) | Per-brain advisory file lock in the state dir (`filelock`), held only during apply |
 | Index writes | SQLite WAL, `BEGIN IMMEDIATE`, busy timeout |
-| Future sync | Same per-brain lock; remote correctness from per-object preconditions; an optional remote lease object for cross-device exclusion |
 
 Lock files never live inside the brain: sync tools replicate them as
 ordinary files and do not carry the lock across machines.

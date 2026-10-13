@@ -13,7 +13,7 @@ when higher ones are missing.
 | 1 · Skills | `skills/brain`, `skills/brain-setup`, `skills/brain-maintain` in the plugin | Knows when and how to use, set up, and maintain the brain, through the CLI or MCP ([15](15-skills-onboarding-and-routines.md)). |
 | 2 · MCP | `brain mcp --host <id>` (stdio) | Orient, search with guards, read, log, propose rules, consolidate. |
 | 3 · Hooks | `brain hook <host> <event>` | Orientation injected at session start; optional capture at stop or compaction; optional recall per prompt. |
-| 4 · Native memory | Host-specific memory APIs | Future work ([14 §4](14-roadmap-and-open-questions.md#4-future-work-after-v01)). |
+| 4 · Native memory | Host-specific memory APIs | Not built ([backlog](../proposals/README.md#backlog)). |
 
 v0.1 coverage:
 
@@ -497,35 +497,7 @@ because CLIs change faster than this document.
    exists) and report whether the plugin, server, and instruction block are
    visible.
 
-## 9. Future: remote MCP for chat apps
-
-ChatGPT (web and mobile), claude.ai, and the Gemini app connect only to
-remote MCP servers over HTTPS. Not in v0.1; this is the design to build
-toward.
-
-**Requirements gathered from the hosts:**
-
-| Need | Detail |
-|---|---|
-| Transport | Streamable HTTP |
-| Reachability | Public HTTPS (claude.ai connects from the vendor's cloud) |
-| Authorization | OAuth 2.1 with PKCE (S256 required by ChatGPT); protected resource metadata; issuer identification in responses; client registration through **both** client ID metadata documents (preferred by ChatGPT and Claude) and dynamic client registration (what the Gemini app and Antigravity document); audience-bound tokens |
-| Tool shape | Read tools plus `brain_log_episode`; `search` and `fetch` aliases for hosts that expect those names; annotations everywhere |
-| Gemini app limits | Personal accounts only, US, 18+, Keep Activity on; write actions require confirmation |
-
-**Deployment options:**
-
-| Option | How | Trade-off |
-|---|---|---|
-| A · Local server behind a tunnel | `brain mcp --http` on the user's machine, exposed through a tunnel service; auth delegated to an external identity provider | Brain stays local; machine must be on; tunnel and IdP setup |
-| B · Server mode on a container platform | Stateless server reading the brain from object storage ([03 §6.7](03-config-and-storage.md#67-future-server-mode-reading-object-storage)), behind an identity provider | Always available; the brain is replicated to the cloud |
-| C · Embedded authorization server | brain-wiki implements OAuth itself | Largest security surface; avoided |
-
-Per-client tokens map to agent profiles (`chatgpt-web`, `claude-web`,
-`gemini-app`), read-only by default. A remote client reads the whole brain
-it is given, so this waits on the privacy redesign ([16](16-privacy.md)).
-
-## 10. Test matrix
+## 9. Test matrix
 
 | Check | Claude Code | Codex | Antigravity | OpenClaw |
 |---|---|---|---|---|

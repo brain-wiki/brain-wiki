@@ -30,4 +30,3 @@ Generated from `docs/design/04-index-and-retrieval.md`.
 - [[04-10-performance-budgets]]: Performance budgets (Index and retrieval)
 - [[04-11-failure-modes]]: Failure modes (Index and retrieval)
 - [[04-12-alternatives-considered]]: Alternatives considered (Index and retrieval)
-- [[04-13-future-work]]: Future work

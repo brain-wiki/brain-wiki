@@ -38,8 +38,9 @@ durable brain:
 
 ## Status
 
-Pre-release (0.1.0.dev). The design is in [`docs/design/`](docs/design/);
-the user guide is in [`docs/user/`](docs/user/).
+Pre-release (0.1.0.dev). The design is in [`docs/design/`](docs/design/),
+proposals for what is not built yet are in [`docs/proposals/`](docs/proposals/),
+and the user guide is in [`docs/user/`](docs/user/).
 
 ## Install
 
@@ -97,6 +98,8 @@ dry run.
   import, privacy.
 - [Design](docs/design/README.md): format, index, write path, lint, MCP and
   CLI, host integrations, security, bench.
+- [Proposals](docs/proposals/README.md): privacy, remote sync, remote MCP for
+  chat apps, public benchmarks, and the backlog.
 - [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) ·
   [Changelog](CHANGELOG.md)
 

@@ -12,9 +12,9 @@
 
 | Topic | Hub | About |
 |---|---|---|
-| agent-integrations | topics/agent-integrations/agent-integrations.md | Plugin bundle, per-host details, hooks, brain connect, capture, future remote MCP |
+| agent-integrations | topics/agent-integrations/agent-integrations.md | Plugin bundle, per-host details, hooks, brain connect, capture and harvest |
 | brain-format | topics/brain-format/brain-format.md | The on-disk contract: layout, manifest, notes, claims, relations, episodes, rules (normative) |
-| config-and-storage | topics/config-and-storage/config-and-storage.md | User config, multiple brains, brain selection, machine state, git, sync, future backends |
+| config-and-storage | topics/config-and-storage/config-and-storage.md | User config, multiple brains, brain selection, machine state, git, desktop sync tools |
 | decisions | topics/decisions/decisions.md | How the design documents fit together, and the decision log with what each decision rejected and where it is argued |
 | engineering | topics/engineering/engineering.md | Repo layout, dependencies, packaging, testing, performance budgets, release |
 | eval-bench | topics/eval-bench/eval-bench.md | Retrieval, lint, consolidation, and performance suites |
@@ -23,8 +23,8 @@
 | interfaces | topics/interfaces/interfaces.md | CLI commands, MCP tools and schemas, agent profiles, error model |
 | lint-and-reports | topics/lint-and-reports/lint-and-reports.md | Rules, profiles, fixes, generated reports, pre-commit use |
 | overview | topics/overview/overview.md | Problem, goals, non-goals, principles, scenarios, glossary |
-| privacy | topics/privacy/privacy.md | What privacy must protect, from whom, and a draft model to replace the removed levels |
-| roadmap-and-open-questions | topics/roadmap-and-open-questions/roadmap-and-open-questions.md | Implementation milestones, future work, decisions needed |
+| proposals | topics/proposals/proposals.md | Designs not implemented yet, and the backlog of ideas without a design |
+| roadmap-and-open-questions | topics/roadmap-and-open-questions/roadmap-and-open-questions.md | Implementation milestones and status, decisions needed, verification items |
 | security-and-privacy | topics/security-and-privacy/security-and-privacy.md | Threat model and mitigations |
 | skills-onboarding-and-routines | topics/skills-onboarding-and-routines/skills-onboarding-and-routines.md | The three skills, the guided setup flow, brain doctor --json, and routine templates for hosts' schedulers |
 | user-guide | topics/user-guide/user-guide.md | How to install, connect, use, and maintain brain-wiki |

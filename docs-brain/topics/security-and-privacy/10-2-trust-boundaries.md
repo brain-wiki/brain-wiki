@@ -25,7 +25,7 @@ bw-part_of:
 - **Model providers see what is sent to them.** The consolidator LLM and the
   host's model receive brain content. Today every host that may use a brain
   reads all of it; which brains a host may use is the only limit
-  ([[privacy|16]] proposes finer control).
+  (a [[proposal-privacy|proposal]] drafts finer control).
 - **File access bypasses brain-wiki.** Any program running as the user can
   read and write the brain directly. Profiles govern brain-wiki's
   interfaces only and are not a sandbox. Real separation from a host that

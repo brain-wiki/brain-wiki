@@ -20,4 +20,3 @@ network access in the core.
 | Command-backend consolidation | The rendered prompt and packet | Whatever service the configured CLI uses (none for a local model) |
 | Harvest with distillation | Condensed turns of the selected sessions (no tool output, secrets scrubbed) | The distill preset's service (CLI), or the host's model provider (in-agent recipe); `--raw` sends nothing |
 | Bench with model backends | Synthetic scenarios only | The configured CLIs' providers |
-| Future sync | File contents | The user's own remote |

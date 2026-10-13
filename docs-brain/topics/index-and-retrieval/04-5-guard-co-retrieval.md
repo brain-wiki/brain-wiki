@@ -41,10 +41,5 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
   update, then history. The rest are counted (`more_guards: n`) so the agent
   knows to look. Only true guards count against this cap: a negative causal
   influence is a qualifier on `depends_on`, not a guard.
-- **Containment inheritance (future).** Exceptions declared on a parent
-  (a carve-out on a whole agreement, a caveat on a whole topic) could also
-  apply to its parts. A bounded option to inherit guards from `part_of`
-  ancestors (one or two hops, within the same cap) is planned once real
-  brains show the need.
 - **Notes vs claims.** Claim-level supersession needs no query: superseded
   claims are already excluded from `body` and marked in reads.

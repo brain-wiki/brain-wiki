@@ -14,7 +14,7 @@ Three interfaces expose the same engine:
 
 A profile decides what one host may do in one brain. Every host that may
 use a brain reads all of it; privacy inside a brain is being redesigned
-([16](16-privacy.md)). Profiles live in `brain.toml` because they travel
+([proposal](../proposals/privacy.md)). Profiles live in `brain.toml` because they travel
 with the brain ([02 §3](02-brain-format.md#3-braintoml)).
 
 ```toml
@@ -397,7 +397,7 @@ as `internal` with a log reference, never with internal details.
 - Resources (`brain://note/{id}`) for hosts that let users attach
   resources. Easy to add once the read path is stable.
 - `search` / `fetch` aliases and HTTP transport for chat apps
-  ([08 §9](08-agent-integrations.md#9-future-remote-mcp-for-chat-apps)).
+  ([proposal](../proposals/remote-mcp.md)).
 
 ## 4. Stability promises
 

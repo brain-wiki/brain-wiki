@@ -20,6 +20,5 @@ Generated from `docs/design/11-eval-bench.md`.
   - [[11-34-perf-offline]]: `perf` (offline)
   - [[11-35-agent-optional-real-hosts]]: `agent` (optional, real hosts)
 - [[11-4-data]]: Data (Eval bench)
-- [[11-5-public-benchmarks]]: Public benchmarks
-- [[11-6-output]]: Output (Eval bench)
-- [[11-7-when-the-bench-runs]]: When the bench runs
+- [[11-5-output]]: Output (Eval bench)
+- [[11-6-when-the-bench-runs]]: When the bench runs

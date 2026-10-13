@@ -17,7 +17,7 @@ description = "The on-disk contract: layout, manifest, notes, claims, relations,
 
 [topics.config-and-storage]
 title = "Config and storage"
-description = "User config, multiple brains, brain selection, machine state, git, sync, future backends"
+description = "User config, multiple brains, brain selection, machine state, git, desktop sync tools"
 
 [topics.index-and-retrieval]
 title = "Index and retrieval"
@@ -37,7 +37,7 @@ description = "CLI commands, MCP tools and schemas, agent profiles, error model"
 
 [topics.agent-integrations]
 title = "Agent integrations"
-description = "Plugin bundle, per-host details, hooks, brain connect, capture, future remote MCP"
+description = "Plugin bundle, per-host details, hooks, brain connect, capture and harvest"
 
 [topics.import]
 title = "Import"
@@ -61,15 +61,11 @@ description = "Repo layout, dependencies, packaging, testing, performance budget
 
 [topics.roadmap-and-open-questions]
 title = "Roadmap and open questions"
-description = "Implementation milestones, future work, decisions needed"
+description = "Implementation milestones and status, decisions needed, verification items"
 
 [topics.skills-onboarding-and-routines]
 title = "Skills, onboarding, and routines"
 description = "The three skills, the guided setup flow, brain doctor --json, and routine templates for hosts' schedulers"
-
-[topics.privacy]
-title = "Privacy (proposal)"
-description = "What privacy must protect, from whom, and a draft model to replace the removed levels"
 
 [topics.decisions]
 title = "Design overview and decisions"
@@ -78,6 +74,10 @@ description = "How the design documents fit together, and the decision log with 
 [topics.user-guide]
 title = "User guide"
 description = "How to install, connect, use, and maintain brain-wiki"
+
+[topics.proposals]
+title = "Design proposals"
+description = "Designs not implemented yet, and the backlog of ideas without a design"
 
 [agents.default]
 write = ["episodes"]

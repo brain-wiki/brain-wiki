@@ -6,7 +6,7 @@ source: "docs/design/08-agent-integrations.md"
 ---
 # Agent integrations
 
-Plugin bundle, per-host details, hooks, `brain connect`, capture, future remote MCP
+Plugin bundle, per-host details, hooks, `brain connect`, capture and harvest
 
 Generated from `docs/design/08-agent-integrations.md`.
 
@@ -33,5 +33,4 @@ Generated from `docs/design/08-agent-integrations.md`.
   - [[08-64-session-readers]]: Session readers
 - [[08-7-headless-presets-for-the-command-backend]]: Headless presets for the command backend
 - [[08-8-brain-connect]]: `brain connect`
-- [[08-9-future-remote-mcp-for-chat-apps]]: Future: remote MCP for chat apps
-- [[08-10-test-matrix]]: Test matrix
+- [[08-9-test-matrix]]: Test matrix

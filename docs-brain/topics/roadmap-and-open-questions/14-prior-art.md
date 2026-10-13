@@ -22,4 +22,4 @@ borrows ideas only, never code, and is Apache-2.0.
 | Hosted memory layers (Mem0, Zep/Graphiti, Letta) | Various | Supersession instead of deletion; temporal validity | Require a service or database; files are not the truth. |
 | Obsidian | Proprietary app; open help docs | Link resolution by file name, properties model, comments, Bases views | We stay compatible without depending on it. |
 | Agent Skills, AGENTS.md, Agent Plugins 1.0, MCP | Open specifications | The integration surfaces in [[agent-integrations\|08]] | — |
-| Memory benchmarks (LongMemEval, MemoryAgentBench, LoCoMo, HaluMem) and wiki-compilation studies | MIT; MIT; CC BY-NC 4.0; CC BY-NC-ND 4.0 | Knowledge-update and conflict-resolution slices; extraction quality against gold points; probe coverage | See [[11-5-public-benchmarks\|11 §5]]. |
+| Memory benchmarks (LongMemEval, MemoryAgentBench, LoCoMo, HaluMem) and wiki-compilation studies | MIT; MIT; CC BY-NC 4.0; CC BY-NC-ND 4.0 | Knowledge-update and conflict-resolution slices; extraction quality against gold points; probe coverage | See the [[proposal-public-benchmarks\|public benchmarks proposal]]. |

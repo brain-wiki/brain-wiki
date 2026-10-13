@@ -1,0 +1,29 @@
+# Design proposals
+
+Designs that are not implemented. [docs/design](../design/README.md)
+describes what brain-wiki does today; a proposal here describes what it
+could do.
+
+When a proposal is built, its content moves into the design documents it
+changes, in the same change as the code, and the proposal is deleted.
+
+| Proposal | Status | Changes |
+|---|---|---|
+| [Privacy](privacy.md) | Draft; open questions PQ1–PQ6 | Levels defined by where content may go (model, tools, outputs, exports), declared in a topic's `index.md`; replaces the removed privacy levels |
+| [Remote sync and object storage](remote-sync.md) | Designed, not scheduled | `brain sync` to a private git remote, then GCS and S3; a store interface for a server with no local copy |
+| [Remote MCP for chat apps](remote-mcp.md) | Designed, not scheduled; waits on privacy | HTTP transport and OAuth for ChatGPT, claude.ai, and the Gemini app |
+| [Public memory benchmarks](public-benchmarks.md) | Designed, not scheduled | Bench adapters for LongMemEval and similar; probe coverage as a consolidation metric |
+
+## Backlog
+
+Ideas without a design yet.
+
+| Area | Idea | Related design |
+|---|---|---|
+| Retrieval | Optional embeddings (`sqlite-vec`, a local model) with rank fusion, guards applied the same way; a file watcher in long-running processes for very large brains; cross-brain search with results labeled by brain; guards inherited through `part_of` (one or two hops, within the cap) once real brains need it | [04](../design/04-index-and-retrieval.md) |
+| Consolidation | Direct-API backend behind the same packet → ops interface; clustering as a selection heuristic | [05 §4.4](../design/05-write-path-and-consolidation.md#44-backends) |
+| Checked edits | One tool that edits and checks in a single call | [05 §2.3](../design/05-write-path-and-consolidation.md#23-checked-agent-edits) |
+| Provenance | `brain forget --session <id>`: retract every claim whose only sources come from one session, with a dry run; per-claim source kinds (stated by user, observed in code, read in a document, inferred) | — |
+| Hosts | Native OpenClaw memory provider (memory slot); Claude API memory-tool handler; Cursor plugin with its own hooks; session readers for OpenClaw and Cursor; MCP resources | [08](../design/08-agent-integrations.md) |
+| Importers | Chat exports, email, documents; authority ordering (specs over notes over chat) when sources disagree | [09](../design/09-import.md) |
+| Domain plugins | Signed influence propagation over weighted `depends_on`; domain layouts in the visualizer (dependency DAG, rule/exception tree, claim/evidence matrix); external state providers keyed by qualifiers | — |

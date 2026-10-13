@@ -9,7 +9,7 @@ bw-part_of:
   - "[[10-3-threats-and-mitigations]]"
 bw-related_to:
   - "[[03-3-choosing-a-brain]]"
-  - "[[privacy]]"
+  - "[[proposal-privacy]]"
 ---
 # T3: Cross-agent leakage
 
@@ -17,4 +17,4 @@ bw-related_to:
 
 **Mitigations:** Separate brains plus host brain limits ([[03-3-choosing-a-brain|03 §3]]).
 
-**Residual risk:** Inside one brain, every host reads everything until privacy is redesigned ([[privacy|16]]). File access bypasses host limits (§2).
+**Residual risk:** Inside one brain, every host reads everything until privacy is redesigned ([[proposal-privacy|privacy proposal]]). File access bypasses host limits (§2).

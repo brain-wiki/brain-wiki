@@ -13,7 +13,7 @@ bw-part_of:
 | Kind | Linux / macOS default | Windows | Contents | If deleted |
 |---|---|---|---|---|
 | config | `~/.config/brain-wiki/` | `%APPDATA%\brain-wiki\` | `config.toml` | Brains must be re-registered |
-| state | `$XDG_STATE_HOME/brain-wiki/`, default `~/.local/state/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\state\` | run records and pre-images (undo), open consolidation packets, session capture and taint markers, harvest watermarks, locks, future sync manifests | Undo history is lost; harvest may re-read sessions (dedupe keys prevent duplicate episodes); nothing in any brain is lost |
+| state | `$XDG_STATE_HOME/brain-wiki/`, default `~/.local/state/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\state\` | run records and pre-images (undo), open consolidation packets, session capture and taint markers, harvest watermarks, locks | Undo history is lost; harvest may re-read sessions (dedupe keys prevent duplicate episodes); nothing in any brain is lost |
 | cache | `$XDG_CACHE_HOME/brain-wiki/`, default `~/.cache/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\cache\` | `brains/<brain-id>/index.sqlite` | Rebuilt on next use |
 
 `BRAIN_WIKI_STATE_DIR` and `BRAIN_WIKI_CACHE_DIR` override them (tests use

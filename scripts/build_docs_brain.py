@@ -41,6 +41,22 @@ ROW_KINDS = {
     "T": "threat",
 }
 MENTION = re.compile(r"\b(D\d{1,2}|M\d{1,2}|Q\d{1,2})\b")
+# Folders whose documents become one note each (sections below it), in a topic of their own:
+# slug -> (folder, topic title, topic description, note type)
+GROUPS = {
+    "user-guide": (
+        "docs/user",
+        "User guide",
+        "How to install, connect, use, and maintain brain-wiki",
+        "guide",
+    ),
+    "proposals": (
+        "docs/proposals",
+        "Design proposals",
+        "Designs not implemented yet, and the backlog of ideas without a design",
+        "proposal",
+    ),
+}
 
 
 def ulid(key: str) -> str:
@@ -115,7 +131,7 @@ class Doc:
     sections: list[Section] = field(default_factory=list)
     anchors: dict[str, Section] = field(default_factory=dict)
     hub: str = ""
-    note: Section | None = None  # user docs: one note for the whole document
+    note: Section | None = None  # grouped docs (GROUPS): one note for the whole document
 
 
 def parse(path: Path, topic: str, key: str, number: str | None) -> Doc:
@@ -334,14 +350,15 @@ def build() -> dict[str, str]:
         ),
     )
     docs.append(design)
-    for path in sorted((ROOT / "docs/user").glob("*.md")):
-        doc = parse(path.relative_to(ROOT), "user-guide", f"user-{path.stem.lower()}", None)
-        docs.append(doc)
+    for slug, (folder, *_) in GROUPS.items():
+        prefix = slug.split("-")[0].removesuffix("s")  # user-guide -> user, proposals -> proposal
+        for path in sorted((ROOT / folder).glob("*.md")):
+            docs.append(parse(path.relative_to(ROOT), slug, f"{prefix}-{path.stem.lower()}", None))
     for doc in docs:
         brain.docs[doc.path.as_posix()] = doc
         name_sections(doc, doc.sections)
         doc.hub = doc.topic
-        if doc.topic == "user-guide":
+        if doc.topic in GROUPS:
             doc.note = Section(doc, 1, doc.title, None, doc.title, "", stem=doc.key)
 
     # Titles must read well in search results, so repeated section names get their document.
@@ -366,8 +383,8 @@ def build() -> dict[str, str]:
         render_doc(brain, doc, topics)
     for slug, (title, description, children) in topics.items():
         source = (
-            "docs/user/"
-            if slug == "user-guide"
+            f"{GROUPS[slug][0]}/"
+            if slug in GROUPS
             else (
                 "docs/design/README.md"
                 if slug == "decisions"
@@ -392,8 +409,8 @@ def build() -> dict[str, str]:
 
 def render_doc(brain: Brain, doc: Doc, topics: dict) -> None:
     slug = doc.topic
-    if slug == "user-guide":
-        title, description = "User guide", "How to install, connect, use, and maintain brain-wiki"
+    if slug in GROUPS:
+        _, title, description, _ = GROUPS[slug]
     else:
         title, description = doc.title, doc.description
     entry = topics.setdefault(slug, (title, description, []))
@@ -405,18 +422,18 @@ def render_doc(brain: Brain, doc: Doc, topics: dict) -> None:
             entry[2].extend((r.stem, r.title, depth + 1) for r in s.rows)
             tree(s.children, depth + 1)
 
-    if doc.note is not None:  # a user-guide document: one note, its sections below it
+    if doc.note is not None:  # a grouped document: one note, its sections below it
         entry[2].append((doc.note.stem, doc.title, 0))
         tree(doc.sections, 1)
         brain.note(
             f"{folder}/{doc.note.stem}.md",
             key=f"note:{doc.path}",
-            kind="guide",
+            kind=GROUPS[slug][3],
             title=doc.title,
             source=doc.path.as_posix(),
             body=["## Sections", *[f"- [[{s.stem}]]: {s.note_title}" for s in doc.sections]],
             relations=[("part_of", slug)],
-            tags=["user-guide"],
+            tags=[slug],
         )
     else:
         tree(doc.sections, 0)
@@ -428,7 +445,7 @@ def render_doc(brain: Brain, doc: Doc, topics: dict) -> None:
         if s.rows:
             body += ["", "## Items", *[f"- [[{r.stem}]]: {r.title}" for r in s.rows]]
         aliases = [f"{doc.number} §{s.number}"] if doc.number and s.number else None
-        kind = "guide" if doc.note else ("design" if doc.number else "reference")
+        kind = GROUPS[slug][3] if doc.note else ("design" if doc.number else "reference")
         brain.note(
             f"{folder}/{s.stem}.md",
             key=f"section:{doc.path}#{s.anchor}",

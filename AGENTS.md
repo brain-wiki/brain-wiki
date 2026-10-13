@@ -6,8 +6,10 @@ user's brain, use the brain-wiki MCP tools or the `brain` skill.
 ## Developing brain-wiki
 
 - Setup: `uv sync`. Run everything CI runs: `uv run scripts/check.py`.
-- Design first: behavior is specified in `docs/design/`; change the
-  relevant document together with the code.
+- Design first: implemented behavior is specified in `docs/design/`; change
+  the relevant document together with the code. Unbuilt designs live in
+  `docs/proposals/`; when one is built, move its content into `docs/design/`
+  and delete the proposal.
 - Every curated change goes through `brainwiki.runs.Run`; writers change
   only the lines they must.
 - `brain hook` must stay fast and must never import the MCP SDK.

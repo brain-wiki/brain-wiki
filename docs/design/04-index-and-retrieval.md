@@ -263,11 +263,6 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
   update, then history. The rest are counted (`more_guards: n`) so the agent
   knows to look. Only true guards count against this cap: a negative causal
   influence is a qualifier on `depends_on`, not a guard.
-- **Containment inheritance (future).** Exceptions declared on a parent
-  (a carve-out on a whole agreement, a caveat on a whole topic) could also
-  apply to its parts. A bounded option to inherit guards from `part_of`
-  ancestors (one or two hops, within the same cap) is planned once real
-  brains show the need.
 - **Notes vs claims.** Claim-level supersession needs no query: superseded
   claims are already excluded from `body` and marked in reads.
 
@@ -568,12 +563,3 @@ SSD:
 | DuckDB | Strong for analytics, weaker and heavier for incremental full-text search. |
 | In-memory index per process | Parsing 10k notes on every hook call costs seconds. |
 | Index inside the brain | Breaks under sync tools, is device-specific, and clutters git. |
-
-## 13. Future work
-
-- **Embeddings.** Optional `sqlite-vec` table, local embedding model,
-  reciprocal-rank fusion with the lexical score. Guards apply the same way.
-- **File watcher.** An optional watcher in long-running processes (MCP
-  server, `brain viz`) to replace polling on very large brains.
-- **Cross-brain search.** For hosts allowed to use several brains;
-  each brain's results stay labeled with its name.

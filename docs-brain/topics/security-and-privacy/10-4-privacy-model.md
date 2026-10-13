@@ -17,5 +17,5 @@ bw-part_of:
 
 Inside one brain there is no access control: every host that may use it
 reads every note. Privacy levels and topic allowlists were removed because
-a level did not say what it protects against or from whom;
-[[privacy|16]] drafts their replacement.
+a level did not say what it protects against or from whom; a
+[[proposal-privacy|proposal]] drafts their replacement.

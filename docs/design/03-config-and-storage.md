@@ -54,8 +54,8 @@ enabled = false
 - The config holds **locations and per-user choices only**. Everything that
   must travel with a brain (topics, agent profiles, budgets) is in
   that brain's `brain.toml` ([02 §3](02-brain-format.md#3-braintoml)).
-- No credentials are ever stored here. Future remote backends use the
-  platform's own credential chains (§6.6).
+- No credentials are ever stored here. Proposed remote backends use the
+  platform's own credential chains ([remote sync](../proposals/remote-sync.md)).
 - The file is created by `brain init` and edited by `brain brains add |
   remove | default`, which preserve comments and formatting.
 
@@ -91,14 +91,14 @@ they may be stored, and which models may process them. Separate brains
 make that boundary a directory boundary, which every tool understands,
 and keep relations from crossing it. Every host that may use a brain reads
 all of it; finer-grained privacy inside a brain is being redesigned
-([16](16-privacy.md)).
+([proposal](../proposals/privacy.md)).
 
 ## 4. Machine state
 
 | Kind | Linux / macOS default | Windows | Contents | If deleted |
 |---|---|---|---|---|
 | config | `~/.config/brain-wiki/` | `%APPDATA%\brain-wiki\` | `config.toml` | Brains must be re-registered |
-| state | `$XDG_STATE_HOME/brain-wiki/`, default `~/.local/state/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\state\` | run records and pre-images (undo), open consolidation packets, session capture and taint markers, harvest watermarks, locks, future sync manifests | Undo history is lost; harvest may re-read sessions (dedupe keys prevent duplicate episodes); nothing in any brain is lost |
+| state | `$XDG_STATE_HOME/brain-wiki/`, default `~/.local/state/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\state\` | run records and pre-images (undo), open consolidation packets, session capture and taint markers, harvest watermarks, locks | Undo history is lost; harvest may re-read sessions (dedupe keys prevent duplicate episodes); nothing in any brain is lost |
 | cache | `$XDG_CACHE_HOME/brain-wiki/`, default `~/.cache/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\cache\` | `brains/<brain-id>/index.sqlite` | Rebuilt on next use |
 
 `BRAIN_WIKI_STATE_DIR` and `BRAIN_WIKI_CACHE_DIR` override them (tests use
@@ -131,22 +131,11 @@ Obsidian), and the index needs local files to stay fast. So every device
 that uses a brain has a **local working copy**: a normal folder. That
 folder is the only thing the engine reads and writes.
 
-Remote storage, when added, is a **replica** of that folder, kept in step
-by a sync component. The engine never reads from a network filesystem on
-the hot path.
-
-```
-   engine (index, search, consolidate) ──reads/writes──► local working copy
-                                                             │
-                                          ┌──────────────────┼──────────────────┐
-                                          ▼                  ▼                  ▼
-                                   v0.1: nothing,      future: git        future: object
-                                   or the user's own   remote replicator  store replicator
-                                   sync tool / git                        (fsspec: GCS, S3)
-```
-
-The exception is a future stateless server ([§6.7](#67-future-server-mode-reading-object-storage)),
-which has no local copy by design.
+Remote storage is the user's own sync tool or git in v0.1. Any remote
+brain-wiki adds will be a **replica** of that folder, kept in step by a
+sync component; the engine never reads from a network filesystem on the hot
+path. Git and object-storage replicas, and a server mode with no local
+copy, are a [proposal](../proposals/remote-sync.md).
 
 ### 6.2 v0.1: local folder with optional git
 
@@ -198,141 +187,14 @@ of the way:
 | Temporary files from atomic writes | Prefix `.brain-tmp-`; dot files are ignored by brain-wiki and by most sync tools' default rules. |
 | Two devices consolidating the same episodes | Possible across sync gaps; see [05 §9](05-write-path-and-consolidation.md#9-concurrency-and-multiple-devices). `[consolidate] device = "…"` restricts scheduled runs to one machine. |
 
-### 6.4 Future: the replicator interface
+### 6.4 File access
 
-Remote backends plug in behind one small interface, so the engine and the
-format never change:
-
-```python
-class Replicator(Protocol):
-    name: str                                # "git", "gcs", "s3", ...
-    def status(self, brain: Brain) -> SyncStatus: ...      # ahead/behind/conflicts, no changes made
-    def sync(self, brain: Brain, *, dry_run: bool) -> SyncReport: ...
-```
-
-```toml
-# user config.toml (credentials are never stored here)
-[brains.personal.remote]
-type   = "git"                        # or "gcs", "s3"
-url    = "git@example.com:me/brain.git"
-# type = "gcs"; url = "gs://my-bucket/brains/personal"; project = "my-project"
-# type = "s3";  url = "s3://my-bucket/brains/personal"; profile = "personal"
-auto   = "after-write"                # off | after-write | interval
-```
-
-`brain sync [--dry-run]` and `brain sync status` drive it. Sync runs under
-the brain's state-dir lock, never concurrently with an apply.
-
-### 6.5 Future: private git remote
-
-The simplest remote for most users and the first one to build.
-
-- `sync` = `git pull --rebase` (or merge, configurable), then `git push`.
-- Pull conflicts in curated notes: the rebase is aborted, the remote
-  version is kept in place, and the local version is written as a conflict
-  copy `<stem>.conflict-<device>-<UTC timestamp>.md` with `conflict_of:`
-  frontmatter, then committed. Lint and `reports/` show it; a person or an
-  agent resolves it. Episodes and `log.md` do not conflict (new files;
-  union merge).
-- Hosting: any git remote the user's credentials reach (a private GitHub,
-  GitLab, Codeberg, or Forgejo repository; a bare repository over SSH).
-- Encryption at rest on the host is out of scope; documented options are
-  an encrypted disk on a self-hosted remote, or a git remote helper that
-  encrypts the whole repository (`git-remote-gcrypt`). Per-file filters
-  (`git-crypt`) leave file names visible and cannot revoke access, which
-  users should know before choosing them.
-
-### 6.6 Future: object storage through fsspec (GCS, S3)
-
-For users who want a bucket instead of a git host (or a server deployment,
-§6.7). `fsspec` provides one API over `gcsfs` (GCS) and `s3fs` (S3); the
-replicator uses it **only for the remote side**. Local writes keep using
-brain-wiki's atomic writer, because fsspec's local transactions commit
-through the system temp directory and are not atomic across filesystems.
-
-**Sync algorithm: three-way, manifest-based.** `fsspec.generic.rsync` is
-one-way and compares sizes only, so it cannot be used for a brain.
-Instead, modeled on rclone bisync:
-
-```
-state/sync/<brain-id>/<remote>.sqlite   manifest: path, base_sha256, base_size,
-                                         local_mtime_ns, local_size,
-                                         remote_token (GCS generation / S3 ETag),
-                                         state (live | tombstone), deleted_at
-state/sync/<brain-id>/base/<sha256>     content of each file at the last sync
-
-sync:
-  1 scan local (stat; hash only when stat changed)
-  2 list remote once: find(detail=True) gives token + size per object
-  3 per path, compare both sides with the base:
-      changed locally only   → upload with precondition (token == base token; create-only if new)
-      changed remotely only  → download, atomic local write
-      changed on both        → identical? record. Else three-way merge with the base;
-                               if hunks overlap, keep remote, write local as a conflict copy
-      deleted on one side    → delete the other with a precondition; tombstone
-      deleted vs changed     → the edit wins; log it
-  4 precondition failed (412) → re-list that path and re-classify (bounded retries)
-  5 abort before applying if deletes exceed max_delete (default 50%) or a side lists empty
-  6 commit manifest rows only for transfers that succeeded
-```
-
-**Content classes.**
-
-- Episodes: uploaded create-only (GCS `ifGenerationMatch=0`, S3
-  `If-None-Match: *`). A precondition failure means "already there"; the
-  upload is idempotent and can never conflict.
-- Curated notes: optimistic concurrency on the object token, three-way
-  merge on conflict, conflict copy as a last resort.
-- Deletes: tombstones kept 90 days so a device that was offline cannot
-  resurrect deleted files; bucket versioning or soft delete recommended
-  for recovery.
-
-**Known gaps to close before building it** (from the research):
-
-- `gcsfs` exposes create-only writes but not compare-and-swap on an
-  existing object's generation. The GCS replicator needs the
-  `google-cloud-storage` client (`if_generation_match`) for updates and
-  conditional deletes.
-- `s3fs` forwards extra arguments to `put_object`, so `IfMatch` should
-  work, but this must be verified end to end; S3 conditional writes
-  require SigV4 and current botocore.
-- `DirFileSystem` only blocks `..` escapes on local filesystems; remote
-  paths must be validated by brain-wiki.
-
-**Credentials** come from the platform chains (Google application default
-credentials, AWS profiles and environment), selected by name in the user
-config. Optional end-to-end encryption would encrypt each object with
-`age` in the replicator, store plaintext hashes in the manifest, and leave
-the local copy in plain text (agents must read it).
-
-### 6.7 Future: server mode reading object storage
-
-A remote MCP server for chat apps ([08 §9](08-agent-integrations.md#9-future-remote-mcp-for-chat-apps))
-could run where there is no persistent disk (a container platform). Its
-brain is a bucket prefix.
-
-To keep that possible without complicating v0.1, the engine reads and
-writes brain files through a narrow internal interface:
-
-```python
-class BrainStore(Protocol):
-    def list(self) -> Iterator[FileStat]: ...            # path, size, mtime_ns or token
-    def read(self, path: str) -> bytes: ...
-    def write(self, path: str, data: bytes, *, expect: Token | None, create_only: bool) -> Token: ...
-    def move(self, src: str, dst: str, *, expect: Token | None) -> None: ...
-    def delete(self, path: str, *, expect: Token | None) -> None: ...
-```
-
-v0.1 ships only `LocalStore` (atomic writes, `O_EXCL` creates, hash
-tokens). An `FsspecStore` would map `expect` to generation/ETag
-preconditions; GCS and S3 are strongly consistent for read-after-write and
-listing, so no extra consistency handling is needed. The index for a
-server would live on local ephemeral disk and be rebuilt at startup.
-
-Building every engine operation on `BrainStore`, including the "write only
-if unchanged" checks consolidation already does
-([05 §7.3](05-write-path-and-consolidation.md#73-apply)), costs little now
-and is what keeps this future cheap.
+The engine reads and writes brain files only through `LocalStore`: paths are
+resolved and checked to stay inside the brain root, writes are atomic
+(temporary file, `fsync`, rename), new files are created with `O_EXCL`, and
+a write can name the content hash it expects to replace, so a file changed
+since it was read is never overwritten. Consolidation's "write only if
+unchanged" check uses this ([05 §7.3](05-write-path-and-consolidation.md#73-apply)).
 
 ## 7. Concurrency and locking summary
 
@@ -341,7 +203,6 @@ and is what keeps this future cheap.
 | Episode creation | `O_EXCL` create of a unique name; no lock |
 | Curated writes (apply, fix, rule, review accept, mv) | Per-brain advisory file lock in the state dir (`filelock`), held only during apply |
 | Index writes | SQLite WAL, `BEGIN IMMEDIATE`, busy timeout |
-| Future sync | Same per-brain lock; remote correctness from per-object preconditions; an optional remote lease object for cross-device exclusion |
 
 Lock files never live inside the brain: sync tools replicate them as
 ordinary files and do not carry the lock across machines.
@@ -365,6 +226,5 @@ ordinary files and do not carry the lock across machines.
 | A single brain per user | Forces work and personal knowledge together, or one tool install per sphere. |
 | Index and run state inside the brain (`.brain/`) | Sync tools corrupt SQLite; device-specific state conflicts across machines. |
 | The engine reading object storage directly on every call | Hosts and editors need local files; latency on every hook; offline breaks. |
-| `fsspec.generic.rsync` or a cache layer as the sync engine | One-way, size-only comparison, no conflict handling. |
 | Requiring git | Many users sync with cloud drives; git stays optional. |
 | A git library (GitPython, dulwich) instead of the CLI | GitPython is in maintenance mode and leaks resources in long-running processes; dulwich lacks some porcelain; the CLI honors user hooks and credentials. dulwich remains an option where no git binary exists. |

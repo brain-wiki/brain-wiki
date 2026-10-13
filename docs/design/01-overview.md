@@ -110,8 +110,8 @@ started by a scheduled job. brain-wiki needs no API keys.
 - **Hosted service or multi-user collaboration.** A brain belongs to one
   person. Sharing happens through the user's own sync (git, a cloud drive).
 - **Remote MCP for chat apps** (ChatGPT web, claude.ai, the Gemini app). The
-  design is in [08 §9](08-agent-integrations.md#9-future-remote-mcp-for-chat-apps);
-  the implementation is not in v0.1.
+  design is a [proposal](../proposals/remote-mcp.md); the implementation is
+  not in v0.1.
 - **Built-in LLM API clients.** Consolidation goes through the host agent or
   a headless agent CLI. A direct-API backend is a later addition behind the
   same interface.
@@ -191,7 +191,7 @@ agent-readable without restructuring it.
 | **op** | One structured edit proposed by an LLM: `add_claim`, `merge_claim`, `supersede_claim`, `add_relation`, `create_note`, `create_topic`, `skip_episode`. |
 | **origin** | Who produced content: `owner` (the human), `agent`, `import`, or `system`. |
 | **taint** | Whether untrusted external content (web, email, unknown tools) influenced an episode: `true`, `false`, or `unknown`. |
-| **agent profile** | Per-brain settings for one host (e.g. `claude-code`): what it may write. Every host that may use a brain reads all of it; privacy inside a brain is being redesigned ([16](16-privacy.md)). |
+| **agent profile** | Per-brain settings for one host (e.g. `claude-code`): what it may write. Every host that may use a brain reads all of it; privacy inside a brain is being redesigned ([proposal](../proposals/privacy.md)). |
 | **host** | An agent application that loads brain-wiki: Claude Code, Codex, Antigravity, OpenClaw, Cursor, or a generic MCP client. |
 | **index** | The SQLite database derived from a brain; stored in the user cache directory, never inside the brain. |
 | **orientation** | The short, budgeted context an agent receives at session start. |

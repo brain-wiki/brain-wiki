@@ -6,7 +6,7 @@ source: "docs/design/14-roadmap-and-open-questions.md"
 ---
 # Roadmap and open questions
 
-Implementation milestones, future work, decisions needed
+Implementation milestones and status, decisions needed, verification items
 
 Generated from `docs/design/14-roadmap-and-open-questions.md`.
 
@@ -54,5 +54,5 @@ Generated from `docs/design/14-roadmap-and-open-questions.md`.
   - [[t-12]]: T-12: Can an agent running inside each desktop app (Claude Code,…
   - [[t-13]]: T-13: Antigravity /schedule
   - [[t-14]]: T-14: Does Obsidian treat links in list properties (bw-depends_on
-- [[14-4-future-work-after-v01]]: Future work (after v0.1)
+- [[14-4-future-work]]: Future work
 - [[14-prior-art]]: Prior art

@@ -1,4 +1,4 @@
-"""Bench output: results.json, report.md, a terminal table, and comparisons (design doc 11 §6)."""
+"""Bench output: results.json, report.md, a terminal table, and comparisons (design doc 11 §5)."""
 
 from __future__ import annotations
 
