@@ -26,7 +26,7 @@ bw-part_of:
   the constellation dust ease down at the topic and note levels, where the
   camera sits inside the glow and full strength would merge a cluster into
   one white blob.
-- **Health mode** (`H`) recolors instead of only dimming: each topic nebula
+- **Highlight issues** (`H`, formerly health mode) recolors instead of only dimming: each topic nebula
   and constellation's dust takes a cool → amber → red tint by its flagged
   share, ranked against the other flagged topics so a brain where every
   topic has some flags still shows where the trouble concentrates. Unflagged
@@ -41,7 +41,7 @@ bw-part_of:
   URL overrides it. `prefers-reduced-motion` turns off flows and flights.
 - **No WebGL2** (hardware acceleration off, a remote desktop or VM without
   a GPU): the stage says why the map could not start and how to check, and
-  the navigator, search, and inspector keep working without the scene.
+  the topic list, search, and details panel keep working without the scene.
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
   inside their constellation, a parent topic at the center of the
@@ -50,6 +50,12 @@ bw-part_of:
   with its folder note as its star, notes around their folder; strong tree
   springs, weak typed-link springs, seeded by note id). The same brain always
   produces the same map, and no layout ever spans the whole brain.
+- **Labels say what things are.** The galaxy is the look, not the vocabulary:
+  the interface says Overview, Group (of topics), Topic, and Note, never
+  galaxy or constellation; *issues*, not flags; *session captures*, not
+  episodes; *Facts*, not claims; the topic index, not the hub. Relations read
+  as plain verbs (Part of, Contains, Depends on, Enables, Conflicts with,
+  Replaces, Replaced by, Related to), and every number names its unit.
 - **The hierarchy follows the folders.** Inside a topic, the map's tree is
   the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
   folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is the branch's star;

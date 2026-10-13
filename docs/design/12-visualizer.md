@@ -86,7 +86,7 @@ decoration for its own sake.
   the constellation dust ease down at the topic and note levels, where the
   camera sits inside the glow and full strength would merge a cluster into
   one white blob.
-- **Health mode** (`H`) recolors instead of only dimming: each topic nebula
+- **Highlight issues** (`H`, formerly health mode) recolors instead of only dimming: each topic nebula
   and constellation's dust takes a cool → amber → red tint by its flagged
   share, ranked against the other flagged topics so a brain where every
   topic has some flags still shows where the trouble concentrates. Unflagged
@@ -101,7 +101,7 @@ decoration for its own sake.
   URL overrides it. `prefers-reduced-motion` turns off flows and flights.
 - **No WebGL2** (hardware acceleration off, a remote desktop or VM without
   a GPU): the stage says why the map could not start and how to check, and
-  the navigator, search, and inspector keep working without the scene.
+  the topic list, search, and details panel keep working without the scene.
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
   inside their constellation, a parent topic at the center of the
@@ -110,6 +110,12 @@ decoration for its own sake.
   with its folder note as its star, notes around their folder; strong tree
   springs, weak typed-link springs, seeded by note id). The same brain always
   produces the same map, and no layout ever spans the whole brain.
+- **Labels say what things are.** The galaxy is the look, not the vocabulary:
+  the interface says Overview, Group (of topics), Topic, and Note, never
+  galaxy or constellation; *issues*, not flags; *session captures*, not
+  episodes; *Facts*, not claims; the topic index, not the hub. Relations read
+  as plain verbs (Part of, Contains, Depends on, Enables, Conflicts with,
+  Replaces, Replaced by, Related to), and every number names its unit.
 - **The hierarchy follows the folders.** Inside a topic, the map's tree is
   the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
   folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is the branch's star;
@@ -132,11 +138,11 @@ Glass panels over the scene, keyboard-first:
 
 | Region | Contents |
 |---|---|
-| Top bar | Brain name and profile; back, forward, and a history list of everything opened in this tab; the breadcrumb (Galaxy › constellation › parent topics › topic › folders › note); search (`/` or `Ctrl/⌘-K`); totals (notes, links, flagged, inbox), where *flagged* opens the Health tab and *inbox* says what is pending |
-| Left: navigator | Tabs: **Atlas** (constellations → topics tree with counts, sub-topics nested under their parent, health badges and recency bars; filter and sort by size, health, recency, name), **Health** (flagged notes grouped by flag, counts first), **Changes** (recent runs; selecting one highlights what it touched) |
-| Right: inspector | Topic: description, counts, flag breakdown, busiest notes, strongest flows to other topics. Note: type, status and privacy chips, guard banners, claims (superseded struck through, unverified marked), relations by family, backlinks, path with copy and an `obsidian://` link |
+| Top bar | Brain name and profile; back, forward, and a history list of everything opened in this tab; the breadcrumb (Overview › group › parent topics › topic › folders › note); search (`/` or `Ctrl/⌘-K`); totals (topics, notes, links, *with issues*, *inbox*), where *with issues* opens the Issues tab and *inbox* says what is waiting to be merged |
+| Left panel: browse | Tabs: **Topics** (groups → topics, sub-topics nested under their parent, with "N topics · N notes" and "N notes" counts, issue badges and recency bars; filter, and sort by most notes, most issues, recently changed, or name), **Issues** (notes with issues grouped by kind, counts first, and the switch that highlights them on the map), **Activity** (recent recorded changes; selecting one highlights the notes it changed) |
+| Right panel: details | Always shown, headed **Details**; with nothing selected it says how to fill it. A group: its topics. A topic: description, counts (notes, changed 7d, with issues, last change), issue breakdown, **Open the topic index**, **Sub-topics** and **Folders** (each with its note count, clickable), **Most connected** notes (with link counts; hidden for topics of five notes or fewer), **Linked topics**. A note: where it lives ("In Guide › Sync › …"), type, status and privacy chips, guard banners, **Facts** (superseded struck through, unverified marked), relations by family, **Linked from**, path with copy and an `obsidian://` link |
 | Right: note preview | Clicking a note (a star, a row, a search result, a wikilink) also opens its preview over the inspector: the note rendered like Obsidian's reading view, with properties from the frontmatter, then the body (headings, lists and tasks, tables, code, callouts, highlights, tags, footnotes). Wikilinks open the linked note and move the map with it, in the body and in property values alike (so `bw-part_of` and other relations are links); links the viewer may not see show as unresolved. A claim's `{id: …}` block shows as a tooltip. `Esc` closes it, `P` toggles it |
-| Bottom left | Minimap: top-down galaxy with the current view; click to fly. Beside it, the level ladder: Galaxy, Constellation, Topic, Note, with the current level and its place named, a marker that creeps toward the next level as you scroll, and earlier levels clickable |
+| Bottom left | Minimap: top-down galaxy with the current view; click to fly. Beside it, the zoom ladder: Overview, Group, Topic, Note, with the current level and its place named, a marker that creeps toward the next level as you scroll, and earlier levels clickable |
 | Bottom center | Layer dock: one chip per relation family (the legend and the filter; a hidden family shows a hollow swatch and a struck label), health mode, a ⋯ menu (labels, Graphics: Auto, High, Low), and help. Going back to the overview is the breadcrumb's first crumb or `R` |
 | Overlays | Hover card: for a star its title, topic, status, and flags; for a trail the two notes it connects, read as a sentence ("2026.9.9 supersedes 2026.9.8"), with the trail and both ends lit, and a click goes to the other end; for a flow the two topics and the link count by type. Command palette with server-side search results grouped by topic; `?` shows the shortcuts |
 
