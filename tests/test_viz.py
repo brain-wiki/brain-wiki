@@ -366,6 +366,44 @@ def test_small_brain_has_one_constellation():
     assert group_topics([], {}) == []
 
 
+def _topic_graph(notes: dict[str, int], edges: list[tuple[str, str]]) -> dict:
+    """A minimal graph: `notes` notes per topic, one typed link per edge between topics."""
+    nodes = [
+        {"id": f"{t}-{i}", "kind": "note", "topic": t, "flags": [], "updated": None}
+        for t, count in notes.items()
+        for i in range(count)
+    ]
+    links = [
+        {"source": f"{a}-0", "target": f"{b}-0", "typed": True, "rel": "related_to"}
+        for a, b in edges
+    ]
+    topics = [{"slug": t, "title": t.title(), "notes": n} for t, n in notes.items()]
+    return {
+        "brain": "b",
+        "generated": "",
+        "profile": "owner",
+        "privacy": 0,
+        "topics": topics,
+        "nodes": nodes,
+        "links": links,
+        "runs": [],
+    }
+
+
+def test_constellation_title_leads_with_its_hub_topic():
+    tickers = ["calendar", "kanban", "tasks", "web-clipper"]
+    star = _topic_graph(
+        {"investing": 1, **dict.fromkeys(tickers, 3)}, [("investing", t) for t in tickers]
+    )
+    [only] = Atlas(star).world()["constellations"]
+    assert only["title"] == "Investing · Calendar · Kanban · …"
+    chain = ["a", "b", "c", "d", "e", "f"]  # no topic reaches half of the others
+    line = _topic_graph(
+        dict(zip(chain, range(1, 7), strict=True)), list(zip(chain, chain[1:], strict=False))
+    )
+    assert Atlas(line).world()["constellations"][0]["title"] == "F · E · D · …"
+
+
 def test_constellations_on_generated_brain(tmp_path: Path):
     from brainwiki.bench.generate import generate
 

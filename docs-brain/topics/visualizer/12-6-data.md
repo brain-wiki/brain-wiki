@@ -34,8 +34,10 @@ bw-part_of:
 
 - `recent`: notes updated in the last 7 days. `flows`: typed links between
   topics (body links excluded), `a` < `b`.
-- Constellation titles name their largest topics; the topic hierarchy will
-  supply real names.
+- Constellation titles lead with the group's hub topic, one typed-linked to
+  at least half of the other topics in it (a portfolio and its tickers);
+  otherwise they name the largest topics. The map labels a constellation by
+  its first topic. The topic hierarchy will supply real names.
 
 `/api/topic/<slug>`: `{slug, title, color, hub, nodes: [...], links: [...],
 external: [...]}`. `nodes` use the node shape below; `links` are relations
@@ -52,7 +54,7 @@ first).
 
 `/api/note/<id>`: the outline read (path, banners, summary, claims,
 relations, backlinks), plus what the preview needs: `properties` (the
-frontmatter), `markdown` (the body after the frontmatter, at most 200 KB), and
+frontmatter, as written), `markdown` (the body after the frontmatter, at most 200 KB), and
 `links` (wikilink text as written → `{id, title, topic}` for each target this
 profile may see; others are absent, so they render unresolved). `/api/search?q=`: the index search for the viewer's
 profile (`{results: [{id, title, topic, kind, snippet}]}`, at most 20).

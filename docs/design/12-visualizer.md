@@ -127,7 +127,7 @@ Glass panels over the scene, keyboard-first:
 | Top bar | Brain name and profile; back, forward, and a history list of everything opened in this tab; the breadcrumb (Galaxy › constellation › topic › note); search (`/` or `Ctrl/⌘-K`); totals (notes, links, flagged, inbox), where *flagged* opens the Health tab and *inbox* says what is pending |
 | Left: navigator | Tabs: **Atlas** (constellations → topics tree with counts, health badges and recency bars; filter and sort by size, health, recency, name), **Health** (flagged notes grouped by flag, counts first), **Changes** (recent runs; selecting one highlights what it touched) |
 | Right: inspector | Topic: description, counts, flag breakdown, busiest notes, strongest flows to other topics. Note: type, status and privacy chips, guard banners, claims (superseded struck through, unverified marked), relations by family, backlinks, path with copy and an `obsidian://` link |
-| Right: note preview | Clicking a note (a star, a row, a search result, a wikilink) also opens its preview over the inspector: the note rendered like Obsidian's reading view, with properties from the frontmatter, then the body (headings, lists and tasks, tables, code, callouts, highlights, tags, footnotes). Wikilinks open the linked note and move the map with it; links the viewer may not see show as unresolved. `Esc` closes it, `P` toggles it |
+| Right: note preview | Clicking a note (a star, a row, a search result, a wikilink) also opens its preview over the inspector: the note rendered like Obsidian's reading view, with properties from the frontmatter, then the body (headings, lists and tasks, tables, code, callouts, highlights, tags, footnotes). Wikilinks open the linked note and move the map with it, in the body and in property values alike (so `bw-part_of` and other relations are links); links the viewer may not see show as unresolved. A claim's `{id: …}` block shows as a tooltip. `Esc` closes it, `P` toggles it |
 | Bottom left | Minimap: top-down galaxy with the current view; click to fly. Beside it, the level ladder: Galaxy, Constellation, Topic, Note, with the current level and its place named, a marker that creeps toward the next level as you scroll, and earlier levels clickable |
 | Bottom center | Layer dock: one chip per relation family (the legend and the filter; a hidden family shows a hollow swatch and a struck label), health mode, a ⋯ menu (labels, Graphics: Auto, High, Low), and help. Going back to the overview is the breadcrumb's first crumb or `R` |
 | Overlays | Hover card: for a star its title, topic, status, and flags; for a trail the two notes it connects, read as a sentence ("2026.9.9 supersedes 2026.9.8"), with the trail and both ends lit, and a click goes to the other end; for a flow the two topics and the link count by type. Command palette with server-side search results grouped by topic; `?` shows the shortcuts |
@@ -208,8 +208,10 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
 
 - `recent`: notes updated in the last 7 days. `flows`: typed links between
   topics (body links excluded), `a` < `b`.
-- Constellation titles name their largest topics; the topic hierarchy will
-  supply real names.
+- Constellation titles lead with the group's hub topic, one typed-linked to
+  at least half of the other topics in it (a portfolio and its tickers);
+  otherwise they name the largest topics. The map labels a constellation by
+  its first topic. The topic hierarchy will supply real names.
 
 `/api/topic/<slug>`: `{slug, title, color, hub, nodes: [...], links: [...],
 external: [...]}`. `nodes` use the node shape below; `links` are relations
@@ -226,7 +228,7 @@ first).
 
 `/api/note/<id>`: the outline read (path, banners, summary, claims,
 relations, backlinks), plus what the preview needs: `properties` (the
-frontmatter), `markdown` (the body after the frontmatter, at most 200 KB), and
+frontmatter, as written), `markdown` (the body after the frontmatter, at most 200 KB), and
 `links` (wikilink text as written → `{id, title, topic}` for each target this
 profile may see; others are absent, so they render unresolved). `/api/search?q=`: the index search for the viewer's
 profile (`{results: [{id, title, topic, kind, snippet}]}`, at most 20).

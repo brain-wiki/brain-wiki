@@ -147,7 +147,7 @@ class VizServer(ThreadingHTTPServer):
         # The preview renders the note like Obsidian: frontmatter as properties, the body as
         # Markdown, and wikilinks resolved only to notes this profile may see.
         fm = split(text)
-        out["properties"] = fm.data
+        out["properties"] = fm.raw  # as written: no plain-name copies of bw- fields
         out["markdown"] = fm.body[:MAX_MARKDOWN]
         out["links"] = links
         return out

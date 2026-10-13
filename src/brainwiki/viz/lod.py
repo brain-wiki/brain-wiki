@@ -196,8 +196,8 @@ class Atlas:
             n for n in graph["nodes"] if n["kind"] in ("note", "hub") and n["topic"] in self.topics
         ]
         self._topic_of = {n["id"]: n["topic"] for n in self.notes}
-        adj = topic_weights(self.notes, graph["links"])
-        self.groups = group_topics(list(self.topics), adj)
+        self._adj = topic_weights(self.notes, graph["links"])
+        self.groups = group_topics(list(self.topics), self._adj)
         self.colors = topic_colors(self.groups)
         self.constellation_of = {s: f"c{i + 1}" for i, g in enumerate(self.groups) for s in g}
         self._inner: dict[str, list[dict[str, Any]]] = {}
@@ -228,6 +228,9 @@ class Atlas:
         constellations = []
         for i, group in enumerate(self.groups):
             ranked = sorted(group, key=lambda s: (-self.topics[s]["notes"], s))
+            hub = self._hub_topic(group)
+            if hub:  # the map labels a constellation by its first topic
+                ranked = [hub, *(s for s in ranked if s != hub)]
             titles = [self.topics[s]["title"] for s in ranked[:3]]
             constellations.append(
                 {
@@ -256,6 +259,16 @@ class Atlas:
             "episodes": {"count": self._episode_count()},
             "runs": [self._run(r) for r in g["runs"]],
         }
+
+    def _hub_topic(self, group: list[str]) -> str | None:
+        """The topic typed-linked to at least half of the others in its group (investing and
+        its tickers, people and each person), or None when no topic holds the group together."""
+        if len(group) < 3:
+            return None
+        inside = set(group)
+        reach = {s: len(set(self._adj.get(s, {})) & inside - {s}) for s in group}
+        best = min(group, key=lambda s: (-reach[s], -self.topics[s]["notes"], s))
+        return best if reach[best] * 2 >= len(group) - 1 else None
 
     def _episode_count(self) -> int:
         return sum(1 for n in self.graph["nodes"] if n["kind"] == "episode")
