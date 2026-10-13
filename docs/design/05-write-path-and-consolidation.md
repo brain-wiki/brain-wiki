@@ -28,7 +28,7 @@ Status: draft for review · Schemas in §4.3 and §5 are normative for v0.1
 
                      PATH 3: checked edits (agents with `edit`)
   agent edits a note ─► brain check <paths> ─► validate (schema, links, claims,
-        privacy, protected files, loss guard) ─► record as a run (undo, log.md, git)
+        protected files, loss guard) ─► record as a run (undo, log.md, git)
                      (or ─► errors, nothing recorded; fix, or brain restore)
 
   rules.md ◄── only: user via CLI, or agent via MCP with user confirmation (§6)
@@ -65,9 +65,7 @@ All writers go through one function, `write_episode()`, which:
 
 1. Mints the ULID and path (UTC year and month).
 2. Sets the provenance fields from the code path, ignoring any values the
-   model put in the text. Privacy is the most restrictive of the requested
-   level and the levels of the hinted topics, so an episode about a
-   sensitive topic is never visible to agents that cannot read that topic.
+   model put in the text.
 3. Scrubs secrets (patterns for common API keys, tokens, private key
    blocks; [10](10-security-and-privacy.md)), replacing them with
    `[REDACTED:<kind>]`.
@@ -114,7 +112,7 @@ consolidation:
 |---|---|---|
 | `agent` (in-session recipe) | The user runs `/brain:harvest` (the `harvest` MCP prompt, or the skill's harvest section) inside a host. The agent calls `brain_harvest_prepare`; brain-wiki discovers, filters, routes, extracts, and scrubs that host's new sessions and returns a packet of condensed turns (at most 15k tokens; call again for more). The agent distills and calls `brain_harvest_apply` with one entry per session (episode content, or `skip` with a reason). The server validates turn ranges and lengths, sets every provenance field itself (including taint computed from the parsed tool calls), writes the episodes, and advances watermarks. | Regular use: the agent the user already runs does the thinking, no extra process or credentials |
 | `command` (headless) | `brain harvest --apply` calls the configured preset per chunk. | Unattended schedules and large backfills, which would exhaust a chat session's context |
-| `raw` | No model: the episode is a condensed transcript excerpt; consolidation distills later. | No model available, or the backend's profile may not read the session's brain |
+| `raw` | No model: the episode is a condensed transcript excerpt; consolidation distills later. | No model available |
 
 **Fallback for hosts without a reader.** For hosts brain-wiki cannot read
 yet (Cursor, OpenClaw, new hosts), `brain_harvest_prepare` returns
@@ -136,10 +134,8 @@ Harvest is off by default and enabled per host (`[harvest] hosts` in the
 user config, plus `harvest` in the host's profile `write` list for the
 agent backend). Every CLI run starts as a dry run that lists the sessions
 it would read, the brain each routes to, and an estimate of tokens for
-distillation; `--apply` executes. Every backend is subject to the same
-profile check as consolidation: it only receives sessions routed to brains
-and privacy levels its profile may read. Sessions it may not read are
-harvested `raw` by the CLI or left for another backend.
+distillation; `--apply` executes. A backend only receives sessions routed
+to a brain; unrouted sessions are skipped.
 
 ### 2.3 Checked agent edits
 
@@ -162,11 +158,10 @@ recorded version:
 
 | Check | Fails when |
 |---|---|
-| Schema | Frontmatter is not valid YAML, a required key is missing, `status` or `bw-privacy` has an unknown value, or an `id` was changed or duplicated (lint BW1xx) |
+| Schema | Frontmatter is not valid YAML, a required key is missing, `status` has an unknown value, or an `id` was changed or duplicated (lint BW1xx) |
 | Links and relations | A relation does not parse or names an unknown `bw-` field (error), or a new link does not resolve (warning) |
 | Claims | Claim metadata is broken, or a claim was deleted or reworded in place. Claims change only by superseding (move the old claim to `bw-claims-superseded`, add the new one), so a fact's history is never lost |
 | Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` |
-| Privacy | A note's privacy was lowered, or the note is above what the caller's profile may read |
 | Protected files | Any of the files above changed |
 | Sync debris | Merge-conflict markers or sync-conflict copies |
 
@@ -289,10 +284,10 @@ money and attention, and the user should choose when.
 ### 4.3 Selecting and packaging work
 
 **Selection.** Pending episodes (everything under `inbox/episodes/` and
-`inbox/agents/`), oldest first, up to `max_episodes_per_run`, **filtered by
-the backend's agent profile**: episodes above the profile's
-`max_privacy` stay pending for a more trusted backend (for example a local
-model). This is what keeps sensitive notes away from a cloud model.
+`inbox/agents/`), oldest first, up to `max_episodes_per_run`. The backend's
+model provider sees every episode and candidate note in the packet; keeping
+a body of notes away from a cloud model means keeping it in a separate
+brain ([16](16-privacy.md)).
 
 **Grouping.** For each episode, the engine finds candidate notes:
 topic hints, then an FTS query over the episode text (top 5), then the
@@ -436,7 +431,7 @@ Rules for origin reads:
 - Reading origins requires `read_origin = true` in the caller's agent
   profile ([07 §1](07-interfaces.md#1-agent-profiles)), off by default for
   every host, because transcripts hold far more than the episode chose to
-  keep. The episode's own privacy level also applies.
+  keep.
 - Claims may cite the conversation directly with an origin source,
   `<host>:<session>#T<start>-T<end>`, in addition to the episode span. Lint
   cannot check origin sources on other devices or after the host deleted the
@@ -517,8 +512,8 @@ Semantics (what the deterministic writer does):
 | `supersede_claim` | Puts the new claim in the old one's place in `bw-claims` and moves the old one to `bw-claims-superseded` with `by: <new id>`, the reason, and the date. |
 | `retract_claim` | Moves the claim to `bw-claims-superseded` with `status: retracted` and the reason, citing sources that show it was wrong. |
 | `add_relation` | Appends a canonical relation to the `from` note's `bw-<verb>` field. `supersedes` also sets the target note's `status: superseded`. A relation that already exists becomes a no-op. |
-| `create_note` | Creates `topics/<topic>/<slug>.md` with frontmatter (new id, type, title, `bw-part_of` the hub, `bw-claims`, and `bw-privacy` only when a source episode is more private than the topic), `# title`, and the summary; adds a line to the hub's `## Notes`. |
-| `create_topic` | Creates the folder and a hub, inside the `parent` topic's folder when given (a sub-topic, 02 §2); adds the topic to the `AGENTS.md` block. Allowed only when the profile's `topics` is `*`. |
+| `create_note` | Creates `topics/<topic>/<slug>.md` with frontmatter (new id, type, title, `bw-part_of` the hub, and `bw-claims`), `# title`, and the summary; adds a line to the hub's `## Notes`. |
+| `create_topic` | Creates the folder and a hub, inside the `parent` topic's folder when given (a sub-topic, 02 §2); adds the topic to the `AGENTS.md` block. |
 | `skip_episode` | Nothing, except that the episode is archived with the run. |
 
 `new:<topic>/<slug>` refs let ops in one batch point at notes created in the
@@ -554,7 +549,7 @@ Budget overflow is an error that tells the user which rules are longest.
 | V3 | Every source span lies within its episode's lines; the episode is in the packet. | Invalid. |
 | V4 | Claim text is one line, contains no `<!--` or `-->`, and is within length limits; titles and slugs are well formed. | Invalid. |
 | V5 | Relation verbs are canonical or known aliases; no self-supersession; no supersession cycle; targets resolve. | Invalid. |
-| V6 | Ops stay within the backend profile: allowed topics, no privacy lowering, `create_topic` only with `*`. | Invalid. |
+| V6 | Topics exist: a note is created in a topic of the packet or one created earlier in the batch, and a sub-topic's parent exists. | Invalid. |
 | V7 | Completeness: episodes neither cited nor skipped. | Not an error: they stay pending and the run reports them. |
 | V8 | **Supersession ratio**: for a note with ≥ 4 active claims, superseded + retracted in this run ÷ active before > `max_supersede_ratio`. | Run is routed to review. |
 | V9 | **Specificity warning**: a superseding claim drops anchors (numbers, dates, versions, URLs, code spans, wikilinks) that appear in the old claim. | Warning in the run record and review file. Not blocking: changing a value is the point of superseding, and the old text is kept. |

@@ -15,7 +15,7 @@ itself. The message starts with a stable code:
 
 | Code | When |
 |---|---|
-| `not_found` | Target, brain, or run does not exist or is hidden by the profile |
+| `not_found` | Target, brain, or run does not exist |
 | `ambiguous` | Target matches several notes; the message lists them |
 | `forbidden` | Not allowed by the profile or host limits |
 | `invalid_ops` | Validation failed; a list of `{op_index, check, message}` follows |

@@ -18,10 +18,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from brainwiki.bench.generate import PROFILES, WORDS, generate
+from brainwiki.bench.generate import WORDS, generate
 from brainwiki.config.resolve import open_brain
 from brainwiki.engine import Engine
-from brainwiki.errors import NotFound
 
 
 @dataclass
@@ -81,13 +80,11 @@ def _ratio(num: int, den: int) -> float:
 
 
 # -- retrieval ---------------------------------------------------------------
-def retrieval(work: Path, size: int, seed: int = 0, *, cross_privacy: bool = True) -> SuiteResult:
-    from brainwiki.index.orient import orient
-    from brainwiki.index.read import read
+def retrieval(work: Path, size: int, seed: int = 0) -> SuiteResult:
     from brainwiki.index.search import search
 
     res = SuiteResult("retrieval")
-    truth = generate(work / f"retrieval-{size}", notes=size, seed=seed, cross_privacy=cross_privacy)
+    truth = generate(work / f"retrieval-{size}", notes=size, seed=seed)
     mix = truth.relation_counts
     total = sum(mix.values())
     res.details["brain"] = {
@@ -95,115 +92,62 @@ def retrieval(work: Path, size: int, seed: int = 0, *, cross_privacy: bool = Tru
         "queries": dict(Counter(q.family for q in truth.queries)),
         "relation_mix": {k: round(v / total, 3) for k, v in sorted(mix.items())},
     }
-    with _engine(truth.root) as owner:
-        owner.rebuild()
     failures: list[dict[str, Any]] = []
-    for profile, max_rank in PROFILES.items():
-        engine = _engine(truth.root, profile)
-        hidden = [n for n in truth.nodes.values() if n.rank > max_rank]
-        markers = [m for n in hidden for m in n.markers()]
-        markers += [n.title for n in hidden if n.kind == "note"]
-        if max_rank < 1:
-            markers.append(f"topics/{truth.sensitive_topic}/")
-        ranking: dict[str, list[tuple[float, float, float]]] = {}
-        guards = {"expected": 0, "found": 0, "extra": 0, "hidden_ok": 0, "hidden_n": 0}
-        newest = [0, 0]
-        checked: set[str] = set()
-        leaks: list[str] = []
+    ranking: dict[str, list[tuple[float, float, float]]] = {}
+    guards = {"expected": 0, "found": 0, "extra": 0}
+    newest = [0, 0]
+    checked: set[str] = set()
+    with _engine(truth.root) as engine:
+        engine.rebuild()
         for query in truth.queries:
-            resp = search(engine, query.text, limit=8)
-            results = resp["results"]
-            dump = json.dumps(results, ensure_ascii=False)  # not the echoed query
-            for marker in (m for m in markers if m in dump):
-                where = [
-                    f"{r['path']} ({key})"
-                    for r in results
-                    for key, value in r.items()
-                    if marker in json.dumps(value, ensure_ascii=False)
-                ]
-                leaks.append(f"search {query.text!r}: {', '.join(where)} reveals {marker!r}")
-            for r in results:
-                node = truth.nodes.get(r["id"])
-                if node is None or node.rank > max_rank:
-                    leaks.append(f"search {query.text!r} returns {r['path']}")
-                for g in r.get("guards", []):
-                    if g["id"] in truth.nodes and truth.nodes[g["id"]].rank > max_rank:
-                        leaks.append(f"guard on {r['path']} names {g['path']}")
-            expected = {i: gr for i, gr in query.expected.items() if truth.visible(i, max_rank)}
-            if expected:
-                primary = [r["id"] for r in results if not r.get("via")][:8]
-                ranking.setdefault(query.family, []).append(_rank_scores(primary, expected))
+            results = search(engine, query.text, limit=8)["results"]
+            primary = [r["id"] for r in results if not r.get("via")][:8]
+            ranking.setdefault(query.family, []).append(_rank_scores(primary, query.expected))
             for r in results:
                 if r["kind"] not in ("note", "hub") or r["id"] in checked:
                     continue
                 checked.add(r["id"])
-                want, want_hidden = truth.expected_guards(r["id"], max_rank)
+                want = truth.expected_guards(r["id"])
                 got = {(g["label"], g["id"]) for g in r.get("guards", [])}
                 guards["expected"] += len(want)
                 guards["found"] += len(want & got)
                 guards["extra"] += len(got - want)
-                if want_hidden or r.get("hidden_guards"):
-                    guards["hidden_n"] += 1
-                    guards["hidden_ok"] += dict(r.get("hidden_guards") or {}) == want_hidden
-                chain = [n for n in truth.chain(r["id"]) if truth.visible(n, max_rank)]
+                chain = truth.chain(r["id"])
                 if chain:
                     newest[1] += 1
                     newest[0] += ("superseded_by", chain[-1]) in got
-                if want != got or dict(r.get("hidden_guards") or {}) != want_hidden:
+                if want != got:
                     failures.append(
                         {
-                            "profile": profile,
                             "hit": r["path"],
                             "missing": sorted(_names(truth, want - got)),
                             "unexpected": sorted(_names(truth, got - want)),
-                            "hidden_expected": want_hidden,
-                            "hidden_returned": r.get("hidden_guards") or {},
                         }
                     )
-        case = f"{size}/{profile}"
-        if profile == "owner":
-            every = [s for scores in ranking.values() for s in scores]
-            for family, scores in [("all", every), *sorted(ranking.items())]:
-                for i, name in enumerate(("recall@8", "mrr", "ndcg@8")):
-                    value = round(statistics.fmean(s[i] for s in scores), 4) if scores else None
-                    res.add(f"{size}/{family}", name, value)
-        found, expected = guards["found"], guards["expected"]
-        res.add(
-            case,
-            "guard_recall",
-            _ratio(found, expected),
-            target="1.0",
-            passed=found == expected,
-            hard=True,
-        )
-        res.add(case, "guard_unexpected", guards["extra"], target="0", passed=not guards["extra"])
-        res.add(
-            case,
-            "newest_successor",
-            _ratio(*newest),
-            target="1.0",
-            passed=newest[0] == newest[1],
-            hard=True,
-        )
-        if max_rank < 2:
-            ok, n = guards["hidden_ok"], guards["hidden_n"]
-            res.add(
-                case, "hidden_guards_exact", _ratio(ok, n), target="1.0", passed=ok == n, hard=True
-            )
-            text = orient(engine)["text"]
-            leaks += [f"orient reveals {m!r}" for m in markers if m in text]
-            if max_rank < 1 and f"**{truth.sensitive_topic}**" in text:
-                leaks.append(f"orient lists topic {truth.sensitive_topic}")
-            for node in [n for n in hidden if n.kind == "note"][:10]:
-                try:
-                    read(engine, node.id)
-                    leaks.append(f"read returns {node.path}")
-                except NotFound:
-                    pass
-            res.add(case, "privacy_leaks", len(leaks), target="0", passed=not leaks, hard=True)
-            if leaks:
-                res.details.setdefault("leaks", {})[profile] = sorted(set(leaks))[:20]
-        engine.close()
+    every = [s for scores in ranking.values() for s in scores]
+    for family, scores in [("all", every), *sorted(ranking.items())]:
+        for i, name in enumerate(("recall@8", "mrr", "ndcg@8")):
+            value = round(statistics.fmean(s[i] for s in scores), 4) if scores else None
+            res.add(f"{size}/{family}", name, value)
+    case = str(size)
+    found, expected = guards["found"], guards["expected"]
+    res.add(
+        case,
+        "guard_recall",
+        _ratio(found, expected),
+        target="1.0",
+        passed=found == expected,
+        hard=True,
+    )
+    res.add(case, "guard_unexpected", guards["extra"], target="0", passed=not guards["extra"])
+    res.add(
+        case,
+        "newest_successor",
+        _ratio(*newest),
+        target="1.0",
+        passed=newest[0] == newest[1],
+        hard=True,
+    )
     res.details["guard_failures"] = failures[:30]
     res.details["guard_failure_count"] = len(failures)
     return res
@@ -238,8 +182,7 @@ description = "Core services of the fictional Kestrel project."
 
 [topics.vault]
 title = "Vault"
-description = "Costs and contracts, restricted."
-privacy = "sensitive"
+description = "Costs and contracts."
 """
 
 
@@ -305,7 +248,7 @@ def base_brain(root: Path) -> Path:
             ["The gateway throttles producers above 2000 events per second."],
             [("part_of", alpha)],
         ),
-        "topics/vault/index.md": _hub("Vault", "Restricted.", ["vault-costs"]),
+        "topics/vault/index.md": _hub("Vault", "Costs and contracts.", ["vault-costs"]),
         VC: _note(
             "Broker hosting costs",
             "The hosted broker costs more than running it ourselves.",
@@ -410,16 +353,6 @@ def _bw104(root: Path) -> Expect:
 @_case("BW106")
 def _bw106(root: Path) -> Expect:
     return [("BW106", IL, _frontmatter(root, IL, "status: draft"))], {IL: 2}
-
-
-@_case("BW107")
-def _bw107(root: Path) -> Expect:
-    return [("BW107", VC, _frontmatter(root, VC, "bw-privacy: confidential"))], None
-
-
-@_case("BW108")
-def _bw108(root: Path) -> Expect:
-    return [("BW108", VC, _frontmatter(root, VC, "bw-privacy: default"))], {VC: 1}
 
 
 @_case("BW113")
@@ -882,7 +815,7 @@ def _model_slices(res: SuiteResult, work: Path, backends: list[str], timeout: in
             continue
         for name, text, anchors, forbidden in MODEL_SCENARIOS:
             root = base_brain(work / f"model-{preset}-{name}")
-            profile = f'\n[agents.{preset}]\nmax_privacy = "default"\nwrite = ["episodes", "consolidate"]\n'
+            profile = f'\n[agents.{preset}]\nwrite = ["episodes", "consolidate"]\n'
             (root / "brain.toml").write_text((root / "brain.toml").read_text() + profile, "utf-8")
             with _engine(root) as engine:
                 _log(engine, text)

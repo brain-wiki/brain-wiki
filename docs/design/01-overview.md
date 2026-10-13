@@ -135,7 +135,7 @@ started by a scheduled job. brain-wiki needs no API keys.
    safe, make every curated change attributable and reversible, and make
    lint catch what bypasses them.
 3. **The engine decides; the LLM proposes.** Everything that must be
-   correct (parsing, validation, budgets, privacy, undo) is deterministic
+   correct (parsing, validation, budgets, provenance, undo) is deterministic
    code. The LLM only produces structured proposals that the engine accepts
    or rejects.
 4. **Change is first-class.** Supersession and contradiction are typed
@@ -159,7 +159,7 @@ agent-readable without restructuring it.
 
 | # | Scenario | Flow (details in) |
 |---|---|---|
-| S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, privacy, capture and harvest, and routines, with a dry run before every write. [15](15-skills-onboarding-and-routines.md) |
+| S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, which brains each may use, capture and harvest, and routines, with a dry run before every write. [15](15-skills-onboarding-and-routines.md) |
 | S1 | **Session start.** An agent starts in a project. | The static block `brain connect` wrote tells it to call `brain_list` and `brain_orient` when the task may depend on the user's knowledge; the briefing (what the brain holds, rules, topics, recent changes) fits a fixed budget. [04](04-index-and-retrieval.md), [08 §3.2](08-agent-integrations.md#32-the-static-instruction-block) |
 | S2 | **Recall during a task.** The agent asks about a past decision. | `search` returns the matching notes plus every note that supersedes or conflicts with them; the agent opens one with `read` and follows its relations with `neighbors`, or reads files directly when allowed. [04](04-index-and-retrieval.md) |
 | S2b | **An agent updates a note.** The user says "Maya moved to the platform team." | The agent edits the person's note and runs `brain check`, which validates and records the edit. [05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits) |
@@ -178,7 +178,7 @@ agent-readable without restructuring it.
 
 | Term | Meaning |
 |---|---|
-| **brain** | A directory with a `brain.toml` manifest; the unit of storage, privacy, and selection. |
+| **brain** | A directory with a `brain.toml` manifest; the unit of storage, access, and selection. |
 | **topic** | A folder of related notes with one **hub** page that summarizes it and links its notes. Topics nest: a folder with a hub inside a topic is a sub-topic. |
 | **note** | A curated Markdown file: frontmatter (with claims and relations in `bw-` fields) and free prose. |
 | **claim** | One item in a note's `bw-claims` list, with an id and provenance metadata. The unit consolidation operates on. |
@@ -191,8 +191,7 @@ agent-readable without restructuring it.
 | **op** | One structured edit proposed by an LLM: `add_claim`, `merge_claim`, `supersede_claim`, `add_relation`, `create_note`, `create_topic`, `skip_episode`. |
 | **origin** | Who produced content: `owner` (the human), `agent`, `import`, or `system`. |
 | **taint** | Whether untrusted external content (web, email, unknown tools) influenced an episode: `true`, `false`, or `unknown`. |
-| **privacy level** | An ordered label on topics and notes (default: `default` < `sensitive` < `secret`). Each agent profile has a maximum level it may see. |
-| **agent profile** | Per-brain settings for one host (e.g. `claude-code`): which privacy levels and topics it may read and what it may write. |
+| **agent profile** | Per-brain settings for one host (e.g. `claude-code`): what it may write. Every host that may use a brain reads all of it; privacy inside a brain is being redesigned ([16](16-privacy.md)). |
 | **host** | An agent application that loads brain-wiki: Claude Code, Codex, Antigravity, OpenClaw, Cursor, or a generic MCP client. |
 | **index** | The SQLite database derived from a brain; stored in the user cache directory, never inside the brain. |
 | **orientation** | The short, budgeted context an agent receives at session start. |

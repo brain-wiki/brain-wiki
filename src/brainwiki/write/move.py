@@ -2,7 +2,7 @@
 
 Links by file name keep working when only folders change; links that name a path, and relative
 Markdown links into or out of what moved, are rewritten. Topics are known by their slug, so
-moving a topic folder re-parents it without breaking agent allowlists (design doc 02 §2).
+moving a topic folder re-parents it without breaking topic policies (design doc 02 §2).
 """
 
 from __future__ import annotations

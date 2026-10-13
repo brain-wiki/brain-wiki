@@ -23,6 +23,7 @@
 | interfaces | topics/interfaces/interfaces.md | CLI commands, MCP tools and schemas, agent profiles, error model |
 | lint-and-reports | topics/lint-and-reports/lint-and-reports.md | Rules, profiles, fixes, generated reports, pre-commit use |
 | overview | topics/overview/overview.md | Problem, goals, non-goals, principles, scenarios, glossary |
+| privacy | topics/privacy/privacy.md | What privacy must protect, from whom, and a draft model to replace the removed levels |
 | roadmap-and-open-questions | topics/roadmap-and-open-questions/roadmap-and-open-questions.md | Implementation milestones, future work, decisions needed |
 | security-and-privacy | topics/security-and-privacy/security-and-privacy.md | Threat model and mitigations |
 | skills-onboarding-and-routines | topics/skills-onboarding-and-routines/skills-onboarding-and-routines.md | The three skills, the guided setup flow, brain doctor --json, and routine templates for hosts' schedulers |

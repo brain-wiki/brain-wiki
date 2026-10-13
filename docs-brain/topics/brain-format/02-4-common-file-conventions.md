@@ -18,7 +18,7 @@ bw-part_of:
   MUST NOT be used. Reasons: Obsidian's properties editor only handles flat
   properties; LLMs frequently break nested YAML; flat values index trivially.
 - **brain-wiki's fields carry the `bw-` prefix.** Relations (§6.4), claims
-  (§6.3), `bw-privacy`, `bw-stage`, and episode provenance (§9) are fields
+  (§6.3), `bw-stage`, and episode provenance (§9) are fields
   named `bw-…`. Shared note metadata stays unprefixed: `id`, `type`, `title`,
   `aliases`, `tags`, `status`, `created`, `updated`. Reasons: the prefix
   marks what brain-wiki parses and validates, keeps those fields together in

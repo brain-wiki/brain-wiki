@@ -105,20 +105,15 @@ def test_graph_nodes_links_and_flags(example: Path):
     assert topics["search"]["hub"] == "01M4KT3JPRY4W6766VT18CQS90"
     assert topics["search"]["description"] == "How local search works and why."
     assert len({t["color"] for t in topics.values()}) == 3
-    assert graph["privacy"] == ["default", "sensitive"]
     assert graph["runs"] == []
 
 
-def test_graph_respects_profile(example: Path):
+def test_graph_shows_every_topic_to_any_host(example: Path):
     with engine_for(example, host="someone") as eng:
         graph = build_graph(eng)
     ids = {n["id"] for n in graph["nodes"]}
-    assert GPU not in ids
-    assert BUDGET_HUB not in ids
-    assert FTS5 in ids
-    assert all(GPU not in (link["source"], link["target"]) for link in graph["links"])
-    assert "budget" not in {t["slug"] for t in graph["topics"]}
-    assert graph["privacy"] == ["default"]
+    assert {GPU, BUDGET_HUB, FTS5} <= ids
+    assert "budget" in {t["slug"] for t in graph["topics"]}
     assert graph["profile"] == "default"
     assert "conflict" in _node(graph, VECTOR)["flags"]
 
@@ -184,9 +179,6 @@ def test_runs_from_records(example: Path):
         "episodes": 1,
         "touched": [FTS5, GPU],
     }
-    with engine_for(example, host="someone") as eng:
-        hidden = build_graph(eng)["runs"]
-    assert hidden[0]["touched"] == [FTS5]
 
 
 def test_graphml_well_formed(example: Path):
@@ -239,7 +231,6 @@ def test_world_shape_and_totals(example: Path):
         "brain",
         "generated",
         "profile",
-        "privacy",
         "totals",
         "constellations",
         "topics",
@@ -289,24 +280,16 @@ def test_world_recent_counts_last_week(example: Path):
     assert all(t["recent"] == 0 for t in far["topics"])
 
 
-def test_world_hides_what_the_profile_cannot_see(example: Path):
+def test_world_shows_every_topic_to_any_host(example: Path):
     atlas = _atlas(example, host="someone")
     world = atlas.world()
     assert world["profile"] == "default"
-    assert "budget" not in {t["slug"] for t in world["topics"]}
-    assert all("budget" not in c["topics"] for c in world["constellations"])
-    assert all("budget" not in (f["a"], f["b"]) for f in world["flows"])
-    assert world["totals"]["topics"] == 2
-    assert world["totals"]["notes"] + world["totals"]["hubs"] == 6
-    assert atlas.topic("budget") is None
+    assert "budget" in {t["slug"] for t in world["topics"]}
+    assert world["totals"]["topics"] == 3
+    assert atlas.topic("budget") is not None
     health = atlas.health()
-    ids = {item["id"] for items in health["items"].values() for item in items}
-    assert GPU not in ids and BUDGET_HUB not in ids
-    assert health["counts"] == {"conflict": 2}
-    search = atlas.topic("search")
-    assert search is not None
-    assert all(GPU not in (x["source"], x["target"]) for x in search["external"])
-    assert atlas.search_titles("gpu") == []
+    assert GPU in {item["id"] for items in health["items"].values() for item in items}
+    assert GPU in {r["id"] for r in atlas.search_titles("gpu")}
 
 
 def test_topic_payload(example: Path):
@@ -375,7 +358,6 @@ def _topic_graph(notes: dict[str, int], edges: list[tuple[str, str]]) -> dict:
         "brain": "b",
         "generated": "",
         "profile": "owner",
-        "privacy": 0,
         "topics": topics,
         "nodes": nodes,
         "links": links,
@@ -449,7 +431,6 @@ def test_world_keeps_each_topics_strongest_flows():
         "brain": "b",
         "generated": "",
         "profile": "owner",
-        "privacy": [],
         "topics": [{"slug": s, "title": s, "notes": 1, "hub": None} for s in slugs],
         "nodes": nodes,
         "links": links,
@@ -648,15 +629,15 @@ def test_server_api(server: VizServer):
     world = _api(server, "/api/world")
     assert isinstance(world, dict)
     assert world["profile"] == "default"
-    assert "budget" not in {t["slug"] for t in world["topics"]}
+    assert "budget" in {t["slug"] for t in world["topics"]}
     topic = _api(server, "/api/topic/search")
     assert isinstance(topic, dict)
     assert FTS5 in {n["id"] for n in topic["nodes"]}
-    assert _get(server, f"/api/topic/budget?t={server.token}")[0] == 404
+    assert _get(server, f"/api/topic/budget?t={server.token}")[0] == 200
     assert _get(server, f"/api/topic/nope?t={server.token}")[0] == 404
     health = _api(server, "/api/health")
     assert isinstance(health, dict)
-    assert GPU not in {i["id"] for items in health["items"].values() for i in items}
+    assert GPU in {i["id"] for items in health["items"].values() for i in items}
     assert _get(server, f"/api/graph?t={server.token}")[0] == 404
 
     status, _, body = _get(server, f"/api/note/{FTS5}?t={server.token}")
@@ -665,7 +646,7 @@ def test_server_api(server: VizServer):
     assert note["title"] == "Use SQLite FTS5 for local search"
     assert note["path"] == "topics/search/fts5.md"
     assert any("SUPERSEDES" in b.upper() or "CONFLICTS" in b for b in note["banners"])
-    assert _get(server, f"/api/note/{GPU}?t={server.token}")[0] == 404
+    assert _get(server, f"/api/note/{GPU}?t={server.token}")[0] == 200
 
 
 def test_server_note_preview(server: VizServer, example: Path):
@@ -683,9 +664,10 @@ def test_server_note_preview(server: VizServer, example: Path):
     assert "id:" not in note["markdown"]
     assert note["properties"]["type"] == "concept"
     assert note["properties"]["tags"] == ["search"]
-    # Links resolve only to notes this profile may see; hidden and missing targets stay unresolved.
+    # Links resolve to the notes they name; a missing target stays unresolved.
     assert note["links"] == {
-        "fts5": {"id": FTS5, "title": "Use SQLite FTS5 for local search", "topic": "search"}
+        "fts5": {"id": FTS5, "title": "Use SQLite FTS5 for local search", "topic": "search"},
+        "gpu-freeze": {"id": GPU, "title": "No GPU spending this year", "topic": "budget"},
     }
 
 
@@ -695,10 +677,8 @@ def test_server_search(server: VizServer):
     assert isinstance(found, dict)
     assert found["results"][0]["id"] == FTS5
     assert set(found["results"][0]) == {"id", "title", "topic", "kind", "snippet"}
-    for query in ("GPU", "spending", "budget"):
-        results = _api(server, f"/api/search?q={query}")["results"]  # type: ignore[index]
-        assert all(r["topic"] != "budget" for r in results), query
-        assert GPU not in {r["id"] for r in results}, query
+    gpu = _api(server, "/api/search?q=GPU")["results"]  # type: ignore[index]
+    assert GPU in {r["id"] for r in gpu}
     # Body text, not just titles, reaches the index search.
     body = _api(server, "/api/search?q=ripgrep")["results"]  # type: ignore[index]
     assert body and len(body) <= 20
@@ -787,11 +767,11 @@ def test_cli_export(
     out = tmp_path / "graph.json"
     assert main(["viz", "--brain", str(example), "--as", "someone", "--export", str(out)]) == 0
     graph = json.loads(out.read_text(encoding="utf-8"))
-    assert GPU not in {n["id"] for n in graph["nodes"]}
-    assert "privacy levels: default" in capsys.readouterr().out
+    assert GPU in {n["id"] for n in graph["nodes"]}
+    assert "profile default" in capsys.readouterr().out
     html = tmp_path / "brain.html"
     assert main(["viz", "--brain", str(example), "--export", str(html)]) == 0
-    assert "default, sensitive" in capsys.readouterr().out
+    assert "profile owner" in capsys.readouterr().out
     assert html.read_text(encoding="utf-8").startswith("<!doctype html>")
     assert 'id="brain-data"' in html.read_text(encoding="utf-8")
     assert main(["viz", "--brain", str(example), "--export", str(tmp_path / "x.txt")]) == 2

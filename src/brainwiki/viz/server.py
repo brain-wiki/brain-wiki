@@ -53,7 +53,6 @@ _NOTE_FIELDS = (
     "status",
     "topic",
     "updated",
-    "privacy",
     "banners",
     "summary",
     "claims",
@@ -141,33 +140,28 @@ class VizServer(ThreadingHTTPServer):
             result = read(self.engine, node_id, mode="outline")
             root = self.engine.brain.root
             text = self.engine.store.read_text(result["path"])
-            links = self._visible_links(result["id"])
+            links = self._links(result["id"])
         out = {key: result.get(key) for key in _NOTE_FIELDS}
         out["abs_path"] = str(root / result["path"])
         # The preview renders the note like Obsidian: frontmatter as properties, the body as
-        # Markdown, and wikilinks resolved only to notes this profile may see.
+        # Markdown, and wikilinks resolved to the notes they name.
         fm = split(text)
         out["properties"] = fm.raw  # as written: no plain-name copies of bw- fields
         out["markdown"] = fm.body[:MAX_MARKDOWN]
         out["links"] = links
         return out
 
-    def _visible_links(self, node_id: str) -> dict[str, dict[str, Any]]:
-        """Caller holds the lock. Link text as written -> the note it resolves to, if visible."""
-        links: dict[str, dict[str, Any]] = {}
+    def _links(self, node_id: str) -> dict[str, dict[str, Any]]:
+        """Caller holds the lock. Link text as written -> the note it resolves to."""
         rows = self.engine.db.execute(
-            """SELECT e.raw_target, n.id, n.title, n.topic, n.privacy_rank FROM edges e
+            """SELECT e.raw_target, n.id, n.title, n.topic FROM edges e
                JOIN nodes n ON n.id = e.other WHERE e.declared_in = ?""",
             (node_id,),
         )
-        for row in rows:
-            if self.engine.visible(row["privacy_rank"], row["topic"]):
-                links[row["raw_target"]] = {
-                    "id": row["id"],
-                    "title": row["title"],
-                    "topic": row["topic"],
-                }
-        return links
+        return {
+            row["raw_target"]: {"id": row["id"], "title": row["title"], "topic": row["topic"]}
+            for row in rows
+        }
 
     def watch_idle(self, idle_seconds: float = IDLE_SECONDS, interval: float = 30.0) -> None:
         def run() -> None:

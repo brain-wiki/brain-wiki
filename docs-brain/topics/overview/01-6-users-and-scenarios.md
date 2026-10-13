@@ -18,7 +18,7 @@ agent-readable without restructuring it.
 
 | # | Scenario | Flow (details in) |
 |---|---|---|
-| S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, privacy, capture and harvest, and routines, with a dry run before every write. [[skills-onboarding-and-routines\|15]] |
+| S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, which brains each may use, capture and harvest, and routines, with a dry run before every write. [[skills-onboarding-and-routines\|15]] |
 | S1 | **Session start.** An agent starts in a project. | The static block `brain connect` wrote tells it to call `brain_list` and `brain_orient` when the task may depend on the user's knowledge; the briefing (what the brain holds, rules, topics, recent changes) fits a fixed budget. [[index-and-retrieval\|04]], [[08-32-the-static-instruction-block\|08 §3.2]] |
 | S2 | **Recall during a task.** The agent asks about a past decision. | `search` returns the matching notes plus every note that supersedes or conflicts with them; the agent opens one with `read` and follows its relations with `neighbors`, or reads files directly when allowed. [[index-and-retrieval\|04]] |
 | S2b | **An agent updates a note.** The user says "Maya moved to the platform team." | The agent edits the person's note and runs `brain check`, which validates and records the edit. [[05-23-checked-agent-edits\|05 §2.3]] |

@@ -1,8 +1,8 @@
 """The topic tree (design doc 02 §2): which folders are topics, their parents, what they inherit.
 
 A topic is a folder directly under the topics directory, or a folder at any depth below it that
-has a hub. Its slug, not its path, is its identity, so folders can be reorganized. Privacy and
-agent allowlists inherit down the tree.
+has a hub. Its slug, not its path, is its identity, so folders can be reorganized. Topic policies
+(`review`, `agent_edits`) inherit down the tree.
 """
 
 from __future__ import annotations
@@ -38,7 +38,6 @@ def is_hub_file(layout: Layout, rel: str) -> bool:
 class TopicTree:
     paths: dict[str, str]  # slug -> folder
     parents: dict[str, str | None]
-    levels: dict[str, str | None]  # slug -> strictest declared privacy on the way to the root
     settings: dict[str, dict[str, str]] = field(default_factory=dict)  # slug -> nearest declared
     _children: dict[str, list[str]] = field(default_factory=dict, compare=False, repr=False)
 
@@ -93,14 +92,6 @@ class TopicTree:
             out.update(self.descendants(slug))
         return out
 
-    def allowed(self, allowlist: Iterable[str]) -> frozenset[str] | None:
-        """What an agent allowlist admits: None for all topics, else the topics and their sub-topics."""
-        allowlist = list(allowlist)
-        return None if "*" in allowlist else frozenset(self.expand(allowlist))
-
-    def privacy(self, slug: str | None) -> str | None:
-        return self.levels.get(slug) if slug else None
-
     def setting(self, slug: str | None, name: str) -> str | None:
         """A topic policy (`review`, `agent_edits`): its own, else its nearest ancestor's."""
         return self.settings.get(slug, {}).get(name) if slug else None
@@ -108,10 +99,7 @@ class TopicTree:
     @property
     def signature(self) -> str:
         return json.dumps(
-            {
-                s: [self.paths[s], self.parents.get(s), self.levels.get(s)]
-                for s in sorted(self.paths)
-            },
+            {s: [self.paths[s], self.parents.get(s)] for s in sorted(self.paths)},
             separators=(",", ":"),
         )
 
@@ -174,21 +162,6 @@ def build_tree(manifest: Manifest, top_dirs: Iterable[str], hub_files: Iterable[
         claimed[folder] = slug
 
     parents = {slug: parent_of(path) for slug, path in paths.items()}
-    levels: dict[str, str | None] = {}
-
-    def level(slug: str, seen: tuple[str, ...] = ()) -> str | None:
-        if slug in levels:
-            return levels[slug]
-        own = declared[slug].privacy if slug in declared else None
-        own = own if own and manifest.is_privacy_level(own) else None
-        parent = parents.get(slug)
-        inherited = level(parent, (*seen, slug)) if parent and parent not in seen else None
-        candidates = [lvl for lvl in (own, inherited) if lvl]
-        levels[slug] = max(candidates, key=manifest.privacy_rank) if candidates else None
-        return levels[slug]
-
-    for slug in paths:
-        level(slug)
     settings: dict[str, dict[str, str]] = {}
     for slug in paths:
         found: dict[str, str] = {}
@@ -199,7 +172,7 @@ def build_tree(manifest: Manifest, top_dirs: Iterable[str], hub_files: Iterable[
                 if value is not None and name not in found:
                     found[name] = value
         settings[slug] = found
-    return TopicTree(paths, parents, levels, settings)
+    return TopicTree(paths, parents, settings)
 
 
 INHERITED = ("review", "agent_edits")

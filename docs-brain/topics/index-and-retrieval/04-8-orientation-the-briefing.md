@@ -10,7 +10,7 @@ bw-part_of:
 ---
 # Orientation (the briefing)
 
-`orient(profile)` returns one brain's briefing. Agents fetch it with
+`orient()` returns one brain's briefing. Agents fetch it with
 `brain_orient` when a task may depend on the user's knowledge (the static
 instruction block tells them to, [[08-32-the-static-instruction-block|08 §3.2]]);
 an optional session-start hook can inject it instead. It is assembled in
@@ -38,6 +38,4 @@ included in full:
 7. How to query: three example calls built from this brain's own topics and
    types (a keyword search, a typed "latest" lookup, and a `why` search).
 
-Everything in it is filtered by the caller's profile, so hidden notes are
-never counted or named. The same function generates the managed block of
-`AGENTS.md`, with the profile `default`.
+The same function generates the managed block of `AGENTS.md`.

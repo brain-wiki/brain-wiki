@@ -16,4 +16,4 @@ bw-part_of:
 - [[02-62-body]]: Body
 - [[02-63-claims]]: Claims
 - [[02-64-relations]]: Relations
-- [[02-65-links]]: Links
+- [[02-65-links]]: Links (Brain format)

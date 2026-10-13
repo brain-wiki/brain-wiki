@@ -85,13 +85,9 @@ class FileContext:
     def for_engine(cls, engine: Engine) -> FileContext:
         return cls(engine.manifest, engine.topics)
 
-    def topic_privacy(self, rel: str) -> str | None:
-        """The privacy a note's topic gives it, inherited from its ancestors (02 §2)."""
-        return self.tree.privacy(self.tree.for_path(rel))
-
 
 def _fm_line(doc: ParsedDoc, key: str) -> int:
-    """The line of `key` in the frontmatter, or of its `bw-` field (`privacy` -> `bw-privacy`)."""
+    """The line of `key` in the frontmatter, or of its `bw-` field (`stage` -> `bw-stage`)."""
     if not doc.frontmatter.present:
         return 1
     lines = doc.text.splitlines()
@@ -103,11 +99,6 @@ def _fm_line(doc: ParsedDoc, key: str) -> int:
             if pattern.match(lines[idx]):
                 return idx + 1
     return 1
-
-
-def _note_field(doc: ParsedDoc, name: str) -> str:
-    """Where a fix writes `name`: the unprefixed key a format 1 note already uses, else `bw-`."""
-    return name if name in doc.frontmatter.legacy_fields else FIELDS[name]
 
 
 def _set(values: dict[str, object]) -> Callable[[str], str]:
@@ -186,7 +177,6 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
     doc = parse_document(rel, text)
     problems = _parse_problems(doc, rel)
     fm = doc.fm
-    manifest = ctx.manifest
     if not doc.frontmatter.error:
         raw_id = fm.get("id")
         if raw_id is None:
@@ -224,33 +214,6 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                     fix=Fix(f"status: {new_status}, stage: {stage}", _set(values)),
                 )
             )
-        privacy = fm.get("privacy")
-        if privacy is not None:
-            topic_level = ctx.topic_privacy(rel)
-            if not isinstance(privacy, str) or not manifest.is_privacy_level(privacy):
-                problems.append(
-                    Problem(
-                        "BW107",
-                        rel,
-                        _fm_line(doc, "privacy"),
-                        f"privacy {privacy!r} is not a declared level",
-                    )
-                )
-            elif topic_level and manifest.privacy_rank(privacy) < manifest.privacy_rank(
-                topic_level
-            ):
-                problems.append(
-                    Problem(
-                        "BW108",
-                        rel,
-                        _fm_line(doc, "privacy"),
-                        f"privacy {privacy!r} is lower than the topic's {topic_level!r}",
-                        fix=Fix(
-                            f"privacy: {topic_level}",
-                            _set({_note_field(doc, "privacy"): topic_level}),
-                        ),
-                    )
-                )
         for key, value in doc.frontmatter.raw.items():
             if key.lower() not in RELATION_PROPERTIES or not property_links(value):
                 continue
@@ -366,7 +329,7 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                 "BW116",
                 rel,
                 None,
-                "format 1: ## Claims, ## Relations, or unprefixed privacy/stage; "
+                "format 1: ## Claims, ## Relations, or unprefixed stage; "
                 "move them to bw- frontmatter fields",
                 fix=Fix("convert to format 2", to_format2),
             )
@@ -426,18 +389,6 @@ def _check_episode(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool
                         fix=Fix(f"move to {expected}", move_to=expected),
                     )
                 )
-    privacy = fm.get("privacy")
-    if privacy is not None and (
-        not isinstance(privacy, str) or not ctx.manifest.is_privacy_level(privacy)
-    ):
-        problems.append(
-            Problem(
-                "BW107",
-                rel,
-                _fm_line(doc, "privacy"),
-                f"privacy {privacy!r} is not a declared level",
-            )
-        )
     return problems
 
 

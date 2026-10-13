@@ -11,9 +11,8 @@ person **understand and audit** their brain:
 | Question | What the view shows |
 |---|---|
 | What is in here? | Topics as nebulae grouped into constellations; zooming in reveals notes as stars |
-| What is unhealthy? | Contradictions, stale dependents, orphans, unverified claims, over-budget hubs, lint errors |
+| What is unhealthy? | Contradictions, stale dependents, orphans, unverified claims, lint errors |
 | What changed recently? | Brightness by recency; recent consolidation runs, highlighted where they landed |
-| What does a host see? | The same map filtered by a host's profile (`--as <host>`) |
 
 Non-goals: editing notes, collaboration, public hosting. The view is
 read-only and local.
@@ -193,8 +192,7 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
   topic embedded; the inspector shows what the topic data carries, without
   claim text, and the preview says note text is not included.
   `--export graph.json` and `--export graph.graphml` are unchanged, for
-  other tools. Exports contain note titles; the command prints which
-  privacy levels are included.
+  other tools. Exports contain every note title.
 
 ## 6. Data
 
@@ -203,7 +201,6 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
 ```json
 {
   "brain": "personal", "generated": "2026-10-11T18:00:00Z", "profile": "owner",
-  "privacy": ["default", "sensitive"],
   "totals": {"topics": 250, "notes": 10250, "hubs": 250, "episodes": 200,
              "links": 29935, "flagged": 1925},
   "constellations": [{"id": "c1", "title": "Bispai · Ditpi · …", "color": "#6aa9ff",
@@ -237,23 +234,23 @@ first).
 ```json
 {"id": "01J9Z7Q2…", "title": "Use SQLite FTS5 for local search", "path": "topics/search/fts5.md",
  "kind": "note", "topic": "search", "type": "decision", "status": "active",
- "privacy": "default", "updated": "2026-10-09", "aliases": [], "degree": 7,
+ "updated": "2026-10-09", "aliases": [], "degree": 7,
  "claims": 5, "superseded_claims": 1, "unverified_claims": 0, "flags": ["conflict"]}
 ```
 
 `/api/note/<id>`: the outline read (path, banners, summary, claims,
 relations, backlinks), plus what the preview needs: `properties` (the
 frontmatter, as written), `markdown` (the body after the frontmatter, at most 200 KB), and
-`links` (wikilink text as written → `{id, title, topic}` for each target this
-profile may see; others are absent, so they render unresolved). `/api/search?q=`: the index search for the viewer's
-profile (`{results: [{id, title, topic, kind, snippet}]}`, at most 20).
+`links` (wikilink text as written → `{id, title, topic}` for each target
+that resolves; others are absent, so they render unresolved).
+`/api/search?q=`: the index search (`{results: [{id, title, topic, kind,
+snippet}]}`, at most 20).
 `/api/health`: `{counts: {flag: n}, items: {flag: [{id, title, topic}]}}`,
 at most 200 per flag.
 
 `flags` come from the same queries as the reports
 ([06 §7](06-lint-and-reports.md#7-reports)): `conflict`, `stale`, `orphan`,
-`unverified`, `lint_error`. Hidden notes never appear in any
-payload, count, flow, or search result.
+`unverified`, `lint_error`.
 
 ## 7. Budgets
 
@@ -273,7 +270,7 @@ payload, count, flow, or search result.
   HTML string is ever built or assigned. Raw HTML in a note shows as text,
   HTML and `%%` comments are dropped, links open only `http(s)` and `mailto`
   URLs (in a new tab, `noopener noreferrer`), wikilinks open only targets the
-  server resolved for the viewer's profile, and images show as their alt
+  server resolved, and images show as their alt
   text (the CSP blocks remote images anyway).
 - Content-Security-Policy: `default-src 'none'; script-src 'self';
   style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src
@@ -285,8 +282,7 @@ payload, count, flow, or search result.
 ## 9. Testing
 
 - Server: token or cookie required on every route; loopback only; CSP;
-  every API shape on fixture brains; profile filtering (hidden notes absent
-  from world, topic, flows, health, search).
+  every API shape on fixture brains.
 - Constellations: deterministic, size limits, single constellation for
   small brains.
 - Export: titles containing HTML and script are inert; CSP hashes match.

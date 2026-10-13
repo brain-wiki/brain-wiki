@@ -17,7 +17,7 @@ current state and offers only what is missing.
 - **Nothing that reads past sessions or sends content to a model is turned
   on without an explicit yes**, and the explanation comes first.
 - **Never move, rename, or delete the user's files.**
-- **Plain language.** Say "agent app", "notes", "sensitive notes". Details
+- **Plain language.** Say "agent app", "notes", "brain". Details
   live in the references; use them when the user asks.
 - **Resumable.** If setup stopped halfway, start again from step 1; `doctor`
   shows what is already done.
@@ -90,13 +90,12 @@ Per-app notes (permissions, what to expect): [references/hosts.md](references/ho
 
 Explain in three sentences:
 
-> One brain is fine to start with. If some notes are more sensitive than
-> others, brain-wiki can label them and keep them from agents you choose.
-> For separate parts of life, like work and personal, use separate brains,
-> and choose which agents may use each.
+> One brain is fine to start with. Every agent you connect can read all of
+> it. For separate parts of life, like work and personal, use separate
+> brains, and choose which agents may use each.
 
 Offer: keep the defaults (recommended for most people), set up a second
-brain, or limit an agent. Details and the exact settings:
+brain, or limit which brains an agent may use. Details and the exact settings:
 [references/privacy.md](references/privacy.md). Show any config change as a
 diff before writing it.
 

@@ -20,11 +20,11 @@ _RANGE = re.compile(r"^(\d+)-(\d+)$")
 def _episode(engine: Engine, target: str) -> Any:
     engine.scan()
     row = engine.db.execute(
-        """SELECT path, fm_id, agent, session, origin_turns, device, privacy_rank, topic FROM nodes
+        """SELECT path, fm_id, agent, session, origin_turns, device FROM nodes
            WHERE kind IN ('episode', 'archived_episode') AND (fm_id = ? OR path = ?)""",
         (target, target),
     ).fetchone()
-    if row is None or not engine.visible(row["privacy_rank"], row["topic"]):
+    if row is None:
         raise NotFound(f"no episode {target!r}")
     return row
 

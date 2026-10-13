@@ -23,11 +23,10 @@ bw-part_of:
 - **External content is untrusted.** It enters through agents. Taint
   tracks it ([[05-3-provenance-and-taint|05 §3]]).
 - **Model providers see what is sent to them.** The consolidator LLM and the
-  host's model receive brain content. Profiles limit what each gets.
+  host's model receive brain content. Today every host that may use a brain
+  reads all of it; which brains a host may use is the only limit
+  ([[privacy|16]] proposes finer control).
 - **File access bypasses brain-wiki.** Any program running as the user can
-  read and write the brain directly. Profiles and privacy levels govern
-  brain-wiki's interfaces only: they filter what the tools return and are
-  not a sandbox. Real separation from a host that has file access means
-  keeping the brain where that host cannot reach, or a separate brain. For
-  the same reason `brain_list` gives a brain's folder path only to profiles
-  that may already read everything in it ([[04-91-brain-list|04 §9.1]]).
+  read and write the brain directly. Profiles govern brain-wiki's
+  interfaces only and are not a sandbox. Real separation from a host that
+  has file access means keeping the brain where that host cannot reach.

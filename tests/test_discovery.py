@@ -24,21 +24,18 @@ def example(tmp_path: Path) -> Path:
         toml.read_text().replace(
             'name = "example"', 'name = "example"\ndescription = "Lumen design notes"'
         )
-        + '\n[agents.codex]\nmax_privacy = "secret"\n'
     )
     register_brain("ex", root, make_default=True)
     return root
 
 
-def test_list_counts_follow_the_profile(example: Path, tmp_path: Path):
+def test_list_gives_counts_and_path(example: Path, tmp_path: Path):
     owner = list_brains(None, cwd=tmp_path)["brains"][0]
-    default = list_brains("some-host", cwd=tmp_path)["brains"][0]
+    host = list_brains("some-host", cwd=tmp_path)["brains"][0]
     assert owner["description"] == "Lumen design notes" and owner["default_here"]
     assert owner["path"] == str(example.resolve()) and owner["default"] is True
-    assert default["notes"] < owner["notes"]  # the sensitive budget topic is hidden
-    assert default["topics"] == owner["topics"] - 1
-    assert "path" not in default and "default" not in default
-    assert list_brains("codex", cwd=tmp_path)["brains"][0]["path"]  # reads every level
+    assert (host["notes"], host["topics"]) == (owner["notes"], owner["topics"])
+    assert host["path"] == owner["path"] and "default" not in host
 
 
 def test_list_respects_host_limits_and_marks_default_here(example: Path, tmp_path: Path):
@@ -169,15 +166,13 @@ def test_question_ranks_by_its_content_words(example: Path):
     assert "Vector-only search proposal" not in titles  # shares only filler words ("with")
 
 
-def test_facets_and_counts_respect_privacy(example: Path):
+def test_facets_and_counts(example: Path):
     from brainwiki.index.search import search
 
-    with _engine(example) as owner, _engine(example, "some-host") as host:
-        mine = search(owner, "", facets=True)
-        theirs = search(host, "", facets=True)
-    assert "budget" in mine["facets"]["topic"] and "budget" not in theirs["facets"]["topic"]
-    assert theirs["total"] < mine["total"]
-    assert mine["facets"]["type"]["decision"] >= 2
+    with _engine(example, "some-host") as host:
+        found = search(host, "", facets=True)
+    assert "budget" in found["facets"]["topic"]
+    assert found["facets"]["type"]["decision"] >= 2
 
 
 def test_text_and_paths_formats(example: Path):
@@ -221,15 +216,6 @@ def test_read_gives_a_handle_for_every_relation_and_backlink(example: Path):
     assert full["content"].rstrip().endswith(")") and "Linked from:" in full["content"]
 
 
-def test_read_hides_handles_of_restricted_targets(example: Path):
-    from brainwiki.index.read import read
-
-    with _engine(example, "some-host") as eng:
-        outline = read(eng, "vector-only", mode="outline")
-    assert all("budget" not in (b["path"] or "") for b in outline["backlinks"])
-    assert any("restricted" in line for line in outline["banners"])
-
-
 def test_banners_show_three_then_point_to_neighbors():
     from brainwiki.index.guards import banners
 
@@ -261,16 +247,13 @@ def test_neighbors_follow_typed_edges_by_direction_and_depth(example: Path):
     assert "has_part" in format_neighbors_text(hub)
 
 
-def test_neighbors_count_hidden_and_reject_bad_input(example: Path):
+def test_neighbors_reject_bad_input(example: Path):
     from brainwiki.errors import NotFound, UsageError
     from brainwiki.index.neighbors import neighbors
 
     with _engine(example, "some-host") as eng:
-        result = neighbors(eng, "vector-only", relations=["conflicts_with"])
-        assert result["hidden"] == 1  # the budget note is above this host's privacy level
-        assert all("budget" not in n["path"] for n in result["nodes"])
         with pytest.raises(NotFound):
-            neighbors(eng, "gpu-freeze")
+            neighbors(eng, "no-such-note")
         with pytest.raises(UsageError):
             neighbors(eng, "fts5", relations=["likes"])
 
@@ -283,15 +266,14 @@ def test_cli_neighbors(example: Path, capsys: pytest.CaptureFixture[str]):
 # -- the briefing (04 §8) ---------------------------------------------------------------
 
 
-def test_briefing_describes_the_brain_for_the_caller(example: Path):
+def test_briefing_describes_the_brain(example: Path):
     from brainwiki.index.orient import orient
 
-    with _engine(example) as owner, _engine(example, "some-host") as host:
-        mine = orient(owner)
-        theirs = orient(host)
+    with _engine(example, "some-host") as host:
+        mine = orient(host)
     assert "## What's in this brain" in mine["text"] and "decision" in mine["text"]
     assert "Open issues: " in mine["text"] and "active conflicts" in mine["text"]
-    assert theirs["notes"] < mine["notes"] and "**budget**" not in theirs["text"]
+    assert "**budget**" in mine["text"]
     assert "## How to query" in mine["text"] and 'brain_search("", type=[' in mine["text"]
     assert mine["contents"]["span"][0] <= mine["contents"]["span"][1]
 
@@ -311,18 +293,18 @@ def test_instructions_follow_the_host_profile(example: Path):
 
     (example / "brain.toml").write_text(
         (example / "brain.toml").read_text()
-        + '\n[agents.claude-code]\nmax_privacy = "sensitive"\nwrite = ["episodes", "edit"]\n'
+        + '\n[agents.claude-code]\nwrite = ["episodes", "edit"]\n'
     )
-    assert host_access("codex") == Access(files=True, edit=False)
-    assert host_access("claude-code") == Access(files=False, edit=True)
-    assert host_access(None) == Access(files=True, edit=True)
+    assert host_access("codex") == Access(edit=False)
+    assert host_access("claude-code") == Access(edit=True)
+    assert host_access(None) == Access(edit=True)
     restricted = server_instructions(Access())
-    assert "Markdown files directly" not in restricted and "do not edit" in restricted
+    assert "Markdown files directly" in restricted and "do not edit" in restricted
     assert "brain_check" not in restricted and "Details: the `brain` skill" not in restricted
-    full = marked_block(Access(files=True, edit=True))
+    full = marked_block(Access(edit=True))
     assert full.startswith("<!-- brain-wiki:begin v1 -->\n## brain-wiki")
     assert full.rstrip().endswith("<!-- brain-wiki:end -->") and "brain_check" in full
-    assert len(server_instructions(Access(files=True, edit=True))) < 2000
+    assert len(server_instructions(Access(edit=True))) < 2000
 
 
 # -- Obsidian-style browsing commands (07 §2) -------------------------------------------

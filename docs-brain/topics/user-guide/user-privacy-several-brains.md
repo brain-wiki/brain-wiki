@@ -9,8 +9,9 @@ bw-part_of:
 ---
 # Several brains
 
-Separate brains are the strongest boundary (work and personal, for
-example). Limit which brains an agent may use in the user config:
+Separate brains are the boundary between parts of your life (work and
+personal, for example). Limit which brains an agent may use in the user
+config:
 
 ```toml
 # ~/.config/brain-wiki/config.toml

@@ -11,44 +11,27 @@ from brainwiki.format.rules import parse_rules
 from brainwiki.ids import is_ulid, ulid_datetime
 
 if TYPE_CHECKING:
-    from brainwiki.config.manifest import Profile
     from brainwiki.engine import Engine
 
 
 _PEOPLE_TYPES = {"person": "People", "meeting": "Meetings"}
 
 
-def visibility(
-    engine: Engine, alias: str = "n", profile: Profile | None = None
-) -> tuple[str, list[Any]]:
-    """SQL limiting `alias` to the nodes `profile` (default: the engine's) may see."""
-    profile = profile or engine.profile
-    clause = f"{alias}.privacy_rank <= ?"
-    params: list[Any] = [engine.manifest.privacy_rank(profile.max_privacy)]
-    allowed = engine.allowed_topics(profile)
-    if allowed is not None:
-        clause += f" AND {alias}.topic IN ({','.join('?' * len(allowed)) or 'NULL'})"
-        params += sorted(allowed)
-    return clause, params
-
-
-def brief_stats(engine: Engine, profile: Profile | None = None) -> dict[str, Any]:
-    """Everything the briefing counts, from one pass over the visible notes.
+def brief_stats(engine: Engine) -> dict[str, Any]:
+    """Everything the briefing counts, from one pass over the notes.
 
     A pass over 10k notes costs about 10 ms even from a covering index, so the topic table,
     the totals, the type counts, and where people and meetings live share this one query.
     """
-    vis, params = visibility(engine, profile=profile)
     week_ago = (datetime.now(UTC) - timedelta(days=7)).strftime("%Y-%m-%d")
     by_topic: dict[str, dict[str, Any]] = {}
     types: dict[str, int] = {}
     homes: dict[str, dict[str, int]] = {}
     notes, last = 0, ""
     for row in engine.db.execute(
-        f"""SELECT kind, topic, type, COUNT(*) AS c, MAX(updated) AS l
-            FROM nodes n WHERE kind IN ('note', 'hub') AND {vis}
-            GROUP BY kind, topic, type""",  # noqa: S608
-        params,
+        """SELECT kind, topic, type, COUNT(*) AS c, MAX(updated) AS l
+            FROM nodes n WHERE kind IN ('note', 'hub')
+            GROUP BY kind, topic, type"""
     ):
         notes += row["c"]
         latest = (row["l"] or "")[:10]
@@ -64,31 +47,25 @@ def brief_stats(engine: Engine, profile: Profile | None = None) -> dict[str, Any
                 where[row["topic"]] = where.get(row["topic"], 0) + row["c"]
     # The oldest date and the last week's count read nodes_updated in order, not every note.
     oldest = engine.db.execute(
-        f"""SELECT updated FROM nodes n INDEXED BY nodes_updated
-            WHERE updated IS NOT NULL AND kind IN ('note', 'hub') AND {vis}
-            ORDER BY updated LIMIT 1""",  # noqa: S608
-        params,
+        """SELECT updated FROM nodes n INDEXED BY nodes_updated
+            WHERE updated IS NOT NULL AND kind IN ('note', 'hub')
+            ORDER BY updated LIMIT 1"""
     ).fetchone()
     first = (oldest["updated"] or "")[:10] if oldest else ""
     week = engine.db.execute(
-        f"""SELECT COUNT(*) FROM nodes n INDEXED BY nodes_updated
-            WHERE updated >= ? AND kind IN ('note', 'hub') AND {vis}""",  # noqa: S608
-        (week_ago, *params),
+        """SELECT COUNT(*) FROM nodes n INDEXED BY nodes_updated
+            WHERE updated >= ? AND kind IN ('note', 'hub')""",
+        (week_ago,),
     ).fetchone()[0]
     episodes = engine.db.execute(
-        f"""SELECT COUNT(*) AS pending,
+        """SELECT COUNT(*) AS pending,
                    MIN(CASE WHEN length(fm_id) = 26 THEN fm_id END) AS oldest
-            FROM nodes n WHERE kind = 'episode' AND {vis}""",  # noqa: S608
-        params,
+            FROM nodes n WHERE kind = 'episode'"""
     ).fetchone()
-    vis_a, params_a = visibility(engine, "a", profile)
-    vis_b, params_b = visibility(engine, "b", profile)
     pairs = engine.db.execute(
-        f"""SELECT DISTINCT e.src, e.dst, a.topic AS ta, b.topic AS tb FROM edges e
+        """SELECT DISTINCT e.src, e.dst, a.topic AS ta, b.topic AS tb FROM edges e
             JOIN nodes a ON a.id = e.src JOIN nodes b ON b.id = e.dst
-            WHERE e.rel = 'conflicts_with' AND a.status = 'active' AND b.status = 'active'
-              AND {vis_a} AND {vis_b}""",  # noqa: S608
-        (*params_a, *params_b),
+            WHERE e.rel = 'conflicts_with' AND a.status = 'active' AND b.status = 'active'"""
     ).fetchall()
     conflicts: dict[str, int] = {}
     for pair in pairs:
@@ -106,24 +83,19 @@ def brief_stats(engine: Engine, profile: Profile | None = None) -> dict[str, Any
         },
         "pending": episodes["pending"],
         "oldest_episode": episodes["oldest"],
-        "conflicts": len(pairs),  # active conflicts between two visible notes
+        "conflicts": len(pairs),  # active conflicts between two notes
         "conflicts_by_topic": conflicts,
     }
 
 
-def topic_rows(
-    engine: Engine, profile: Profile | None = None, stats: dict[str, Any] | None = None
-) -> list[dict[str, Any]]:
-    """Topics visible to `profile` (default: the engine's), most recently updated first.
+def topic_rows(engine: Engine, stats: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    """Topics, most recently updated first.
 
-    Every topic of the tree gets a row with its own counts, its visible `parent`, and `total_*`
-    counts that include its sub-topics. Counts include only notes the profile may see, so a hidden
-    note is never counted."""
+    Every topic of the tree gets a row with its own counts, its `parent`, and `total_*` counts
+    that include its sub-topics."""
     conn = engine.db
     tree = engine.topics
-    profile = profile or engine.profile
-    max_rank = engine.manifest.privacy_rank(profile.max_privacy)
-    stats = stats or brief_stats(engine, profile)
+    stats = stats or brief_stats(engine)
     by_topic, conflict_counts = stats["by_topic"], stats["conflicts_by_topic"]
     hubs: dict[str, Any] = {}
     for r in conn.execute(
@@ -133,11 +105,6 @@ def topic_rows(
     rows = []
     for slug, path in sorted(tree.paths.items()):
         declared = engine.manifest.topics.get(slug)
-        privacy = tree.privacy(slug) or engine.manifest.privacy.default
-        if engine.manifest.privacy_rank(privacy) > max_rank or not engine.topic_allowed(
-            slug, profile
-        ):
-            continue
         stat = by_topic.get(slug, {"notes": 0, "updated": ""})
         hub = hubs.get(slug)
         title = (declared.title if declared and declared.title else None) or (
@@ -158,10 +125,10 @@ def topic_rows(
                 "conflicts": conflict_counts.get(slug, 0),
             }
         )
-    visible = {r["slug"]: r for r in rows}
+    by_slug = {r["slug"]: r for r in rows}
     for row in rows:
-        parent = next((a for a in tree.ancestors(row["slug"]) if a in visible), None)
-        below = [visible[d] for d in tree.descendants(row["slug"]) if d in visible]
+        parent = next((a for a in tree.ancestors(row["slug"]) if a in by_slug), None)
+        below = [by_slug[d] for d in tree.descendants(row["slug"]) if d in by_slug]
         row["parent"] = parent
         row["sub_topics"] = [
             r["slug"] for r in sorted(below, key=lambda r: r["updated"], reverse=True)
@@ -202,14 +169,12 @@ def recent_changes(engine: Engine, count: int = 5) -> list[str]:
 
 
 def open_issues(engine: Engine, stats: dict[str, Any]) -> dict[str, int]:
-    """Active conflicts between visible notes, and unverified claims in visible notes."""
-    vis, params = visibility(engine)
+    """Active conflicts between notes, and unverified claims in notes."""
     unverified = engine.db.execute(
         # CROSS JOIN starts from the few unverified claims (claims_unverified), not every note.
-        f"""SELECT COUNT(*) FROM claims c CROSS JOIN nodes n ON n.id = c.node_id
+        """SELECT COUNT(*) FROM claims c CROSS JOIN nodes n ON n.id = c.node_id
             WHERE c.status = 'active' AND c.taint IN ('true', 'unknown')
-              AND n.kind IN ('note', 'hub') AND {vis}""",  # noqa: S608
-        params,
+              AND n.kind IN ('note', 'hub')"""
     ).fetchone()[0]
     return {"conflicts": stats["conflicts"], "unverified_claims": unverified}
 
@@ -398,7 +363,7 @@ def strip_markdown(text: str) -> str:
 
 
 def agents_block(engine: Engine, extra: list[dict[str, Any]] | None = None) -> str:
-    """The generated block of the brain's AGENTS.md, as the `default` profile sees the brain.
+    """The generated block of the brain's AGENTS.md.
 
     Topics are listed alphabetically so the block only changes when topics do; when the file
     would exceed `budgets.agents_md_max_lines`, only the most recently updated topics are kept.
@@ -406,9 +371,7 @@ def agents_block(engine: Engine, extra: list[dict[str, Any]] | None = None) -> s
     from brainwiki.format.agents_md import extract_block
     from brainwiki.lifecycle import default_agents_block
 
-    rows = [
-        r for r in topic_rows(engine, engine.manifest.profile("default")) if r["parent"] is None
-    ]
+    rows = [r for r in topic_rows(engine) if r["parent"] is None]
     known = {r["slug"] for r in rows}
     rows = [r for r in extra or [] if r["slug"] not in known and not r.get("parent")] + rows
     name = engine.brain.display_name

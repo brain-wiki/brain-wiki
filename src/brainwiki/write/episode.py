@@ -116,7 +116,6 @@ def write_episode(
     origin_turns: str | None = None,
     device: str | None = None,
     topics: list[str] | None = None,
-    privacy: str | None = None,
     dedupe: str | None = None,
     source: str | None = None,
 ) -> EpisodeResult:
@@ -140,15 +139,6 @@ def write_episode(
             return EpisodeResult(found[0], found[1], deduped=True)
 
     hints = [t.strip() for t in topics or [] if t and t.strip()][:5]
-    levels = [privacy] if privacy else []
-    for slug in hints:
-        level = engine.topics.privacy(slug)
-        if level:
-            levels.append(level)
-    for level in levels:
-        if not manifest.is_privacy_level(level):
-            raise UsageError(f"unknown privacy level {level!r}")
-    level = max(levels, key=manifest.privacy_rank) if levels else None
 
     redacted: list[str] = []
 
@@ -177,7 +167,6 @@ def write_episode(
         "captured": captured,
         "created": now_iso(),
         "topics": hints,
-        "privacy": level,
         "dedupe": dedupe,
         "source": source,
     }

@@ -34,9 +34,10 @@ without exposing anyone's directory layout. If the named brain does not
 exist for this user, resolution continues with the next source and logs a
 notice.
 
-**Why a brain is the unit of separation.** Privacy levels ([[02-3-braintoml|02 §3]])
-handle sensitivity inside one body of knowledge. Unrelated spheres (an
+**Why a brain is the unit of separation.** Unrelated spheres (an
 employer's knowledge and a personal life) differ in who owns them, where
 they may be stored, and which models may process them. Separate brains
 make that boundary a directory boundary, which every tool understands,
-and keep relations from crossing it.
+and keep relations from crossing it. Every host that may use a brain reads
+all of it; finer-grained privacy inside a brain is being redesigned
+([[privacy|16]]).

@@ -18,7 +18,7 @@ bw-part_of:
    safe, make every curated change attributable and reversible, and make
    lint catch what bypasses them.
 3. **The engine decides; the LLM proposes.** Everything that must be
-   correct (parsing, validation, budgets, privacy, undo) is deterministic
+   correct (parsing, validation, budgets, provenance, undo) is deterministic
    code. The LLM only produces structured proposals that the engine accepts
    or rejects.
 4. **Change is first-class.** Supersession and contradiction are typed

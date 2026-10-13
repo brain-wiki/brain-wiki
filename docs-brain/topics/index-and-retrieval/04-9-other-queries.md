@@ -13,9 +13,9 @@ bw-part_of:
 | Query | Used by | Notes |
 |---|---|---|
 | Backlinks of a node | read (`outline`), neighbors, lint orphans | All edges with `dst = node` |
-| Facet counts | orientation, search `facets`, `brain tags`, `brain types` | Counts by type, topic, tag, and property over visible nodes |
+| Facet counts | orientation, search `facets`, `brain tags`, `brain types` | Counts by type, topic, tag, and property |
 | Orphans, dead ends, unresolved links | `brain orphans`, `brain unresolved`, reports | Nodes without incoming edges; nodes without outgoing edges; links that resolve to nothing |
-| Neighborhood graph | visualizer | Nodes plus edges filtered by profile; see [[visualizer\|12]] |
+| Neighborhood graph | visualizer | Nodes plus edges; see [[visualizer\|12]] |
 | Stale dependents | reports | Nodes that `depends_on` a superseded or archived node |
 | Open conflicts | orientation, reports | `conflicts_with` edges between two active nodes |
 | Pending episodes | consolidation gate | `kind = 'episode'`, ordered by id |

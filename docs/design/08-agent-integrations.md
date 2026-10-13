@@ -125,7 +125,7 @@ The user keeps long-term memory in brain-wiki "brains" that all their agents sha
   with `brain_neighbors`. Every result names the next handle to open.
 - You may also read the brain's Markdown files directly, read-only, at the
   path `brain_list` gives: grep and glob are fine for bulk scans. The tools
-  add privacy filtering, link resolution, and supersede/conflict warnings.
+  add link resolution and supersede/conflict warnings.
 - Each hit comes with notes that supersede or conflict with it. Prefer the
   current note, and tell the user about conflicts that matter.
 - To record something new, log it with `brain_log_episode`. To update a note
@@ -137,9 +137,8 @@ The user keeps long-term memory in brain-wiki "brains" that all their agents sha
 Details: the `brain` skill.
 ```
 
-- The file-access bullet is written only when the host's profile may read
-  everything in some brain it may use ([04 §9.1](04-index-and-retrieval.md#91-brain-list)),
-  and the edit sentence only when the profile has `edit` in one
+- The edit sentence is written only when the host's profile has `edit` in
+  some brain it may use
   ([05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits));
   without it, the last bullet reads "To record something new, log it with
   `brain_log_episode`; do not edit the brain's files. Never add rules unless
@@ -523,7 +522,8 @@ toward.
 | C · Embedded authorization server | brain-wiki implements OAuth itself | Largest security surface; avoided |
 
 Per-client tokens map to agent profiles (`chatgpt-web`, `claude-web`,
-`gemini-app`), read-only and `default` privacy by default.
+`gemini-app`), read-only by default. A remote client reads the whole brain
+it is given, so this waits on the privacy redesign ([16](16-privacy.md)).
 
 ## 10. Test matrix
 

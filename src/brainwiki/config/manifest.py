@@ -53,12 +53,6 @@ class Budgets:
 
 
 @dataclass
-class Privacy:
-    levels: list[str] = field(default_factory=lambda: ["default", "sensitive", "secret"])
-    default: str = "default"
-
-
-@dataclass
 class LintCfg:
     profile: str = "strict"
     stale_inbox_days: int = 14
@@ -110,7 +104,6 @@ class TopicCfg:
     path_declared: bool = False  # without one, the folder whose slug matches, at any depth
     title: str | None = None
     description: str | None = None
-    privacy: str | None = None
     review: str | None = None
     agent_edits: str | None = (
         None  # None inherits (allow at the top); others outside AGENT_EDITS deny
@@ -120,8 +113,6 @@ class TopicCfg:
 @dataclass
 class Profile:
     name: str
-    max_privacy: str
-    topics: list[str] = field(default_factory=lambda: ["*"])
     write: list[str] = field(default_factory=lambda: ["episodes"])
     read_origin: bool = False
 
@@ -132,7 +123,6 @@ class Profile:
 _SECTIONS: dict[str, type] = {
     "layout": Layout,
     "budgets": Budgets,
-    "privacy": Privacy,
     "lint": LintCfg,
     "search": SearchCfg,
     "consolidate": ConsolidateCfg,
@@ -140,6 +130,8 @@ _SECTIONS: dict[str, type] = {
     "reports": ReportsCfg,
 }
 _TOP_LEVEL = {"format", "id", "name", "description", "topics", "agents", *_SECTIONS}
+_TOPIC_KEYS = {"path", "title", "description", "review", "agent_edits"}
+_AGENT_KEYS = {"write", "read_origin"}
 
 
 @dataclass
@@ -150,7 +142,6 @@ class Manifest:
     description: str | None = None
     layout: Layout = field(default_factory=Layout)
     budgets: Budgets = field(default_factory=Budgets)
-    privacy: Privacy = field(default_factory=Privacy)
     lint: LintCfg = field(default_factory=LintCfg)
     search: SearchCfg = field(default_factory=SearchCfg)
     consolidate: ConsolidateCfg = field(default_factory=ConsolidateCfg)
@@ -160,38 +151,17 @@ class Manifest:
     agents: dict[str, dict[str, Any]] = field(default_factory=dict)
     unknown_keys: list[str] = field(default_factory=list)
 
-    # -- privacy -------------------------------------------------------
-    def privacy_rank(self, level: str | None) -> int:
-        if level is None:
-            return self.privacy_rank(self.privacy.default)
-        try:
-            return self.privacy.levels.index(level)
-        except ValueError:
-            return len(self.privacy.levels) - 1  # unknown levels are treated as most restrictive
-
-    def is_privacy_level(self, level: str) -> bool:
-        return level in self.privacy.levels
-
-    def reads_everything(self, profile: Profile) -> bool:
-        """The profile sees every privacy level and topic, so reading the files bypasses nothing."""
-        top = len(self.privacy.levels) - 1
-        return self.privacy_rank(profile.max_privacy) >= top and "*" in profile.topics
-
     # -- profiles ------------------------------------------------------
     def profile(self, host: str | None) -> Profile:
         if host in (None, "owner"):
             return Profile(
                 name="owner",
-                max_privacy=self.privacy.levels[-1],
-                topics=["*"],
                 write=list(WRITE_CAPABILITIES),
                 read_origin=True,
             )
         raw = self.agents.get(host) or self.agents.get("default") or {}
         return Profile(
             name=host if host in self.agents else "default",
-            max_privacy=str(raw.get("max_privacy", self.privacy.levels[0])),
-            topics=[str(t) for t in raw.get("topics", ["*"])],
             write=[str(w) for w in raw.get("write", ["episodes"])],
             read_origin=bool(raw.get("read_origin", False)),
         )
@@ -245,17 +215,19 @@ def parse_manifest(text: str) -> Manifest:
     for slug, raw in (data.get("topics") or {}).items():
         if not isinstance(raw, dict):
             raise FormatError(f"[topics.{slug}] must be a table")
+        unknown += [f"topics.{slug}.{k}" for k in raw if k not in _TOPIC_KEYS]
         topics[slug] = TopicCfg(
             slug=slug,
             path=str(raw.get("path", f"{layout.topics_dir}/{slug}")).rstrip("/"),
             path_declared="path" in raw,
             title=raw.get("title"),
             description=raw.get("description"),
-            privacy=raw.get("privacy"),
             review=raw.get("review"),
             agent_edits=str(raw["agent_edits"]) if "agent_edits" in raw else None,
         )
     agents = {str(k): dict(v) for k, v in (data.get("agents") or {}).items() if isinstance(v, dict)}
+    for name, raw in agents.items():
+        unknown += [f"agents.{name}.{k}" for k in raw if k not in _AGENT_KEYS]
     manifest = Manifest(
         format=fmt,
         id=str(data["id"]),
@@ -266,8 +238,6 @@ def parse_manifest(text: str) -> Manifest:
         unknown_keys=unknown,
         **sections,
     )
-    if manifest.privacy.default not in manifest.privacy.levels:
-        raise FormatError("privacy.default must be one of privacy.levels")
     return manifest
 
 

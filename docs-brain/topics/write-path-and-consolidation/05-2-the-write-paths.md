@@ -23,7 +23,7 @@ bw-part_of:
 
                      PATH 3: checked edits (agents with `edit`)
   agent edits a note ─► brain check <paths> ─► validate (schema, links, claims,
-        privacy, protected files, loss guard) ─► record as a run (undo, log.md, git)
+        protected files, loss guard) ─► record as a run (undo, log.md, git)
                      (or ─► errors, nothing recorded; fix, or brain restore)
 
   rules.md ◄── only: user via CLI, or agent via MCP with user confirmation (§6)

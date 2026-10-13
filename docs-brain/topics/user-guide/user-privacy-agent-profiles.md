@@ -9,18 +9,13 @@ bw-part_of:
 ---
 # Agent profiles (Privacy and safety)
 
+A profile says what an agent may change:
+
 ```toml
 [agents.default]          # any agent without its own profile
-max_privacy = "default"
-topics = ["*"]
 write = ["episodes"]
 
 [agents.claude-code]
-max_privacy = "sensitive"
-topics = ["*"]
 write = ["episodes", "propose_rules", "consolidate", "harvest", "review"]
 read_origin = false       # may it read the conversations episodes came from?
 ```
-
-Consolidation backends use a profile too: episodes above a backend's level
-stay in the inbox for a more trusted one, such as a local model.

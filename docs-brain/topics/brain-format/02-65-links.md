@@ -1,14 +1,14 @@
 ---
 id: 01M3250V002SS09D5ZKWWANYYK
 type: design
-title: "Links"
+title: "Links (Brain format)"
 aliases: ["02 §6.5"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#65-links"
 bw-part_of:
   - "[[02-6-notes]]"
 ---
-# Links
+# Links (Brain format)
 
 Body links of either form are recognized:
 

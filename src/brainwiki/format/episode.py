@@ -22,7 +22,6 @@ FIELD_ORDER = (
     "captured",
     "created",
     "topics",
-    "privacy",
     "dedupe",
     "source",
 )

@@ -239,7 +239,7 @@ class Atlas:
         self._world: dict[str, Any] | None = None
 
     def note(self, node_id: str) -> dict[str, Any] | None:
-        """A note or hub in a visible topic."""
+        """A note or hub in one of the map's topics."""
         return self.nodes.get(node_id) if node_id in self._topic_of else None
 
     def world(self) -> dict[str, Any]:
@@ -270,7 +270,6 @@ class Atlas:
             "brain": g["brain"],
             "generated": g["generated"],
             "profile": g["profile"],
-            "privacy": g["privacy"],
             "totals": {
                 "topics": len(self.topics),
                 "notes": sum(1 for n in self.notes if n["kind"] == "note"),

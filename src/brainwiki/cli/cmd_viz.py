@@ -25,7 +25,6 @@ def viz(args: Any) -> int:
 def _export(args: Any, engine: Any) -> int:
     from brainwiki.viz.export import (
         build_graph,
-        privacy_levels,
         to_graphml,
         to_json,
         to_standalone_html,
@@ -48,19 +47,16 @@ def _export(args: Any, engine: Any) -> int:
     else:
         body = to_json(graph) if fmt == "json" else to_graphml(graph)
     out.write_text(body, encoding="utf-8")
-    levels = privacy_levels(graph, engine.manifest.privacy.levels)
     data = {
         "path": str(out),
         "format": fmt,
         "profile": graph["profile"],
         "nodes": len(graph["nodes"]),
         "links": len(graph["links"]),
-        "privacy_levels": levels,
     }
     text = (
         f"Wrote {out} ({fmt}, {data['nodes']} nodes, {data['links']} links, "
-        f"profile {graph['profile']}).\n"
-        f"Contains note titles at privacy levels: {', '.join(levels) or '(none)'}."
+        f"profile {graph['profile']})."
     )
     emit(args, data, text)
     return 0

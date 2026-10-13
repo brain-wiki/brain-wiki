@@ -124,16 +124,6 @@ def protected_reason(engine: Engine, rel: str) -> str | None:
     return None
 
 
-def _visible(engine: Engine, rel: str, texts: list[bytes | None]) -> bool:
-    if engine.profile.name == "owner":
-        return True
-    row = engine.db.execute("SELECT privacy_rank, topic FROM nodes WHERE path=?", (rel,)).fetchone()
-    if row is not None:
-        return engine.visible(row["privacy_rank"], row["topic"])
-    rank, topic = _privacy(engine, rel, next((t for t in texts if t is not None), None))
-    return engine.visible(rank, topic)
-
-
 def pending_edits(engine: Engine) -> list[dict[str, Any]]:
     """Notes whose file differs from their last recorded version, with diffs."""
     engine.scan()
@@ -148,8 +138,6 @@ def pending_edits(engine: Engine) -> list[dict[str, Any]]:
         _, base = baseline(engine, rel)
         current = _read(engine, rel)
         if current is None and base is None:
-            continue
-        if not _visible(engine, rel, [current, base]):
             continue
         change = _Change(rel, base, current)
         out.append(
@@ -179,21 +167,6 @@ def _diff(change: _Change, limit: int = DIFF_LINES) -> str:
     if len(lines) > limit:
         lines = [*lines[:limit], f"… {len(lines) - limit} more diff lines\n"]
     return "".join(lines)
-
-
-def _privacy(engine: Engine, rel: str, data: bytes | None) -> tuple[int, str | None]:
-    manifest = engine.manifest
-    topic = engine.topics.for_path(rel)
-    levels = []
-    inherited = engine.topics.privacy(topic)
-    if inherited:
-        levels.append(inherited)
-    if data is not None:
-        level = parse_document(rel, _text(data)).fm.get("privacy")
-        if isinstance(level, str) and manifest.is_privacy_level(level):
-            levels.append(level)
-    rank = max([manifest.privacy_rank(lvl) for lvl in levels] or [manifest.privacy_rank(None)])
-    return rank, topic
 
 
 def _words(data: bytes | None) -> list[str]:
@@ -387,18 +360,6 @@ def _validate(engine: Engine, change: _Change, *, allow_shrink: bool) -> list[Cl
                 rel, "sync_debris", "this looks like a sync-conflict copy; merge it and delete it"
             )
         )
-    before_rank, topic = _privacy(engine, rel, change.base)
-    after_rank, _ = _privacy(engine, rel, change.current)
-    if change.base is not None and change.current is not None and after_rank < before_rank:
-        change.problems.append(
-            Problem(
-                rel, "privacy_lowered", "the note's privacy was lowered; only the user may do that"
-            )
-        )
-    if max(before_rank, after_rank) > engine.max_rank or not engine.topic_allowed(topic):
-        change.problems.append(
-            Problem(rel, "privacy_above_profile", "this note is outside what your profile may read")
-        )
     added = _check_claims(change)
     loss = _loss(change)
     if loss > LOSS_ERROR and not allow_shrink:
@@ -473,7 +434,7 @@ def check_edits(
             continue
         known, base = baseline(engine, rel)
         current = _read(engine, rel)
-        if (not known and current is None) or not _visible(engine, rel, [current, base]):
+        if not known and current is None:
             raise NotFound(f"no note at {rel}")
         if known and (sha256_bytes(base) if base is not None else None) == (
             sha256_bytes(current) if current is not None else None

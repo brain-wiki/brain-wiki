@@ -67,6 +67,10 @@ description = "Implementation milestones, future work, decisions needed"
 title = "Skills, onboarding, and routines"
 description = "The three skills, the guided setup flow, brain doctor --json, and routine templates for hosts' schedulers"
 
+[topics.privacy]
+title = "Privacy (proposal)"
+description = "What privacy must protect, from whom, and a draft model to replace the removed levels"
+
 [topics.decisions]
 title = "Design overview and decisions"
 description = "How the design documents fit together, and the decision log with what each decision rejected and where it is argued"
@@ -76,6 +80,4 @@ title = "User guide"
 description = "How to install, connect, use, and maintain brain-wiki"
 
 [agents.default]
-max_privacy = "default"
-topics = ["*"]
 write = ["episodes"]

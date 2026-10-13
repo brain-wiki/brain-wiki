@@ -121,7 +121,7 @@ FILLER = frozenset(
     }
 )
 # Frontmatter keys indexed as columns rather than in `props`; `status` also matches a custom stage.
-_COLUMNS = {"type", "status", "stage", "topic", "privacy", "created", "updated"}
+_COLUMNS = {"type", "status", "stage", "topic", "created", "updated"}
 FACET_LIMIT = 10
 
 
@@ -186,19 +186,12 @@ def node_filters(
     since: str | None = None,
     until: str | None = None,
 ) -> tuple[str, list[Any]]:
-    """SQL over `nodes n` for the caller's profile and the requested filters."""
+    """SQL over `nodes n` for the requested filters."""
     clauses = [
-        "n.privacy_rank <= ?",
         f"n.kind IN ({','.join('?' * len(kinds))})",
         f"n.status IN ({','.join('?' * len(statuses))})",
     ]
-    params: list[Any] = [engine.max_rank, *kinds, *statuses]
-    allowed = engine.allowed_topics()
-    if allowed is not None:
-        clauses.append(
-            f"(n.topic IN ({','.join('?' * len(allowed)) or 'NULL'}) OR n.kind IN ('episode','archived_episode'))"
-        )
-        params.extend(sorted(allowed))
+    params: list[Any] = [*kinds, *statuses]
     if topics:  # a topic filter includes its sub-topics (02 §2)
         wanted = sorted(engine.topics.expand(topics))
         clauses.append(f"n.topic IN ({','.join('?' * len(wanted))})")
@@ -349,7 +342,7 @@ def search(
     results = page + expanded
     guard_info = guards_for(engine, [r["id"] for r in results if r["kind"] in ("note", "hub")])
     for r in results:
-        r.update(guard_info.get(r["id"], {"guards": [], "hidden_guards": {}, "more_guards": 0}))
+        r.update(guard_info.get(r["id"], {"guards": [], "more_guards": 0}))
     more = total > offset + len(page)
     result.update(
         results=results,
@@ -598,7 +591,7 @@ def _expand(engine: Engine, ranked: list[dict[str, Any]], intent: str) -> list[d
                     if nid in seen or added >= 3 or len(out) >= 10:
                         continue
                     row = engine.db.execute("SELECT * FROM nodes WHERE id=?", (nid,)).fetchone()
-                    if row is None or not engine.visible(row["privacy_rank"], row["topic"]):
+                    if row is None:
                         continue
                     seen.add(nid)
                     added += 1

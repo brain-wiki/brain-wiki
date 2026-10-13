@@ -17,7 +17,7 @@ bw-part_of:
   HTML string is ever built or assigned. Raw HTML in a note shows as text,
   HTML and `%%` comments are dropped, links open only `http(s)` and `mailto`
   URLs (in a new tab, `noopener noreferrer`), wikilinks open only targets the
-  server resolved for the viewer's profile, and images show as their alt
+  server resolved, and images show as their alt
   text (the CSP blocks remote images anyway).
 - Content-Security-Policy: `default-src 'none'; script-src 'self';
   style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src

@@ -68,7 +68,7 @@ skills/
 │   ├── SKILL.md                        the onboarding flow (§3)
 │   └── references/
 │       ├── hosts.md                    per-host connect, permission, and scheduler notes
-│       ├── privacy.md                  levels, profiles, separate brains, in plain words
+│       ├── privacy.md                  separate brains and profiles, in plain words
 │       └── routines/                   routine templates (§4)
 │           ├── brain-maintenance.md
 │           ├── brain-harvest.md

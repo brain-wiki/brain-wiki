@@ -29,11 +29,10 @@ recorded version:
 
 | Check | Fails when |
 |---|---|
-| Schema | Frontmatter is not valid YAML, a required key is missing, `status` or `bw-privacy` has an unknown value, or an `id` was changed or duplicated (lint BW1xx) |
+| Schema | Frontmatter is not valid YAML, a required key is missing, `status` has an unknown value, or an `id` was changed or duplicated (lint BW1xx) |
 | Links and relations | A relation does not parse or names an unknown `bw-` field (error), or a new link does not resolve (warning) |
 | Claims | Claim metadata is broken, or a claim was deleted or reworded in place. Claims change only by superseding (move the old claim to `bw-claims-superseded`, add the new one), so a fact's history is never lost |
 | Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` |
-| Privacy | A note's privacy was lowered, or the note is above what the caller's profile may read |
 | Protected files | Any of the files above changed |
 | Sync debris | Merge-conflict markers or sync-conflict copies |
 

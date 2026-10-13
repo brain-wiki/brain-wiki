@@ -28,7 +28,7 @@ tags:
   - search
   - storage
 created: 2026-10-07
-bw-privacy: sensitive
+bw-stage: accepted
 bw-part_of: "[[search]]"
 bw-depends_on:
   - "[[SQLite version policy]] — needs the trigram tokenizer"
@@ -87,7 +87,7 @@ def test_frontmatter_parses_dates_and_lists():
 def test_document_structure():
     doc = parse_document("topics/search/fts5.md", NOTE)
     assert doc.title == "Use SQLite FTS5 for local search"
-    assert doc.fm["privacy"] == "sensitive" and not doc.frontmatter.legacy_fields
+    assert doc.fm["stage"] == "accepted" and not doc.frontmatter.legacy_fields
     assert [(c.status, c.key) for c in doc.claims] == [
         ("active", "bw-claims"),
         ("active", "bw-claims"),
@@ -229,7 +229,7 @@ def test_new_fields_land_before_brain_wiki_fields():
     out = set_fields(NOTE, {"source": "a book"})
     keys = [line.split(":")[0] for line in out.split("\n---\n")[0].splitlines()[1:]]
     keys = [k for k in keys if not k.startswith(" ")]
-    assert keys.index("source") == keys.index("bw-privacy") - 1
+    assert keys.index("source") == keys.index("bw-stage") - 1
 
 
 def test_set_fields_creates_frontmatter():

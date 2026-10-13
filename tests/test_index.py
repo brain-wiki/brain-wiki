@@ -8,7 +8,6 @@ import pytest
 
 from brainwiki.config.resolve import open_brain
 from brainwiki.engine import Engine
-from brainwiki.errors import NotFound
 from brainwiki.index.orient import orient
 from brainwiki.index.read import read
 from brainwiki.index.search import search
@@ -58,19 +57,11 @@ def test_guard_recall_both_directions(example: Path):
         assert labels == ["conflicts_with", "supersedes"]
 
 
-def test_privacy_hides_guard_but_counts_it(example: Path):
+def test_any_host_reads_every_topic(example: Path):
     with engine_for(example, host="someone") as eng:
         hit = _hit(search(eng, "vector embeddings"), "Vector-only search proposal")
-        assert all(g["title"] != "No GPU spending this year" for g in hit["guards"])
-        assert hit["hidden_guards"] == {"conflicts_with": 1}
-        assert not [
-            r for r in search(eng, "GPU purchases frozen")["results"] if r["topic"] == "budget"
-        ]
-        with pytest.raises(NotFound):
-            read(eng, "No GPU spending this year")
-    with engine_for(example, host="trusted") as eng:
-        hit = _hit(search(eng, "vector embeddings"), "Vector-only search proposal")
         assert "No GPU spending this year" in [g["title"] for g in hit["guards"]]
+        assert read(eng, "No GPU spending this year")["topic"] == "budget"
 
 
 def test_superseded_text_ranks_low_and_not_in_snippet(example: Path):
@@ -129,13 +120,11 @@ def test_freshness_picks_up_edits_and_renames(example: Path):
         )
 
 
-def test_orient_respects_profile_and_budget(example: Path):
+def test_orient_lists_topics_within_budget(example: Path):
     with engine_for(example, host="someone") as eng:
         text = orient(eng)["text"]
-        assert "Prefer pytest" in text and "**search**" in text and "budget" not in text
+        assert "Prefer pytest" in text and "**search**" in text and "**budget**" in text
         assert len(text) <= eng.manifest.budgets.orient_max_tokens * 4
-    with engine_for(example, host="trusted") as eng:
-        assert "**budget**" in orient(eng)["text"]
 
 
 def test_cjk_and_short_queries(example: Path):

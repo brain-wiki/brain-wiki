@@ -10,14 +10,13 @@ bw-part_of:
 ---
 # Guard co-retrieval
 
-Given the set of hit node ids `H` and the caller's profile (maximum privacy
-rank `P`, topic allowlist `T`, expanded to its sub-topics):
+Given the set of hit node ids `H`:
 
 ```sql
 SELECT e.rel, e.verb, e.qualifier, e.note,
        CASE WHEN e.src = h.id THEN 'out' ELSE 'in' END AS dir,
        h.id AS hit,
-       n.id, n.title, n.path, n.status, n.updated, n.privacy_rank, n.topic
+       n.id, n.title, n.path, n.status, n.updated, n.topic
 FROM hits h
 JOIN edges e ON e.is_guard = 1 AND (e.src = h.id OR e.dst = h.id) AND e.dst IS NOT NULL
 JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
@@ -34,13 +33,6 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
 - **Chains.** `superseded_by` is followed up to 5 hops so the agent always
   gets the newest note (`superseded by C (via B)`). Cycles are a lint error
   and are cut at the first repeat.
-- **Privacy.** Neighbors with `privacy_rank > P` or a topic outside `T` are
-  not returned. The hit instead carries `hidden_guards: {superseded_by: 1}`.
-  A chain resolves to the newest successor the caller may see; if a newer
-  one is hidden, it is counted, and hidden notes never appear in `via`.
-  This reveals that a restricted newer or conflicting note exists, which is
-  a deliberate trade: an agent that knows it is looking at possibly stale
-  information can say so, while one that does not will act on it.
 - **Budget.** Guard neighbors are added on top of the result limit. Each is
   returned compactly (title, path, status, one-line note); the agent can
   `read` it. To keep a heavily contested note from flooding the context,

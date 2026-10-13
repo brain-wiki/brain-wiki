@@ -9,13 +9,12 @@ bw-part_of:
 ---
 # Which agent may do what
 
-Each agent acts with a **profile** in `brain.toml`. By default an agent may
-read notes up to the `default` privacy level and write episodes, nothing
-more. Grant more per host:
+Each agent acts with a **profile** in `brain.toml`. Every agent reads the
+whole brain; by default it may write episodes and nothing more. Grant more
+per host:
 
 ```toml
 [agents.claude-code]
-max_privacy = "sensitive"
 write = ["episodes", "edit", "propose_rules", "consolidate", "harvest"]
 read_origin = true
 ```

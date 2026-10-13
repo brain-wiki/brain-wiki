@@ -34,7 +34,7 @@ from brainwiki.logs import log_path, setup_logging
 log = logging.getLogger("brainwiki.mcp")
 
 # The longest variant; build_server tailors the file-access and edit sentences to the host.
-INSTRUCTIONS = server_instructions(Access(files=True, edit=True))
+INSTRUCTIONS = server_instructions(Access(edit=True))
 READ = ToolAnnotations(
     read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
 )
@@ -530,9 +530,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             engine, engine.profile, backend="agent", topic=topic, max_episodes=max_episodes
         )
         if packet is None:
-            return _result(
-                "Nothing to consolidate: no pending episodes this profile may read.", {"run": None}
-            )
+            return _result("Nothing to consolidate: no pending episodes.", {"run": None})
         text = pipeline.instructions() + "\n" + packet.model_text()
         warning = pipeline.device_warning(engine)
         if warning:

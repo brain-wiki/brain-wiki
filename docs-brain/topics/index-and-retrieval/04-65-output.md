@@ -31,8 +31,7 @@ Structured result (MCP `structuredContent`; JSON from the CLI with
       "guards": [
         {"label": "supersedes", "id": "01J8…", "title": "Use ripgrep for search",
          "path": "topics/search/ripgrep.md", "status": "superseded"}
-      ],
-      "hidden_guards": {}
+      ]
     }
   ],
   "truncated": false,

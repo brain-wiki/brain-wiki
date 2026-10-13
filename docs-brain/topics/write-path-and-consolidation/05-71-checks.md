@@ -17,7 +17,7 @@ bw-part_of:
 | V3 | Every source span lies within its episode's lines; the episode is in the packet. | Invalid. |
 | V4 | Claim text is one line, contains no `<!--` or `-->`, and is within length limits; titles and slugs are well formed. | Invalid. |
 | V5 | Relation verbs are canonical or known aliases; no self-supersession; no supersession cycle; targets resolve. | Invalid. |
-| V6 | Ops stay within the backend profile: allowed topics, no privacy lowering, `create_topic` only with `*`. | Invalid. |
+| V6 | Topics exist: a note is created in a topic of the packet or one created earlier in the batch, and a sub-topic's parent exists. | Invalid. |
 | V7 | Completeness: episodes neither cited nor skipped. | Not an error: they stay pending and the run reports them. |
 | V8 | **Supersession ratio**: for a note with ≥ 4 active claims, superseded + retracted in this run ÷ active before > `max_supersede_ratio`. | Run is routed to review. |
 | V9 | **Specificity warning**: a superseding claim drops anchors (numbers, dates, versions, URLs, code spans, wikilinks) that appear in the old claim. | Warning in the run record and review file. Not blocking: changing a value is the point of superseding, and the old text is kept. |

@@ -22,11 +22,8 @@ from brainwiki.write.move import move_note
 
 MANIFEST = """format = 2
 id = "01M4KT3JPRY4W6766VT18CQS8Z"
-[privacy]
-levels = ["default", "sensitive", "secret"]
-default = "default"
 [topics.people]
-privacy = "sensitive"
+agent_edits = "review"
 [topics.rin-sato]
 review = "always"
 [topics.handbook]
@@ -62,14 +59,14 @@ def test_tree_slugs_parents_and_inheritance():
         "people",
     ]
     assert tree.roots() == ["people", "search"]
-    assert tree.privacy("meetings") == "sensitive" and tree.privacy("search-notes") is None
+    assert tree.setting("meetings", "agent_edits") == "review"
+    assert tree.setting("search-notes", "agent_edits") is None
     assert (
         tree.setting("meetings", "review") == "always" and tree.setting("people", "review") is None
     )
     assert tree.for_path("topics/people/rin-sato/meetings/2026-10-01.md") == "meetings"
     assert tree.for_path("topics/people/rin-sato/drafts/idea.md") == "rin-sato"  # no hub: no topic
     assert tree.expand(["people"]) == {"people", "rin-sato", "meetings", "notes"}
-    assert tree.allowed(["*"]) is None
 
 
 def _note(root: Path, rel: str, title: str, body: str = "", extra: str = "") -> None:
@@ -78,13 +75,6 @@ def _note(root: Path, rel: str, title: str, body: str = "", extra: str = "") -> 
 
 @pytest.fixture
 def people(brain_dir: Path) -> Path:
-    toml = brain_dir / "brain.toml"
-    toml.write_text(
-        toml.read_text()
-        + '\n[topics.people]\nprivacy = "sensitive"\n'
-        + '\n[agents.scoped]\nmax_privacy = "secret"\ntopics = ["people"]\n'
-        + '\n[agents.other]\nmax_privacy = "secret"\ntopics = ["search"]\n'
-    )
     _note(brain_dir, "topics/people/index.md", "People", "## Notes\n- [[rin-sato/index|Rin Sato]]")
     _note(brain_dir, "topics/people/rin-sato/index.md", "Rin Sato", "## Notes\n- [[priority]]")
     _note(brain_dir, "topics/people/rin-sato/priority.md", "Priority", "Ship the search rewrite.")
@@ -98,13 +88,13 @@ def people(brain_dir: Path) -> Path:
     return brain_dir
 
 
-def test_nested_topic_inherits_privacy_scope_and_part_of(people: Path):
+def test_nested_topic_takes_its_notes_and_part_of(people: Path):
     with Engine(open_brain(people)) as e:
         e.scan(force=True)
         row = e.db.execute(
-            "SELECT topic, privacy FROM nodes WHERE path='topics/people/rin-sato/priority.md'"
+            "SELECT topic FROM nodes WHERE path='topics/people/rin-sato/priority.md'"
         ).fetchone()
-        assert (row["topic"], row["privacy"]) == ("rin-sato", "sensitive")
+        assert row["topic"] == "rin-sato"
         hub = e.db.execute(
             "SELECT kind FROM nodes WHERE path='topics/people/rin-sato/index.md'"
         ).fetchone()
@@ -120,10 +110,6 @@ def test_nested_topic_inherits_privacy_scope_and_part_of(people: Path):
         assert (
             "**people**" in text and "1 sub-topics: rin-sato" in text and "**rin-sato**" not in text
         )
-    with Engine(open_brain(people), host="scoped") as e:
-        assert e.visible(1, "rin-sato") and not e.visible(1, "search")
-    with Engine(open_brain(people), host="other") as e:
-        assert not e.visible(1, "rin-sato")
 
 
 def test_a_new_hub_makes_a_sub_topic_and_moves_notes_into_it(people: Path):
@@ -158,8 +144,8 @@ def test_mv_moves_a_topic_folder_and_keeps_its_identity(people: Path):
         assert "[[priority]]" in fts and "](../rin-sato/priority.md)" in fts
         e.scan()
         assert e.topics.paths["rin-sato"] == "topics/rin-sato" and e.topics.parent("rin-sato") is None
-        row = e.db.execute("SELECT privacy FROM nodes WHERE path='topics/rin-sato/priority.md'")
-        assert row.fetchone()[0] == "default"  # no longer under people
+        row = e.db.execute("SELECT topic FROM nodes WHERE path='topics/rin-sato/priority.md'")
+        assert row.fetchone()[0] == "rin-sato"
         undo(e, record.run)
         assert (people / "topics/people/rin-sato/priority.md").exists()
 

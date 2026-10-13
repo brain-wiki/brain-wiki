@@ -22,4 +22,3 @@ bw-part_of:
 | BW309 | Contradictory containment (A part_of B and B part_of A). | error / error | — |
 | BW310 | Body link does not resolve. | warning / info | repair via id history |
 | BW311 | More than one `## Relations` section (format 1). | error / warning | — |
-| BW312 | A note links to a note with a higher privacy level (the link text reveals the target's name to anyone allowed to read the source). | warning / warning | — |

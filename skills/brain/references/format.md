@@ -34,13 +34,12 @@ Free prose: context, reasoning. Anything may go here.
 
 - Never change an `id`. Ids are permanent, even when a file moves.
 - `status` is one of `active`, `superseded`, `archived`. Free workflow
-  states go in `bw-stage`; a higher privacy level in `bw-privacy`.
+  states go in `bw-stage`.
 - Write `bw-` values double-quoted, one list item per line. Other `bw-`
   fields than those listed here are errors.
 - To move or rename a note, use `brain mv SRC DST`, which also fixes links.
 - Topics nest: a folder with its own `index.md` hub inside a topic is a
-  sub-topic, with its parent's privacy or stricter. Folders without a hub
-  just organize notes. `brain mv` also moves a whole topic folder.
+  sub-topic. Folders without a hub just organize notes. `brain mv` also moves a whole topic folder.
 
 ## Claims
 
@@ -133,7 +132,6 @@ bw-origin: agent
 bw-taint: unknown
 bw-captured: mcp
 bw-topics: [lumen]
-bw-privacy: default
 ---
 Moved Lumen's attachments out of SQLite after backups became slow.
 

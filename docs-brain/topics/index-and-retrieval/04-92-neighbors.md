@@ -23,7 +23,7 @@ small subgraph:
             "status": "active", "flags": ["conflict"], "depth": 1,
             "via": {"from": "01J9…", "relation": "has_part"}}],
  "edges": [{"rel": "part_of", "src": "…", "dst": "01J9…"}],
- "hidden": 0, "truncated": false}
+ "truncated": false}
 ```
 
 The root comes first, at depth 0. `via.relation` reads from the node it was
@@ -36,5 +36,4 @@ newer note supersedes.
 
 Typical uses: what a release shipped (`depends_on`, `out`), what depends on
 a decision (`depends_on`, `in`), how a fact evolved (`supersedes`, `both`,
-depth 3). Privacy filtering applies to every node; hidden neighbors are
-counted, not named, as in §5.
+depth 3).

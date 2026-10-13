@@ -2,10 +2,6 @@ format = 2
 id = "01M4KT3JPRY4W6766VT18CQS8Z"
 name = "example"
 
-[privacy]
-levels  = ["default", "sensitive", "secret"]
-default = "default"
-
 [topics.search]
 title = "Search"
 description = "How local search works and why."
@@ -17,13 +13,9 @@ description = "Where data lives and which versions we require."
 [topics.budget]
 title = "Budget"
 description = "Spending decisions."
-privacy = "sensitive"
 
 [agents.default]
-max_privacy = "default"
-topics = ["*"]
 write = ["episodes"]
 
 [agents.trusted]
-max_privacy = "sensitive"
 write = ["episodes", "propose_rules", "consolidate", "harvest", "review"]

@@ -56,10 +56,15 @@ def test_store_create_is_exclusive(tmp_path: Path):
 def test_manifest_defaults_and_unknown_keys():
     m = parse_manifest(
         'format = 1\nid = "01J9Z7M0W4K8P2R6T9V3X5Z7A1"\nweird = 1\n[layout]\nfoo = 2\n'
+        '[topics.search]\nprivacy = "sensitive"\n[agents.codex]\nmax_privacy = "secret"\n'
     )
     assert m.layout.topics_dir == "topics"
-    assert m.privacy_rank("sensitive") == 1
-    assert set(m.unknown_keys) == {"weird", "layout.foo"}
+    assert set(m.unknown_keys) == {
+        "weird",
+        "layout.foo",
+        "topics.search.privacy",
+        "agents.codex.max_privacy",
+    }
     assert m.profile("unknown-host").write == ["episodes"]
     assert m.profile(None).can("consolidate")
 

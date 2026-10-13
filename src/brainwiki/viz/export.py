@@ -29,7 +29,7 @@ def build_graph(engine: Engine, *, topics: list[str] | None = None) -> dict[str,
 
     engine.scan()
     wanted = engine.topics.expand(topics) if topics else None  # with their sub-topics
-    rows = _visible_nodes(engine, wanted)
+    rows = _nodes(engine, wanted)
     ids = {row["id"] for row in rows}
     links = _links(engine, ids)
     flags = _flags(engine)
@@ -45,7 +45,6 @@ def build_graph(engine: Engine, *, topics: list[str] | None = None) -> dict[str,
         "brain": engine.brain.display_name,
         "generated": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "profile": engine.profile.name,
-        "privacy": privacy_levels({"nodes": nodes}, engine.manifest.privacy.levels),
         "topics": topic_list,
         "nodes": nodes,
         "links": links,
@@ -53,22 +52,13 @@ def build_graph(engine: Engine, *, topics: list[str] | None = None) -> dict[str,
     }
 
 
-def privacy_levels(graph: dict[str, Any], order: list[str] | None = None) -> list[str]:
-    present = {n["privacy"] for n in graph["nodes"]}
-    ranked = [level for level in (order or []) if level in present]
-    return ranked + sorted(present - set(ranked))
-
-
-def _visible_nodes(engine: Engine, wanted: set[str] | None) -> list[dict[str, Any]]:
+def _nodes(engine: Engine, wanted: set[str] | None) -> list[dict[str, Any]]:
     rows = engine.db.execute(
-        """SELECT id, path, kind, topic, title, type, status, privacy, privacy_rank, updated,
-                  aliases, line_count FROM nodes
-           WHERE kind IN ('note','hub','episode') ORDER BY path"""
+        """SELECT id, path, kind, topic, title, type, status, updated, aliases, line_count
+           FROM nodes WHERE kind IN ('note','hub','episode') ORDER BY path"""
     ).fetchall()
     out = []
     for row in rows:
-        if not engine.visible(row["privacy_rank"], row["topic"]):
-            continue
         if wanted is not None and row["topic"] not in wanted:
             continue
         out.append(dict(row))
@@ -182,7 +172,6 @@ def _node(
         "topic": row["topic"],
         "type": row["type"],
         "status": row["status"],
-        "privacy": row["privacy"],
         "updated": (row["updated"] or "")[:10] or None,
         "aliases": aliases,
         "lines": row["line_count"],
@@ -290,7 +279,6 @@ _NODE_KEYS = (
     ("topic", "string"),
     ("type", "string"),
     ("status", "string"),
-    ("privacy", "string"),
     ("updated", "string"),
     ("degree", "int"),
     ("claims", "int"),

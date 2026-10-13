@@ -53,8 +53,6 @@ can repair it safely.
 | BW104 | `id` is not a ULID. | error / warning | re-mint |
 | BW105 | Two files share an `id`. | error / error | re-mint the newer file's id (the oldest file keeps it; not offered for episodes) |
 | BW106 | `status` is not `active`, `superseded`, or `archived`. | error / info | move the value to `bw-stage`, set `status` (mapping table in [09](09-import.md)) |
-| BW107 | `bw-privacy` is not a declared level. | error / error | — |
-| BW108 | Note `bw-privacy` is lower than its topic's. | error / error | raise to the topic level |
 | BW109 | Unknown key in `brain.toml`. | warning / warning | — |
 | BW110 | Two paths differ only by letter case. | warning / warning | — |
 | BW111 | File is not valid UTF-8. | error / error | — |
@@ -62,7 +60,7 @@ can repair it safely.
 | BW113 | A frontmatter property holds wikilinks that look like relations (`related`, `parent`, `up`…). | info / info | convert to `bw-<verb>` relations |
 | BW114 | Leftover merge conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) outside code. | error / error | — |
 | BW115 | A database or lock file (`*.sqlite`, `*.db`, `*-wal`, `*-shm`) inside the brain; sync tools corrupt these. | warning / warning | — |
-| BW116 | Note is in format 1: `## Claims` or `## Relations` sections, or unprefixed `privacy` or `stage` ([02 §13](02-brain-format.md#13-format-versioning)). | warning / info | convert to format 2 |
+| BW116 | Note is in format 1: `## Claims` or `## Relations` sections, or an unprefixed `stage` ([02 §13](02-brain-format.md#13-format-versioning)). | warning / info | convert to format 2 |
 
 ### BW2xx: claims
 
@@ -91,7 +89,6 @@ can repair it safely.
 | BW309 | Contradictory containment (A part_of B and B part_of A). | error / error | — |
 | BW310 | Body link does not resolve. | warning / info | repair via id history |
 | BW311 | More than one `## Relations` section (format 1). | error / warning | — |
-| BW312 | A note links to a note with a higher privacy level (the link text reveals the target's name to anyone allowed to read the source). | warning / warning | — |
 
 ### BW4xx: structure and budgets
 
@@ -155,7 +152,7 @@ lint(paths, profile):
 `brain check` ([05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits))
 reuses the per-file rules for the notes an agent edited and adds checks that
 need the note's last recorded version: claims deleted or reworded in place,
-lowered privacy, large deletions, and protected files. Pending edits (a
+large deletions, and protected files. Pending edits (a
 note that differs from its last recorded version) are reported by `brain
 check`, not by lint, so hand edits never raise warnings.
 
@@ -225,6 +222,6 @@ churn on every run.
 
 | Option | Why not |
 |---|---|
-| A general Markdown linter (markdownlint, remark) | Knows nothing about ids, relations, privacy, or the index; can run alongside. |
+| A general Markdown linter (markdownlint, remark) | Knows nothing about ids, relations, claims, or the index; can run alongside. |
 | JSON Schema over frontmatter only | Covers a tenth of the rules; cross-file checks need the index anyway. |
 | LLM-based lint | Non-deterministic, slow, and needs a model; the bench covers semantic quality instead. |

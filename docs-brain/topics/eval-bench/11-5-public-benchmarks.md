@@ -13,7 +13,7 @@ bw-part_of:
 Public memory benchmarks measure question answering over long histories.
 An adapter (after v0.1) can run them against brain-wiki by turning
 sessions into episodes in timestamp order, consolidating, and answering
-through search. They complement the core suites but do not test privacy,
+through search. They complement the core suites but do not test guards,
 write safety, or relation structure.
 
 | Benchmark | Relevant part | License | Use |

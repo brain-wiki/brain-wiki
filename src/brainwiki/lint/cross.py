@@ -277,7 +277,7 @@ def _edge_checks(conn: sqlite3.Connection) -> list[Problem]:
             return None
         if node_id not in node_cache:
             node_cache[node_id] = conn.execute(
-                "SELECT id, path, title, status, kind, privacy, privacy_rank FROM nodes WHERE id=?",
+                "SELECT id, path, title, status, kind FROM nodes WHERE id=?",
                 (node_id,),
             ).fetchone()
         return node_cache[node_id]
@@ -327,21 +327,6 @@ def _edge_checks(conn: sqlite3.Connection) -> list[Problem]:
         out.append(
             Problem(
                 "BW306", edge["from_path"], edge["line"], f"note relates to itself ({edge['verb']})"
-            )
-        )
-    for row in conn.execute(
-        """SELECT e.line, s.path AS from_path, s.privacy AS from_privacy, t.path AS to_path,
-                  t.privacy AS to_privacy
-           FROM nodes t CROSS JOIN edges e ON e.other = t.id CROSS JOIN nodes s ON s.id = e.declared_in
-           WHERE t.privacy_rank > 0 AND t.privacy_rank > s.privacy_rank"""
-    ):
-        out.append(
-            Problem(
-                "BW312",
-                row["from_path"],
-                row["line"],
-                f"links to {row['to_path']} ({row['to_privacy']}) from a {row['from_privacy']} note; "
-                "the link text reveals its name",
             )
         )
     supersedes: dict[str, list[sqlite3.Row]] = defaultdict(list)

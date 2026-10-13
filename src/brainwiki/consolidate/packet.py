@@ -108,7 +108,6 @@ class EpisodeRef:
     last_line: int
     taint: str
     origin: str
-    privacy_rank: int
     archive_to: str
 
 
@@ -119,7 +118,6 @@ class NoteRef:
     id: str
     hash: str
     topic: str | None
-    privacy_rank: int
     kind: str
 
 
@@ -138,7 +136,6 @@ class TopicRef:
     path: str
     hub: str | None  # note handle
     hub_path: str | None
-    privacy_rank: int
     review: str | None
 
 
@@ -237,26 +234,18 @@ def reserved_episodes(engine: Engine) -> set[str]:
     return found
 
 
-def pending_episodes(engine: Engine, profile: Profile, *, topic: str | None = None) -> list[Any]:
-    """Pending episodes this profile may read, oldest first."""
-    max_rank = engine.manifest.privacy_rank(profile.max_privacy)
+def pending_episodes(engine: Engine, *, topic: str | None = None) -> list[Any]:
+    """Pending episodes, oldest first."""
     reserved = reserved_episodes(engine)
     rows = engine.db.execute(
-        """SELECT id, path, fm_id, agent, origin, taint, privacy_rank, props, created, session, origin_turns,
+        """SELECT id, path, fm_id, agent, origin, taint, props, created, session, origin_turns,
                   device FROM nodes WHERE kind = 'episode' ORDER BY COALESCE(fm_id, created, path)"""
     ).fetchall()
-    out = []
-    for row in rows:
-        if row["privacy_rank"] > max_rank or row["path"] in reserved:
-            continue
-        hints = _hints(row["props"])
-        if topic and topic not in hints:
-            continue
-        allowed = engine.allowed_topics(profile)
-        if allowed is not None and hints and not any(h in allowed for h in hints):
-            continue
-        out.append(row)
-    return out
+    return [
+        row
+        for row in rows
+        if row["path"] not in reserved and (not topic or topic in _hints(row["props"]))
+    ]
 
 
 def _hints(props: str) -> list[str]:
@@ -277,13 +266,13 @@ def _query_terms(text: str) -> str | None:
     return " OR ".join(f'"{t}"' for t in terms) if terms else None
 
 
-def _candidates(engine: Engine, text: str, hints: list[str], visible: set[str]) -> list[str]:
+def _candidates(engine: Engine, text: str, hints: list[str]) -> list[str]:
     found: list[str] = []
     for slug in hints:
         hub = engine.db.execute(
             "SELECT id FROM nodes WHERE topic = ? AND kind = 'hub' ORDER BY path LIMIT 1", (slug,)
         ).fetchone()
-        if hub and hub["id"] in visible:
+        if hub:
             found.append(hub["id"])
     query = _query_terms(text)
     if query:
@@ -296,7 +285,7 @@ def _candidates(engine: Engine, text: str, hints: list[str], visible: set[str]) 
             ).fetchall()
         except Exception:  # noqa: BLE001 - an FTS syntax edge case must not block consolidation
             rows = []
-        notes = [r["id"] for r in rows if r["id"] in visible and r["id"] not in found]
+        notes = [r["id"] for r in rows if r["id"] not in found]
         found += notes[:MAX_CANDIDATES]
     return found
 
@@ -339,17 +328,9 @@ def build_packet(
     manifest = engine.manifest
     limit = max_episodes or manifest.consolidate.max_episodes_per_run
     budget = (budget_tokens or BUDGETS.get(backend, 15_000)) * 4  # characters
-    episodes = pending_episodes(engine, profile, topic=topic)[: max(limit * 3, limit)]
+    episodes = pending_episodes(engine, topic=topic)[: max(limit * 3, limit)]
     if not episodes:
         return None
-    max_rank = manifest.privacy_rank(profile.max_privacy)
-    visible = {
-        r["id"]
-        for r in engine.db.execute(
-            "SELECT id, topic, privacy_rank FROM nodes WHERE kind IN ('note', 'hub')"
-        )
-        if r["privacy_rank"] <= max_rank and engine.topic_allowed(r["topic"], profile)
-    }
     packet = Packet(
         run=run,
         brain=engine.brain.display_name,
@@ -367,7 +348,7 @@ def build_packet(
         if node_id in note_handles:
             return note_handles[node_id], 0
         row = engine.db.execute(
-            "SELECT id, path, title, type, status, topic, privacy_rank, kind FROM nodes WHERE id = ?",
+            "SELECT id, path, title, type, status, topic, kind FROM nodes WHERE id = ?",
             (node_id,),
         ).fetchone()
         if row is None:
@@ -404,7 +385,6 @@ def build_packet(
             row["id"],
             "sha256:" + sha256_bytes(data),
             row["topic"],
-            row["privacy_rank"],
             row["kind"],
         )
         note_entries.append(entry)
@@ -425,7 +405,7 @@ def build_packet(
             continue
         lines = [f"{n}| {all_lines[n - 1]}" for n in range(first, last + 1)]
         cost = sum(len(line) + 4 for line in lines) + 200
-        candidates_ids = _candidates(engine, doc.body_text, _hints(row["props"]), visible)
+        candidates_ids = _candidates(engine, doc.body_text, _hints(row["props"]))
         if packet.episodes and used + cost > budget:
             break
         handle = f"E{len(packet.episodes) + 1}"
@@ -444,7 +424,6 @@ def build_packet(
             last_line=last,
             taint=row["taint"] or "unknown",
             origin=row["origin"] or "agent",
-            privacy_rank=row["privacy_rank"],
             archive_to=_archive_path(engine, row["path"]),
         )
         entry = {
@@ -467,9 +446,6 @@ def build_packet(
     tree = engine.topics
     for slug, path in sorted(tree.paths.items()):
         declared = manifest.topics.get(slug)
-        rank = manifest.privacy_rank(tree.privacy(slug) or manifest.privacy.default)
-        if rank > max_rank or not engine.topic_allowed(slug, profile):
-            continue
         hub = engine.db.execute(
             "SELECT id, path, title FROM nodes WHERE topic = ? AND kind = 'hub' ORDER BY path LIMIT 1",
             (slug,),
@@ -483,7 +459,6 @@ def build_packet(
             path,
             hub_handle,
             hub["path"] if hub else None,
-            rank,
             tree.setting(slug, "review"),
         )
         entry = {
@@ -494,7 +469,7 @@ def build_packet(
             "notes": sorted(h for h, n in packet.notes.items() if n.topic == slug),
         }
         parent = tree.parent(slug)
-        if parent and engine.topic_allowed(parent, profile):
+        if parent:
             entry["parent"] = parent
         if hub_handle:
             entry["hub"] = hub_handle

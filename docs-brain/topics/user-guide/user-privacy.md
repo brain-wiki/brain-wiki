@@ -10,7 +10,7 @@ bw-part_of:
 # Privacy and safety
 
 ## Sections
-- [[user-privacy-privacy-levels]]: Privacy levels
+- [[user-privacy-what-agents-can-read]]: What agents can read
 - [[user-privacy-agent-profiles]]: Agent profiles (Privacy and safety)
 - [[user-privacy-several-brains]]: Several brains
 - [[user-privacy-what-is-protected]]: What is protected

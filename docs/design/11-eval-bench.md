@@ -10,7 +10,6 @@ tuned on evidence and regressions are caught:
 | Promise | Suite |
 |---|---|
 | Retrieval finds the right notes and always surfaces superseding and conflicting ones (G5) | `retrieval` |
-| Privacy filters leak nothing | `retrieval` (profile variants) |
 | Lint finds what it claims and fixes safely | `lint` |
 | Consolidation writes faithful, specific, well-placed claims, with any model (G4, G8) | `consolidation` |
 | Injected instructions never become rules or directives | `consolidation` (injection slice) |
@@ -41,17 +40,14 @@ the command and version that produced them.
 ### 3.1 `retrieval` (offline)
 
 Generated brains with known structure: topics, notes, claims, relations,
-supersession chains up to 4 long, conflict pairs, privacy levels, and
-episodes. Queries come from templates over titles and claims (with
+supersession chains up to 4 long, conflict pairs, and episodes. Queries come from templates over titles and claims (with
 synonym substitution) plus hand-written queries for the example brain.
 
 | Metric | Target |
 |---|---|
 | Recall@8, MRR, nDCG@8 for primary results | tracked; used to tune ranking factors |
-| **Guard recall**: for every hit with a guard neighbor visible to the profile, the neighbor is returned | **100%** (fails the suite otherwise) |
+| **Guard recall**: for every hit with a guard neighbor, the neighbor is returned | **100%** (fails the suite otherwise) |
 | Newest-successor correctness through chains | **100%** |
-| **Privacy leaks**: any result, snippet, guard, or count derived from a note above the profile's level, other than the hidden-guard count | **0** |
-| Hidden-guard counts | exact |
 
 ### 3.2 `lint` (offline)
 
@@ -138,7 +134,7 @@ releases.
 - **Generator** (`brainwiki.bench.gen`): seeded; fictional domains
   (a software project, a research lab, a recipe collection, a community
   garden); produces notes, claims with anchors, relations, chains,
-  conflicts, privacy levels, and episodes with controlled noise and
+  conflicts, and episodes with controlled noise and
   injection.
 - **Example brain:** a small hand-written brain about a fictional
   software project, also used by tests and docs.
@@ -150,7 +146,7 @@ bench/scenarios/<slice>/<id>/
 ├── brain/               starting brain (a normal brain directory)
 ├── episodes/            episodes to place in the inbox before the run
 └── expect.toml          expected claims (anchors, terms, target), forbidden anchors,
-                         expected ops and relations, budget checks
+                         expected ops and relations
 ```
 
 - **Growing the set from real failures:** `brain bench capture <run>`
@@ -163,7 +159,7 @@ bench/scenarios/<slice>/<id>/
 Public memory benchmarks measure question answering over long histories.
 An adapter (after v0.1) can run them against brain-wiki by turning
 sessions into episodes in timestamp order, consolidating, and answering
-through search. They complement the core suites but do not test privacy,
+through search. They complement the core suites but do not test guards,
 write safety, or relation structure.
 
 | Benchmark | Relevant part | License | Use |

@@ -20,7 +20,6 @@ log = logging.getLogger(__name__)
 def config_hash(manifest: Manifest) -> str:
     relevant = {
         "layout": vars(manifest.layout),
-        "privacy": vars(manifest.privacy),
         "topics": {k: vars(v) for k, v in sorted(manifest.topics.items())},
     }
     return hashlib.sha256(json.dumps(relevant, sort_keys=True, default=str).encode()).hexdigest()[

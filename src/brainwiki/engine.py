@@ -60,33 +60,12 @@ class Engine:
             self._db.close()
             self._db = None
 
-    # profile helpers ---------------------------------------------------
-    @property
-    def max_rank(self) -> int:
-        return self.manifest.privacy_rank(self.profile.max_privacy)
-
     @property
     def topics(self) -> TopicTree:
         """The topic tree (02 §2)."""
         from brainwiki.index.topics import topic_tree
 
         return topic_tree(self)
-
-    def allowed_topics(self, profile: Profile | None = None) -> frozenset[str] | None:
-        """Topics a profile may read, sub-topics included; None when it may read all."""
-        profile = profile or self.profile
-        return None if "*" in profile.topics else self.topics.allowed(profile.topics)
-
-    def topic_allowed(self, topic: str | None, profile: Profile | None = None) -> bool:
-        allowed = self.allowed_topics(profile)
-        return allowed is None or (topic is not None and topic in allowed)
-
-    def visible(self, privacy_rank: int, topic: str | None) -> bool:
-        return privacy_rank <= self.max_rank and self.topic_allowed(topic)
-
-    @property
-    def reads_everything(self) -> bool:
-        return self.manifest.reads_everything(self.profile)
 
     def __enter__(self) -> Engine:
         return self

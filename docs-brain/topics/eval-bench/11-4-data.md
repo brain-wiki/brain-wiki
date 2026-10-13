@@ -13,7 +13,7 @@ bw-part_of:
 - **Generator** (`brainwiki.bench.gen`): seeded; fictional domains
   (a software project, a research lab, a recipe collection, a community
   garden); produces notes, claims with anchors, relations, chains,
-  conflicts, privacy levels, and episodes with controlled noise and
+  conflicts, and episodes with controlled noise and
   injection.
 - **Example brain:** a small hand-written brain about a fictional
   software project, also used by tests and docs.
@@ -25,7 +25,7 @@ bench/scenarios/<slice>/<id>/
 ├── brain/               starting brain (a normal brain directory)
 ├── episodes/            episodes to place in the inbox before the run
 └── expect.toml          expected claims (anchors, terms, target), forbidden anchors,
-                         expected ops and relations, budget checks
+                         expected ops and relations
 ```
 
 - **Growing the set from real failures:** `brain bench capture <run>`

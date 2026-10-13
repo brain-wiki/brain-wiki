@@ -60,7 +60,7 @@ Rules:
   brain is complete by itself.
 
 **Why topics are folders.** A topic is the unit people browse, the unit of
-privacy defaults, and the unit a hub summarizes. A folder makes that
+topic policies (review, agent edits), and the unit a hub summarizes. A folder makes that
 visible in every file browser and in Obsidian without extra tooling. Notes
 MAY also live outside any topic (for example in an imported vault); they
 belong to no topic and lint can warn about it.
@@ -80,15 +80,13 @@ belong to no topic and lint can warn about it.
   slug, the deeper one takes its parent's slug as a prefix (`rin-sato-notes`).
   Declaring a topic in `brain.toml` (§3) can name it. The slug, not the
   path, is the topic's identity.
-- **Access inherits down the tree.** A topic's privacy level is the
-  strictest of its own declared level and its ancestors'; a note may raise
-  it further (§6.1). An agent allowed a topic (`topics = ["people"]`) may
-  read its sub-topics.
+- **Policies inherit down the tree.** A topic without its own `review` or
+  `agent_edits` setting takes its nearest ancestor's.
 - **Reorganizing is moving folders.** `brain mv` moves a topic folder with
   its notes and rewrites the links that named them by path, as one undoable
   run; a move by hand works too, and `brain lint --fix` repairs path links
-  from the index's history. Because a topic is known by its slug, agent
-  allowlists, links by file name, and run records survive the move.
+  from the index's history. Because a topic is known by its slug, topic
+  settings, links by file name, and run records survive the move.
 
 Why a tree rather than flat topics: a brain grows many small topics (a
 person, a project, a ticker) that fall into a few natural groups. Flat, they
@@ -129,10 +127,6 @@ rules_max_chars     = 4000
 agents_md_max_lines = 150
 orient_max_tokens   = 1500
 
-[privacy]
-levels  = ["default", "sensitive", "secret"]  # ascending restriction
-default = "default"
-
 [lint]
 profile = "strict"                          # strict | migrate (see 06)
 stale_inbox_days = 14
@@ -167,16 +161,13 @@ mode = "auto"                               # auto | off ; auto = commit when th
 path        = "topics/search"               # default: the folder with this slug, at any depth
 title       = "Search"
 description = "How local search works and why."
-privacy     = "default"
 review      = "always"                      # per-topic override
 agent_edits = "allow"                       # allow | review | deny for checked agent edits (05 §2.3)
 
 [agents.default]                            # profile for unknown hosts
-max_privacy = "default"
+write       = ["episodes"]
 
 [agents.claude-code]                        # profile for one host id
-max_privacy = "sensitive"
-topics      = ["*"]                         # topic allowlist; "*" = all
 write       = ["episodes", "edit", "propose_rules", "consolidate", "review"]
 ```
 
@@ -187,9 +178,9 @@ Rules:
 - Inline tables (`status_factor = { … }`) are TOML, not frontmatter; the
   flat-values rule in §4 applies to note frontmatter only.
 - A topic that exists on disk but is not declared still works: its slug is
-  its folder name, title is taken from the hub, privacy is its parent's (the
-  brain default at the top). Declaring a topic lets the user set description,
-  privacy, review mode, or a path (for imported vaults). A declaration without
+  its folder name, title is taken from the hub, and its policies are its
+  parent's. Declaring a topic lets the user set description, review mode,
+  agent edits, or a path (for imported vaults). A declaration without
   `path` applies to the folder whose slug matches, wherever it sits.
 - Topic slugs match `^[a-z0-9][a-z0-9-]{0,63}$`.
 - Agent profile names are host ids ([08](08-agent-integrations.md#2-host-ids)).
@@ -204,7 +195,7 @@ Rules:
   MUST NOT be used. Reasons: Obsidian's properties editor only handles flat
   properties; LLMs frequently break nested YAML; flat values index trivially.
 - **brain-wiki's fields carry the `bw-` prefix.** Relations (§6.4), claims
-  (§6.3), `bw-privacy`, `bw-stage`, and episode provenance (§9) are fields
+  (§6.3), `bw-stage`, and episode provenance (§9) are fields
   named `bw-…`. Shared note metadata stays unprefixed: `id`, `type`, `title`,
   `aliases`, `tags`, `status`, `created`, `updated`. Reasons: the prefix
   marks what brain-wiki parses and validates, keeps those fields together in
@@ -248,7 +239,6 @@ aliases: [FTS5 decision]
 tags: [search, storage]
 created: 2026-10-07
 updated: 2026-10-09
-bw-privacy: default
 bw-part_of: "[[search]]"
 bw-depends_on:
   - "[[SQLite version policy]] — needs the trigram tokenizer"
@@ -274,7 +264,6 @@ bw-claims-superseded:
 | `tags` | no | list of strings | Without `#`. |
 | `created`, `updated` | no | ISO 8601 date or date-time | Writers set `updated` when they change a note. |
 | `bw-stage` | no | string | Free workflow state (`draft`, `shipped`, `abandoned`…). Importers move non-standard `status` values here. |
-| `bw-privacy` | no (inherits) | one of `privacy.levels` | MAY raise the level above the topic's, MUST NOT lower it. |
 | `bw-<verb>` | no | string or list of strings | Relations, one field per canonical verb (§6.4). |
 | `bw-claims`, `bw-claims-superseded` | no | list of strings | Current claims, and claims that were superseded or retracted (§6.3). |
 
@@ -458,9 +447,7 @@ Two families change what retrieval must return:
 
 This holds regardless of which side declared the relation, of search
 scores, and of result limits: guard neighbors are added on top of the
-top-k results. The only exception is privacy. If a guard neighbor is above
-the caller's privacy level, the caller is told that a hidden superseding or
-conflicting note exists, but not its content ([04](04-index-and-retrieval.md#5-guard-co-retrieval)).
+top-k results ([04](04-index-and-retrieval.md#5-guard-co-retrieval)).
 
 Claim-level supersession (§6.3) stays out of the way: reads list current
 claims and say how many were superseded or retracted, and superseded claims
@@ -517,7 +504,6 @@ bw-origin: agent                 # owner | agent | import | system
 bw-taint: unknown                # true | false | unknown
 bw-captured: mcp                 # hook | mcp | harvest | cli | import | file
 bw-topics: [search]              # hints only
-bw-privacy: default
 ---
 Switched the search path to FTS5 after ripgrep was too slow on 10k notes.
 
@@ -622,15 +608,15 @@ run records ([05 §8](05-write-path-and-consolidation.md#8-undo)).
   may contain. This document defines format 2.
 - A tool MUST refuse to open a brain with a higher format than it supports.
   A best-effort read is not safe: an older reader ignores fields it does
-  not know, such as `bw-privacy`, and would show what it should hide.
+  not know, such as `bw-claims`, and would show a note without its facts.
 - A tool that writes files in a newer format first raises `format`. The
   change is one-way: undoing the run that raised it does not lower it,
   because other files in the new format may remain.
 - Readers accept every older format. A format change ships with a fix that
   converts files, has a dry run, and writes one undo point.
 
-**Format 1** kept claims and relations in the body, wrote `privacy` and
-`stage` without the prefix, and wrote episode provenance without it:
+**Format 1** kept claims and relations in the body, wrote `stage` without
+the prefix, and wrote episode provenance without it:
 
 ```markdown
 ## Claims

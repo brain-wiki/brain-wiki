@@ -18,15 +18,9 @@ from brainwiki.format.agents_md import replace_block
 from brainwiki.format.fields import claim_value, quote, relation_value
 from brainwiki.lifecycle import default_agents_block, init_brain
 
-LEVELS = ["default", "sensitive", "secret"]
-PROFILES = {"owner": 2, "trusted": 1, "default": 0}
 BRAIN_EXTRA = """
 [git]
 mode = "off"
-
-[agents.trusted]
-max_privacy = "sensitive"
-write = ["episodes", "consolidate"]
 """
 
 COMMON = """
@@ -89,14 +83,9 @@ class Node:
     path: str
     title: str
     topic: str | None
-    rank: int  # privacy rank: 0 default, 1 sensitive, 2 secret
     kind: str = "note"  # note | hub | episode
     status: str = "active"
     token: str = ""  # unique planted token in the body
-
-    def markers(self) -> list[str]:
-        """Strings that must never appear in a response for a profile that cannot see this node."""
-        return [m for m in (self.id, self.token, self.slug if self.kind == "note" else "") if m]
 
 
 @dataclass
@@ -115,8 +104,6 @@ class Truth:
     conflicts: list[tuple[str, str]] = field(default_factory=list)
     queries: list[Query] = field(default_factory=list)
     relation_counts: Counter[str] = field(default_factory=Counter)
-    sensitive_topic: str = ""
-    sensitive_title: str = ""
 
     def __post_init__(self) -> None:
         self._index()
@@ -132,9 +119,6 @@ class Truth:
             self.conflicting[a].append(b)
             self.conflicting[b].append(a)
 
-    def visible(self, node_id: str, max_rank: int) -> bool:
-        return self.nodes[node_id].rank <= max_rank
-
     def chain(self, node_id: str) -> list[str]:
         """Successors from the direct one to the newest."""
         out, current = [], node_id
@@ -143,31 +127,14 @@ class Truth:
             out.append(current)
         return out
 
-    def expected_guards(self, node_id: str, max_rank: int) -> tuple[set[tuple[str, str]], dict]:
-        """Visible guards (label, id) and hidden-guard counts a hit must carry (doc 04 §5).
-
-        `superseded_by` points at the newest successor the profile can see; a hidden newest
-        successor is counted, never named.
-        """
-        shown: set[tuple[str, str]] = set()
-        hidden: Counter[str] = Counter()
-        for label, others in (
-            ("supersedes", self.older.get(node_id, [])),
-            ("conflicts_with", self.conflicting.get(node_id, [])),
-        ):
-            for other in others:
-                if self.visible(other, max_rank):
-                    shown.add((label, other))
-                else:
-                    hidden[label] += 1
+    def expected_guards(self, node_id: str) -> set[tuple[str, str]]:
+        """The guards (label, id) a hit must carry (doc 04 §5); `superseded_by` is the newest."""
+        shown = {("supersedes", other) for other in self.older.get(node_id, [])}
+        shown |= {("conflicts_with", other) for other in self.conflicting.get(node_id, [])}
         chain = self.chain(node_id)
         if chain:
-            seen = [n for n in chain if self.visible(n, max_rank)]
-            if seen:
-                shown.add(("superseded_by", seen[-1]))
-            if not self.visible(chain[-1], max_rank):
-                hidden["superseded_by"] += 1
-        return shown, dict(hidden)
+            shown.add(("superseded_by", chain[-1]))
+        return shown
 
 
 class _Gen:
@@ -200,17 +167,14 @@ class _Gen:
         return text[0].upper() + text[1:] + "."
 
 
-def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: bool = True) -> Truth:
-    """Write a brain of `notes` notes under `root` (created; must not be a brain yet).
-
-    `cross_privacy` plants supersession chains and conflicts that cross privacy levels.
-    """
+def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
+    """Write a brain of `notes` notes under `root` (created; must not be a brain yet)."""
     g = _Gen(seed)
     rng = g.rng
     root = init_brain(Path(root), "bench")
     truth = Truth(seed=seed, root=root)
 
-    # Topics: about forty notes each; topic 1 is sensitive.
+    # Topics: about forty notes each.
     n_topics = max(3, notes // 40)
     topic_slugs: list[str] = []
     while len(topic_slugs) < n_topics:
@@ -221,19 +185,9 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
     topic_about = {
         t: f"How the fictional {t.title()} project builds and runs." for t in topic_slugs
     }
-    sensitive = topic_slugs[1]
-    truth.sensitive_topic, truth.sensitive_title = sensitive, topic_titles[sensitive]
     hubs: dict[str, Node] = {}
     for t in topic_slugs:
-        hub = Node(
-            g.ulid(_EPOCH),
-            "index",
-            f"topics/{t}/index.md",
-            topic_titles[t],
-            t,
-            1 if t == sensitive else 0,
-            "hub",
-        )
+        hub = Node(g.ulid(_EPOCH), "index", f"topics/{t}/index.md", topic_titles[t], t, "hub")
         hubs[t] = hub
         truth.nodes[hub.id] = hub
 
@@ -249,24 +203,15 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
                 break
         slug = f"{title.split()[0].lower()}-{title.split()[-1].lower()}-{i}"
         node = Node(
-            g.ulid(_EPOCH),
-            slug,
-            f"topics/{topic}/{slug}.md",
-            title,
-            topic,
-            1 if topic == sensitive else 0,
-            token=g.token(),
+            g.ulid(_EPOCH), slug, f"topics/{topic}/{slug}.md", title, topic, token=g.token()
         )
         order.append(node)
         truth.nodes[node.id] = node
-    public = [n for n in order if n.rank == 0]
-    for node in rng.sample(public, min(len(public) // 4, max(4, notes // 200))):
-        node.rank = 2
-    by_topic_rank: dict[tuple[str, int], list[Node]] = defaultdict(list)
+    by_topic: dict[str, list[Node]] = defaultdict(list)
     for n in order:
-        by_topic_rank[(n.topic or "", n.rank)].append(n)
+        by_topic[n.topic or ""].append(n)
 
-    # Guards: supersession chains (3% of relations) and conflicts (2%), some across levels.
+    # Guards: supersession chains (3% of relations) and conflicts (2%).
     used: set[str] = set()
     target_sup = round(0.03 * 3 * notes)
     target_conf = round(0.02 * 3 * notes)
@@ -284,20 +229,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
             truth.supersedes.append((newer.id, older.id))
             older.status = "superseded"
 
-    secret = [n for n in order if n.rank == 2]
-    plain = [n for n in order if n.rank == 0]
-    sens = [n for n in order if n.rank == 1]
-    if cross_privacy and len(secret) >= 4 and len(plain) >= 12 and sens:
-        a = free(plain, 2) + free(secret, 1)  # newest successor is secret
-        chain_of(a)
-        b = free(plain, 1) + free(secret, 1) + free(plain, 1)  # secret in the middle
-        chain_of(b)
-        c = free(secret, 1) + free(plain, 1)  # history (supersedes) is secret
-        chain_of(c)
-        for x, y in ((free(plain, 1)[0], free(secret, 1)[0]), (free(plain, 1)[0], sens[0])):
-            truth.conflicts.append((x.id, y.id))
-        used.add(sens[0].id)
-    pools = [p for p in by_topic_rank.values() if len(p) >= 4 and p[0].rank < 2]
+    pools = [p for p in by_topic.values() if len(p) >= 4]
     tries = 0
     while len(truth.supersedes) < target_sup and tries < 10 * notes:
         tries += 1
@@ -308,7 +240,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
     tries = 0
     while len(truth.conflicts) < target_conf and tries < 10 * notes:
         tries += 1
-        pair = free(plain if rng.random() < 0.85 else sens, 2)
+        pair = free(order, 2)
         if pair:
             truth.conflicts.append((pair[0].id, pair[1].id))
     truth._index()
@@ -320,39 +252,37 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
         for newer in truth.chain(node_id):
             day[newer] = max(day[newer], day[node_id] + 1)
 
-    # Relations, declared in the more private note so a file never names a note above its level.
+    # Relations, declared in the newer note for supersession.
     relations: dict[str, list[tuple[str, str]]] = defaultdict(list)  # note -> (verb, link)
     linked: dict[str, set[str]] = defaultdict(set)
 
     def link_name(n: Node) -> str:
         return n.slug
 
-    def declare(a: Node, verb: str, b: Node, inverse: str) -> None:
-        if b.rank > a.rank:
-            a, b, verb = b, a, inverse
+    def declare(a: Node, verb: str, b: Node) -> None:
         relations[a.id].append((verb, link_name(b)))
         linked[a.id].add(b.id)
         linked[b.id].add(a.id)
 
     for new, old in truth.supersedes:
-        declare(truth.nodes[new], "supersedes", truth.nodes[old], "superseded_by")
+        declare(truth.nodes[new], "supersedes", truth.nodes[old])
         truth.relation_counts["supersedes"] += 1
     for x, y in truth.conflicts:
-        declare(truth.nodes[x], "conflicts_with", truth.nodes[y], "conflicts_with")
+        declare(truth.nodes[x], "conflicts_with", truth.nodes[y])
         truth.relation_counts["conflicts_with"] += 1
     for n in order:
         relations[n.id].insert(
             0, ("part_of", f"topics/{n.topic}/index|{hubs[n.topic or ''].title}")
         )
         truth.relation_counts["part_of"] += 1
-        same = by_topic_rank[(n.topic or "", n.rank)]
+        same = by_topic[n.topic or ""]
         for _ in range(2 if rng.random() < 0.85 else 1):
             pick = rng.random()
             verb = "depends_on" if pick < 0.45 else "related_to" if pick < 0.88 else "enables"
             for _attempt in range(6):
                 pool = same if rng.random() < 0.6 and len(same) > 1 else order
                 other = pool[rng.randrange(len(pool))]
-                if other.id != n.id and other.rank <= n.rank and other.id not in linked[n.id]:
+                if other.id != n.id and other.id not in linked[n.id]:
                     relations[n.id].append((verb, link_name(other)))
                     linked[n.id].add(other.id)
                     linked[other.id].add(n.id)
@@ -363,9 +293,8 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
     plants: dict[str, list[str]] = defaultdict(list)
     for n in order:
         plants[n.id].append(n.token)
-    groupable = [n for n in order if n.rank == 0]
     for _ in range(max(5, notes // 30)):
-        members = rng.sample(groupable, 3)
+        members = rng.sample(order, 3)
         tok = g.token()
         for grade, member in zip((3, 2, 1), members, strict=True):
             plants[member.id] += [tok] * grade
@@ -377,10 +306,10 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
     for n in order:
         _write(root / n.path, _note_text(g, n, day[n.id], plants[n.id], order, relations[n.id]))
 
-    # Hubs list their notes, except secret ones (a listing would name them).
+    # Hubs list their notes.
     for t in topic_slugs:
         hub = hubs[t]
-        listed = [n for n in order if n.topic == t and n.rank <= hub.rank]
+        listed = by_topic[t]
         lines = [
             "---",
             f"id: {hub.id}",
@@ -396,18 +325,16 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
         ]
         _write(root / hub.path, "\n".join(lines) + "\n")
 
-    # Pending episodes: a few at higher levels, some unverified.
+    # Pending episodes, some unverified.
     for i in range(max(5, notes // 50)):
         when = _EPOCH + timedelta(days=60, hours=i)
         eid = g.ulid(when)
-        rank = 2 if i == 0 else 1 if i == 1 else 0
         node = Node(
             eid,
             eid,
             f"inbox/episodes/{when:%Y}/{when:%m}/{eid}.md",
             "",
             None,
-            rank,
             "episode",
             token=g.token(),
         )
@@ -422,13 +349,11 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
             "bw-captured: mcp",
             f"created: {when:%Y-%m-%dT%H:%M:%SZ}",
         ]
-        if rank:
-            fm.append(f"bw-privacy: {LEVELS[rank]}")
         body = [g.sentence(12, [node.token] if j == 1 else []) for j in range(4)]
         _write(root / node.path, "\n".join([*fm, "---", *body]) + "\n")
 
-    _write_manifest(root, g.ulid(_EPOCH), topic_slugs, topic_titles, topic_about, sensitive)
-    rows = [(t, hubs[t].path, topic_about[t]) for t in sorted(topic_slugs) if t != sensitive]
+    _write_manifest(root, g.ulid(_EPOCH), topic_slugs, topic_titles, topic_about)
+    rows = [(t, hubs[t].path, topic_about[t]) for t in sorted(topic_slugs)]
     agents = (root / "AGENTS.md").read_text(encoding="utf-8")
     _write(root / "AGENTS.md", replace_block(agents, default_agents_block("bench", rows)))
 
@@ -456,10 +381,7 @@ def _note_text(
     ]
     if n.status != "active":
         fm.append(f"status: {n.status}")
-    if n.rank == 2:
-        fm.append(f"bw-privacy: {LEVELS[2]}")
-    # Body links point only at notes this note's readers may see.
-    targets = [o for o in rng.sample(order, min(12, len(order))) if o.rank <= n.rank and o is not n]
+    targets = [o for o in rng.sample(order, min(12, len(order))) if o is not n]
     links = [f"[[{o.slug}]]" for o in targets[:5]]
     extras = plants + links
     rng.shuffle(extras)
@@ -490,12 +412,11 @@ def _note_text(
 def _plant_queries(g: _Gen, truth: Truth, order: list[Node]) -> None:
     rng = g.rng
     guarded = {x for pair in truth.supersedes + truth.conflicts for x in pair}
-    private = [n for n in truth.nodes.values() if n.rank > 0 and n.token]
     sample = rng.sample(order, max(30, len(order) // 10))
-    ids = dict.fromkeys([*sorted(guarded), *(n.id for n in private), *(n.id for n in sample)])
+    ids = dict.fromkeys([*sorted(guarded), *(n.id for n in sample)])
     for n in (truth.nodes[i] for i in ids):
         truth.queries.append(Query(n.token, {n.id: 1}, "exact"))
-    for n in rng.sample([o for o in order if o.rank < 2], max(20, len(order) // 10)):
+    for n in rng.sample(order, max(20, len(order) // 10)):
         truth.queries.append(Query(n.title, {n.id: 1}, "title"))
 
 
@@ -505,17 +426,13 @@ def _write_manifest(
     topics: list[str],
     titles: dict[str, str],
     about: dict[str, str],
-    sensitive: str,
 ) -> None:
     path = root / "brain.toml"
     text = path.read_text(encoding="utf-8")
     text = re.sub(r'^id = ".*"$', f'id = "{brain_id}"', text, count=1, flags=re.M)
     lines = [text.rstrip("\n"), BRAIN_EXTRA]
     for t in sorted(topics):
-        lines += [f"[topics.{t}]", f'title = "{titles[t]}"', f'description = "{about[t]}"']
-        if t == sensitive:
-            lines.append('privacy = "sensitive"')
-        lines.append("")
+        lines += [f"[topics.{t}]", f'title = "{titles[t]}"', f'description = "{about[t]}"', ""]
     path.write_text("\n".join(lines), encoding="utf-8")
 
 

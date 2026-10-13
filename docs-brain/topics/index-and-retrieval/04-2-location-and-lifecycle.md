@@ -19,8 +19,8 @@ bw-part_of:
   index keyed by `<brain-id>-<hash of path>` and lint warns about the
   duplicate id.
 - Opening the index checks `meta.schema_version` and `meta.config_hash`
-  (a hash of the `brain.toml` settings that affect indexing: layout,
-  privacy levels, topics). A mismatch triggers a full rebuild. So does an
+  (a hash of the `brain.toml` settings that affect indexing: layout and
+  topics). A mismatch triggers a full rebuild. So does an
   integrity error (`PRAGMA quick_check`). Rebuilds are logged, never
   prompted.
 - Pragmas: `journal_mode=WAL`, `synchronous=NORMAL`, `foreign_keys=ON`,

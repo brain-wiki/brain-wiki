@@ -26,8 +26,7 @@ bw-part_of:
 - [[threat-t12]]: T12: Corruption or loss by a buggy run
 - [[threat-t13]]: T13: Sync-tool damage
 - [[threat-t14]]: T14: Supply chain
-- [[threat-t15]]: T15: Name leakage through links
-- [[threat-t16]]: T16: Impersonating plugins
-- [[threat-t18]]: T18: Unattended routines act without the user watching
-- [[threat-t19]]: T19: A direct agent edit damages a note
-- [[threat-t17]]: T17: Over-reading agent transcripts
+- [[threat-t15]]: T15: Impersonating plugins
+- [[threat-t16]]: T16: Unattended routines act without the user watching
+- [[threat-t17]]: T17: A direct agent edit damages a note
+- [[threat-t18]]: T18: Over-reading agent transcripts

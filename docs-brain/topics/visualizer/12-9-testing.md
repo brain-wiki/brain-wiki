@@ -11,8 +11,7 @@ bw-part_of:
 # Testing (Visualizer)
 
 - Server: token or cookie required on every route; loopback only; CSP;
-  every API shape on fixture brains; profile filtering (hidden notes absent
-  from world, topic, flows, health, search).
+  every API shape on fixture brains.
 - Constellations: deterministic, size limits, single constellation for
   small brains.
 - Export: titles containing HTML and script are inert; CSP hashes match.

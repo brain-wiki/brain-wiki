@@ -134,7 +134,7 @@ def apply(
 
     _require(profile)
     result = ApplyResult(packet.run, "invalid")
-    validation = validate(engine, packet, payload, profile)
+    validation = validate(engine, packet, payload)
     result.errors, result.warnings = list(validation.errors), list(validation.warnings)
     warning = device_warning(engine)
     if warning:
@@ -221,7 +221,7 @@ def consolidate_command(
     """The headless backend: one subprocess per packet, one retry with the validator's errors."""
     name = preset if isinstance(preset, str) else "custom"
     profile = engine.manifest.profile(name)
-    if if_pending and len(pending_episodes(engine, profile, topic=topic)) < if_pending:
+    if if_pending and len(pending_episodes(engine, topic=topic)) < if_pending:
         return None
     packet = prepare(engine, profile, backend="command", topic=topic, max_episodes=max_episodes)
     if packet is None:

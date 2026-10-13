@@ -51,7 +51,7 @@ Rules:
   brain is complete by itself.
 
 **Why topics are folders.** A topic is the unit people browse, the unit of
-privacy defaults, and the unit a hub summarizes. A folder makes that
+topic policies (review, agent edits), and the unit a hub summarizes. A folder makes that
 visible in every file browser and in Obsidian without extra tooling. Notes
 MAY also live outside any topic (for example in an imported vault); they
 belong to no topic and lint can warn about it.
@@ -71,15 +71,13 @@ belong to no topic and lint can warn about it.
   slug, the deeper one takes its parent's slug as a prefix (`rin-sato-notes`).
   Declaring a topic in `brain.toml` (§3) can name it. The slug, not the
   path, is the topic's identity.
-- **Access inherits down the tree.** A topic's privacy level is the
-  strictest of its own declared level and its ancestors'; a note may raise
-  it further (§6.1). An agent allowed a topic (`topics = ["people"]`) may
-  read its sub-topics.
+- **Policies inherit down the tree.** A topic without its own `review` or
+  `agent_edits` setting takes its nearest ancestor's.
 - **Reorganizing is moving folders.** `brain mv` moves a topic folder with
   its notes and rewrites the links that named them by path, as one undoable
   run; a move by hand works too, and `brain lint --fix` repairs path links
-  from the index's history. Because a topic is known by its slug, agent
-  allowlists, links by file name, and run records survive the move.
+  from the index's history. Because a topic is known by its slug, topic
+  settings, links by file name, and run records survive the move.
 
 Why a tree rather than flat topics: a brain grows many small topics (a
 person, a project, a ticker) that fall into a few natural groups. Flat, they

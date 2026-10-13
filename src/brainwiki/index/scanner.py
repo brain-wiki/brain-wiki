@@ -326,7 +326,7 @@ def _bare_key(target: str) -> str:
 
 def _retopic(conn: sqlite3.Connection, tree: TopicTree, stored: str | None) -> list[str]:
     """Notes and hubs to re-index after the topic tree changed: their topic is different now, or
-    their topic moved, gained a parent, or inherits a different privacy level."""
+    their topic moved or gained a parent."""
     old = json.loads(stored) if stored else {}
     new = json.loads(tree.signature)
     changed = {s for s in old.keys() | new.keys() if old.get(s) != new.get(s)}
@@ -433,14 +433,6 @@ def _index_file(
     )
     if note_type == "hub" and kind == "note":
         kind = "hub"
-    topic_privacy = tree.privacy(topic)
-    levels = [
-        lvl
-        for lvl in (topic_privacy, fm.get("privacy"))
-        if isinstance(lvl, str) and manifest.is_privacy_level(lvl)
-    ]
-    rank = max([manifest.privacy_rank(lvl) for lvl in levels] or [manifest.privacy_rank(None)])
-    privacy = manifest.privacy.levels[rank]
     aliases = _as_list(fm.get("aliases"))
     tags = _as_list(fm.get("tags"))
     updated = str(fm.get("updated") or fm.get("created") or _iso_from_ns(mtime_ns))
@@ -455,7 +447,6 @@ def _index_file(
             "title",
             "status",
             "stage",
-            "privacy",
             "aliases",
             "tags",
             "created",
@@ -488,9 +479,9 @@ def _index_file(
     else:
         node_kind = kind
     conn.execute(
-        """INSERT INTO nodes(id, path, kind, topic, title, type, status, stage, privacy, privacy_rank, created, updated,
+        """INSERT INTO nodes(id, path, kind, topic, title, type, status, stage, created, updated,
                              aliases, tags, props, line_count, fm_id, agent, session, origin_turns, device, origin, taint, captured)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             node_id,
             rel,
@@ -506,8 +497,6 @@ def _index_file(
                 if fm.get("status") and str(fm["status"]) not in STATUSES
                 else None
             ),
-            privacy,
-            rank,
             str(fm.get("created")) if fm.get("created") else None,
             updated,
             json.dumps(aliases),

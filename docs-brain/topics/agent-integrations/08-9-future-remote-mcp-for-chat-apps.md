@@ -33,4 +33,5 @@ toward.
 | C · Embedded authorization server | brain-wiki implements OAuth itself | Largest security surface; avoided |
 
 Per-client tokens map to agent profiles (`chatgpt-web`, `claude-web`,
-`gemini-app`), read-only and `default` privacy by default.
+`gemini-app`), read-only by default. A remote client reads the whole brain
+it is given, so this waits on the privacy redesign ([[privacy|16]]).

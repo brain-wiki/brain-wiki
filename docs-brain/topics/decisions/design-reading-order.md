@@ -26,6 +26,7 @@ bw-part_of:
 | 13 | [[engineering\|Engineering]] | Repo layout, dependencies, packaging, testing, performance budgets, release |
 | 14 | [[roadmap-and-open-questions\|Roadmap and open questions]] | Implementation milestones, future work, decisions needed |
 | 15 | [[skills-onboarding-and-routines\|Skills, onboarding, and routines]] | The three skills, the guided setup flow, `brain doctor --json`, and routine templates for hosts' schedulers |
+| 16 | [[privacy\|Privacy (proposal)]] | What privacy must protect, from whom, and a draft model to replace the removed levels |
 
 Normative documents (02, and the schemas in 04, 05, 07) use MUST, SHOULD,
 and MAY as in RFC 2119. The others explain and justify.

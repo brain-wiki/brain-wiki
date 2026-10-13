@@ -12,49 +12,39 @@ Three interfaces expose the same engine:
 
 ## 1. Agent profiles
 
-A profile decides what one host may see and do in one brain. Profiles live
-in `brain.toml` because privacy semantics belong to the brain
-([02 §3](02-brain-format.md#3-braintoml)).
+A profile decides what one host may do in one brain. Every host that may
+use a brain reads all of it; privacy inside a brain is being redesigned
+([16](16-privacy.md)). Profiles live in `brain.toml` because they travel
+with the brain ([02 §3](02-brain-format.md#3-braintoml)).
 
 ```toml
 [agents.default]                 # any host without its own table
-max_privacy = "default"
-topics      = ["*"]
 write       = ["episodes"]
 
 [agents.claude-code]
-max_privacy = "sensitive"
-topics      = ["*"]
 write       = ["episodes", "propose_rules", "consolidate"]
 ```
 
 | Field | Meaning | Built-in default |
 |---|---|---|
-| `max_privacy` | Highest privacy level this host may read. | lowest level |
-| `topics` | Topic allowlist; `"*"` means all. Notes outside topics are readable when `"*"`. | `["*"]` |
 | `write` | Subset of `episodes`, `edit`, `propose_rules`, `consolidate`, `harvest`, `review`. `edit` allows checked direct edits of notes ([05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits)). | `["episodes"]`; the owner profile has `edit` |
-| `read_origin` | May read the original agent conversations behind episodes ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)). Transcripts hold much more than the episodes kept, so this is separate from note access. | `false` |
+| `read_origin` | May read the original agent conversations behind episodes ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)). Transcripts hold much more than the episodes kept, so this is off by default. | `false` |
 
 Resolution: `--host <id>` → `[agents.<id>]` → `[agents.default]` →
 built-in default. The CLI acts as `owner` (everything allowed) because the
-person at the terminal owns the brain; `--as <host>` previews what a host
-would see, which is how users check their privacy setup.
+person at the terminal owns the brain; `--as <host>` acts with a host's
+profile, which is how users check what it may do.
 
 Enforcement points, all in the engine so every interface gets them:
 
-- Reads: SQL filters before ranking ([04 §6.2](04-index-and-retrieval.md#62-matching));
-  reads of hidden notes return `not_found`.
-- Guard neighbors above the level: hidden, counted ([04 §5](04-index-and-retrieval.md#5-guard-co-retrieval)).
-- Consolidation: packets contain only what the backend's profile may read
-  ([05 §4.3](05-write-path-and-consolidation.md#43-selecting-and-packaging-work)).
 - Writes: tools absent from `write` are refused with `forbidden`.
 - Host brain limits from the user config ([03 §3](03-config-and-storage.md#3-choosing-a-brain)).
 
 Profiles are not authentication. A local stdio server trusts the `--host`
 argument its host gave it, because the user configured that host. Profiles
-prevent accidents and limit what a confused or manipulated agent can reach;
-they do not stop a malicious program running as the user, which could read
-the files anyway ([10](10-security-and-privacy.md)).
+prevent accidents and limit what a confused or manipulated agent can
+change; they do not stop a malicious program running as the user, which
+could read and write the files anyway ([10](10-security-and-privacy.md)).
 
 ## 2. CLI
 
@@ -133,8 +123,7 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `-q`, `-v`.
 - Listing commands share `--count` (print only the total), `--facets` (counts
   by type, topic, and tag), `--paths` (one path per line, for piping into
   file tools), `--limit`, and `--cursor`.
-- `--topic T` (and the MCP `topic` filter) includes T's sub-topics, the same
-  way an agent allowed a topic may read its sub-topics (02 §2).
+- `--topic T` (and the MCP `topic` filter) includes T's sub-topics (02 §2).
 - `brain log -` reads the episode body from stdin, so other tools can pipe
   into the inbox.
 - `brain hook` and `brain mcp` never print anything to stdout except their
@@ -378,7 +367,7 @@ itself. The message starts with a stable code:
 
 | Code | When |
 |---|---|
-| `not_found` | Target, brain, or run does not exist or is hidden by the profile |
+| `not_found` | Target, brain, or run does not exist |
 | `ambiguous` | Target matches several notes; the message lists them |
 | `forbidden` | Not allowed by the profile or host limits |
 | `invalid_ops` | Validation failed; a list of `{op_index, check, message}` follows |

@@ -40,7 +40,7 @@ Generated from `docs/user/`.
   - [[user-maintenance-undo]]: Undo (Maintenance)
   - [[user-maintenance-git]]: Git
 - [[user-privacy]]: Privacy and safety
-  - [[user-privacy-privacy-levels]]: Privacy levels
+  - [[user-privacy-what-agents-can-read]]: What agents can read
   - [[user-privacy-agent-profiles]]: Agent profiles (Privacy and safety)
   - [[user-privacy-several-brains]]: Several brains
   - [[user-privacy-what-is-protected]]: What is protected

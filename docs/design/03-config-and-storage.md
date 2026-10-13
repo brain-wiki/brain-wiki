@@ -52,7 +52,7 @@ enabled = false
 ```
 
 - The config holds **locations and per-user choices only**. Everything that
-  must travel with a brain (privacy levels, agent profiles, budgets) is in
+  must travel with a brain (topics, agent profiles, budgets) is in
   that brain's `brain.toml` ([02 §3](02-brain-format.md#3-braintoml)).
 - No credentials are ever stored here. Future remote backends use the
   platform's own credential chains (§6.6).
@@ -85,12 +85,13 @@ without exposing anyone's directory layout. If the named brain does not
 exist for this user, resolution continues with the next source and logs a
 notice.
 
-**Why a brain is the unit of separation.** Privacy levels ([02 §3](02-brain-format.md#3-braintoml))
-handle sensitivity inside one body of knowledge. Unrelated spheres (an
+**Why a brain is the unit of separation.** Unrelated spheres (an
 employer's knowledge and a personal life) differ in who owns them, where
 they may be stored, and which models may process them. Separate brains
 make that boundary a directory boundary, which every tool understands,
-and keep relations from crossing it.
+and keep relations from crossing it. Every host that may use a brain reads
+all of it; finer-grained privacy inside a brain is being redesigned
+([16](16-privacy.md)).
 
 ## 4. Machine state
 

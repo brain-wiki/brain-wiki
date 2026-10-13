@@ -12,7 +12,7 @@ bw-part_of:
 
 | Term | Meaning |
 |---|---|
-| **brain** | A directory with a `brain.toml` manifest; the unit of storage, privacy, and selection. |
+| **brain** | A directory with a `brain.toml` manifest; the unit of storage, access, and selection. |
 | **topic** | A folder of related notes with one **hub** page that summarizes it and links its notes. Topics nest: a folder with a hub inside a topic is a sub-topic. |
 | **note** | A curated Markdown file: frontmatter (with claims and relations in `bw-` fields) and free prose. |
 | **claim** | One item in a note's `bw-claims` list, with an id and provenance metadata. The unit consolidation operates on. |
@@ -25,8 +25,7 @@ bw-part_of:
 | **op** | One structured edit proposed by an LLM: `add_claim`, `merge_claim`, `supersede_claim`, `add_relation`, `create_note`, `create_topic`, `skip_episode`. |
 | **origin** | Who produced content: `owner` (the human), `agent`, `import`, or `system`. |
 | **taint** | Whether untrusted external content (web, email, unknown tools) influenced an episode: `true`, `false`, or `unknown`. |
-| **privacy level** | An ordered label on topics and notes (default: `default` < `sensitive` < `secret`). Each agent profile has a maximum level it may see. |
-| **agent profile** | Per-brain settings for one host (e.g. `claude-code`): which privacy levels and topics it may read and what it may write. |
+| **agent profile** | Per-brain settings for one host (e.g. `claude-code`): what it may write. Every host that may use a brain reads all of it; privacy inside a brain is being redesigned ([[privacy\|16]]). |
 | **host** | An agent application that loads brain-wiki: Claude Code, Codex, Antigravity, OpenClaw, Cursor, or a generic MCP client. |
 | **index** | The SQLite database derived from a brain; stored in the user cache directory, never inside the brain. |
 | **orientation** | The short, budgeted context an agent receives at session start. |

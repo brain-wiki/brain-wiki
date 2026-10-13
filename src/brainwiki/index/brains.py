@@ -13,7 +13,7 @@ from brainwiki.errors import BrainError
 
 
 def brain_stats(engine: Engine) -> dict[str, Any]:
-    """Counts over what the engine's profile may see."""
+    """Counts over the brain's notes."""
     from brainwiki.index.orient import brief_stats, topic_rows
 
     engine.scan()
@@ -34,7 +34,7 @@ def list_brains(
     user: UserConfig | None = None,
     engine_for: Callable[[Brain], Engine] | None = None,
 ) -> dict[str, Any]:
-    """Every brain `host` may use. `path` is withheld unless its profile reads everything.
+    """Every brain `host` may use, with its folder path.
 
     `engine_for` lets a long-running caller reuse its engines; otherwise each brain gets a
     short-lived one.
@@ -68,7 +68,6 @@ def list_brains(
         engine = engine_for(brain) if engine_for else Engine(brain, host=host, user=user)
         try:
             stats = brain_stats(engine)
-            reads_everything = engine.reads_everything
         finally:
             if engine_for is None:
                 engine.close()
@@ -76,10 +75,9 @@ def list_brains(
             ok=True,
             description=brain.manifest.description or "",
             default_here=here is not None and brain.root == here.root,
+            path=str(brain.root),
             **stats,
         )
-        if reads_everything:
-            entry["path"] = str(brain.root)
         entries.append(entry)
     return {"brains": entries}
 

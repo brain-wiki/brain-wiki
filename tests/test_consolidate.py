@@ -12,7 +12,6 @@ from tests.conftest import write
 from brainwiki.cli.main import main
 from brainwiki.config.resolve import open_brain
 from brainwiki.consolidate import pipeline
-from brainwiki.consolidate.packet import pending_episodes
 from brainwiki.engine import Engine
 from brainwiki.errors import Forbidden
 from brainwiki.format.document import parse_document
@@ -23,12 +22,7 @@ from brainwiki.write.episode import write_episode
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 PROFILES = """
-[agents.local]
-max_privacy = "default"
-write = ["episodes", "consolidate"]
-
 [agents.custom]
-max_privacy = "sensitive"
 write = ["episodes", "consolidate"]
 """
 
@@ -69,10 +63,9 @@ def claim_handle(packet, text_start: str) -> str:
     return next(h for h, c in packet.claims.items() if c.text.startswith(text_start))
 
 
-def test_packet_lines_candidates_and_privacy(example: Path):
+def test_packet_lines_and_candidates(example: Path):
     with eng(example) as e:
         path = log(e, "FTS5 search p95 is now 3 ms on 10k notes.", topics=["search"])
-        secret = log(e, "We may raise the GPU budget next quarter.", topics=["budget"])
         packet = pipeline.prepare(e, e.profile)
         h = handle_for(packet, path)
         entry = next(ep for ep in packet.data["episodes"] if ep["handle"] == h)
@@ -80,28 +73,19 @@ def test_packet_lines_candidates_and_privacy(example: Path):
         number, _, content = entry["lines"][0].partition("| ")
         assert text[int(number) - 1] == content
         assert note_handle(packet, "topics/search/fts5.md") in entry["candidates"]
-        local = eng(example, "local")
-        assert secret not in {r["path"] for r in pending_episodes(local, local.profile)}
         with pytest.raises(Forbidden):
             pipeline.prepare(e, e.manifest.profile("default"))
 
 
 def test_validation_errors(example: Path):
     with eng(example) as e:
-        secret = log(e, "The GPU budget is 10k this year.", topics=["budget"])
         public = log(e, "Search uses FTS5.")
         packet = pipeline.prepare(e, e.profile)
-        s, p = handle_for(packet, secret), handle_for(packet, public)
+        p = handle_for(packet, public)
         fts5 = note_handle(packet, "topics/search/fts5.md")
         bad = {
             "ops": [
                 {"op": "add_claim", "note": "N99", "text": "x", "sources": [f"{p}#L1"]},
-                {
-                    "op": "add_claim",
-                    "note": fts5,
-                    "text": "GPU budget is 10k.",
-                    "sources": [f"{s}#L{packet.episodes[s].first_line}"],
-                },
                 {"op": "add_relation", "from": fts5, "verb": "frobs", "to": fts5},
                 {"op": "create_note", "ref": "new:nope/x", "title": "X", "claims": []},
             ]
@@ -110,7 +94,6 @@ def test_validation_errors(example: Path):
         assert result.status == "invalid"
         joined = "\n".join(result.errors)
         assert "N99" in joined and "lines must be within" in joined
-        assert "sensitive episode content into a default note" in joined
         assert "unknown relation verb" in joined and "unknown topic 'nope'" in joined
         shape = pipeline.apply(e, packet, {"ops": [{"op": "add_claim", "note": fts5}]}, e.profile)
         assert any("'text' is a required property" in err for err in shape.errors)

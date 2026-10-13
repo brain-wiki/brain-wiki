@@ -1,17 +1,17 @@
 ---
 id: 01M3250V00X03S8DA9XCESPJRV
 type: threat
-title: "T18: Unattended routines act without the user watching"
+title: "T18: Over-reading agent transcripts"
 aliases: ["threat T18"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 bw-part_of:
   - "[[10-3-threats-and-mitigations]]"
 ---
-# T18: Unattended routines act without the user watching
+# T18: Over-reading agent transcripts
 
-**Unattended routines act without the user watching.**
+**Over-reading agent transcripts.** Harvest and origin lookup read host session stores, which hold everything a session saw: other projects, secrets, tool output from untrusted sources.
 
-**Mitigations:** Routines use only brain-wiki tools the user pre-approved for that task; they never propose rules (that tool always needs a person); consolidation results that trip a check go to review; every run is logged, committed, and undoable; one consolidation device.
+**Mitigations:** Off by default, enabled per host; every harvest starts as a dry run listing the sessions it would read; sessions route to a brain by working directory and unrouted sessions are skipped; tool output bodies are dropped (origin lookup can include them only on request, wrapped as untrusted); secrets scrubbed before anything is written or sent; taint computed from the session's tool calls; origin reads need `read_origin`, off for every host by default; readers never modify host files.
 
-**Residual risk:** A pre-approved routine can still consolidate tainted episodes into claims marked unverified, the same as an interactive run.
+**Residual risk:** Distillation sends condensed transcripts to the configured backend's provider, the same trust decision as consolidation.

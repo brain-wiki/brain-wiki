@@ -39,8 +39,6 @@ CREATE TABLE nodes (
   type         TEXT NOT NULL DEFAULT 'note',
   status       TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','superseded','archived')),
   stage        TEXT,
-  privacy      TEXT NOT NULL,       -- effective level: max(topic and its ancestors, note level)
-  privacy_rank INTEGER NOT NULL,    -- index into [privacy].levels
   created      TEXT,
   updated      TEXT,                -- frontmatter 'updated', else file mtime (ISO 8601)
   aliases      TEXT NOT NULL DEFAULT '[]',   -- JSON array

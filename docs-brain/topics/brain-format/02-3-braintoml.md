@@ -34,10 +34,6 @@ rules_max_chars     = 4000
 agents_md_max_lines = 150
 orient_max_tokens   = 1500
 
-[privacy]
-levels  = ["default", "sensitive", "secret"]  # ascending restriction
-default = "default"
-
 [lint]
 profile = "strict"                          # strict | migrate (see 06)
 stale_inbox_days = 14
@@ -72,16 +68,13 @@ mode = "auto"                               # auto | off ; auto = commit when th
 path        = "topics/search"               # default: the folder with this slug, at any depth
 title       = "Search"
 description = "How local search works and why."
-privacy     = "default"
 review      = "always"                      # per-topic override
 agent_edits = "allow"                       # allow | review | deny for checked agent edits (05 §2.3)
 
 [agents.default]                            # profile for unknown hosts
-max_privacy = "default"
+write       = ["episodes"]
 
 [agents.claude-code]                        # profile for one host id
-max_privacy = "sensitive"
-topics      = ["*"]                         # topic allowlist; "*" = all
 write       = ["episodes", "edit", "propose_rules", "consolidate", "review"]
 ```
 
@@ -92,9 +85,9 @@ Rules:
 - Inline tables (`status_factor = { … }`) are TOML, not frontmatter; the
   flat-values rule in §4 applies to note frontmatter only.
 - A topic that exists on disk but is not declared still works: its slug is
-  its folder name, title is taken from the hub, privacy is its parent's (the
-  brain default at the top). Declaring a topic lets the user set description,
-  privacy, review mode, or a path (for imported vaults). A declaration without
+  its folder name, title is taken from the hub, and its policies are its
+  parent's. Declaring a topic lets the user set description, review mode,
+  agent edits, or a path (for imported vaults). A declaration without
   `path` applies to the folder whose slug matches, wherever it sits.
 - Topic slugs match `^[a-z0-9][a-z0-9-]{0,63}$`.
 - Agent profile names are host ids ([[08-2-host-ids|08]]).

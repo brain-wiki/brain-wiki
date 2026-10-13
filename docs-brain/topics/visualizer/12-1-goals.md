@@ -16,9 +16,8 @@ person **understand and audit** their brain:
 | Question | What the view shows |
 |---|---|
 | What is in here? | Topics as nebulae grouped into constellations; zooming in reveals notes as stars |
-| What is unhealthy? | Contradictions, stale dependents, orphans, unverified claims, over-budget hubs, lint errors |
+| What is unhealthy? | Contradictions, stale dependents, orphans, unverified claims, lint errors |
 | What changed recently? | Brightness by recency; recent consolidation runs, highlighted where they landed |
-| What does a host see? | The same map filtered by a host's profile (`--as <host>`) |
 
 Non-goals: editing notes, collaboration, public hosting. The view is
 read-only and local.

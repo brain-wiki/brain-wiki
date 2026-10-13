@@ -12,11 +12,10 @@ bw-part_of:
 
 | Mechanism | Scope | Enforced by |
 |---|---|---|
-| Separate brains | Unrelated spheres (employer vs personal) | Directory boundary; user config host limits |
-| Privacy levels (ordered) | Sensitivity within one brain | Engine, before ranking; packets; reads |
-| Topic allowlists | Narrow a host to some topics | Engine |
+| Separate brains | Unrelated spheres (employer vs personal) | Directory boundary |
 | Host brain limits | Which brains a host may select | Config resolution |
 
-Defaults: one level (`default`) is used for everything until the user
-declares more. `brain init` explains levels in the generated `brain.toml`
-comments, and `brain search --as <host>` shows what a host would see.
+Inside one brain there is no access control: every host that may use it
+reads every note. Privacy levels and topic allowlists were removed because
+a level did not say what it protects against or from whom;
+[[privacy|16]] drafts their replacement.

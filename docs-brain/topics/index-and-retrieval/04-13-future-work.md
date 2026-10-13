@@ -11,9 +11,8 @@ bw-part_of:
 # Future work
 
 - **Embeddings.** Optional `sqlite-vec` table, local embedding model,
-  reciprocal-rank fusion with the lexical score. Guards and privacy apply
-  the same way.
+  reciprocal-rank fusion with the lexical score. Guards apply the same way.
 - **File watcher.** An optional watcher in long-running processes (MCP
   server, `brain viz`) to replace polling on very large brains.
-- **Cross-brain search.** For profiles allowed to read several brains;
+- **Cross-brain search.** For hosts allowed to use several brains;
   each brain's results stay labeled with its name.

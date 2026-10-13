@@ -1,17 +1,17 @@
 ---
 id: 01M3250V00HJGT6CMGK1B2BYJR
 type: threat
-title: "T15: Name leakage through links"
+title: "T15: Impersonating plugins"
 aliases: ["threat T15"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 bw-part_of:
   - "[[10-3-threats-and-mitigations]]"
 ---
-# T15: Name leakage through links
+# T15: Impersonating plugins
 
-**Name leakage through links.** A `default` note links to `[[Secret project]]`.
+**Impersonating plugins.** A fake "brain-wiki" plugin in a marketplace.
 
-**Mitigations:** Lint BW312 warns; guard results hide the target.
+**Mitigations:** Document the official sources (repository, PyPI, registry name); the plugin manifests point to the official package.
 
-**Residual risk:** The link text in the source note is visible to whoever may read that note.
+**Residual risk:** Users must install from the official source.

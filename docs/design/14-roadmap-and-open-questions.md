@@ -49,8 +49,8 @@ These change the design or defaults. Each has a recommendation.
 |---|---|---|---|
 | Q1 | **How should session capture work when enabled?** | (a) *Raw*: the stop hook copies a bounded transcript tail into an episode, no model involved. (b) *Prompted*: the stop hook asks the agent, once per session, to call `brain_log_episode` with its own summary (hosts that support "continue with reason" from a stop hook). (c) Both, per host. | (c), with (b) as default where supported: the agent's own summary is far more useful than a raw tail, costs one short turn, and needs no transcript parsing. Raw remains for hosts without that ability. |
 | Q2 | **Should tainted sources route consolidation runs to review by default?** (`review_tainted`) | false: tainted claims land marked `[unverified]`; true: every run touching web-derived episodes waits for review | false. Coding sessions use web search constantly; true would put nearly every run in review. Rules stay protected regardless. |
-| Q3 | **Default privacy levels** | `default/sensitive/secret`; or a single level until the user opts in | Ship the three names in the template, all content `default`, agent profiles defaulting to `default`. Users who never think about it see no difference. |
-| Q4 | **Hidden guard counts** reveal that a restricted superseding or conflicting note exists. | Keep counts; hide completely | Keep counts. An agent that knows its answer may be stale can say so. |
+| Q3 | **Privacy inside a brain** | Ordered levels per topic and note with a maximum per host (shipped, then removed); a model built on who receives content | **Open:** levels were removed until a design says what each protects against ([16](16-privacy.md)). |
+| Q4 | **Hidden guard counts** reveal that a restricted superseding or conflicting note exists. | Keep counts; hide completely | Moot until privacy returns ([16](16-privacy.md)). |
 | Q5 | **Windows support level for v0.1** | First-class; best-effort | Best-effort (core tests in CI, no hook or host guarantees). |
 | Q6 | **npm launcher** (`npx brain-wiki`) | Ship in v0.1; defer | Defer. `uvx` covers the no-install path. |
 | Q7 | **Publishing identity** | Personal GitHub account; an organization | **Decided (D24):** the `brain-wiki` organization, `github.com/brain-wiki/brain-wiki`; MCP Registry name `io.github.brain-wiki/brain-wiki`. |
@@ -90,7 +90,7 @@ result.
 | Remote | HTTP transport, OAuth (CIMD and DCR), `search`/`fetch` aliases, tunnel recipes, for ChatGPT, claude.ai, and the Gemini app | [08 §9](08-agent-integrations.md#9-future-remote-mcp-for-chat-apps) |
 | Storage | Git remote replicator, then GCS and S3 replicators via fsspec; server mode on object storage | [03 §6](03-config-and-storage.md#6-storage-and-sync) |
 | Retrieval | Optional embeddings (sqlite-vec) with rank fusion; file watcher; cross-brain search; guard inheritance through containment | [04 §13](04-index-and-retrieval.md#13-future-work) |
-| Consolidation | Direct-API backend; per-privacy-level backend routing (local model for sensitive topics); clustering as a selection heuristic | [05 §4.4](05-write-path-and-consolidation.md#44-backends) |
+| Consolidation | Direct-API backend; clustering as a selection heuristic | [05 §4.4](05-write-path-and-consolidation.md#44-backends) |
 | Provenance | `brain forget --session <id>`: retract every claim whose only sources come from one session, with a dry run; per-claim source kinds (stated by user, observed in code, read in a document, inferred) | — |
 | Hosts | Native OpenClaw memory provider (memory slot); Claude API memory-tool handler; Cursor plugin; MCP resources | [08](08-agent-integrations.md) |
 | Importers | Chat exports, email, documents; authority ordering (specs over notes over chat) when sources disagree | [09](09-import.md) |

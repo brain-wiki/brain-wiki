@@ -24,10 +24,9 @@ bw-part_of:
    characters. Shorter runs fall back to a bounded `LIKE` scan over
    `docs.title` and `docs.body` (trigram cannot match fewer than 3
    characters).
-5. Privacy, topic, type, tag, property, and date filters are applied to FTS
+5. Topic, type, tag, property, and date filters are applied to FTS
    candidates before scoring and truncation (R3). Candidates are fetched in
-   growing batches, so restricted notes never displace visible ones and
-   nothing about them reaches the result.
+   growing batches, so filtered-out notes never displace matching ones.
 6. An empty query skips steps 1–4: it selects the filtered nodes directly and
    orders them by `sort`, which is how an agent lists a topic or asks for the
    latest release.

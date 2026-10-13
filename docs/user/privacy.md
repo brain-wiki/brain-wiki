@@ -1,46 +1,30 @@
 # Privacy and safety
 
-## Privacy levels
+## What agents can read
 
-`brain.toml` declares levels from least to most restrictive:
-
-```toml
-[privacy]
-levels  = ["default", "sensitive", "secret"]
-default = "default"
-
-[topics.health]
-privacy = "sensitive"
-```
-
-A note's level is the higher of its topic's level and its own `bw-privacy:`
-property (a note can raise its level, never lower it). Agents see only
-notes up to their profile's `max_privacy`. When a hidden note supersedes or
-contradicts a visible one, the agent is told that such a note exists, not
-what it says.
+Every agent that may use a brain reads all of it: every topic and note.
+Privacy levels inside a brain are being redesigned and are not available
+yet. Until then, keep notes away from an agent by putting them in a brain
+that agent may not use.
 
 ## Agent profiles
 
+A profile says what an agent may change:
+
 ```toml
 [agents.default]          # any agent without its own profile
-max_privacy = "default"
-topics = ["*"]
 write = ["episodes"]
 
 [agents.claude-code]
-max_privacy = "sensitive"
-topics = ["*"]
 write = ["episodes", "propose_rules", "consolidate", "harvest", "review"]
 read_origin = false       # may it read the conversations episodes came from?
 ```
 
-Consolidation backends use a profile too: episodes above a backend's level
-stay in the inbox for a more trusted one, such as a local model.
-
 ## Several brains
 
-Separate brains are the strongest boundary (work and personal, for
-example). Limit which brains an agent may use in the user config:
+Separate brains are the boundary between parts of your life (work and
+personal, for example). Limit which brains an agent may use in the user
+config:
 
 ```toml
 # ~/.config/brain-wiki/config.toml

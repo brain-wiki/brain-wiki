@@ -21,7 +21,7 @@ def _engine(args: Any) -> Engine:
     return open_engine(args.brain, host=getattr(args, "as_host", None))
 
 
-def _visible_where(engine: Engine) -> tuple[str, list[Any]]:
+def _note_where(engine: Engine) -> tuple[str, list[Any]]:
     return node_filters(engine, NOTE_KINDS, STATUSES, None)
 
 
@@ -54,7 +54,7 @@ def _listing(
 
 
 def topics(args: Any) -> int:
-    """The topic tree as this host sees it: slug, title, notes, and sub-topics indented below."""
+    """The topic tree: slug, title, notes, and sub-topics indented below."""
     from brainwiki.errors import NotFound
     from brainwiki.index.orient import topic_rows
 
@@ -62,7 +62,7 @@ def topics(args: Any) -> int:
         engine.scan()
         rows = {r["slug"]: r for r in topic_rows(engine)}
     if args.topic and args.topic not in rows:
-        raise NotFound(f"no topic {args.topic!r} visible to this profile")
+        raise NotFound(f"no topic {args.topic!r}")
     starts = (
         [args.topic] if args.topic else sorted(s for s, r in rows.items() if r["parent"] is None)
     )
@@ -71,7 +71,7 @@ def topics(args: Any) -> int:
     def walk(slug: str, depth: int) -> None:
         items.append({**rows[slug], "depth": depth})
         for child in sorted(s for s, r in rows.items() if r["parent"] == slug):
-            walk(child, depth + 1)  # `parent` is the nearest visible ancestor
+            walk(child, depth + 1)
 
     for slug in starts:
         walk(slug, 0)
@@ -153,20 +153,19 @@ def links(args: Any) -> int:
         node = resolve_target(engine, args.target)
         rows = []
         for edge in engine.db.execute(
-            """SELECT e.verb, e.rel, e.raw_target, e.line, n.id, n.title, n.path, n.privacy_rank, n.topic
+            """SELECT e.verb, e.rel, e.raw_target, e.line, n.id, n.title, n.path
                FROM edges e LEFT JOIN nodes n ON n.id = e.other
                WHERE e.declared_in = ? ORDER BY e.line""",
             (node["id"],),
         ):
-            visible = edge["id"] is not None and engine.visible(edge["privacy_rank"], edge["topic"])
             rows.append(
                 {
                     "relation": edge["verb"],
                     "target": edge["raw_target"],
                     "line": edge["line"],
-                    "id": edge["id"] if visible else None,
-                    "title": edge["title"] if visible else None,
-                    "path": edge["path"] if visible else None,
+                    "id": edge["id"],
+                    "title": edge["title"],
+                    "path": edge["path"],
                     "resolved": edge["id"] is not None,
                 }
             )
@@ -191,14 +190,14 @@ def backlinks(args: Any) -> int:
         node = resolve_target(engine, args.target)
         rows, seen = [], set()
         for edge in engine.db.execute(
-            """SELECT e.verb, n.id, n.title, n.path, n.privacy_rank, n.topic
+            """SELECT e.verb, n.id, n.title, n.path
                FROM edges e JOIN nodes n ON n.id = e.declared_in
                WHERE e.other = ? AND e.declared_in != ?
                ORDER BY e.rel = 'links_to', n.updated DESC""",
             (node["id"], node["id"]),
         ):
             key = (edge["id"], edge["verb"])
-            if key in seen or not engine.visible(edge["privacy_rank"], edge["topic"]):
+            if key in seen:
                 continue
             seen.add(key)
             rows.append(
@@ -219,7 +218,7 @@ def backlinks(args: Any) -> int:
 
 def _counts(args: Any, select: str, source: str, what: str) -> int:
     with _engine(args) as engine:
-        where, params = _visible_where(engine)
+        where, params = _note_where(engine)
         rows = [
             {"name": r["k"], "count": r["c"]}
             for r in engine.db.execute(
@@ -248,7 +247,7 @@ def types(args: Any) -> int:
 def orphans(args: Any) -> int:
     """Notes nothing else links to (hubs are entry points, so they are not listed)."""
     with _engine(args) as engine:
-        where, params = _visible_where(engine)
+        where, params = _note_where(engine)
         rows = []
         for row in engine.db.execute(
             f"""SELECT n.id, n.title, n.path, n.type FROM nodes n WHERE {where} AND n.kind = 'note'
@@ -264,7 +263,7 @@ def orphans(args: Any) -> int:
 def unresolved(args: Any) -> int:
     """Links and relations that resolve to no note."""
     with _engine(args) as engine:
-        where, params = _visible_where(engine)
+        where, params = _note_where(engine)
         rows = [
             {"target": r["raw_target"], "path": r["path"], "line": r["line"], "relation": r["verb"]}
             for r in engine.db.execute(

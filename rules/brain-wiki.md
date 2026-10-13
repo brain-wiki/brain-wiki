@@ -16,6 +16,9 @@ The user keeps long-term memory in brain-wiki "brains" that all their agents sha
   topic lists that topic), open a note with `brain_read` (outline first: it
   lists the note's typed relations and backlinks), and follow connections
   with `brain_neighbors`. Every result names the next handle to open.
+- You may also read the brain's Markdown files directly, read-only, at the
+  path `brain_list` gives: grep and glob are fine for bulk scans. The tools
+  add link resolution and supersede/conflict warnings.
 - Each hit comes with notes that supersede or conflict with it. Prefer the
   current note, and tell the user about conflicts that matter.
 - To record something new, log it with `brain_log_episode`; do not edit the

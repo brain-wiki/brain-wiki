@@ -20,7 +20,6 @@ aliases: [FTS5 decision]
 tags: [search, storage]
 created: 2026-10-07
 updated: 2026-10-09
-bw-privacy: default
 bw-part_of: "[[search]]"
 bw-depends_on:
   - "[[SQLite version policy]] — needs the trigram tokenizer"
@@ -46,7 +45,6 @@ bw-claims-superseded:
 | `tags` | no | list of strings | Without `#`. |
 | `created`, `updated` | no | ISO 8601 date or date-time | Writers set `updated` when they change a note. |
 | `bw-stage` | no | string | Free workflow state (`draft`, `shipped`, `abandoned`…). Importers move non-standard `status` values here. |
-| `bw-privacy` | no (inherits) | one of `privacy.levels` | MAY raise the level above the topic's, MUST NOT lower it. |
 | `bw-<verb>` | no | string or list of strings | Relations, one field per canonical verb (§6.4). |
 | `bw-claims`, `bw-claims-superseded` | no | list of strings | Current claims, and claims that were superseded or retracted (§6.3). |
 

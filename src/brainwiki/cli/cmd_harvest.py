@@ -70,11 +70,6 @@ def _harvest_one(hv: Any, candidate: Any, preset: str | None, *, dry_run: bool) 
         "host": candidate.info.host,
         "episodes": [],
     }
-    if preset is not None:
-        manifest = candidate.brain.manifest
-        profile = manifest.profile(preset)
-        if manifest.privacy_rank(None) > manifest.privacy_rank(profile.max_privacy):
-            preset = None  # this backend may not read the brain; consolidation distills it later
     prompt_head = (resources.files("brainwiki") / "assets" / "prompts" / "distill.md").read_text(
         encoding="utf-8"
     )

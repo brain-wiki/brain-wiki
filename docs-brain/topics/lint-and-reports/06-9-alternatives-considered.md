@@ -12,6 +12,6 @@ bw-part_of:
 
 | Option | Why not |
 |---|---|
-| A general Markdown linter (markdownlint, remark) | Knows nothing about ids, relations, privacy, or the index; can run alongside. |
+| A general Markdown linter (markdownlint, remark) | Knows nothing about ids, relations, claims, or the index; can run alongside. |
 | JSON Schema over frontmatter only | Covers a tenth of the rules; cross-file checks need the index anyway. |
 | LLM-based lint | Non-deterministic, slow, and needs a model; the bench covers semantic quality instead. |

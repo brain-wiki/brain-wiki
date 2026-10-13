@@ -42,7 +42,7 @@ _ORIENT = """\
 _FILES = """\
 - You may also read the brain's Markdown files directly, read-only, at the
   path `brain_list` gives: grep and glob are fine for bulk scans. The tools
-  add privacy filtering, link resolution, and supersede/conflict warnings.
+  add link resolution and supersede/conflict warnings.
 """
 _GUARDS = """\
 - Each hit comes with notes that supersede or conflict with it. Prefer the
@@ -65,15 +65,14 @@ _SKILL = "\nDetails: the `brain` skill.\n"
 
 @dataclass(frozen=True)
 class Access:
-    """What the host's profile allows, which decides the two variable sentences."""
+    """What the host's profile allows, which decides the variable sentence."""
 
-    files: bool = False  # reads every privacy level and topic, so file reads bypass nothing
     edit: bool = False  # may edit notes directly and record them with brain_check
 
 
 def block_text(access: Access, *, skill: bool = True) -> str:
     """The block's Markdown, without markers."""
-    body = _ORIENT + (_FILES if access.files else "") + _GUARDS
+    body = _ORIENT + _FILES + _GUARDS
     body += _WRITE_EDIT if access.edit else _WRITE_LOG
     return _HEAD + "\n" + body + (_SKILL if skill else "")
 
@@ -105,11 +104,7 @@ def host_access(host: str | None) -> Access:
             continue
     with contextlib.suppress(BrainError):
         manifests.append(resolve_brain(None, host=host, user=user).manifest)
-    profiles = [(m, m.profile(host)) for m in manifests]
-    return Access(
-        files=any(m.reads_everything(p) for m, p in profiles),
-        edit=any(p.can("edit") for _, p in profiles),
-    )
+    return Access(edit=any(m.profile(host).can("edit") for m in manifests))
 
 
 def antigravity_rule(access: Access) -> str:

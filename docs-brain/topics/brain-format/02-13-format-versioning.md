@@ -14,15 +14,15 @@ bw-part_of:
   may contain. This document defines format 2.
 - A tool MUST refuse to open a brain with a higher format than it supports.
   A best-effort read is not safe: an older reader ignores fields it does
-  not know, such as `bw-privacy`, and would show what it should hide.
+  not know, such as `bw-claims`, and would show a note without its facts.
 - A tool that writes files in a newer format first raises `format`. The
   change is one-way: undoing the run that raised it does not lower it,
   because other files in the new format may remain.
 - Readers accept every older format. A format change ships with a fix that
   converts files, has a dry run, and writes one undo point.
 
-**Format 1** kept claims and relations in the body, wrote `privacy` and
-`stage` without the prefix, and wrote episode provenance without it:
+**Format 1** kept claims and relations in the body, wrote `stage` without
+the prefix, and wrote episode provenance without it:
 
 ```markdown
 ## Claims

@@ -30,7 +30,7 @@ Rules for origin reads:
 - Reading origins requires `read_origin = true` in the caller's agent
   profile ([[07-1-agent-profiles|07 §1]]), off by default for
   every host, because transcripts hold far more than the episode chose to
-  keep. The episode's own privacy level also applies.
+  keep.
 - Claims may cite the conversation directly with an origin source,
   `<host>:<session>#T<start>-T<end>`, in addition to the episode span. Lint
   cannot check origin sources on other devices or after the host deleted the

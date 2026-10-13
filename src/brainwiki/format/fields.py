@@ -31,7 +31,6 @@ RELATION_KEYS = {f"{PREFIX}{verb}": verb for verb in CANONICAL}
 ALIAS_KEYS = {f"{PREFIX}{alias}": alias for alias in ALIASES}
 # Unprefixed name -> field. Readers keep using the plain name; `split()` maps the field onto it.
 FIELDS = {
-    "privacy": "bw-privacy",
     "stage": "bw-stage",
     "origin": "bw-origin",
     "taint": "bw-taint",
@@ -44,7 +43,7 @@ FIELDS = {
     "dedupe": "bw-dedupe",
     "source": "bw-source",
 }
-NOTE_FIELDS = ("privacy", "stage")  # the unprefixed names a note may still use (format 1)
+NOTE_FIELDS = ("stage",)  # the unprefixed names a note may still use (format 1)
 KNOWN = {CLAIMS, SUPERSEDED, *RELATION_KEYS, *FIELDS.values()}
 _META_KEYS = {"id", "src", "origin", "taint", "at", "status", "by", "reason", "quote", "via"}
 _META_TAIL = re.compile(r"\s*\{(?P<body>[^{}]*)\}\s*$")
@@ -54,7 +53,7 @@ _NOT_YAML = re.compile("[^\x09\x0a\x0d\x20-\x7e\x85\xa0-\ud7ff\ue000-\ufffd\U000
 
 
 def field(name: str) -> str:
-    """The frontmatter key brain-wiki writes for `name` (`privacy` -> `bw-privacy`)."""
+    """The frontmatter key brain-wiki writes for `name` (`stage` -> `bw-stage`)."""
     return FIELDS.get(name, name)
 
 

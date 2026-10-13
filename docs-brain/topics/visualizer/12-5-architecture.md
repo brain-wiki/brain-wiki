@@ -46,5 +46,4 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
   topic embedded; the inspector shows what the topic data carries, without
   claim text, and the preview says note text is not included.
   `--export graph.json` and `--export graph.graphml` are unchanged, for
-  other tools. Exports contain note titles; the command prints which
-  privacy levels are included.
+  other tools. Exports contain every note title.

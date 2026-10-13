@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 DDL = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -26,8 +26,6 @@ CREATE TABLE nodes (
   type         TEXT NOT NULL DEFAULT 'note',
   status       TEXT NOT NULL DEFAULT 'active',
   stage        TEXT,
-  privacy      TEXT NOT NULL,
-  privacy_rank INTEGER NOT NULL,
   created      TEXT,
   updated      TEXT,
   aliases      TEXT NOT NULL DEFAULT '[]',
@@ -47,7 +45,7 @@ CREATE INDEX nodes_topic ON nodes(topic, kind, updated);
 CREATE INDEX nodes_kind ON nodes(kind, status);
 CREATE INDEX nodes_updated ON nodes(updated);
 -- Covers the briefing's single pass over visible notes (orient.brief_stats).
-CREATE INDEX nodes_brief ON nodes(kind, topic, type, privacy_rank, updated);
+CREATE INDEX nodes_brief ON nodes(kind, topic, type, updated);
 
 CREATE TABLE names (
   key     TEXT NOT NULL,

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 def resolve_target(engine: Engine, target: str) -> dict[str, Any]:
-    """Find a visible node by id, path, file name, alias, or title."""
+    """Find a node by id, path, file name, alias, or title."""
     engine.scan()
     conn = engine.db
     row = conn.execute(
@@ -27,22 +27,22 @@ def resolve_target(engine: Engine, target: str) -> dict[str, Any]:
     if row is None:
         res = Resolver(conn).resolve(target)
         if res.node_id is None and res.candidates:
-            visible = []
+            found = []
             for cid in res.candidates:
                 cand = conn.execute("SELECT * FROM nodes WHERE id=?", (cid,)).fetchone()
-                if cand and engine.visible(cand["privacy_rank"], cand["topic"]):
-                    visible.append(cand)
-            if len(visible) == 1:
-                row = visible[0]
-            elif visible:
+                if cand:
+                    found.append(cand)
+            if len(found) == 1:
+                row = found[0]
+            elif found:
                 raise Ambiguous(
                     f"{target!r} matches several notes: "
-                    + "; ".join(f"{c['title']} ({c['path']})" for c in visible),
-                    details=[c["path"] for c in visible],
+                    + "; ".join(f"{c['title']} ({c['path']})" for c in found),
+                    details=[c["path"] for c in found],
                 )
         elif res.node_id:
             row = conn.execute("SELECT * FROM nodes WHERE id=?", (res.node_id,)).fetchone()
-    if row is None or not engine.visible(row["privacy_rank"], row["topic"]):
+    if row is None:
         raise NotFound(f"no note matches {target!r}")
     return dict(row)
 
@@ -92,7 +92,7 @@ def read(
     guard_info = (
         guards_for(engine, [node["id"]])[node["id"]]
         if kind in ("note", "hub")
-        else {"guards": [], "hidden_guards": {}, "more_guards": 0}
+        else {"guards": [], "more_guards": 0}
     )
     result: dict[str, Any] = {
         "id": node["id"],
@@ -103,7 +103,6 @@ def read(
         "status": node["status"],
         "topic": node["topic"],
         "updated": node["updated"],
-        "privacy": node["privacy"],
         "mode": mode,
         "banners": banners(guard_info, node["path"]),
         **guard_info,
@@ -174,9 +173,9 @@ def _relations(engine: Engine, node_id: str) -> list[dict[str, Any]]:
         title = path = other_id = None
         if row["other"]:
             other = engine.db.execute(
-                "SELECT id, title, path, privacy_rank, topic FROM nodes WHERE id=?", (row["other"],)
+                "SELECT id, title, path FROM nodes WHERE id=?", (row["other"],)
             ).fetchone()
-            if other and engine.visible(other["privacy_rank"], other["topic"]):
+            if other:
                 title, path, other_id = other["title"], other["path"], other["id"]
         out.append(
             {
@@ -194,9 +193,9 @@ def _relations(engine: Engine, node_id: str) -> list[dict[str, Any]]:
 
 
 def _backlinks(engine: Engine, node_id: str, limit: int = 10) -> tuple[list[dict[str, Any]], int]:
-    """Visible notes that link here, typed relations first, and how many there are in all."""
+    """Notes that link here, typed relations first, and how many there are in all."""
     rows = engine.db.execute(
-        """SELECT n.id, n.title, n.path, n.privacy_rank, n.topic, e.rel, e.verb, e.flip
+        """SELECT n.id, n.title, n.path, n.topic, e.rel, e.verb, e.flip
            FROM edges e JOIN nodes n ON n.id = e.declared_in
            WHERE e.other=? AND e.declared_in != ?
            ORDER BY e.rel = 'links_to', n.updated DESC""",
@@ -204,7 +203,7 @@ def _backlinks(engine: Engine, node_id: str, limit: int = 10) -> tuple[list[dict
     ).fetchall()
     seen: dict[str, dict[str, Any]] = {}
     for r in rows:
-        if r["id"] in seen or not engine.visible(r["privacy_rank"], r["topic"]):
+        if r["id"] in seen:
             continue
         seen[r["id"]] = {
             "id": r["id"],

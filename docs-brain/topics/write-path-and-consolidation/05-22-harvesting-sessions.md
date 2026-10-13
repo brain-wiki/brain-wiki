@@ -42,7 +42,7 @@ consolidation:
 |---|---|---|
 | `agent` (in-session recipe) | The user runs `/brain:harvest` (the `harvest` MCP prompt, or the skill's harvest section) inside a host. The agent calls `brain_harvest_prepare`; brain-wiki discovers, filters, routes, extracts, and scrubs that host's new sessions and returns a packet of condensed turns (at most 15k tokens; call again for more). The agent distills and calls `brain_harvest_apply` with one entry per session (episode content, or `skip` with a reason). The server validates turn ranges and lengths, sets every provenance field itself (including taint computed from the parsed tool calls), writes the episodes, and advances watermarks. | Regular use: the agent the user already runs does the thinking, no extra process or credentials |
 | `command` (headless) | `brain harvest --apply` calls the configured preset per chunk. | Unattended schedules and large backfills, which would exhaust a chat session's context |
-| `raw` | No model: the episode is a condensed transcript excerpt; consolidation distills later. | No model available, or the backend's profile may not read the session's brain |
+| `raw` | No model: the episode is a condensed transcript excerpt; consolidation distills later. | No model available |
 
 **Fallback for hosts without a reader.** For hosts brain-wiki cannot read
 yet (Cursor, OpenClaw, new hosts), `brain_harvest_prepare` returns
@@ -64,7 +64,5 @@ Harvest is off by default and enabled per host (`[harvest] hosts` in the
 user config, plus `harvest` in the host's profile `write` list for the
 agent backend). Every CLI run starts as a dry run that lists the sessions
 it would read, the brain each routes to, and an estimate of tokens for
-distillation; `--apply` executes. Every backend is subject to the same
-profile check as consolidation: it only receives sessions routed to brains
-and privacy levels its profile may read. Sessions it may not read are
-harvested `raw` by the CLI or left for another backend.
+distillation; `--apply` executes. A backend only receives sessions routed
+to a brain; unrouted sessions are skipped.

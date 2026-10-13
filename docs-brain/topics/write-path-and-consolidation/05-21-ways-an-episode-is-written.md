@@ -32,9 +32,7 @@ All writers go through one function, `write_episode()`, which:
 
 1. Mints the ULID and path (UTC year and month).
 2. Sets the provenance fields from the code path, ignoring any values the
-   model put in the text. Privacy is the most restrictive of the requested
-   level and the levels of the hinted topics, so an episode about a
-   sensitive topic is never visible to agents that cannot read that topic.
+   model put in the text.
 3. Scrubs secrets (patterns for common API keys, tokens, private key
    blocks; [[security-and-privacy|10]]), replacing them with
    `[REDACTED:<kind>]`.

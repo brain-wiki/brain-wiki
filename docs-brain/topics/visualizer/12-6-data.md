@@ -15,7 +15,6 @@ bw-part_of:
 ```json
 {
   "brain": "personal", "generated": "2026-10-11T18:00:00Z", "profile": "owner",
-  "privacy": ["default", "sensitive"],
   "totals": {"topics": 250, "notes": 10250, "hubs": 250, "episodes": 200,
              "links": 29935, "flagged": 1925},
   "constellations": [{"id": "c1", "title": "Bispai · Ditpi · …", "color": "#6aa9ff",
@@ -49,20 +48,20 @@ first).
 ```json
 {"id": "01J9Z7Q2…", "title": "Use SQLite FTS5 for local search", "path": "topics/search/fts5.md",
  "kind": "note", "topic": "search", "type": "decision", "status": "active",
- "privacy": "default", "updated": "2026-10-09", "aliases": [], "degree": 7,
+ "updated": "2026-10-09", "aliases": [], "degree": 7,
  "claims": 5, "superseded_claims": 1, "unverified_claims": 0, "flags": ["conflict"]}
 ```
 
 `/api/note/<id>`: the outline read (path, banners, summary, claims,
 relations, backlinks), plus what the preview needs: `properties` (the
 frontmatter, as written), `markdown` (the body after the frontmatter, at most 200 KB), and
-`links` (wikilink text as written → `{id, title, topic}` for each target this
-profile may see; others are absent, so they render unresolved). `/api/search?q=`: the index search for the viewer's
-profile (`{results: [{id, title, topic, kind, snippet}]}`, at most 20).
+`links` (wikilink text as written → `{id, title, topic}` for each target
+that resolves; others are absent, so they render unresolved).
+`/api/search?q=`: the index search (`{results: [{id, title, topic, kind,
+snippet}]}`, at most 20).
 `/api/health`: `{counts: {flag: n}, items: {flag: [{id, title, topic}]}}`,
 at most 200 per flag.
 
 `flags` come from the same queries as the reports
 ([[06-7-reports|06 §7]]): `conflict`, `stale`, `orphan`,
-`unverified`, `lint_error`. Hidden notes never appear in any
-payload, count, flow, or search result.
+`unverified`, `lint_error`.

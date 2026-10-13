@@ -41,21 +41,13 @@ def test_generator_is_deterministic_and_realistic(tmp_path: Path):
     assert {"exact", "title", "group"} <= {q.family for q in a.queries}
 
 
-def test_retrieval_targets_hold_without_cross_level_chains(tmp_path: Path):
-    result = suites.retrieval(tmp_path, 200, cross_privacy=False)
+def test_retrieval_targets_hold(tmp_path: Path):
+    result = suites.retrieval(tmp_path, 200)
     m = _metrics(result)
-    for profile in ("owner", "trusted", "default"):
-        assert m[(f"200/{profile}", "guard_recall")].value == 1.0
-        assert m[(f"200/{profile}", "newest_successor")].value == 1.0
-    for profile in ("trusted", "default"):
-        assert m[(f"200/{profile}", "privacy_leaks")].value == 0, result.details.get("leaks")
-        assert m[(f"200/{profile}", "hidden_guards_exact")].value == 1.0
+    assert m[("200", "guard_recall")].value == 1.0
+    assert m[("200", "newest_successor")].value == 1.0
     assert m[("200/all", "recall@8")].value > 0.9
     assert result.status == "pass", result.details
-
-
-def test_retrieval_targets_hold_across_privacy_levels(tmp_path: Path):
-    assert suites.retrieval(tmp_path, 200).status == "pass"
 
 
 def test_lint_suite_finds_every_planted_defect_and_fixes_safely(tmp_path: Path):
@@ -66,7 +58,6 @@ def test_lint_suite_finds_every_planted_defect_and_fixes_safely(tmp_path: Path):
     assert {
         "BW103",
         "BW106",
-        "BW108",
         "BW114",
         "BW202",
         "BW301",
@@ -123,7 +114,9 @@ def test_cli_writes_results_and_compares(tmp_path: Path, capsys: pytest.CaptureF
     code = main(["bench", "retrieval", "--sizes", "200", "--out", str(out)])
     data = json.loads((out / "results.json").read_text())
     assert (out / "report.md").read_text().startswith("# brain-wiki bench")
-    assert {"guard_recall", "privacy_leaks", "recall@8"} <= {m["metric"] for m in data["metrics"]}
+    assert {"guard_recall", "newest_successor", "recall@8"} <= {
+        m["metric"] for m in data["metrics"]
+    }
     assert code == (1 if hard_failures(data) else 0)
     results = str(out / "results.json")
     capsys.readouterr()

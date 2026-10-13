@@ -47,7 +47,7 @@ enabled = false
 ```
 
 - The config holds **locations and per-user choices only**. Everything that
-  must travel with a brain (privacy levels, agent profiles, budgets) is in
+  must travel with a brain (topics, agent profiles, budgets) is in
   that brain's `brain.toml` ([[02-3-braintoml|02 §3]]).
 - No credentials are ever stored here. Future remote backends use the
   platform's own credential chains (§6.6).

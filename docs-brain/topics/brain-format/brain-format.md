@@ -21,7 +21,7 @@ Generated from `docs/design/02-brain-format.md`.
   - [[02-62-body]]: Body
   - [[02-63-claims]]: Claims
   - [[02-64-relations]]: Relations
-  - [[02-65-links]]: Links
+  - [[02-65-links]]: Links (Brain format)
 - [[02-7-guard-relations]]: Guard relations
 - [[02-8-topic-hubs]]: Topic hubs
 - [[02-9-episodes]]: Episodes

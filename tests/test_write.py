@@ -61,7 +61,7 @@ def test_write_episode_sets_provenance_scrubs_and_indexes(example: Path):
         assert doc.fm["origin"] == "agent" and doc.fm["taint"] == "unknown"
         assert doc.fm["captured"] == "mcp" and doc.fm["agent"] == "claude-code"
         assert doc.fm["origin_turns"] == "3-9"
-        assert doc.fm["privacy"] == "sensitive"  # inherited from the hinted topic
+        assert doc.fm["topics"] == ["budget"]
         assert FAKE_KEY not in doc.text and "[REDACTED:github-token]" in doc.text
         assert result.redacted == ["github-token"]
         hits = search(e, "zebra cache")["results"]

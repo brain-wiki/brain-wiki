@@ -21,9 +21,7 @@ Two families change what retrieval must return:
 
 This holds regardless of which side declared the relation, of search
 scores, and of result limits: guard neighbors are added on top of the
-top-k results. The only exception is privacy. If a guard neighbor is above
-the caller's privacy level, the caller is told that a hidden superseding or
-conflicting note exists, but not its content ([[04-5-guard-co-retrieval|04]]).
+top-k results ([[04-5-guard-co-retrieval|04]]).
 
 Claim-level supersession (§6.3) stays out of the way: reads list current
 claims and say how many were superseded or retracted, and superseded claims

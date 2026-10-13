@@ -26,8 +26,7 @@ def example(tmp_path: Path) -> Path:
     root = tmp_path / "example"
     shutil.copytree(FIXTURE, root)
     (root / "brain.toml").write_text(
-        (root / "brain.toml").read_text()
-        + '\n[agents.claude-code]\nmax_privacy = "sensitive"\nwrite = ["episodes", "edit"]\n'
+        (root / "brain.toml").read_text() + '\n[agents.claude-code]\nwrite = ["episodes", "edit"]\n'
     )
     register_brain("ex", root, make_default=True)
     with Engine(open_brain(root)) as eng:
@@ -105,17 +104,11 @@ def test_superseding_a_claim_is_the_way_to_change_it(example: Path):
     assert result["status"] == "recorded", result["problems"]
 
 
-def test_checks_guard_privacy_protected_files_and_large_removals(example: Path):
-    vector = "topics/search/vector-only.md"
-    _edit(example, vector, "type: proposal", "type: proposal\nprivacy: sensitive")
-    with _agent(example) as eng:
-        assert check_edits(eng, [vector])["status"] == "recorded"
-    _edit(example, vector, "privacy: sensitive", "privacy: default")
+def test_checks_guard_protected_files_and_large_removals(example: Path):
     _edit(example, "rules.md", "pytest", "nose")
     with _agent(example) as eng:
-        codes = {p["code"] for p in check_edits(eng, [vector, "rules.md"])["problems"]}
-        assert {"privacy_lowered", "protected"} <= codes
-        restore(eng, vector)
+        codes = {p["code"] for p in check_edits(eng, ["rules.md"])["problems"]}
+        assert "protected" in codes
     path = example / "topics/storage/sqlite-version-policy.md"
     text = path.read_text()
     path.write_text(text.split("\n#", 1)[0] + "\n# SQLite version policy\n")

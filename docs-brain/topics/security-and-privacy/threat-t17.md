@@ -1,17 +1,19 @@
 ---
 id: 01M3250V00NQN6MJNSBCGS2XX6
 type: threat
-title: "T17: Over-reading agent transcripts"
+title: "T17: A direct agent edit damages a note"
 aliases: ["threat T17"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 bw-part_of:
   - "[[10-3-threats-and-mitigations]]"
+bw-related_to:
+  - "[[05-23-checked-agent-edits]]"
 ---
-# T17: Over-reading agent transcripts
+# T17: A direct agent edit damages a note
 
-**Over-reading agent transcripts.** Harvest and origin lookup read host session stores, which hold everything a session saw: other projects, secrets, tool output from untrusted sources.
+**A direct agent edit damages a note.** A manipulated or careless agent rewrites a note or drops claims.
 
-**Mitigations:** Off by default, enabled per host; every harvest starts as a dry run listing the sessions it would read; sessions route to a brain by working directory and unrouted sessions are skipped; tool output bodies are dropped (origin lookup can include them only on request, wrapped as untrusted); secrets scrubbed before anything is written or sent; taint computed from the session's tool calls; origin reads need `read_origin`, off for every host by default; readers never modify host files.
+**Mitigations:** Only profiles with `edit`, and only in topics whose `agent_edits` allows it; `brain check` refuses deleted or reworded claims (they must be superseded), protected files, and large deletions; every recorded edit is a run with an undo point and a git commit; claims an agent adds are marked unverified ([[05-23-checked-agent-edits|05 §2.3]]).
 
-**Residual risk:** Distillation sends condensed transcripts to the configured backend's provider, the same trust decision as consolidation.
+**Residual risk:** An agent can skip `brain check`: the change then shows as a pending edit with its diff until it is adopted or restored, but nothing blocks the write itself, because files are the user's.

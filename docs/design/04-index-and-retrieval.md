@@ -8,7 +8,7 @@ Status: draft for review · Schemas in §3 are normative for v0.1
 |---|---|---|
 | R1 | The index is derived entirely from the brain directory and can be deleted at any time. | D1: files are the truth. Users never repair an index; they rebuild it. |
 | R2 | Results reflect edits made a moment ago by any tool (Obsidian, git pull, another agent). | Agents act on what they retrieve; stale results cause wrong actions. |
-| R3 | Privacy and topic restrictions are applied before ranking, never after. | Filtering after top-k leaks counts and can starve results; filtering before is simpler to prove correct. |
+| R3 | Filters (topic, type, tag, property, date) are applied before ranking, never after. | Filtering after top-k can starve results; filtering before is simpler to prove correct. |
 | R4 | Guard neighbors are always returned (02 §7). | Correctness about change is the core retrieval promise (G5). |
 | R5 | Fast enough for hooks: search p95 < 50 ms, freshness check < 150 ms at 10k notes. | Hooks run on every session start and, optionally, every prompt (G7). |
 | R6 | Lexical search works with zero models; embeddings are optional and later. | G6: no required services. |
@@ -24,8 +24,8 @@ Status: draft for review · Schemas in §3 are normative for v0.1
   index keyed by `<brain-id>-<hash of path>` and lint warns about the
   duplicate id.
 - Opening the index checks `meta.schema_version` and `meta.config_hash`
-  (a hash of the `brain.toml` settings that affect indexing: layout,
-  privacy levels, topics). A mismatch triggers a full rebuild. So does an
+  (a hash of the `brain.toml` settings that affect indexing: layout and
+  topics). A mismatch triggers a full rebuild. So does an
   integrity error (`PRAGMA quick_check`). Rebuilds are logged, never
   prompted.
 - Pragmas: `journal_mode=WAL`, `synchronous=NORMAL`, `foreign_keys=ON`,
@@ -62,8 +62,6 @@ CREATE TABLE nodes (
   type         TEXT NOT NULL DEFAULT 'note',
   status       TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','superseded','archived')),
   stage        TEXT,
-  privacy      TEXT NOT NULL,       -- effective level: max(topic and its ancestors, note level)
-  privacy_rank INTEGER NOT NULL,    -- index into [privacy].levels
   created      TEXT,
   updated      TEXT,                -- frontmatter 'updated', else file mtime (ISO 8601)
   aliases      TEXT NOT NULL DEFAULT '[]',   -- JSON array
@@ -234,14 +232,13 @@ scan(brain):
 
 ## 5. Guard co-retrieval
 
-Given the set of hit node ids `H` and the caller's profile (maximum privacy
-rank `P`, topic allowlist `T`, expanded to its sub-topics):
+Given the set of hit node ids `H`:
 
 ```sql
 SELECT e.rel, e.verb, e.qualifier, e.note,
        CASE WHEN e.src = h.id THEN 'out' ELSE 'in' END AS dir,
        h.id AS hit,
-       n.id, n.title, n.path, n.status, n.updated, n.privacy_rank, n.topic
+       n.id, n.title, n.path, n.status, n.updated, n.topic
 FROM hits h
 JOIN edges e ON e.is_guard = 1 AND (e.src = h.id OR e.dst = h.id) AND e.dst IS NOT NULL
 JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
@@ -258,13 +255,6 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
 - **Chains.** `superseded_by` is followed up to 5 hops so the agent always
   gets the newest note (`superseded by C (via B)`). Cycles are a lint error
   and are cut at the first repeat.
-- **Privacy.** Neighbors with `privacy_rank > P` or a topic outside `T` are
-  not returned. The hit instead carries `hidden_guards: {superseded_by: 1}`.
-  A chain resolves to the newest successor the caller may see; if a newer
-  one is hidden, it is counted, and hidden notes never appear in `via`.
-  This reveals that a restricted newer or conflicting note exists, which is
-  a deliberate trade: an agent that knows it is looking at possibly stale
-  information can say so, while one that does not will act on it.
 - **Budget.** Guard neighbors are added on top of the result limit. Each is
   returned compactly (title, path, status, one-line note); the agent can
   `read` it. To keep a heavily contested note from flooding the context,
@@ -319,10 +309,9 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
    characters. Shorter runs fall back to a bounded `LIKE` scan over
    `docs.title` and `docs.body` (trigram cannot match fewer than 3
    characters).
-5. Privacy, topic, type, tag, property, and date filters are applied to FTS
+5. Topic, type, tag, property, and date filters are applied to FTS
    candidates before scoring and truncation (R3). Candidates are fetched in
-   growing batches, so restricted notes never displace visible ones and
-   nothing about them reaches the result.
+   growing batches, so filtered-out notes never displace matching ones.
 6. An empty query skips steps 1–4: it selects the filtered nodes directly and
    orders them by `sort`, which is how an agent lists a topic or asks for the
    latest release.
@@ -381,8 +370,7 @@ Structured result (MCP `structuredContent`; JSON from the CLI with
       "guards": [
         {"label": "supersedes", "id": "01J8…", "title": "Use ripgrep for search",
          "path": "topics/search/ripgrep.md", "status": "superseded"}
-      ],
-      "hidden_guards": {}
+      ]
     }
   ],
   "truncated": false,
@@ -453,15 +441,12 @@ Every mode except `raw` starts with banners computed by §5:
 ⚠ CONFLICTS WITH "Vector-only search proposal" (unless: embeddings enabled)
 ```
 
-Reads above the caller's privacy level fail with `not_found`, the same
-error as a missing note, so existence is not revealed by reads.
-
 Claims whose `taint` is `true` or `unknown` are shown with an
 `[unverified]` marker, so an agent can weigh them accordingly.
 
 ## 8. Orientation (the briefing)
 
-`orient(profile)` returns one brain's briefing. Agents fetch it with
+`orient()` returns one brain's briefing. Agents fetch it with
 `brain_orient` when a task may depend on the user's knowledge (the static
 instruction block tells them to, [08 §3.2](08-agent-integrations.md#32-the-static-instruction-block));
 an optional session-start hook can inject it instead. It is assembled in
@@ -489,18 +474,16 @@ included in full:
 7. How to query: three example calls built from this brain's own topics and
    types (a keyword search, a typed "latest" lookup, and a `why` search).
 
-Everything in it is filtered by the caller's profile, so hidden notes are
-never counted or named. The same function generates the managed block of
-`AGENTS.md`, with the profile `default`.
+The same function generates the managed block of `AGENTS.md`.
 
 ## 9. Other queries
 
 | Query | Used by | Notes |
 |---|---|---|
 | Backlinks of a node | read (`outline`), neighbors, lint orphans | All edges with `dst = node` |
-| Facet counts | orientation, search `facets`, `brain tags`, `brain types` | Counts by type, topic, tag, and property over visible nodes |
+| Facet counts | orientation, search `facets`, `brain tags`, `brain types` | Counts by type, topic, tag, and property |
 | Orphans, dead ends, unresolved links | `brain orphans`, `brain unresolved`, reports | Nodes without incoming edges; nodes without outgoing edges; links that resolve to nothing |
-| Neighborhood graph | visualizer | Nodes plus edges filtered by profile; see [12](12-visualizer.md) |
+| Neighborhood graph | visualizer | Nodes plus edges; see [12](12-visualizer.md) |
 | Stale dependents | reports | Nodes that `depends_on` a superseded or archived node |
 | Open conflicts | orientation, reports | `conflicts_with` edges between two active nodes |
 | Pending episodes | consolidation gate | `kind = 'episode'`, ordered by id |
@@ -514,13 +497,10 @@ each for?" for the calling host:
 |---|---|
 | `name`, `description` | Registration, and the optional one-line `description` in `brain.toml` |
 | `default_here` | Brain resolution for the current project and host ([03 §3](03-config-and-storage.md#3-choosing-a-brain)) |
-| `topics`, `notes`, `updated`, `pending` | The index, filtered by the host's profile for that brain |
-| `path` | The brain folder, **only** when the host's profile may read every privacy level and topic in the brain; omitted otherwise |
+| `topics`, `notes`, `updated`, `pending` | The index |
+| `path` | The brain folder, so the host can read its files directly |
 
-Brains outside the host's limits are not listed. The path is withheld from
-restricted profiles because reading files directly would bypass the privacy
-filters; privacy levels filter what the tools return and are not a sandbox
-([10](10-security-and-privacy.md)).
+Brains outside the host's limits ([03 §3](03-config-and-storage.md#3-choosing-a-brain)) are not listed.
 
 ### 9.2 Neighbors
 
@@ -537,7 +517,7 @@ small subgraph:
             "status": "active", "flags": ["conflict"], "depth": 1,
             "via": {"from": "01J9…", "relation": "has_part"}}],
  "edges": [{"rel": "part_of", "src": "…", "dst": "01J9…"}],
- "hidden": 0, "truncated": false}
+ "truncated": false}
 ```
 
 The root comes first, at depth 0. `via.relation` reads from the node it was
@@ -550,8 +530,7 @@ newer note supersedes.
 
 Typical uses: what a release shipped (`depends_on`, `out`), what depends on
 a decision (`depends_on`, `in`), how a fact evolved (`supersedes`, `both`,
-depth 3). Privacy filtering applies to every node; hidden neighbors are
-counted, not named, as in §5.
+depth 3).
 
 ## 10. Performance budgets
 
@@ -593,9 +572,8 @@ SSD:
 ## 13. Future work
 
 - **Embeddings.** Optional `sqlite-vec` table, local embedding model,
-  reciprocal-rank fusion with the lexical score. Guards and privacy apply
-  the same way.
+  reciprocal-rank fusion with the lexical score. Guards apply the same way.
 - **File watcher.** An optional watcher in long-running processes (MCP
   server, `brain viz`) to replace polling on very large brains.
-- **Cross-brain search.** For profiles allowed to read several brains;
+- **Cross-brain search.** For hosts allowed to use several brains;
   each brain's results stay labeled with its name.

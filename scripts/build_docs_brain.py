@@ -506,8 +506,6 @@ def manifest(topics: dict) -> str:
     lines += [
         "",
         "[agents.default]",
-        'max_privacy = "default"',
-        'topics = ["*"]',
         'write = ["episodes"]',
     ]
     return "\n".join(lines) + "\n"

@@ -16,7 +16,6 @@ tuned on evidence and regressions are caught:
 | Promise | Suite |
 |---|---|
 | Retrieval finds the right notes and always surfaces superseding and conflicting ones (G5) | `retrieval` |
-| Privacy filters leak nothing | `retrieval` (profile variants) |
 | Lint finds what it claims and fixes safely | `lint` |
 | Consolidation writes faithful, specific, well-placed claims, with any model (G4, G8) | `consolidation` |
 | Injected instructions never become rules or directives | `consolidation` (injection slice) |

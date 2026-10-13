@@ -11,7 +11,7 @@ bw-part_of:
 
 | Where | What |
 |---|---|
-| `<brain>/brain.toml` | Settings that travel with the brain: privacy, topics, agent profiles, lint, consolidation, budgets |
+| `<brain>/brain.toml` | Settings that travel with the brain: topics, agent profiles, lint, consolidation, budgets |
 | `~/.config/brain-wiki/config.toml` | Per machine: registered brains, default brain, per-host brain choice, capture, harvest, recall |
 | `~/.local/state/brain-wiki/` | Run records and pre-images (undo), locks, session and harvest state, connect records, logs |
 | `~/.cache/brain-wiki/` | The search index (rebuilt automatically when missing) |

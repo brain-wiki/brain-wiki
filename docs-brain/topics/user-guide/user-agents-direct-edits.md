@@ -12,8 +12,8 @@ bw-part_of:
 An agent whose profile includes `edit` may correct a note directly (a
 person's new role, a wrong fact) and then run `brain_check`. The check
 compares the file with the note's last recorded version and refuses deleted
-or reworded claims (claims change only by superseding), lowered privacy,
-protected files, and large removals. A clean check is recorded as a run, so
+or reworded claims (claims change only by superseding), protected files,
+and large removals. A clean check is recorded as a run, so
 `brain undo` reverses it; claims the agent added are marked unverified.
 Per topic, `agent_edits = "review"` sends agent edits to you
 (`brain review accept`), and `"deny"` refuses them.

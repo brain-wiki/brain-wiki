@@ -14,7 +14,7 @@ _ORDER = {"superseded_by": 0, "conflicts_with": 1, "supersedes": 2}
 
 def _node(engine: Engine, node_id: str) -> dict[str, Any] | None:
     row = engine.db.execute(
-        "SELECT id, title, path, status, updated, privacy_rank, topic FROM nodes WHERE id=?",
+        "SELECT id, title, path, status, updated, topic FROM nodes WHERE id=?",
         (node_id,),
     ).fetchone()
     return dict(row) if row else None
@@ -42,14 +42,11 @@ def successor_chain(engine: Engine, node_id: str) -> list[str]:
 
 
 def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]:
-    """For each hit, visible guard neighbors (capped, ordered) and counts of hidden ones.
+    """For each hit, its guard neighbors (capped, ordered).
 
-    A supersession chain resolves to its newest successor the caller may see; any newer,
-    hidden successor is counted, never named, and hidden notes never appear in `via`.
+    A supersession chain resolves to its newest successor; the notes between are listed in `via`.
     """
-    result: dict[str, dict[str, Any]] = {
-        n: {"guards": [], "hidden_guards": {}, "more_guards": 0} for n in node_ids
-    }
+    result: dict[str, dict[str, Any]] = {n: {"guards": [], "more_guards": 0} for n in node_ids}
     if not node_ids:
         return result
     nodes: dict[str, dict[str, Any] | None] = {}
@@ -59,10 +56,6 @@ def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]
             nodes[node_id] = _node(engine, node_id)
         return nodes[node_id]
 
-    def visible(node_id: str) -> bool:
-        info = node(node_id)
-        return info is not None and engine.visible(info["privacy_rank"], info["topic"])
-
     placeholders = ",".join("?" * len(node_ids))
     rows = engine.db.execute(
         f"""SELECT id, src, dst, rel, verb, qualifier, note FROM edges
@@ -71,7 +64,6 @@ def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]
         (*node_ids, *node_ids),
     ).fetchall()
     per_hit: dict[str, dict[tuple[str, str], dict[str, Any]]] = defaultdict(dict)
-    hidden: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
     cap = engine.manifest.search.max_guards_per_hit
     for row in rows:
         for hit in (row["src"], row["dst"]):
@@ -85,15 +77,11 @@ def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]
                 label = "conflicts_with"
             via: list[str] = []
             if label == "superseded_by":
-                chain = successor_chain(engine, neighbor)
-                shown = [n for n in chain if visible(n)]
-                if chain[-1] not in shown:
-                    hidden[hit][label].add(chain[-1])
-                if not shown:
+                chain = [n for n in successor_chain(engine, neighbor) if node(n) is not None]
+                if not chain:
                     continue
-                neighbor, via = shown[-1], shown[:-1]
-            elif not visible(neighbor):
-                hidden[hit][label].add(neighbor)
+                neighbor, via = chain[-1], chain[:-1]
+            elif node(neighbor) is None:
                 continue
             key = (label, neighbor)
             if key in per_hit[hit]:
@@ -117,9 +105,6 @@ def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]
         )
         result[hit]["guards"] = shown[:cap]
         result[hit]["more_guards"] = max(0, len(shown) - cap)
-        result[hit]["hidden_guards"] = {
-            label: len(ids) for label, ids in hidden[hit].items() if ids
-        }
     return result
 
 
@@ -158,10 +143,6 @@ def banners(
             )
         else:
             lines.append(f'↳ supersedes "{g["title"]}" ({g["path"]}).')
-    for label, count in guard_info.get("hidden_guards", {}).items():
-        lines.append(
-            f"⚠ {count} restricted note(s) {label.replace('_', ' ')} this one; you cannot read them."
-        )
     more = max(0, len(guards) - limit) + guard_info.get("more_guards", 0)
     if more:
         pointer = (

@@ -29,7 +29,6 @@ bw-origin: agent                 # owner | agent | import | system
 bw-taint: unknown                # true | false | unknown
 bw-captured: mcp                 # hook | mcp | harvest | cli | import | file
 bw-topics: [search]              # hints only
-bw-privacy: default
 ---
 Switched the search path to FTS5 after ripgrep was too slow on 10k notes.
 

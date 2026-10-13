@@ -200,7 +200,7 @@ def _recall(host: str, cwd: Any, prompt: str, user: Any) -> str:
     for hit in hits:
         lines.append(f"- {hit['title']} ({hit['path']})")
         for guard in hit.get("guards", [])[:3]:
-            lines.append(f"  - ⚠ {guard['label']}: {guard.get('title') or 'a hidden note'}")
+            lines.append(f"  - ⚠ {guard['label']}: {guard['title']}")
     return _context_output(host, "UserPromptSubmit", "\n".join(lines)[:RECALL_MAX_CHARS])
 
 

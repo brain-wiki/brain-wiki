@@ -24,25 +24,16 @@ id = "{id}"
 name = "{name}"
 # description = "What this brain is for, in one line (shown by `brain list`)"
 
-[privacy]
-# Ordered from least to most restrictive. Everything is "default" unless a topic
-# or note says otherwise. Agents only see levels up to their profile's max_privacy.
-levels  = ["default", "sensitive", "secret"]
-default = "default"
-
 [consolidate]
 backend = "agent"          # agent (your agent does it via MCP) | command (headless CLI)
 command = "claude-code"    # preset for the command backend
 review  = "auto"           # auto | always
 
-[agents.default]           # agents without their own profile
-max_privacy = "default"
-topics      = ["*"]
+[agents.default]           # what agents without their own profile may write
 write       = ["episodes"]
 
 # Example of a profile for one agent:
 # [agents.claude-code]
-# max_privacy = "sensitive"
 # write       = ["episodes", "edit", "propose_rules", "consolidate", "harvest"]
 """
 
@@ -77,7 +68,7 @@ def declare_format(engine: Engine) -> bool:
     """Raise `format` in brain.toml to this version before writing files in it (02 §13).
 
     One-way and outside undo: once a brain holds format 2 files, an older brain-wiki must refuse
-    it rather than misread them (it would not see `bw-privacy`). Returns whether it changed.
+    it rather than misread them (it would not see `bw-claims`). Returns whether it changed.
     """
     if engine.manifest.format >= FORMAT_VERSION:
         return False

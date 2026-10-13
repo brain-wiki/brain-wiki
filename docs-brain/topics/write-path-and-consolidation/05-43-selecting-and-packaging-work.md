@@ -11,10 +11,10 @@ bw-part_of:
 # Selecting and packaging work
 
 **Selection.** Pending episodes (everything under `inbox/episodes/` and
-`inbox/agents/`), oldest first, up to `max_episodes_per_run`, **filtered by
-the backend's agent profile**: episodes above the profile's
-`max_privacy` stay pending for a more trusted backend (for example a local
-model). This is what keeps sensitive notes away from a cloud model.
+`inbox/agents/`), oldest first, up to `max_episodes_per_run`. The backend's
+model provider sees every episode and candidate note in the packet; keeping
+a body of notes away from a cloud model means keeping it in a separate
+brain ([[privacy|16]]).
 
 **Grouping.** For each episode, the engine finds candidate notes:
 topic hints, then an FTS query over the episode text (top 5), then the

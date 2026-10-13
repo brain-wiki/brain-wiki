@@ -40,7 +40,7 @@ def example(tmp_path: Path) -> Path:
     toml = root / "brain.toml"
     toml.write_text(
         toml.read_text()
-        + '\n[agents.claude-code]\nmax_privacy = "sensitive"\nwrite = ["episodes", "propose_rules", "consolidate"]\n'
+        + '\n[agents.claude-code]\nwrite = ["episodes", "propose_rules", "consolidate"]\n'
     )
     register_brain("ex", root, make_default=True)
     return root
@@ -85,7 +85,7 @@ async def test_read_tools_and_errors(example: Path):
         listed = await client.call_tool("brain_list", {})
     [entry] = listed.structured_content["brains"]
     assert entry["name"] == "ex" and entry["default_here"] and entry["notes"] > 0
-    assert "path" not in entry  # claude-code reads only up to "sensitive" here
+    assert entry["path"] == str(example.resolve())
     assert listed.content[0].text.startswith("* ex")
 
 

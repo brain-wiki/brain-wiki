@@ -26,7 +26,7 @@ def neighbors(
     depth: int = 1,
     limit: int = 30,
 ) -> dict[str, Any]:
-    """A small subgraph around `target`: nodes by depth, the edges between them, hidden counts.
+    """A small subgraph around `target`: nodes by depth and the edges between them.
 
     Within each depth, guards come first, then dependencies, containment, and plain links,
     newest first, so a `limit` keeps the neighbors that matter most.
@@ -43,7 +43,6 @@ def neighbors(
     conn = engine.db
     nodes: dict[str, dict[str, Any]] = {root["id"]: _node(root, 0, None)}
     edges: dict[tuple[str, str, str], dict[str, str]] = {}
-    hidden: set[str] = set()
     truncated = False
     frontier = [root["id"]]
     marks = ",".join("?" * len(rels))
@@ -52,7 +51,7 @@ def neighbors(
         for current in frontier:
             rows = conn.execute(
                 f"""SELECT e.rel, e.src, e.dst, n.id, n.path, n.title, n.type, n.topic, n.status,
-                           n.updated, n.privacy_rank
+                           n.updated
                     FROM edges e JOIN nodes n ON n.id = CASE WHEN e.src = ? THEN e.dst ELSE e.src END
                     WHERE (e.src = ? OR e.dst = ?) AND e.src IS NOT NULL AND e.dst IS NOT NULL
                       AND e.src != e.dst AND e.rel IN ({marks})""",  # noqa: S608 - placeholders only
@@ -62,9 +61,6 @@ def neighbors(
                 outgoing = row["src"] == current
                 one_way = row["rel"] not in SYMMETRIC_RELS and direction != "both"
                 if one_way and outgoing != (direction == "out"):
-                    continue
-                if not engine.visible(row["privacy_rank"], row["topic"]):
-                    hidden.add(row["id"])
                     continue
                 edge = {"rel": row["rel"], "src": row["src"], "dst": row["dst"]}
                 found.append((_PRIORITY[row["rel"]], current, edge, dict(row)))
@@ -92,7 +88,6 @@ def neighbors(
         "depth": depth,
         "nodes": list(nodes.values()),
         "edges": list(edges.values()),
-        "hidden": len(hidden - set(nodes)),
         "truncated": truncated,
     }
 
@@ -168,8 +163,6 @@ def format_neighbors_text(result: dict[str, Any]) -> str:
     walk(root["id"], "")
     if len(nodes) == 1:
         lines.append("(no neighbors for these relations)")
-    if result["hidden"]:
-        lines.append(f"{result['hidden']} restricted neighbor(s) not shown.")
     if result["truncated"]:
         lines.append("Truncated: raise limit, or narrow relations or direction.")
     return "\n".join(lines)

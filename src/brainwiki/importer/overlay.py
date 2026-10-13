@@ -42,8 +42,6 @@ def manifest_text(found: Survey, name: str) -> str:
         'profile = "migrate"',
         "",
         "[agents.default]",
-        'max_privacy = "default"',
-        'topics = ["*"]',
         'write = ["episodes"]',
     ]
     for slug, folder in found.topics.items():
