@@ -355,3 +355,19 @@ def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
 def test_global_options_work_before_the_command(example: Path, capsys: pytest.CaptureFixture[str]):
     assert main(["--json", "--brain", str(example), "list"]) == 0
     assert '"brains"' in capsys.readouterr().out
+
+
+def test_a_declared_topic_owns_its_folder(brain_dir: Path):
+    from tests.conftest import write
+
+    from brainwiki.index.scanner import discovered_topics
+
+    write(brain_dir, "topics/00 Inbox/idea.md", "# Idea\n")
+    toml = brain_dir / "brain.toml"
+    toml.write_text(toml.read_text() + '\n[topics.vault-inbox]\npath = "topics/00 Inbox"\n')
+    with _engine(brain_dir) as eng:
+        eng.scan(force=True)
+        topics = discovered_topics(eng)
+        assert topics["vault-inbox"] == "topics/00 Inbox" and "inbox" not in topics
+        row = eng.db.execute("SELECT topic FROM nodes WHERE path LIKE '%idea.md'").fetchone()
+    assert row["topic"] == "vault-inbox"

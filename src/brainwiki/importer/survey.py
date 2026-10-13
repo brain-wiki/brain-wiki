@@ -17,9 +17,10 @@ from brainwiki.index.scanner import slugify
 DAILY = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
 HUB_NAMES = ("index.md", "_index.md", "README.md")
 TEMPLATE_NAMES = {"templates", "_templates", "template"}
-INBOX_NAMES = {"inbox", "_inbox", "00 inbox"}
+INBOX_NAMES = {"inbox", "_inbox"}
 ATTACHMENT_NAMES = {"attachments", "assets", "files", "images", "media", "_resources"}
 MAX_PARSE_BYTES = 2 * 1024 * 1024
+NUMBERED = re.compile(r"^\d+[\s._-]+")  # "90 Templates", "00 Inbox": PARA-style prefixes
 CONFLICT = re.compile(r"\.sync-conflict-|(?i:conflicted copy)| \(\d+\)\.md$")
 
 
@@ -89,7 +90,7 @@ def survey(root: Path) -> Survey:
             ignore.add(templates)
     for child in sorted(root.iterdir()):
         if child.is_dir() and not child.name.startswith("."):
-            lowered = child.name.lower()
+            lowered = NUMBERED.sub("", child.name.lower())
             if lowered in TEMPLATE_NAMES or lowered in ATTACHMENT_NAMES:
                 ignore.add(child.name)
     files = [
@@ -156,7 +157,7 @@ def survey(root: Path) -> Survey:
             result.daily_folder = folder
     used: set[str] = set()
     for folder in sorted(folders):
-        if folder.lower() in INBOX_NAMES:
+        if NUMBERED.sub("", folder.lower()) in INBOX_NAMES:
             continue
         slug = "journal" if folder == result.daily_folder else slugify(folder)
         base, n = slug, 2

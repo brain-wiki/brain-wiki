@@ -221,6 +221,13 @@ def vault(tmp_path: Path) -> Path:
     return root
 
 
+def test_survey_reads_numbered_para_folders(tmp_path: Path):
+    for rel in ("00 Inbox/idea.md", "90 Templates/meeting.md", "03 People/kai.md"):
+        write(tmp_path / "vault", rel, "# x\n")
+    found = survey(tmp_path / "vault")
+    assert found.ignore == ["90 Templates"] and found.topics == {"people": "03 People"}
+
+
 def test_overlay_survey_adopt_and_phases(tmp_path: Path):
     root = vault(tmp_path)
     found = survey(root)

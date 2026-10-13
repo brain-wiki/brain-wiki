@@ -91,6 +91,7 @@ def _list_topics(engine: Engine) -> dict[str, str]:
     topics: dict[str, str] = {}
     base = engine.brain.root / layout.topics_dir
     reserved = {layout.inbox_dir, layout.archive_dir, layout.reports_dir}
+    declared = set(engine.manifest.topic_paths().values())  # a declared slug wins for its folder
     prefix = "" if layout.topics_dir in (".", "") else f"{layout.topics_dir}/"
     if base.is_dir():
         for child in sorted(base.iterdir()):
@@ -99,6 +100,7 @@ def _list_topics(engine: Engine) -> dict[str, str]:
                 not child.is_dir()
                 or child.name.startswith(".")
                 or rel in reserved
+                or rel in declared
                 or engine.manifest.is_ignored(rel)
             ):
                 continue
