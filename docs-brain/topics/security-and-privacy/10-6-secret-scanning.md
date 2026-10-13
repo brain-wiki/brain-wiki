@@ -19,6 +19,12 @@ cover common forms, each with a name used in `[REDACTED:<name>]`:
 - `password`, `secret`, `token`, `api_key` assignments whose value has high
   entropy.
 
+Values that only name or compute a secret are not flagged: environment
+lookups (`process.env.API_KEY`), calls and template expressions, dotted
+references, `ALL_CAPS` variable names, and secret-manager references
+(`name:latest`). An `sk-` match counts as an OpenAI-style key only when it
+mixes upper case, lower case, and digits, so words and URL slugs pass.
+
 Redaction happens before the episode touches disk, so a secret never
 enters the brain through brain-wiki. Lint cannot remove secrets that are
 already in git history; its message says to rotate the secret.

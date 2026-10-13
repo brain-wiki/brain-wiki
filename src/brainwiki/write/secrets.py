@@ -34,6 +34,13 @@ _ASSIGNMENT = re.compile(
     r"(?P<quote>[\"']?)(?P<value>[^\s\"'`,;]{12,})(?P=quote)"
 )
 _REDACTED = re.compile(r"\[REDACTED:[a-z-]+\]")
+# Values that name or compute a secret rather than hold one: code (calls, templates, optional
+# chaining), environment lookups, dotted references, ALL_CAPS variable names, and secret-manager
+# references such as `github-pat:latest`.
+_REFERENCE = re.compile(
+    r"[()${}]|\?\.|^(?:process\.env|os\.environ|env)\b|^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+$"
+    r"|^[A-Z][A-Z0-9_]*$|:latest$"
+)
 
 
 @dataclass
@@ -54,10 +61,17 @@ def _high_entropy(value: str) -> bool:
         return False
     if value.startswith(("[[", "[", "(", "<", "{")) or "](" in value:
         return False  # a link or a placeholder, not a credential
+    if _REFERENCE.search(value):
+        return False
     classes = sum(
         bool(re.search(p, value)) for p in (r"[a-z]", r"[A-Z]", r"[0-9]", r"[^A-Za-z0-9]")
     )
     return classes >= 2 and _entropy(value) >= 3.5
+
+
+def _keylike(body: str) -> bool:
+    """Generated keys mix upper case, lower case, and digits; words and slugs do not."""
+    return all(re.search(p, body) for p in (r"[a-z]", r"[A-Z]", r"[0-9]"))
 
 
 def find_secrets(text: str) -> list[SecretHit]:
@@ -68,6 +82,8 @@ def find_secrets(text: str) -> list[SecretHit]:
 
     for kind, pattern in _PATTERNS:
         for match in pattern.finditer(text):
+            if kind == "openai-key" and not _keylike(match.group(0)[3:]):
+                continue  # `sk-` starts many words and URL slugs ("sk-learning-path-…")
             if free(match.start(), match.end()):
                 spans.append((match.start(), match.end(), kind))
     for match in _ASSIGNMENT.finditer(text):
