@@ -21,7 +21,7 @@ bw-part_of:
 |---|---|---|
 | Galaxy | Constellations as glowing clusters with labels; aggregated flows between them; the inbox core at the center | `/api/world` |
 | Constellation | Its topics as nebulae (size by notes, brightness by recency, red tint by open conflicts); flows between topics | `/api/world` |
-| Topic | The hub as a bright core, notes as stars, typed relations as light trails; relations that leave the topic run toward the other topic's nebula | `/api/topic/<slug>` |
+| Topic | The hub as a bright core, each sub-folder as a labeled branch (its note count) with notes around it, typed relations as light trails; relations that leave the topic run toward the other topic's nebula | `/api/topic/<slug>` |
 | Note | The note and its one-hop typed neighborhood lit, the rest dimmed; the inspector shows claims and guards | `/api/note/<id>` |
 
 - **Detail by screen size, like a map.** A topic's stars load and appear

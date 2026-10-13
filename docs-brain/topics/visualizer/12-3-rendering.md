@@ -44,15 +44,22 @@ bw-part_of:
   the navigator, search, and inspector keep working without the scene.
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
-  inside their constellation; notes are laid out per topic with a small
-  force simulation (hub fixed at the center, typed links attract, seeded by
-  note id). The same brain always produces the same map, and no layout ever
-  spans the whole brain.
+  inside their constellation, a parent topic at the center of the
+  constellation its sub-topics form; notes are laid out per topic by its
+  folder tree (hub fixed at the center, each sub-folder in its own direction
+  with its folder note as its star, notes around their folder; strong tree
+  springs, weak typed-link springs, seeded by note id). The same brain always
+  produces the same map, and no layout ever spans the whole brain.
+- **The hierarchy follows the folders.** Inside a topic, the map's tree is
+  the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
+  folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is the branch's star;
+  a folder without one is still a branch, drawn as a label. A written
+  `part_of` that points elsewhere is a relation, not the note's place.
 - **Encoding of relations:**
 
 | Relation | Trail |
 |---|---|
-| `part_of` | Faint, toward the hub; hidden by default, since stars already cluster around their hub |
+| `part_of` | The folder tree (the dock's **Folders** chip, on by default): faint lines from each note to its folder's star and from each folder to the one above; notes directly in the topic draw none, so flat topics stay clean |
 | `depends_on` | Blue, flowing prerequisite → dependent |
 | `conflicts_with` | Red, always shown when either end is visible |
 | `supersedes` | Amber, flowing old → new |

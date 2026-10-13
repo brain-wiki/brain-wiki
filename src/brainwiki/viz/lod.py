@@ -405,6 +405,7 @@ class Atlas:
             "title": topic["title"],
             "color": self.colors[slug],
             "hub": topic.get("hub"),
+            "path": topic.get("path"),  # the map places notes by the folders below it
             "nodes": [n for n in self.notes if n["topic"] == slug],
             "links": list(self._inner.get(slug, [])),
             "external": external,

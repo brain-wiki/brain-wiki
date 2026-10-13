@@ -222,6 +222,7 @@ def _topics(
             "title": row["title"],
             "description": row.get("description") or "",
             "parent": parents[row["slug"]],
+            "path": row.get("path"),
             "color": colors[row["slug"]],
             "notes": counts.get(row["slug"], 0),
             "hub": hubs.get(row["slug"]),

@@ -43,7 +43,7 @@ decoration for its own sake.
 |---|---|---|
 | Galaxy | Constellations as glowing clusters with labels; aggregated flows between them; the inbox core at the center | `/api/world` |
 | Constellation | Its topics as nebulae (size by notes, brightness by recency, red tint by open conflicts); flows between topics | `/api/world` |
-| Topic | The hub as a bright core, notes as stars, typed relations as light trails; relations that leave the topic run toward the other topic's nebula | `/api/topic/<slug>` |
+| Topic | The hub as a bright core, each sub-folder as a labeled branch (its note count) with notes around it, typed relations as light trails; relations that leave the topic run toward the other topic's nebula | `/api/topic/<slug>` |
 | Note | The note and its one-hop typed neighborhood lit, the rest dimmed; the inspector shows claims and guards | `/api/note/<id>` |
 
 - **Detail by screen size, like a map.** A topic's stars load and appear
@@ -104,15 +104,22 @@ decoration for its own sake.
   the navigator, search, and inspector keep working without the scene.
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
-  inside their constellation; notes are laid out per topic with a small
-  force simulation (hub fixed at the center, typed links attract, seeded by
-  note id). The same brain always produces the same map, and no layout ever
-  spans the whole brain.
+  inside their constellation, a parent topic at the center of the
+  constellation its sub-topics form; notes are laid out per topic by its
+  folder tree (hub fixed at the center, each sub-folder in its own direction
+  with its folder note as its star, notes around their folder; strong tree
+  springs, weak typed-link springs, seeded by note id). The same brain always
+  produces the same map, and no layout ever spans the whole brain.
+- **The hierarchy follows the folders.** Inside a topic, the map's tree is
+  the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
+  folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is the branch's star;
+  a folder without one is still a branch, drawn as a label. A written
+  `part_of` that points elsewhere is a relation, not the note's place.
 - **Encoding of relations:**
 
 | Relation | Trail |
 |---|---|
-| `part_of` | Faint, toward the hub; hidden by default, since stars already cluster around their hub |
+| `part_of` | The folder tree (the dock's **Folders** chip, on by default): faint lines from each note to its folder's star and from each folder to the one above; notes directly in the topic draw none, so flat topics stay clean |
 | `depends_on` | Blue, flowing prerequisite → dependent |
 | `conflicts_with` | Red, always shown when either end is visible |
 | `supersedes` | Amber, flowing old → new |
@@ -125,8 +132,8 @@ Glass panels over the scene, keyboard-first:
 
 | Region | Contents |
 |---|---|
-| Top bar | Brain name and profile; back, forward, and a history list of everything opened in this tab; the breadcrumb (Galaxy › constellation › topic › note); search (`/` or `Ctrl/⌘-K`); totals (notes, links, flagged, inbox), where *flagged* opens the Health tab and *inbox* says what is pending |
-| Left: navigator | Tabs: **Atlas** (constellations → topics tree with counts, health badges and recency bars; filter and sort by size, health, recency, name), **Health** (flagged notes grouped by flag, counts first), **Changes** (recent runs; selecting one highlights what it touched) |
+| Top bar | Brain name and profile; back, forward, and a history list of everything opened in this tab; the breadcrumb (Galaxy › constellation › parent topics › topic › folders › note); search (`/` or `Ctrl/⌘-K`); totals (notes, links, flagged, inbox), where *flagged* opens the Health tab and *inbox* says what is pending |
+| Left: navigator | Tabs: **Atlas** (constellations → topics tree with counts, sub-topics nested under their parent, health badges and recency bars; filter and sort by size, health, recency, name), **Health** (flagged notes grouped by flag, counts first), **Changes** (recent runs; selecting one highlights what it touched) |
 | Right: inspector | Topic: description, counts, flag breakdown, busiest notes, strongest flows to other topics. Note: type, status and privacy chips, guard banners, claims (superseded struck through, unverified marked), relations by family, backlinks, path with copy and an `obsidian://` link |
 | Right: note preview | Clicking a note (a star, a row, a search result, a wikilink) also opens its preview over the inspector: the note rendered like Obsidian's reading view, with properties from the frontmatter, then the body (headings, lists and tasks, tables, code, callouts, highlights, tags, footnotes). Wikilinks open the linked note and move the map with it, in the body and in property values alike (so `bw-part_of` and other relations are links); links the viewer may not see show as unresolved. A claim's `{id: …}` block shows as a tooltip. `Esc` closes it, `P` toggles it |
 | Bottom left | Minimap: top-down galaxy with the current view; click to fly. Beside it, the level ladder: Galaxy, Constellation, Topic, Note, with the current level and its place named, a marker that creeps toward the next level as you scroll, and earlier levels clickable |
