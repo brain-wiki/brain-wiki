@@ -5,6 +5,8 @@ title: "To episodes, and from agents"
 aliases: ["09 §6"]
 tags: [import]
 source: "docs/design/09-import.md#6-to-episodes-and-from-agents"
+bw-part_of:
+  - "[[import]]"
 ---
 # To episodes, and from agents
 
@@ -13,14 +15,14 @@ curated notes. It suits note dumps, exported chats, meeting transcripts, and
 clippings.
 
 - Documents are split on headings into chunks of at most 8 KiB; each chunk
-  becomes one episode with `captured: import`, `origin: import`, and a
+  becomes one episode with `bw-captured: import`, `bw-origin: import`, and a
   `source:` property naming the original file and heading.
 - `taint` is `false` for the user's own files, or `true` with `--untrusted`
   (clippings, documents written by others).
 - The original files are not modified or moved.
 
 `--from <host>` knows where hosts keep their own memory and imports those
-files as episodes attributed to the host (`origin: agent`, `taint:
+files as episodes attributed to the host (`bw-origin: agent`, `bw-taint:
 unknown`):
 
 | Host | Files (defaults; overridable with `--path`) |
@@ -40,6 +42,3 @@ the integration tests in [[agent-integrations|08]]; hosts change
 them, so the table lives in code with per-host overrides. Directive-like
 content from these files is a natural candidate for rules, but promotion
 still requires the user ([[05-6-rules|05 §6]]).
-
-## Relations
-- part_of [[import]]

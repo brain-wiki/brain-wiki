@@ -5,6 +5,8 @@ title: "Hooks"
 aliases: ["08 §5"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#5-hooks"
+bw-part_of:
+  - "[[agent-integrations]]"
 ---
 # Hooks
 
@@ -18,6 +20,3 @@ with `--capture`. Without hooks, agents rely on the static instruction block
 - [[08-51-normalized-events]]: Normalized events
 - [[08-52-outputs]]: Outputs
 - [[08-53-rules-for-every-hook]]: Rules for every hook
-
-## Relations
-- part_of [[agent-integrations]]

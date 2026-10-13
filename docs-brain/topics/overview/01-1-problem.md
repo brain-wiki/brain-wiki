@@ -5,6 +5,8 @@ title: "Problem"
 aliases: ["01 §1"]
 tags: [overview]
 source: "docs/design/01-overview.md#1-problem"
+bw-part_of:
+  - "[[overview]]"
 ---
 # Problem
 
@@ -19,6 +21,3 @@ assistant on a home machine. Each one keeps its own memory, if it keeps any:
 | **Unsafe writes** | Agents write to memory while reading untrusted text (web pages, issues, email). An instruction planted in that text can end up in long-term memory and steer every later session. |
 | **Stale retrieval** | Similarity search returns the best-matching note, not the current one. A decision that was later reversed, or a rule with an exception, is retrieved without its correction. |
 | **Silent decay** | When an LLM rewrites a memory file to "clean it up", details disappear a little at a time. Nobody notices until a fact is gone. |
-
-## Relations
-- part_of [[overview]]

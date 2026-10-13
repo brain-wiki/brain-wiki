@@ -4,6 +4,8 @@ type: guide
 title: "Maintenance"
 tags: [user-guide]
 source: "docs/user/maintenance.md"
+bw-part_of:
+  - "[[user-guide]]"
 ---
 # Maintenance
 
@@ -14,6 +16,3 @@ source: "docs/user/maintenance.md"
 - [[user-maintenance-move-a-note]]: Move a note
 - [[user-maintenance-undo]]: Undo (Maintenance)
 - [[user-maintenance-git]]: Git
-
-## Relations
-- part_of [[user-guide]]

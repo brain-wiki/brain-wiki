@@ -5,6 +5,8 @@ title: "Fields"
 aliases: ["05 §3.1"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#31-fields"
+bw-part_of:
+  - "[[05-3-provenance-and-taint]]"
 ---
 # Fields
 
@@ -19,6 +21,3 @@ source: "docs/design/05-write-path-and-consolidation.md#31-fields"
 They are separate because they vary independently: an agent can produce a
 summary of the user's own notes (`agent`, `false`) or of a web page
 (`agent`, `true`).
-
-## Relations
-- part_of [[05-3-provenance-and-taint]]

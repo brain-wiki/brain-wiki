@@ -4,6 +4,8 @@ type: guide
 title: "Documents as episodes"
 tags: [user-guide]
 source: "docs/user/import.md#documents-as-episodes"
+bw-part_of:
+  - "[[user-import]]"
 ---
 # Documents as episodes
 
@@ -14,6 +16,3 @@ brain import clippings/ --to-episodes --untrusted --apply
 
 Documents are split on headings into episodes for consolidation to fold
 into notes. Use `--untrusted` for text you did not write.
-
-## Relations
-- part_of [[user-import]]

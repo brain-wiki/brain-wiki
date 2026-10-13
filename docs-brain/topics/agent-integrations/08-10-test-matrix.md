@@ -5,6 +5,8 @@ title: "Test matrix"
 aliases: ["08 §10"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#10-test-matrix"
+bw-part_of:
+  - "[[agent-integrations]]"
 ---
 # Test matrix
 
@@ -23,6 +25,3 @@ source: "docs/design/08-agent-integrations.md#10-test-matrix"
 Recorded hook payloads for each host and event are kept as test fixtures,
 so the adapters are tested on every change even where the host is not
 installed.
-
-## Relations
-- part_of [[agent-integrations]]

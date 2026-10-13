@@ -5,6 +5,8 @@ title: "Future work"
 aliases: ["04 §13"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#13-future-work"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Future work
 
@@ -15,6 +17,3 @@ source: "docs/design/04-index-and-retrieval.md#13-future-work"
   server, `brain viz`) to replace polling on very large brains.
 - **Cross-brain search.** For profiles allowed to read several brains;
   each brain's results stay labeled with its name.
-
-## Relations
-- part_of [[index-and-retrieval]]

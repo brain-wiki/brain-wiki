@@ -4,6 +4,8 @@ type: reference
 title: "Decision log"
 tags: [decisions]
 source: "docs/design/README.md#decision-log"
+bw-part_of:
+  - "[[decisions]]"
 ---
 # Decision log
 
@@ -39,6 +41,4 @@ considered and rejected.
 - [[d26]]: D26: The tools follow progressive discovery (list, orient, search or browse,…
 - [[d27]]: D27: Agents may read a brain's files directly
 - [[d28]]: D28: Agents may edit notes directly when their profile has edit and the…
-
-## Relations
-- part_of [[decisions]]
+- [[d29]]: D29: brain-wiki's own frontmatter fields carry a bw- prefix

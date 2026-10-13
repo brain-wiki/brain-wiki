@@ -13,8 +13,20 @@ from typing import TYPE_CHECKING
 
 from brainwiki.config.manifest import Manifest
 from brainwiki.format.document import ParsedDoc, parse_document
-from brainwiki.format.edit import append_to_section, replace_line_matching
+from brainwiki.format.edit import replace_line_matching
 from brainwiki.format.episode import ORIGINS, TAINTS, episode_path
+from brainwiki.format.fields import (
+    ALIAS_KEYS,
+    FIELDS,
+    add_items,
+    as_items,
+    canonical_item,
+    claim_value,
+    is_format1,
+    move_item,
+    replace_item,
+    to_format2,
+)
 from brainwiki.format.frontmatter import remove_field, set_fields
 from brainwiki.format.links import mask_code
 from brainwiki.format.meta import format_meta
@@ -23,7 +35,7 @@ from brainwiki.format.normalize import (
     STATUSES,
     map_status,
     property_links,
-    relation_lines_for,
+    relation_values_for,
 )
 from brainwiki.format.relations import canonicalize_line
 from brainwiki.format.rules import parse_rules
@@ -77,14 +89,23 @@ class FileContext:
 
 
 def _fm_line(doc: ParsedDoc, key: str) -> int:
+    """The line of `key` in the frontmatter, or of its `bw-` field (`privacy` -> `bw-privacy`)."""
     if not doc.frontmatter.present:
         return 1
     lines = doc.text.splitlines()
-    pattern = re.compile(rf"^{re.escape(key)}\s*:")
-    for idx in range(1, doc.frontmatter.end_line - 1):
-        if pattern.match(lines[idx]):
-            return idx + 1
+    for name in (key, FIELDS.get(key)):
+        if name is None:
+            continue
+        pattern = re.compile(rf"^{re.escape(name)}\s*:")
+        for idx in range(1, doc.frontmatter.end_line - 1):
+            if pattern.match(lines[idx]):
+                return idx + 1
     return 1
+
+
+def _note_field(doc: ParsedDoc, name: str) -> str:
+    """Where a fix writes `name`: the unprefixed key a format 1 note already uses, else `bw-`."""
+    return name if name in doc.frontmatter.legacy_fields else FIELDS[name]
 
 
 def _set(values: dict[str, object]) -> Callable[[str], str]:
@@ -93,6 +114,10 @@ def _set(values: dict[str, object]) -> Callable[[str], str]:
 
 def _line_edit(original: str, new_line: str, hint: int) -> Callable[[str], str]:
     return lambda text: replace_line_matching(text, original, new_line, hint)
+
+
+def _item_edit(key: str, index: int, value: str) -> Callable[[str], str]:
+    return lambda text: replace_item(text, key, index, [value])
 
 
 def check_file(
@@ -187,7 +212,7 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
             new_status, stage = map_status(str(status))
             values: dict[str, object] = {"status": new_status}
             if stage and fm.get("stage") is None:
-                values["stage"] = stage
+                values[FIELDS["stage"]] = stage
             problems.append(
                 Problem(
                     "BW106",
@@ -218,24 +243,31 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                         rel,
                         _fm_line(doc, "privacy"),
                         f"privacy {privacy!r} is lower than the topic's {topic_level!r}",
-                        fix=Fix(f"privacy: {topic_level}", _set({"privacy": topic_level})),
+                        fix=Fix(
+                            f"privacy: {topic_level}",
+                            _set({_note_field(doc, "privacy"): topic_level}),
+                        ),
                     )
                 )
-        for key, value in fm.items():
+        for key, value in doc.frontmatter.raw.items():
             if key.lower() not in RELATION_PROPERTIES or not property_links(value):
                 continue
-            lines = relation_lines_for(key, value)
+            pairs = relation_values_for(key, value)
 
-            def convert(text: str, key: str = key, lines: list[str] = lines) -> str:
-                return append_to_section(remove_field(text, key), "relations", lines)
+            def convert(text: str, key: str = key, pairs: list[tuple[str, str]] = pairs) -> str:
+                text = remove_field(text, key)
+                for bw_key, item in pairs:
+                    text = add_items(text, bw_key, [item])
+                return text
 
+            verbs = ", ".join(dict.fromkeys(k for k, _ in pairs))
             problems.append(
                 Problem(
                     "BW113",
                     rel,
                     _fm_line(doc, key),
-                    f"property {key!r} holds links that read as relations; write them under ## Relations",
-                    fix=Fix(f"convert {key} to relation lines", convert),
+                    f"property {key!r} holds links that read as relations; write them as {verbs}",
+                    fix=Fix(f"convert {key} to {verbs}", convert),
                 )
             )
     if doc.section_count("claims") > 1:
@@ -247,34 +279,39 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
     for claim in doc.claims:
         last = lines[claim.last_line - 1]
         if not claim.has_meta:
+            new_id = claim_id()
+            edit = (
+                _item_edit(claim.key, claim.index, claim_value(claim.text, {"id": new_id}))
+                if claim.key
+                else _line_edit(last, f"{last} {format_meta({'id': new_id})}", claim.last_line)
+            )
             problems.append(
                 Problem(
                     "BW205",
                     rel,
                     claim.line,
                     "claim has no metadata",
-                    fix=Fix(
-                        "assign a claim id",
-                        _line_edit(
-                            last, f"{last} {format_meta({'id': claim_id()})}", claim.last_line
-                        ),
-                    ),
+                    fix=Fix("assign a claim id", edit),
                 )
             )
             continue
         if claim.id:
             seen_ids[claim.id] += 1
             if seen_ids[claim.id] > 1:
-                new_line = last.replace(f"id:{claim.id}", f"id:{claim_id()}", 1)
+                new_id = claim_id()
+                if claim.key:
+                    value = claim_value(claim.text, {**claim.meta, "id": new_id})
+                    edit = _item_edit(claim.key, claim.index, value)
+                else:
+                    new_line = last.replace(f"id:{claim.id}", f"id:{new_id}", 1)
+                    edit = _line_edit(last, new_line, claim.last_line)
                 problems.append(
                     Problem(
                         "BW202",
                         rel,
                         claim.line,
                         f"duplicate claim id {claim.id}",
-                        fix=Fix(
-                            "re-mint the claim id", _line_edit(last, new_line, claim.last_line)
-                        ),
+                        fix=Fix("re-mint the claim id", edit),
                     )
                 )
         if claim.meta.get("taint") in ("true", "unknown") and _INJECTION.search(claim.text):
@@ -287,7 +324,24 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                 )
             )
     for relation in doc.relations:
-        if relation.is_alias:
+        if relation.key in ALIAS_KEYS:
+            value = str(as_items(fm.get(relation.key))[relation.index])
+            moved = canonical_item(relation.written_verb, value)
+            problems.append(
+                Problem(
+                    "BW303",
+                    rel,
+                    relation.line,
+                    f"alias field {relation.key!r}; canonical is 'bw-{relation.verb}'",
+                    fix=Fix(
+                        f"move to bw-{relation.verb}",
+                        lambda t, k=relation.key, v=value, m=moved: move_item(t, k, v, *m),
+                    )
+                    if moved
+                    else None,
+                )
+            )
+        elif relation.is_alias:
             original = lines[relation.line - 1]
             rewritten = canonicalize_line(original)
             problems.append(
@@ -304,6 +358,17 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                     else None,
                 )
             )
+    if is_format1(doc):
+        problems.append(
+            Problem(
+                "BW116",
+                rel,
+                None,
+                "format 1: ## Claims, ## Relations, or unprefixed privacy/stage; "
+                "move them to bw- frontmatter fields",
+                fix=Fix("convert to format 2", to_format2),
+            )
+        )
     is_hub = kind == "hub" or str(fm.get("type") or "") == "hub"
     if is_hub and doc.line_count > manifest.budgets.hub_max_lines:
         problems.append(
@@ -341,13 +406,15 @@ def _check_episode(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool
         values["taint"] = "unknown"
     if missing:
         move_to = episode_path(base, str(values["id"])) if "id" in values else None
+        legacy = doc.frontmatter.legacy_fields
+        written = {k if k == "id" or k in legacy else FIELDS[k]: v for k, v in values.items()}
         problems.append(
             Problem(
                 "BW503",
                 rel,
                 1,
                 f"episode lacks or has invalid provenance fields: {', '.join(missing)}",
-                fix=Fix("fill provenance fields", _set(values), move_to=move_to),
+                fix=Fix("fill provenance fields", _set(written), move_to=move_to),
             )
         )
     if raw_id is not None:

@@ -5,6 +5,8 @@ title: "Brain list"
 aliases: ["04 §9.1"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#91-brain-list"
+bw-part_of:
+  - "[[04-9-other-queries]]"
 ---
 # Brain list
 
@@ -22,6 +24,3 @@ Brains outside the host's limits are not listed. The path is withheld from
 restricted profiles because reading files directly would bypass the privacy
 filters; privacy levels filter what the tools return and are not a sandbox
 ([[security-and-privacy|10]]).
-
-## Relations
-- part_of [[04-9-other-queries]]

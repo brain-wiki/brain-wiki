@@ -50,7 +50,7 @@ Human edits are always allowed: it is the user's brain.
 | MCP `brain_log_episode` | `agent` | from session state if known (§3.2), else `unknown` | `mcp` | |
 | Hook capture at stop/compaction (opt-in) | `agent` | computed from the transcript (§3.2) | `hook` | |
 | `brain harvest` from host session stores (opt-in) | `agent` | computed from the session's tool calls (§3.2) | `harvest` | §2.2 |
-| File created directly under `inbox/episodes/` | as written if valid, else `agent` | `unknown` (forced) | `file` | Self-declared `taint: false` is not trusted. |
+| File created directly under `inbox/episodes/` | as written if valid, else `agent` | `unknown` (forced) | `file` | Self-declared `bw-taint: false` is not trusted. |
 | File in `inbox/agents/<agent>/` | `agent` | `unknown` | `file` | No frontmatter needed. |
 | `brain import --to-episodes` | `import` | `false` | `import` | Importing the user's own files. |
 
@@ -104,7 +104,7 @@ discover ─► filter ─► route ─► extract ─► distill (or raw) ─�
 | Route | Each session belongs to the brain its working directory resolves to, using the same project files and host defaults as brain selection ([03 §3](03-config-and-storage.md#3-choosing-a-brain)) plus optional path rules in `[harvest.routes]`. Sessions that resolve to no brain are skipped, never sent to the default brain. |
 | Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Injected brain-wiki context is stripped. Secrets are scrubbed. Taint is computed from the tool calls. |
 | Distill | One call to the configured command backend with the distill instructions (`prompts/distill.md`): the model returns `{skip, summary, claims[{text, turns}], negative_findings, open_questions, topics}`. Long sessions are split into chunks of at most 30k tokens, one episode per chunk. With `--raw`, no model is called and the episode holds a condensed transcript excerpt instead; consolidation distills it later. |
-| Write | Episodes with `captured: harvest`, `agent`, `session`, `origin_turns`, `device`, and the computed `taint`. The dedupe key `<host>:<session>:<turn range>` is shared with hook capture, so a session captured by a hook is not harvested again. |
+| Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-taint`. The dedupe key `<host>:<session>:<turn range>` is shared with hook capture, so a session captured by a hook is not harvested again. |
 | Watermark | `<state>/harvest/<host>/<session>.json` records the last harvested turn, so a long-running session is harvested in increments. |
 
 **Who distills.** The distill step reaches an LLM the same three ways as
@@ -121,8 +121,8 @@ yet (Cursor, OpenClaw, new hosts), `brain_harvest_prepare` returns
 `unsupported_host`, and the skill's recipe lets the agent read its own
 session history with its own tools, at the user's request, and log one
 episode per session with `brain_log_episode`, passing `session` and
-`origin_turns` as hints. Those episodes are `captured: mcp` with
-`taint: unknown`, because neither routing nor tool use was checked by
+`origin_turns` as hints. Those episodes are `bw-captured: mcp` with
+`bw-taint: unknown`, because neither routing nor tool use was checked by
 brain-wiki. They are usable knowledge but can never feed rules.
 
 **Running it periodically.** The recipe can be run by hand; as a scheduled
@@ -162,9 +162,9 @@ recorded version:
 
 | Check | Fails when |
 |---|---|
-| Schema | Frontmatter is not valid YAML, a required key is missing, `status` or `privacy` has an unknown value, or an `id` was changed or duplicated (lint BW1xx) |
-| Links and relations | A `## Relations` line does not parse (error) or a new link does not resolve (warning) |
-| Claims | Claim metadata comments are broken, or a claim was deleted or reworded in place. Claims change only by superseding (strike through, add the new claim), so a fact's history is never lost |
+| Schema | Frontmatter is not valid YAML, a required key is missing, `status` or `bw-privacy` has an unknown value, or an `id` was changed or duplicated (lint BW1xx) |
+| Links and relations | A relation does not parse or names an unknown `bw-` field (error), or a new link does not resolve (warning) |
+| Claims | Claim metadata is broken, or a claim was deleted or reworded in place. Claims change only by superseding (move the old claim to `bw-claims-superseded`, add the new one), so a fact's history is never lost |
 | Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` |
 | Privacy | A note's privacy was lowered, or the note is above what the caller's profile may read |
 | Protected files | Any of the files above changed |
@@ -228,7 +228,7 @@ summary of the user's own notes (`agent`, `false`) or of a web page
 
 | Path | Mechanism |
 |---|---|
-| Hook capture | The hook reads the turn's transcript and sets `taint: true` if any tool call matches the host's untrusted-tool list (web fetch and search, browser tools, MCP servers not in `trusted_mcp_servers`). Lists ship per host and are configurable ([08](08-agent-integrations.md)). |
+| Hook capture | The hook reads the turn's transcript and sets `bw-taint: true` if any tool call matches the host's untrusted-tool list (web fetch and search, browser tools, MCP servers not in `trusted_mcp_servers`). Lists ship per host and are configurable ([08](08-agent-integrations.md)). |
 | Harvest | Same rule over every tool call in the harvested turn range; a transcript the reader cannot fully parse yields `unknown`. |
 | Hook-observed sessions | A post-tool-use hook (where the host has one) records `tainted: true` in `<state>/sessions/<host>/<session>.json` the moment an untrusted tool runs. MCP calls that can be tied to that session use it. |
 | MCP without session state | `unknown`. The MCP protocol does not tell a server what else happened in the session, and the model's own claims about it are not evidence. |
@@ -512,19 +512,22 @@ Semantics (what the deterministic writer does):
 
 | Op | Effect on disk |
 |---|---|
-| `add_claim` | Appends `- text <!-- id; src; origin; taint; at -->` to the note's `## Claims` (creating the section above `## Relations`, or at the end). |
+| `add_claim` | Appends `"text {id; src; origin; taint; at}"` to the note's `bw-claims`. |
 | `merge_claim` | Adds the new sources to the claim's `src` and updates `at`. The text is unchanged. |
-| `supersede_claim` | Inserts the new claim directly above the old one; rewrites the old one as `- ~~old text~~ <!-- id; status:superseded; by:<new id>; … -->`. |
-| `retract_claim` | Strikes the claim through with `status:retracted` and the reason, citing sources that show it was wrong. |
-| `add_relation` | Appends a canonical relation line to `## Relations` of the `from` note. `supersedes` also sets the target note's `status: superseded`. A relation that already exists becomes a no-op. |
-| `create_note` | Creates `topics/<topic>/<slug>.md` with frontmatter (new id, type, privacy inherited from the topic), `# title`, summary, claims, and `- part_of [[hub]]`; adds a line to the hub's `## Notes`. |
+| `supersede_claim` | Puts the new claim in the old one's place in `bw-claims` and moves the old one to `bw-claims-superseded` with `by: <new id>`, the reason, and the date. |
+| `retract_claim` | Moves the claim to `bw-claims-superseded` with `status: retracted` and the reason, citing sources that show it was wrong. |
+| `add_relation` | Appends a canonical relation to the `from` note's `bw-<verb>` field. `supersedes` also sets the target note's `status: superseded`. A relation that already exists becomes a no-op. |
+| `create_note` | Creates `topics/<topic>/<slug>.md` with frontmatter (new id, type, title, `bw-part_of` the hub, `bw-claims`, and `bw-privacy` only when a source episode is more private than the topic), `# title`, and the summary; adds a line to the hub's `## Notes`. |
 | `create_topic` | Creates the folder and a hub; adds the topic to the `AGENTS.md` block. Allowed only when the profile's `topics` is `*`. |
 | `skip_episode` | Nothing, except that the episode is archived with the run. |
 
 `new:<topic>/<slug>` refs let ops in one batch point at notes created in the
 same batch. Every op that changes a note also sets its `updated` field; the
 hub line `create_note` adds is bookkeeping and does not, so a hub one line
-under its budget can still take a new child note.
+under its budget can still take a new child note. An op that edits a format 1
+note first converts it to format 2 in the same run
+([02 §13](02-brain-format.md#13-format-versioning)), and a run that writes
+format 2 files into a brain that declares format 1 raises the declaration.
 
 ## 6. Rules
 
@@ -657,7 +660,7 @@ Retention: the last 200 runs or 90 days, whichever keeps more.
 | Index stale or busy | Selection uses a fresh scan; apply verifies note hashes from disk, not from the index. |
 | Proposal file edited by hand | Accept re-parses the JSON block; invalid JSON is reported, nothing applied. |
 | Origin transcript missing or unreadable | `brain_read_origin` returns `not_available`; consolidation uses the episode alone. |
-| Host changes its transcript format | The session reader skips what it cannot parse; harvest reports the session as unreadable; raw capture falls back to `taint: unknown` or no episode. |
+| Host changes its transcript format | The session reader skips what it cannot parse; harvest reports the session as unreadable; raw capture falls back to `bw-taint: unknown` or no episode. |
 
 ## 11. Alternatives considered
 

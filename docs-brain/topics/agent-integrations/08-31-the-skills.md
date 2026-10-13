@@ -5,6 +5,8 @@ title: "The skills (Agent integrations)"
 aliases: ["08 §3.1"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#31-the-skills"
+bw-part_of:
+  - "[[08-3-the-plugin-bundle]]"
 ---
 # The skills (Agent integrations)
 
@@ -13,6 +15,3 @@ The plugin ships three skills, `brain` (everyday use), `brain-setup`
 consolidation, review, health), plus routine templates for the hosts' own
 schedulers. Their design, the onboarding flow, and the templates are in
 [[skills-onboarding-and-routines|15]].
-
-## Relations
-- part_of [[08-3-the-plugin-bundle]]

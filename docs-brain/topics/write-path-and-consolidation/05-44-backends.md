@@ -5,6 +5,8 @@ title: "Backends"
 aliases: ["05 §4.4"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#44-backends"
+bw-part_of:
+  - "[[05-4-consolidation]]"
 ---
 # Backends
 
@@ -57,6 +59,3 @@ The backend's agent profile is the preset name (for example
 
 **Future `api` backend.** Direct provider calls behind the same packet →
 ops interface. Not in v0.1.
-
-## Relations
-- part_of [[05-4-consolidation]]

@@ -5,6 +5,8 @@ title: "Protocol target"
 aliases: ["07 §3.1"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#31-protocol-target"
+bw-part_of:
+  - "[[07-3-mcp-server]]"
 ---
 # Protocol target
 
@@ -19,6 +21,3 @@ source: "docs/design/07-interfaces.md#31-protocol-target"
   logging notifications, all deprecated in the current revision.
 - `tools/list` returns tools in a fixed order with a public cache hint (1
   hour), which helps client caches and prompt caching.
-
-## Relations
-- part_of [[07-3-mcp-server]]

@@ -5,6 +5,8 @@ title: "Levels (semantic zoom)"
 aliases: ["12 §2"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#2-levels-semantic-zoom"
+bw-part_of:
+  - "[[visualizer]]"
 ---
 # Levels (semantic zoom)
 
@@ -42,6 +44,3 @@ source: "docs/design/12-visualizer.md#2-levels-semantic-zoom"
   typed links (modularity clustering, deterministic), aiming for about
   √(topics) groups of 4–40 topics. A brain with 12 topics or fewer has one
   constellation and opens at the constellation level.
-
-## Relations
-- part_of [[visualizer]]

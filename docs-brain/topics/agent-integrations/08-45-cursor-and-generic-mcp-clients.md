@@ -5,6 +5,8 @@ title: "Cursor and generic MCP clients"
 aliases: ["08 §4.5"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#45-cursor-and-generic-mcp-clients"
+bw-part_of:
+  - "[[08-4-per-host-notes]]"
 ---
 # Cursor and generic MCP clients
 
@@ -17,6 +19,3 @@ source: "docs/design/08-agent-integrations.md#45-cursor-and-generic-mcp-clients"
   planned after v0.1.
 - `brain connect generic --print` prints a stdio server entry (`command`,
   `args`, `env`) to paste into any client's MCP configuration.
-
-## Relations
-- part_of [[08-4-per-host-notes]]

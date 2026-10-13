@@ -5,6 +5,8 @@ title: "Common file conventions"
 aliases: ["02 §4"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#4-common-file-conventions"
+bw-part_of:
+  - "[[brain-format]]"
 ---
 # Common file conventions
 
@@ -15,11 +17,18 @@ source: "docs/design/02-brain-format.md#4-common-file-conventions"
 - **Frontmatter values are scalars or lists of scalars.** Nested mappings
   MUST NOT be used. Reasons: Obsidian's properties editor only handles flat
   properties; LLMs frequently break nested YAML; flat values index trivially.
-- Wikilinks inside frontmatter are not relations. Typed connections belong
-  in `## Relations` (§7). Importers convert common frontmatter link
-  properties into relations ([[import|09]]).
+- **brain-wiki's fields carry the `bw-` prefix.** Relations (§6.4), claims
+  (§6.3), `bw-privacy`, `bw-stage`, and episode provenance (§9) are fields
+  named `bw-…`. Shared note metadata stays unprefixed: `id`, `type`, `title`,
+  `aliases`, `tags`, `status`, `created`, `updated`. Reasons: the prefix
+  marks what brain-wiki parses and validates, keeps those fields together in
+  Obsidian's Properties view, and cannot clash with another tool's property
+  names. The prefix is reserved: lint reports unknown `bw-` fields (BW302).
+- Claims and relations are strings, written double-quoted, one list item
+  per line. Obsidian shows and edits them as list properties, and quoted
+  `"[[links]]"` stay live links.
+- Other frontmatter wikilinks (`up:`, `related:`) are not relations.
+  Importers convert common link properties into `bw-` relations
+  ([[import|09]]).
 - Writers change only the lines they mean to change. They MUST NOT reformat
   frontmatter or reflow prose they did not edit.
-
-## Relations
-- part_of [[brain-format]]

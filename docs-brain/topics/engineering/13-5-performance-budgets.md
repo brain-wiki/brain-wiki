@@ -5,6 +5,8 @@ title: "Performance budgets (Engineering)"
 aliases: ["13 §5"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#5-performance-budgets"
+bw-part_of:
+  - "[[engineering]]"
 ---
 # Performance budgets (Engineering)
 
@@ -20,6 +22,3 @@ source: "docs/design/13-engineering.md#5-performance-budgets"
 
 CI runs the perf suite at 1k notes on every change, with thresholds
 relaxed 2× for shared-runner noise, and at 10k nightly.
-
-## Relations
-- part_of [[engineering]]

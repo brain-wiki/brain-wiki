@@ -4,6 +4,8 @@ type: design
 title: "BW4xx: structure and budgets"
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#bw4xx-structure-and-budgets"
+bw-part_of:
+  - "[[06-3-rule-catalog]]"
 ---
 # BW4xx: structure and budgets
 
@@ -18,6 +20,3 @@ source: "docs/design/06-lint-and-reports.md#bw4xx-structure-and-budgets"
 | BW407 | Note outside any topic. | info / off | — |
 | BW408 | `AGENTS.md` managed block missing or out of date. | warning / warning | regenerate |
 | BW409 | Topic slug invalid. | error / warning | — |
-
-## Relations
-- part_of [[06-3-rule-catalog]]

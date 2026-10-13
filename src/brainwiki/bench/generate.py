@@ -15,6 +15,7 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 from brainwiki.format.agents_md import replace_block
+from brainwiki.format.fields import claim_value, quote, relation_value
 from brainwiki.lifecycle import default_agents_block, init_brain
 
 LEVELS = ["default", "sensitive", "secret"]
@@ -320,7 +321,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
             day[newer] = max(day[newer], day[node_id] + 1)
 
     # Relations, declared in the more private note so a file never names a note above its level.
-    relations: dict[str, list[str]] = defaultdict(list)
+    relations: dict[str, list[tuple[str, str]]] = defaultdict(list)  # note -> (verb, link)
     linked: dict[str, set[str]] = defaultdict(set)
 
     def link_name(n: Node) -> str:
@@ -329,7 +330,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
     def declare(a: Node, verb: str, b: Node, inverse: str) -> None:
         if b.rank > a.rank:
             a, b, verb = b, a, inverse
-        relations[a.id].append(f"- {verb} [[{link_name(b)}]]")
+        relations[a.id].append((verb, link_name(b)))
         linked[a.id].add(b.id)
         linked[b.id].add(a.id)
 
@@ -341,7 +342,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
         truth.relation_counts["conflicts_with"] += 1
     for n in order:
         relations[n.id].insert(
-            0, f"- part_of [[topics/{n.topic}/index|{hubs[n.topic or ''].title}]]"
+            0, ("part_of", f"topics/{n.topic}/index|{hubs[n.topic or ''].title}")
         )
         truth.relation_counts["part_of"] += 1
         same = by_topic_rank[(n.topic or "", n.rank)]
@@ -352,7 +353,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
                 pool = same if rng.random() < 0.6 and len(same) > 1 else order
                 other = pool[rng.randrange(len(pool))]
                 if other.id != n.id and other.rank <= n.rank and other.id not in linked[n.id]:
-                    relations[n.id].append(f"- {verb} [[{link_name(other)}]]")
+                    relations[n.id].append((verb, link_name(other)))
                     linked[n.id].add(other.id)
                     linked[other.id].add(n.id)
                     truth.relation_counts["depends_on" if verb == "enables" else verb] += 1
@@ -415,14 +416,14 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
             "---",
             f"id: {eid}",
             "type: episode",
-            "agent: bench-agent",
-            "origin: agent",
-            f"taint: {rng.choice(('false', 'false', 'unknown'))}",
-            "captured: mcp",
+            "bw-agent: bench-agent",
+            "bw-origin: agent",
+            f"bw-taint: {rng.choice(('false', 'false', 'unknown'))}",
+            "bw-captured: mcp",
             f"created: {when:%Y-%m-%dT%H:%M:%SZ}",
         ]
         if rank:
-            fm.append(f"privacy: {LEVELS[rank]}")
+            fm.append(f"bw-privacy: {LEVELS[rank]}")
         body = [g.sentence(12, [node.token] if j == 1 else []) for j in range(4)]
         _write(root / node.path, "\n".join([*fm, "---", *body]) + "\n")
 
@@ -436,7 +437,12 @@ def generate(root: Path, notes: int = 1000, seed: int = 0, *, cross_privacy: boo
 
 
 def _note_text(
-    g: _Gen, n: Node, day: int, plants: list[str], order: list[Node], relations: list[str]
+    g: _Gen,
+    n: Node,
+    day: int,
+    plants: list[str],
+    order: list[Node],
+    relations: list[tuple[str, str]],
 ) -> str:
     rng = g.rng
     when = date(2026, 1, 1) + timedelta(days=day)
@@ -451,8 +457,7 @@ def _note_text(
     if n.status != "active":
         fm.append(f"status: {n.status}")
     if n.rank == 2:
-        fm.append(f"privacy: {LEVELS[2]}")
-    fm.append("---")
+        fm.append(f"bw-privacy: {LEVELS[2]}")
     # Body links point only at notes this note's readers may see.
     targets = [o for o in rng.sample(order, min(12, len(order))) if o.rank <= n.rank and o is not n]
     links = [f"[[{o.slug}]]" for o in targets[:5]]
@@ -472,24 +477,14 @@ def _note_text(
         subject = " ".join(g.words(3))
         claim = f"{subject.capitalize()} {rng.choice(_CLAIM_VERBS)} {' '.join(g.words(4))}."
         cid = "c-" + g.ulid(_EPOCH + timedelta(days=day))
-        claims.append(f"- {claim} <!-- id:{cid}; at:{when:%Y-%m-%d} -->")
-    return (
-        "\n".join(
-            [
-                *fm,
-                f"# {n.title}",
-                "",
-                *body,
-                "",
-                "## Claims",
-                *claims,
-                "",
-                "## Relations",
-                *relations,
-            ]
-        )
-        + "\n"
-    )
+        claims.append(claim_value(claim, {"id": cid, "at": f"{when:%Y-%m-%d}"}))
+    by_verb: dict[str, list[str]] = defaultdict(list)
+    for verb, link in relations:
+        by_verb[verb].append(relation_value(link))
+    for verb, values in by_verb.items():
+        fm += [f"bw-{verb}:", *[f"  - {quote(v)}" for v in values]]
+    fm += ["bw-claims:", *[f"  - {quote(c)}" for c in claims], "---"]
+    return "\n".join([*fm, f"# {n.title}", "", *body]) + "\n"
 
 
 def _plant_queries(g: _Gen, truth: Truth, order: list[Node]) -> None:

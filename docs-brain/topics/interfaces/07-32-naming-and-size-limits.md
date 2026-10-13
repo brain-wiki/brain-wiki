@@ -5,6 +5,8 @@ title: "Naming and size limits"
 aliases: ["07 §3.2"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#32-naming-and-size-limits"
+bw-part_of:
+  - "[[07-3-mcp-server]]"
 ---
 # Naming and size limits
 
@@ -20,6 +22,3 @@ source: "docs/design/07-interfaces.md#32-naming-and-size-limits"
   2,048).
 - Results are kept under 20k tokens by default (one host's default cap is
   25k). Larger content is paginated or summarized with a pointer to `read`.
-
-## Relations
-- part_of [[07-3-mcp-server]]

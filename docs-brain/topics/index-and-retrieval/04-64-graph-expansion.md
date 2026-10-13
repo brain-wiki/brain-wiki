@@ -5,6 +5,8 @@ title: "Graph expansion"
 aliases: ["04 §6.4"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#64-graph-expansion"
+bw-part_of:
+  - "[[04-6-search]]"
 ---
 # Graph expansion
 
@@ -20,6 +22,3 @@ their source's score. At most 3 per result and 10 in total.
 | `impact` | notes that `depends_on` the hit | "what breaks if this changes?" |
 | `history` | the full `supersedes` chain in both directions | "how did this evolve?" |
 | `related` | `related_to` and `links_to` neighbors | exploration |
-
-## Relations
-- part_of [[04-6-search]]

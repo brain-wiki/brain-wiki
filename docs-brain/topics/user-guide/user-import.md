@@ -4,6 +4,8 @@ type: guide
 title: "Import"
 tags: [user-guide]
 source: "docs/user/import.md"
+bw-part_of:
+  - "[[user-guide]]"
 ---
 # Import
 
@@ -12,6 +14,3 @@ source: "docs/user/import.md"
 - [[user-import-copy-notes-into-an-existing-brain]]: Copy notes into an existing brain
 - [[user-import-documents-as-episodes]]: Documents as episodes
 - [[user-import-your-agents-memory-files]]: Your agents' memory files
-
-## Relations
-- part_of [[user-guide]]

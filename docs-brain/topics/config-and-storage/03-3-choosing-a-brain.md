@@ -5,6 +5,8 @@ title: "Choosing a brain"
 aliases: ["03 §3"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#3-choosing-a-brain"
+bw-part_of:
+  - "[[config-and-storage]]"
 ---
 # Choosing a brain
 
@@ -38,6 +40,3 @@ employer's knowledge and a personal life) differ in who owns them, where
 they may be stored, and which models may process them. Separate brains
 make that boundary a directory boundary, which every tool understands,
 and keep relations from crossing it.
-
-## Relations
-- part_of [[config-and-storage]]

@@ -5,6 +5,8 @@ title: "T15: Name leakage through links"
 aliases: ["threat T15"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+bw-part_of:
+  - "[[10-3-threats-and-mitigations]]"
 ---
 # T15: Name leakage through links
 
@@ -13,6 +15,3 @@ source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 **Mitigations:** Lint BW312 warns; guard results hide the target.
 
 **Residual risk:** The link text in the source note is visible to whoever may read that note.
-
-## Relations
-- part_of [[10-3-threats-and-mitigations]]

@@ -5,6 +5,8 @@ title: "Invariants"
 aliases: ["05 §3.3"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#33-invariants"
+bw-part_of:
+  - "[[05-3-provenance-and-taint]]"
 ---
 # Invariants
 
@@ -25,6 +27,3 @@ source: "docs/design/05-write-path-and-consolidation.md#33-invariants"
 5. **Provenance is structural.** Fields are written by code, stored in
    frontmatter and claim metadata, and indexed; no component parses
    provenance out of prose.
-
-## Relations
-- part_of [[05-3-provenance-and-taint]]

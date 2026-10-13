@@ -5,6 +5,8 @@ title: "Future: the replicator interface"
 aliases: ["03 §6.4"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#64-future-the-replicator-interface"
+bw-part_of:
+  - "[[03-6-storage-and-sync]]"
 ---
 # Future: the replicator interface
 
@@ -30,6 +32,3 @@ auto   = "after-write"                # off | after-write | interval
 
 `brain sync [--dry-run]` and `brain sync status` drive it. Sync runs under
 the brain's state-dir lock, never concurrently with an apply.
-
-## Relations
-- part_of [[03-6-storage-and-sync]]

@@ -5,6 +5,8 @@ title: "Integration ladder"
 aliases: ["08 §1"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#1-integration-ladder"
+bw-part_of:
+  - "[[agent-integrations]]"
 ---
 # Integration ladder
 
@@ -29,6 +31,3 @@ v0.1 coverage:
 | OpenClaw | `openclaw plugins install brain-wiki --marketplace <repo>` (bundle mode) | yes | yes | none in bundle mode (Claude-format hooks are not executed there); optional hook pack (§4.4) | after v0.1 |
 | Cursor | Loads the repo's Agent Plugins bundle (`plugin.json` + `mcp.json`), or `brain connect cursor` | yes | yes | not in v0.1 (Cursor has its own hook events; planned) | after v0.1 |
 | Other MCP clients | `brain connect generic --print` gives a config snippet | — | yes | — | — |
-
-## Relations
-- part_of [[agent-integrations]]

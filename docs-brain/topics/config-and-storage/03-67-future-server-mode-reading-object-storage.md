@@ -5,6 +5,8 @@ title: "Future: server mode reading object storage"
 aliases: ["03 §6.7"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#67-future-server-mode-reading-object-storage"
+bw-part_of:
+  - "[[03-6-storage-and-sync]]"
 ---
 # Future: server mode reading object storage
 
@@ -34,6 +36,3 @@ Building every engine operation on `BrainStore`, including the "write only
 if unchanged" checks consolidation already does
 ([[05-73-apply|05 §7.3]]), costs little now
 and is what keeps this future cheap.
-
-## Relations
-- part_of [[03-6-storage-and-sync]]

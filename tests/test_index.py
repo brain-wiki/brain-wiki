@@ -91,7 +91,9 @@ def test_read_banners_and_modes(example: Path):
             or hub["backlinks"]
         )
         full = read(eng, "FTS5 decision")
-        assert "<!--" not in full["content"] and "(superseded)" in full["content"]
+        assert "<!--" not in full["content"] and "{id:" not in full["content"]
+        assert "Claims:\n- SQLite FTS5 is the default" in full["content"]
+        assert "(1 superseded or retracted" in full["content"]
         ep = read(eng, eng.db.execute("SELECT id FROM nodes WHERE kind='episode'").fetchone()["id"])
         assert ep["content"].startswith("<untrusted-episode")
 

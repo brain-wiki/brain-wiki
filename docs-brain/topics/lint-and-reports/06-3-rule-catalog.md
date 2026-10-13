@@ -5,6 +5,8 @@ title: "Rule catalog"
 aliases: ["06 §3"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#3-rule-catalog"
+bw-part_of:
+  - "[[lint-and-reports]]"
 ---
 # Rule catalog
 
@@ -19,6 +21,3 @@ can repair it safely.
 - [[06-bw5xx-inbox]]: BW5xx: inbox
 - [[06-bw6xx-rules]]: BW6xx: rules
 - [[06-bw7xx-safety]]: BW7xx: safety
-
-## Relations
-- part_of [[lint-and-reports]]

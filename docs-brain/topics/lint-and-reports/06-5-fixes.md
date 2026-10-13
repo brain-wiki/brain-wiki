@@ -5,6 +5,8 @@ title: "Fixes"
 aliases: ["06 §5"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#5-fixes"
+bw-part_of:
+  - "[[lint-and-reports]]"
 ---
 # Fixes
 
@@ -21,6 +23,3 @@ for checks and fixes alike. Rules:
 - `--fix --dry-run` prints the diff.
 - Fixes that need judgment (resolving an ambiguous link, removing a
   secret, choosing between conflict copies) are never automatic.
-
-## Relations
-- part_of [[lint-and-reports]]

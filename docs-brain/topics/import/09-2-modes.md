@@ -5,6 +5,8 @@ title: "Modes (Import)"
 aliases: ["09 §2"]
 tags: [import]
 source: "docs/design/09-import.md#2-modes"
+bw-part_of:
+  - "[[import]]"
 ---
 # Modes (Import)
 
@@ -16,6 +18,3 @@ source: "docs/design/09-import.md#2-modes"
 | **From an agent** | `brain import --from <host>` | The host's own memory files become episodes attributed to that host (§6). |
 
 All modes default to `--dry-run`; `--apply` executes.
-
-## Relations
-- part_of [[import]]

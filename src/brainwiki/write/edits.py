@@ -222,6 +222,9 @@ def _claims(data: bytes | None) -> list[Claim]:
     return parse_document("x.md", _text(data)).claims if data is not None else []
 
 
+_SUPERSEDE = "move it to bw-claims-superseded with `by: <new claim id>`, then add the new claim"
+
+
 def _check_claims(change: _Change) -> list[Claim]:
     """Problems for deleted or reworded claims; returns the claims the edit added."""
     before, after = _claims(change.base), _claims(change.current)
@@ -236,8 +239,7 @@ def _check_claims(change: _Change) -> list[Claim]:
                     Problem(
                         change.path,
                         "claim_deleted",
-                        f'claim "{_short(text)}" was deleted; supersede it instead '
-                        "(strike it through and add the new claim)",
+                        f'claim "{_short(text)}" was deleted; supersede it instead ({_SUPERSEDE})',
                         line=claim.line,
                     )
                 )
@@ -250,8 +252,8 @@ def _check_claims(change: _Change) -> list[Claim]:
                     Problem(
                         change.path,
                         "claim_reworded",
-                        f'claim "{_short(text)}" was reworded in place; strike the old claim '
-                        "through and add the new one, so its history is kept",
+                        f'claim "{_short(text)}" was reworded in place; supersede it instead '
+                        f"({_SUPERSEDE}), so its history is kept",
                         line=now.line,
                     )
                 )
@@ -280,22 +282,29 @@ def _short(text: str, width: int = 60) -> str:
 
 def _stamp_claims(data: bytes, claims: list[Claim]) -> bytes:
     """Mark claims an agent added as its own and unverified (05 §3)."""
-    lines = data.decode("utf-8").splitlines(keepends=True)
+    from brainwiki.format.fields import claim_value, replace_item
+
+    text = data.decode("utf-8")
     today = datetime.now(UTC).strftime("%Y-%m-%d")
     for claim in claims:
-        idx = claim.last_line - 1
-        if not 0 <= idx < len(lines):
-            continue
         meta = dict(claim.meta)
         meta.setdefault("id", claim_id())
         meta.setdefault("origin", "agent")
         meta.setdefault("taint", "unknown")
         meta.setdefault("at", today)
+        if claim.key is not None:
+            text = replace_item(text, claim.key, claim.index, [claim_value(claim.text, meta)])
+            continue
+        lines = text.splitlines(keepends=True)  # a format 1 note: the claim is a body line
+        idx = claim.last_line - 1
+        if not 0 <= idx < len(lines):
+            continue
         line = lines[idx]
         ending = "\n" if line.endswith("\n") else ""
         body = re.sub(r"\s*<!--.*?-->\s*$", "", line.rstrip("\n"))
         lines[idx] = f"{body} {format_meta(meta)}{ending}"
-    return "".join(lines).encode("utf-8")
+        text = "".join(lines)
+    return text.encode("utf-8")
 
 
 def _lint_new(engine: Engine, change: _Change) -> None:

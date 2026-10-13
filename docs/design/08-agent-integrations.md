@@ -406,7 +406,7 @@ Capture points are tracked per session in `<state>/sessions/<host>/<id>.json`
 (last captured transcript offset, whether prompted capture already ran,
 taint), and episode `dedupe` keys make retries harmless. Transcript
 readers are per host and defensive: an unreadable or unknown format yields
-a `raw` episode with `taint: unknown`, or no episode, never an error.
+a `raw` episode with `bw-taint: unknown`, or no episode, never an error.
 
 ### 6.3 Taint detection
 
@@ -415,7 +415,7 @@ untrusted tools per host are web fetch and search tools, browser tools,
 MCP tools from servers not in `trusted_mcp_servers`, and shell commands
 that fetch from the network (`curl`, `wget`, URLs in arguments). The
 `tool_used` hook records it immediately; raw capture also scans the
-transcript. Episodes from tainted sessions get `taint: true`; sessions
+transcript. Episodes from tainted sessions get `bw-taint: true`; sessions
 whose tool use cannot be observed get `unknown`.
 
 ### 6.4 Session readers

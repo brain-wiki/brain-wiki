@@ -5,14 +5,24 @@ title: "Relations"
 aliases: ["02 §6.4"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#64-relations"
+bw-part_of:
+  - "[[02-6-notes]]"
 ---
 # Relations
 
-A relation is one list item under `## Relations`:
+A relation is one string in a `bw-<verb>` field, one field per canonical
+verb:
+
+```yaml
+bw-depends_on:
+  - "[[SQLite version policy]] — needs the trigram tokenizer"
+bw-conflicts_with: "[[Vector-only search proposal]] (unless: embeddings enabled)"
+```
 
 ```text
-relation   = "- " verb " " target [ " " qualifiers ] [ " " sep " " note ] EOL
+field      = "bw-" verb ": " ( relation | list of relation )
 verb       = canonical | alias                       ; table below
+relation   = target [ " " qualifiers ] [ " " sep " " note ]
 target     = "[[" link "]]" | "[" label "](" path ")"
 qualifiers = "(" qualifier *( ", " qualifier ) ")"
 qualifier  = word | key ( "=" | ": " ) value         ; e.g. supplies_to, weight=0.7, unless: x
@@ -20,15 +30,15 @@ sep        = "—" | "–" | "--" | "-"
 ```
 
 **Canonical vocabulary.** Five families, eight verbs. The verb is always
-written from the point of view of the note that contains the line.
+written from the point of view of the note that holds the field.
 
-| Family | Verb on note A | Meaning | Inverse (written on B) | Stored as | Guard |
+| Family | Field on note A | Meaning | Inverse (on B) | Stored as | Guard |
 |---|---|---|---|---|---|
-| Containment | `part_of [[B]]` | A is a part, child, or member of B | `has_part [[A]]` | `A part_of B` | no |
-| Dependency | `depends_on [[B]]` | A requires, builds on, or is caused by B | `enables [[A]]` | `A depends_on B` | no |
-| Conflict | `conflicts_with [[B]]` | A contradicts B, or B is an exception that defeats A | `conflicts_with [[A]]` (symmetric) | `A conflicts_with B` | **yes** |
-| Lineage | `supersedes [[B]]` | A replaces B; B is outdated | `superseded_by [[A]]` | `A supersedes B` | **yes** |
-| Peer | `related_to [[B]]` | A and B are related without a stronger claim | `related_to [[A]]` (symmetric) | `A related_to B` | no |
+| Containment | `bw-part_of: "[[B]]"` | A is a part, child, or member of B | `bw-has_part: "[[A]]"` | `A part_of B` | no |
+| Dependency | `bw-depends_on: "[[B]]"` | A requires, builds on, or is caused by B | `bw-enables: "[[A]]"` | `A depends_on B` | no |
+| Conflict | `bw-conflicts_with: "[[B]]"` | A contradicts B, or B is an exception that defeats A | `bw-conflicts_with: "[[A]]"` (symmetric) | `A conflicts_with B` | **yes** |
+| Lineage | `bw-supersedes: "[[B]]"` | A replaces B; B is outdated | `bw-superseded_by: "[[A]]"` | `A supersedes B` | **yes** |
+| Peer | `bw-related_to: "[[B]]"` | A and B are related without a stronger claim | `bw-related_to: "[[A]]"` (symmetric) | `A related_to B` | no |
 
 Choices behind the table:
 
@@ -40,17 +50,17 @@ Choices behind the table:
   relation; the index stores it once in canonical direction. This is what
   makes guard retrieval work no matter which note the author edited.
 - **Domain meaning lives in qualifiers.** A finance note might write
-  `- enables [[Cloud capex]] (supplies_to, weight=0.6, lag=1Q)`, a legal
-  note `- conflicts_with [[Clause 7.2]] (exception)`, a research note
-  `- depends_on [[Prior result]] (replicates)`. The family drives retrieval
+  `bw-enables: "[[Cloud capex]] (supplies_to, weight=0.6, lag=1Q)"`, a legal
+  note `bw-conflicts_with: "[[Clause 7.2]] (exception)"`, a research note
+  `bw-depends_on: "[[Prior result]] (replicates)"`. The family drives retrieval
   and lint; the qualifier and note are stored and displayed but never
   change engine behavior. No vocabulary file to load, no compiler.
 - **Guards are the reason typed relations exist.** See §7.
 
-**Aliases.** The parser accepts common synonyms so people can write
-naturally, normalizes them, and records the original word as the first
-qualifier. Lint (`migrate` profile: info; `strict`: warning) suggests the
-canonical form, and `--fix` rewrites it.
+**Aliases.** The parser accepts alias fields (`bw-requires`, `bw-contains`…)
+so people can write naturally, normalizes them, and records the alias as
+the first qualifier. Lint (`migrate` profile: info; `strict`: warning)
+suggests the canonical field, and `--fix` moves the item there.
 
 | Alias | Canonical |
 |---|---|
@@ -74,6 +84,3 @@ the core does not.
 - If A `supersedes` B, then B's `status` SHOULD be `superseded`.
 - A note MUST NOT supersede itself or form a supersession cycle.
 - Contradictory declarations (A `part_of` B and B `part_of` A) are errors.
-
-## Relations
-- part_of [[02-6-notes]]

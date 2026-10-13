@@ -5,6 +5,8 @@ title: "T10: Hook command injection"
 aliases: ["threat T10"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+bw-part_of:
+  - "[[10-3-threats-and-mitigations]]"
 ---
 # T10: Hook command injection
 
@@ -13,6 +15,3 @@ source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 **Mitigations:** Hooks are invoked as `brain hook <host> <event>` with JSON on stdin; nothing from the payload is ever interpolated into a command line; no `shell=True` anywhere.
 
 **Residual risk:** —
-
-## Relations
-- part_of [[10-3-threats-and-mitigations]]

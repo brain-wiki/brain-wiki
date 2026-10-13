@@ -5,6 +5,8 @@ title: "Other queries"
 aliases: ["04 §9"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#9-other-queries"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Other queries
 
@@ -21,6 +23,3 @@ source: "docs/design/04-index-and-retrieval.md#9-other-queries"
 ## Subsections
 - [[04-91-brain-list]]: Brain list
 - [[04-92-neighbors]]: Neighbors
-
-## Relations
-- part_of [[index-and-retrieval]]

@@ -5,6 +5,8 @@ title: "Machine state"
 aliases: ["03 §4"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#4-machine-state"
+bw-part_of:
+  - "[[config-and-storage]]"
 ---
 # Machine state
 
@@ -22,6 +24,3 @@ path, so moving a brain folder keeps its index and undo history. When two
 folders claim the same id (a copied brain), the second one is keyed by
 `<id>-<hash of path>` and lint reports BW105-style duplication at the
 brain level ([[04-2-location-and-lifecycle|04 §2]]).
-
-## Relations
-- part_of [[config-and-storage]]

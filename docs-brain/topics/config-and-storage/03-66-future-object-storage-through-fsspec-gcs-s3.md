@@ -5,6 +5,8 @@ title: "Future: object storage through fsspec (GCS, S3)"
 aliases: ["03 §6.6"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#66-future-object-storage-through-fsspec-gcs-s3"
+bw-part_of:
+  - "[[03-6-storage-and-sync]]"
 ---
 # Future: object storage through fsspec (GCS, S3)
 
@@ -68,6 +70,3 @@ credentials, AWS profiles and environment), selected by name in the user
 config. Optional end-to-end encryption would encrypt each object with
 `age` in the replicator, store plaintext hashes in the manifest, and leave
 the local copy in plain text (agents must read it).
-
-## Relations
-- part_of [[03-6-storage-and-sync]]

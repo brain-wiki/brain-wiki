@@ -5,6 +5,8 @@ title: "Alternatives considered (Config and storage)"
 aliases: ["03 §9"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#9-alternatives-considered"
+bw-part_of:
+  - "[[config-and-storage]]"
 ---
 # Alternatives considered (Config and storage)
 
@@ -17,6 +19,3 @@ source: "docs/design/03-config-and-storage.md#9-alternatives-considered"
 | `fsspec.generic.rsync` or a cache layer as the sync engine | One-way, size-only comparison, no conflict handling. |
 | Requiring git | Many users sync with cloud drives; git stays optional. |
 | A git library (GitPython, dulwich) instead of the CLI | GitPython is in maintenance mode and leaks resources in long-running processes; dulwich lacks some porcelain; the CLI honors user hooks and credentials. dulwich remains an option where no git binary exists. |
-
-## Relations
-- part_of [[config-and-storage]]

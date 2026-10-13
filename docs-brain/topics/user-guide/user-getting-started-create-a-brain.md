@@ -4,6 +4,8 @@ type: guide
 title: "Create a brain"
 tags: [user-guide]
 source: "docs/user/getting-started.md#create-a-brain"
+bw-part_of:
+  - "[[user-getting-started]]"
 ---
 # Create a brain
 
@@ -28,6 +30,3 @@ under git (recommended), or in a synced folder.
 
 Already have notes? See [[user-import|Import]] to adopt an Obsidian vault in
 place.
-
-## Relations
-- part_of [[user-getting-started]]

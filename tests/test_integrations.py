@@ -251,7 +251,7 @@ def test_overlay_survey_adopt_and_phases(tmp_path: Path):
         assert topics == {"projects", "areas"}
         record, _ = overlay.apply_phase(engine, 1)
         lumen = (root / "01 Projects/Lumen.md").read_text()
-        assert "- part_of [[index]]" in lumen and "up: '[[index]]'" in lumen
+        assert 'bw-part_of:\n  - "[[index]]"' in lumen and "up: '[[index]]'" in lumen
         overlay.apply_phase(engine, 2)
         lumen = (root / "01 Projects/Lumen.md").read_text()
         assert (

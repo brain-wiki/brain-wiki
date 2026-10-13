@@ -5,6 +5,8 @@ title: "Requirements (Index and retrieval)"
 aliases: ["04 §1"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#1-requirements"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Requirements (Index and retrieval)
 
@@ -16,6 +18,3 @@ source: "docs/design/04-index-and-retrieval.md#1-requirements"
 | R4 | Guard neighbors are always returned (02 §7). | Correctness about change is the core retrieval promise (G5). |
 | R5 | Fast enough for hooks: search p95 < 50 ms, freshness check < 150 ms at 10k notes. | Hooks run on every session start and, optionally, every prompt (G7). |
 | R6 | Lexical search works with zero models; embeddings are optional and later. | G6: no required services. |
-
-## Relations
-- part_of [[index-and-retrieval]]

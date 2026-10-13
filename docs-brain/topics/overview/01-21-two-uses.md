@@ -5,6 +5,8 @@ title: "Two uses"
 aliases: ["01 §2.1"]
 tags: [overview]
 source: "docs/design/01-overview.md#21-two-uses"
+bw-part_of:
+  - "[[01-2-what-brain-wiki-is]]"
 ---
 # Two uses
 
@@ -48,6 +50,3 @@ Writes take one of three paths:
 The LLM that proposes operations is whatever the user already runs: the
 host agent itself (through MCP tools and a skill) or a headless agent CLI
 started by a scheduled job. brain-wiki needs no API keys.
-
-## Relations
-- part_of [[01-2-what-brain-wiki-is]]

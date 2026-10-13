@@ -5,6 +5,8 @@ title: "Design principles"
 aliases: ["01 §5"]
 tags: [overview]
 source: "docs/design/01-overview.md#5-design-principles"
+bw-part_of:
+  - "[[overview]]"
 ---
 # Design principles
 
@@ -29,6 +31,3 @@ source: "docs/design/01-overview.md#5-design-principles"
 7. **Respect the user's other tools.** Obsidian, git, and sync tools see a
    normal folder. brain-wiki does not hide state in the brain that those
    tools would mangle.
-
-## Relations
-- part_of [[overview]]

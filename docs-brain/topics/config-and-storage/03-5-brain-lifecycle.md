@@ -5,6 +5,8 @@ title: "Brain lifecycle"
 aliases: ["03 §5"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#5-brain-lifecycle"
+bw-part_of:
+  - "[[config-and-storage]]"
 ---
 # Brain lifecycle
 
@@ -17,6 +19,3 @@ source: "docs/design/03-config-and-storage.md#5-brain-lifecycle"
 | Rename | `brain brains rename <old> <new>` | Config only; `brain.toml` `name` is cosmetic. |
 | Forget | `brain brains remove <name>` | Config only. The folder, index, and state stay until `--purge-state` deletes the last two. The brain folder is never deleted by brain-wiki. |
 | Check | `brain doctor` | Config, brain, index, SQLite features (trigram), git status, host wiring, pending crashed runs. |
-
-## Relations
-- part_of [[config-and-storage]]

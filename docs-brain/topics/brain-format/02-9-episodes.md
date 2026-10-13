@@ -5,6 +5,8 @@ title: "Episodes"
 aliases: ["02 §9"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#9-episodes"
+bw-part_of:
+  - "[[brain-format]]"
 ---
 # Episodes
 
@@ -18,16 +20,16 @@ of the ULID's timestamp.
 ---
 id: 01JA0C5D8E2F4G6H8J0K2M4N6P
 type: episode
-agent: claude-code
-session: 5f2c9a1e-…              # host session id, if known
-origin_turns: 12-48              # turns of that session this episode covers, if known
-device: laptop                   # device the session ran on (user config name)
-origin: agent                    # owner | agent | import | system
-taint: unknown                   # true | false | unknown
-captured: mcp                    # hook | mcp | harvest | cli | import | file
 created: 2026-10-10T19:22:11Z
-topics: [search]                 # hints only
-privacy: default
+bw-agent: claude-code
+bw-session: 5f2c9a1e-…           # host session id, if known
+bw-turns: 12-48                  # turns of that session this episode covers, if known
+bw-device: laptop                # device the session ran on (user config name)
+bw-origin: agent                 # owner | agent | import | system
+bw-taint: unknown                # true | false | unknown
+bw-captured: mcp                 # hook | mcp | harvest | cli | import | file
+bw-topics: [search]              # hints only
+bw-privacy: default
 ---
 Switched the search path to FTS5 after ripgrep was too slow on 10k notes.
 
@@ -46,10 +48,13 @@ Rules:
 
 - Episodes are **immutable**. After creation no tool edits them. Lint
   records each episode's hash in the index and reports changes.
-- `origin`, `taint`, `captured`, and `agent` are set by the code path that
-  writes the episode (hook, MCP server, harvest, CLI), never taken from
-  model-written text. See [[05-3-provenance-and-taint|05 §3]].
-- `session`, `origin_turns`, and `device` point back to the conversation the
+- `bw-origin`, `bw-taint`, `bw-captured`, and `bw-agent` are set by the
+  code path that writes the episode (hook, MCP server, harvest, CLI), never
+  taken from model-written text. See [[05-3-provenance-and-taint|05 §3]].
+  Episodes written before format 2 use the names without `bw-` (and
+  `origin_turns` for `bw-turns`); they are never rewritten, and readers
+  accept both.
+- `bw-session`, `bw-turns`, and `bw-device` point back to the conversation the
   episode came from, so tools on that device can show it
   ([[05-46-origin-context|05 §4.6]]). They
   never hold file paths. An episode must be understandable on its own:
@@ -58,14 +63,12 @@ Rules:
 - The body is free Markdown. `## Claims`, `## Negative findings` (what was
   tried and did not work, so later agents do not repeat it), and
   `## Open questions` are suggested sections that consolidation prompts
-  look for; none is required.
+  look for; none is required. Unlike a note, an episode keeps its claims
+  in the body: it is raw capture that consolidation reads as text.
 - Consolidation moves processed episodes to `archive/episodes/` with the
   same relative path. Archived episodes are kept as provenance: claim `src`
   references still resolve.
 - Files dropped into `inbox/agents/<agent>/` by host-native memory features
   are treated as episodes by consolidation without needing frontmatter.
-  Their `origin` is `agent` and their `taint` is `unknown`. Consolidation
+  Their origin is `agent` and their taint is `unknown`. Consolidation
   archives them to `archive/agents/<agent>/` unchanged.
-
-## Relations
-- part_of [[brain-format]]

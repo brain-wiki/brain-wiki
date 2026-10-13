@@ -5,6 +5,8 @@ title: "Session readers"
 aliases: ["08 §6.4"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#64-session-readers"
+bw-part_of:
+  - "[[08-6-capture-and-harvest]]"
 ---
 # Session readers
 
@@ -24,6 +26,3 @@ Readers are versioned and tested against recorded fixtures from several
 host versions. A line they cannot parse is skipped and counted; a session
 with too many unparseable lines is reported as unreadable rather than
 half-read. Readers never write to a host's files.
-
-## Relations
-- part_of [[08-6-capture-and-harvest]]

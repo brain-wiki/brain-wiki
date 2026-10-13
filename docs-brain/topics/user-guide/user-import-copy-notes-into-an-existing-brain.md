@@ -4,6 +4,8 @@ type: guide
 title: "Copy notes into an existing brain"
 tags: [user-guide]
 source: "docs/user/import.md#copy-notes-into-an-existing-brain"
+bw-part_of:
+  - "[[user-import]]"
 ---
 # Copy notes into an existing brain
 
@@ -13,6 +15,3 @@ brain import ~/old-notes --into personal [--topic archive] --apply
 
 Top-level folders become topics (or everything goes into `--topic`), path
 links are rewritten, and the source is left untouched.
-
-## Relations
-- part_of [[user-import]]

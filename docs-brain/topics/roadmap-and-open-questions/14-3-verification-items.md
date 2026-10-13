@@ -5,6 +5,8 @@ title: "Verification items"
 aliases: ["14 §3"]
 tags: [roadmap-and-open-questions]
 source: "docs/design/14-roadmap-and-open-questions.md#3-verification-items"
+bw-part_of:
+  - "[[roadmap-and-open-questions]]"
 ---
 # Verification items
 
@@ -26,6 +28,4 @@ result.
 - [[t-11]]: T-11: How much does the Claude Code transcript format vary across recent…
 - [[t-12]]: T-12: Can an agent running inside each desktop app (Claude Code,…
 - [[t-13]]: T-13: Antigravity /schedule
-
-## Relations
-- part_of [[roadmap-and-open-questions]]
+- [[t-14]]: T-14: Does Obsidian treat links in list properties (bw-depends_on

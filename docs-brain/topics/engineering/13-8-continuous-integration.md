@@ -5,6 +5,8 @@ title: "Continuous integration"
 aliases: ["13 §8"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#8-continuous-integration"
+bw-part_of:
+  - "[[engineering]]"
 ---
 # Continuous integration
 
@@ -25,6 +27,3 @@ When the repository is published, GitHub Actions jobs:
 6. Bench offline suites and the 1k perf suite.
 
 Until then, the same steps run locally through `uv run scripts/check.py`.
-
-## Relations
-- part_of [[engineering]]

@@ -60,10 +60,11 @@ def property_links(value: Any) -> list[str]:
     return found
 
 
-def relation_lines_for(key: str, value: Any) -> list[str]:
+def relation_values_for(key: str, value: Any) -> list[tuple[str, str]]:
+    """(`bw-<verb>` field, relation value) pairs for a relation-like property (format 2)."""
     mapping = RELATION_PROPERTIES.get(key.lower())
     if not mapping:
         return []
     verb, qualifier = mapping
     suffix = f" ({qualifier})" if qualifier else ""
-    return [f"- {verb} [[{target}]]{suffix}" for target in property_links(value)]
+    return [(f"bw-{verb}", f"[[{target}]]{suffix}") for target in property_links(value)]

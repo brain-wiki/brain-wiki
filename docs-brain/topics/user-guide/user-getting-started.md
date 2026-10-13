@@ -4,6 +4,8 @@ type: guide
 title: "Getting started"
 tags: [user-guide]
 source: "docs/user/getting-started.md"
+bw-part_of:
+  - "[[user-guide]]"
 ---
 # Getting started
 
@@ -13,6 +15,3 @@ source: "docs/user/getting-started.md"
 - [[user-getting-started-first-steps]]: First steps
 - [[user-getting-started-what-a-note-looks-like]]: What a note looks like
 - [[user-getting-started-next]]: Next
-
-## Relations
-- part_of [[user-guide]]

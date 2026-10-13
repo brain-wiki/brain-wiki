@@ -172,14 +172,14 @@ def test_apply_writes_archives_logs_and_undoes(example: Path):
         old = next(
             c
             for c in doc.claims
-            if c.struck and c.text.startswith("SQLite FTS5 is the default search")
+            if c.status == "superseded" and c.text.startswith("SQLite FTS5 is the default search")
         )
-        assert old.meta["status"] == "superseded" and old.meta["by"] == new.id
+        assert old.key == "bw-claims-superseded" and old.meta["by"] == new.id
         assert "- [[edges-index]]" in (example / "topics/search/index.md").read_text()
         created = (example / "topics/search/edges-index.md").read_text()
         assert (
-            "- enables [[fts5]] (supports)" in created
-            and "part_of [[topics/search/index|Search]]" in created
+            'bw-enables:\n  - "[[fts5]] (supports)"' in created
+            and 'bw-part_of: "[[topics/search/index|Search]]"' in created
         )
         assert (
             not (example / first).exists()

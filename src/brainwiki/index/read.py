@@ -7,7 +7,8 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from brainwiki.errors import Ambiguous, NotFound
-from brainwiki.format.document import parse_document
+from brainwiki.format.claims import Claim
+from brainwiki.format.document import ParsedDoc, parse_document
 from brainwiki.format.meta import strip_meta_comments
 from brainwiki.index.guards import banners, guards_for
 from brainwiki.index.resolver import Resolver
@@ -46,25 +47,39 @@ def resolve_target(engine: Engine, target: str) -> dict[str, Any]:
     return dict(row)
 
 
+def _marks(claim: Claim) -> str:
+    suffix = []
+    if claim.status != "active":
+        suffix.append(f"({claim.status})")
+    if claim.meta.get("taint") in ("true", "unknown"):
+        suffix.append("[unverified]")
+    return (" " + " ".join(suffix)) if suffix else ""
+
+
+def _claims_block(doc: ParsedDoc) -> str:
+    """The claims a note keeps in frontmatter (format 2), as the agent reads them."""
+    held = [c for c in doc.claims if c.key is not None]
+    current = [f"- {c.text}{_marks(c)}" for c in held if c.status == "active"]
+    old = len(held) - len(current)
+    lines = ["Claims:", *current] if current else []
+    if old:
+        lines.append(f"({old} superseded or retracted; mode='raw' shows them)")
+    return "\n".join(lines)
+
+
 def _render_full(engine: Engine, text: str) -> str:
     doc = parse_document("x.md", text)
     lines = text.splitlines()
     body_start = doc.frontmatter.body_start_line
-    marks: dict[int, str] = {}
-    for claim in doc.claims:
-        suffix = []
-        if claim.status != "active":
-            suffix.append(f"({claim.status})")
-        if claim.meta.get("taint") in ("true", "unknown"):
-            suffix.append("[unverified]")
-        if suffix:
-            marks[claim.last_line] = " " + " ".join(suffix)
+    marks = {c.last_line: _marks(c) for c in doc.claims if c.key is None}
     out = []
     for n in range(body_start, len(lines) + 1):
         line = lines[n - 1]
         cleaned = re.sub(r"\s*<!--.*?-->", "", line)
         out.append(cleaned + marks.get(n, ""))
-    return strip_meta_comments("\n".join(out)).strip()
+    body = strip_meta_comments("\n".join(out)).strip()
+    claims = _claims_block(doc)
+    return f"{body}\n\n{claims}".strip() if claims else body
 
 
 def read(
@@ -109,10 +124,13 @@ def read(
             raise NotFound("mode 'section' needs a section heading")
         wanted = section.strip().lstrip("#").strip().lower()
         match = next((s for s in doc.sections if s.name == wanted), None)
-        if match is None:
+        if match is None and wanted == "claims" and _claims_block(doc):
+            result["content"] = _claims_block(doc)
+        elif match is None:
             raise NotFound(f"no section {section!r} in {node['path']}")
-        lines = text.splitlines()[match.heading_line - 1 : match.end_line]
-        result["content"] = _render_full(engine, "\n".join(lines))
+        else:
+            lines = text.splitlines()[match.heading_line - 1 : match.end_line]
+            result["content"] = _render_full(engine, "\n".join(lines))
     elif mode == "outline":
         result["headings"] = [h[2] for h in doc.headings]
         result["claims"] = [

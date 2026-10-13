@@ -4,6 +4,8 @@ type: design
 title: "Prior art"
 tags: [roadmap-and-open-questions]
 source: "docs/design/14-roadmap-and-open-questions.md#prior-art"
+bw-part_of:
+  - "[[roadmap-and-open-questions]]"
 ---
 # Prior art
 
@@ -21,6 +23,3 @@ borrows ideas only, never code, and is Apache-2.0.
 | Obsidian | Proprietary app; open help docs | Link resolution by file name, properties model, comments, Bases views | We stay compatible without depending on it. |
 | Agent Skills, AGENTS.md, Agent Plugins 1.0, MCP | Open specifications | The integration surfaces in [[agent-integrations\|08]] | — |
 | Memory benchmarks (LongMemEval, MemoryAgentBench, LoCoMo, HaluMem) and wiki-compilation studies | MIT; MIT; CC BY-NC 4.0; CC BY-NC-ND 4.0 | Knowledge-update and conflict-resolution slices; extraction quality against gold points; probe coverage | See [[11-5-public-benchmarks\|11 §5]]. |
-
-## Relations
-- part_of [[roadmap-and-open-questions]]

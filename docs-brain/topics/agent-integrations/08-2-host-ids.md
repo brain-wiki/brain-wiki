@@ -5,6 +5,8 @@ title: "Host ids"
 aliases: ["08 §2"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#2-host-ids"
+bw-part_of:
+  - "[[agent-integrations]]"
 ---
 # Host ids
 
@@ -24,6 +26,3 @@ file read by two hosts), the host is detected in this order:
    variables for compatibility, which is why the payload check comes first.
 
 An undetectable host is `generic`.
-
-## Relations
-- part_of [[agent-integrations]]

@@ -5,6 +5,8 @@ title: "Ways an episode is written"
 aliases: ["05 §2.1"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#21-ways-an-episode-is-written"
+bw-part_of:
+  - "[[05-2-the-write-paths]]"
 ---
 # Ways an episode is written
 
@@ -15,7 +17,7 @@ source: "docs/design/05-write-path-and-consolidation.md#21-ways-an-episode-is-wr
 | MCP `brain_log_episode` | `agent` | from session state if known (§3.2), else `unknown` | `mcp` | |
 | Hook capture at stop/compaction (opt-in) | `agent` | computed from the transcript (§3.2) | `hook` | |
 | `brain harvest` from host session stores (opt-in) | `agent` | computed from the session's tool calls (§3.2) | `harvest` | §2.2 |
-| File created directly under `inbox/episodes/` | as written if valid, else `agent` | `unknown` (forced) | `file` | Self-declared `taint: false` is not trusted. |
+| File created directly under `inbox/episodes/` | as written if valid, else `agent` | `unknown` (forced) | `file` | Self-declared `bw-taint: false` is not trusted. |
 | File in `inbox/agents/<agent>/` | `agent` | `unknown` | `file` | No frontmatter needed. |
 | `brain import --to-episodes` | `import` | `false` | `import` | Importing the user's own files. |
 
@@ -44,6 +46,3 @@ All writers go through one function, `write_episode()`, which:
    from episodes that arrived by sync.
 6. Writes to a temporary file in the same directory, then renames it
    atomically, then updates the index (write-through).
-
-## Relations
-- part_of [[05-2-the-write-paths]]

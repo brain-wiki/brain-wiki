@@ -5,6 +5,8 @@ title: "`log.md`"
 aliases: ["02 §12"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#12-logmd"
+bw-part_of:
+  - "[[brain-format]]"
 ---
 # `log.md`
 
@@ -18,6 +20,3 @@ An append-only, human-readable record of changes made by brain-wiki:
 
 `log.md` is for people. Nothing depends on parsing it; undo uses machine
 run records ([[05-8-undo|05 §8]]).
-
-## Relations
-- part_of [[brain-format]]

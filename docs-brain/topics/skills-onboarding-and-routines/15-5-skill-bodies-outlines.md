@@ -5,6 +5,8 @@ title: "Skill bodies (outlines)"
 aliases: ["15 §5"]
 tags: [skills-onboarding-and-routines]
 source: "docs/design/15-skills-onboarding-and-routines.md#5-skill-bodies-outlines"
+bw-part_of:
+  - "[[skills-onboarding-and-routines]]"
 ---
 # Skill bodies (outlines)
 
@@ -45,6 +47,3 @@ source: "docs/design/15-skills-onboarding-and-routines.md#5-skill-bodies-outline
 4. Health: `brain lint`, `brain report`, what each report means, which fixes
    are safe.
 5. Undo: find the run, explain what it will restore, undo on confirmation.
-
-## Relations
-- part_of [[skills-onboarding-and-routines]]

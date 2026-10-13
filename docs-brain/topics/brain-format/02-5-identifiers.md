@@ -5,6 +5,8 @@ title: "Identifiers"
 aliases: ["02 §5"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#5-identifiers"
+bw-part_of:
+  - "[[brain-format]]"
 ---
 # Identifiers
 
@@ -20,6 +22,3 @@ source: "docs/design/02-brain-format.md#5-identifiers"
 - Ids are permanent. Renaming or moving a file never changes its id.
 - Ids MUST be unique within a brain. Lint reports duplicates (usually a
   copied file) and `--fix` re-mints the id of the newer copy.
-
-## Relations
-- part_of [[brain-format]]

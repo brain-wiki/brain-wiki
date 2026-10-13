@@ -5,6 +5,8 @@ title: "Links"
 aliases: ["02 §6.5"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#65-links"
+bw-part_of:
+  - "[[02-6-notes]]"
 ---
 # Links
 
@@ -37,6 +39,3 @@ Obsidian.
 **Renames.** The index remembers each id's previous paths. When a file
 moves and links break, `brain lint --fix` rewrites the links using the id.
 `brain mv` moves a file and rewrites links in one step.
-
-## Relations
-- part_of [[02-6-notes]]

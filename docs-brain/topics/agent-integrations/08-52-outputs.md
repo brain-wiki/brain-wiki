@@ -5,6 +5,8 @@ title: "Outputs"
 aliases: ["08 §5.2"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#52-outputs"
+bw-part_of:
+  - "[[08-5-hooks]]"
 ---
 # Outputs
 
@@ -19,6 +21,3 @@ source: "docs/design/08-agent-integrations.md#52-outputs"
 Injected text is wrapped in markers
 (`<brain-wiki-context>` … `</brain-wiki-context>`) so capture can strip it
 ([[05-33-invariants|05 §3.3]]).
-
-## Relations
-- part_of [[08-5-hooks]]

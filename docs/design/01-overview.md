@@ -180,9 +180,9 @@ agent-readable without restructuring it.
 |---|---|
 | **brain** | A directory with a `brain.toml` manifest; the unit of storage, privacy, and selection. |
 | **topic** | A folder of related notes with one **hub** page that summarizes it and links its notes. |
-| **note** | A curated Markdown file: frontmatter, free prose, optional `## Claims` and `## Relations` sections. |
-| **claim** | A single bullet in a note's `## Claims` section with an id and provenance metadata. The unit consolidation operates on. |
-| **relation** | A typed, directed link written in a note's `## Relations` section, such as `depends_on [[Other note]]`. |
+| **note** | A curated Markdown file: frontmatter (with claims and relations in `bw-` fields) and free prose. |
+| **claim** | One item in a note's `bw-claims` list, with an id and provenance metadata. The unit consolidation operates on. |
+| **relation** | A typed, directed link held in a note's `bw-<verb>` field, such as `bw-depends_on: "[[Other note]]"`. |
 | **guard relation** | `conflicts_with` and `supersedes`/`superseded_by`. Retrieving either end always retrieves the other. |
 | **episode** | An immutable inbox file holding raw observations from one agent session or one human entry. May point back to the conversation it came from. |
 | **harvest** | Reading finished sessions from a host's own transcript store and turning them into episodes. |

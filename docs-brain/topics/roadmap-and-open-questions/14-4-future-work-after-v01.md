@@ -5,6 +5,8 @@ title: "Future work (after v0.1)"
 aliases: ["14 §4"]
 tags: [roadmap-and-open-questions]
 source: "docs/design/14-roadmap-and-open-questions.md#4-future-work-after-v01"
+bw-part_of:
+  - "[[roadmap-and-open-questions]]"
 ---
 # Future work (after v0.1)
 
@@ -19,6 +21,3 @@ source: "docs/design/14-roadmap-and-open-questions.md#4-future-work-after-v01"
 | Importers | Chat exports, email, documents; authority ordering (specs over notes over chat) when sources disagree | [[import\|09]] |
 | Domain plugins | Signed influence propagation over weighted `depends_on`; domain layouts in the visualizer (dependency DAG, rule/exception tree, claim/evidence matrix); external state providers keyed by qualifiers | — |
 | Bench | Adapters for public conversation-memory benchmarks | [[11-5-public-benchmarks\|11 §5]] |
-
-## Relations
-- part_of [[roadmap-and-open-questions]]

@@ -4,6 +4,8 @@ type: guide
 title: "Agents"
 tags: [user-guide]
 source: "docs/user/agents.md"
+bw-part_of:
+  - "[[user-guide]]"
 ---
 # Agents
 
@@ -15,6 +17,3 @@ source: "docs/user/agents.md"
 - [[user-agents-capture-off-by-default]]: Capture (off by default)
 - [[user-agents-harvest-off-by-default]]: Harvest (off by default)
 - [[user-agents-scheduled-routines]]: Scheduled routines
-
-## Relations
-- part_of [[user-guide]]

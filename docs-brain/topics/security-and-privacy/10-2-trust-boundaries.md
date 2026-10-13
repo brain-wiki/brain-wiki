@@ -5,6 +5,8 @@ title: "Trust boundaries"
 aliases: ["10 §2"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#2-trust-boundaries"
+bw-part_of:
+  - "[[security-and-privacy]]"
 ---
 # Trust boundaries
 
@@ -29,6 +31,3 @@ source: "docs/design/10-security-and-privacy.md#2-trust-boundaries"
   keeping the brain where that host cannot reach, or a separate brain. For
   the same reason `brain_list` gives a brain's folder path only to profiles
   that may already read everything in it ([[04-91-brain-list|04 §9.1]]).
-
-## Relations
-- part_of [[security-and-privacy]]

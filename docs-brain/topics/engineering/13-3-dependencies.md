@@ -5,6 +5,8 @@ title: "Dependencies"
 aliases: ["13 §3"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#3-dependencies"
+bw-part_of:
+  - "[[engineering]]"
 ---
 # Dependencies
 
@@ -34,6 +36,3 @@ and a lockfile pin.
 
 Supported Python: 3.11 to the latest release. Supported SQLite: 3.35+
 with FTS5; trigram (3.34+) is used when present.
-
-## Relations
-- part_of [[engineering]]

@@ -4,6 +4,8 @@ type: design
 title: "BW7xx: safety"
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#bw7xx-safety"
+bw-part_of:
+  - "[[06-3-rule-catalog]]"
 ---
 # BW7xx: safety
 
@@ -11,6 +13,3 @@ source: "docs/design/06-lint-and-reports.md#bw7xx-safety"
 |---|---|---|---|
 | BW701 | Text matches a secret pattern (API key, token, private key). | error / error | — (the user must remove and rotate it) |
 | BW702 | Instruction-like text ("ignore previous instructions", "you must now…") in a claim with `taint` ≠ `false`. | warning / warning | — |
-
-## Relations
-- part_of [[06-3-rule-catalog]]

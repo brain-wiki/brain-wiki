@@ -5,6 +5,8 @@ title: "Capture and harvest"
 aliases: ["08 §6"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#6-capture-and-harvest"
+bw-part_of:
+  - "[[agent-integrations]]"
 ---
 # Capture and harvest
 
@@ -49,6 +51,3 @@ nudge   = true                  # show unharvested-session counts in orientation
 - [[08-62-modes]]: Modes (Agent integrations)
 - [[08-63-taint-detection]]: Taint detection
 - [[08-64-session-readers]]: Session readers
-
-## Relations
-- part_of [[agent-integrations]]

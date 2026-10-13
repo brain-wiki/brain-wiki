@@ -356,8 +356,8 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         ),
         description="After editing notes' Markdown files directly, validate and record the edits: "
         "pass the paths you changed. Problems come back with their lines; nothing is recorded "
-        "until all errors are fixed. Claims change only by superseding (strike the old one "
-        "through, add the new one). With no paths, lists notes with unrecorded edits.",
+        "until all errors are fixed. Claims change only by superseding (move the old one to "
+        "bw-claims-superseded, add the new one). With no paths, lists notes with unrecorded edits.",
     )
     @guard
     def brain_check(

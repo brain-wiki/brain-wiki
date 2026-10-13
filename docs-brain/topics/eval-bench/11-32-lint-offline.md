@@ -5,6 +5,8 @@ title: "`lint` (offline)"
 aliases: ["11 §3.2"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#32-lint-offline"
+bw-part_of:
+  - "[[11-3-suites]]"
 ---
 # `lint` (offline)
 
@@ -16,6 +18,3 @@ expected diagnostics (code, path, line).
 | Per-rule precision and recall | 100% on the corpus |
 | Fix idempotency: `--fix` twice changes nothing the second time | always |
 | Fix locality: fixes change only the lines they must | always |
-
-## Relations
-- part_of [[11-3-suites]]

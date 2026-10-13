@@ -5,6 +5,8 @@ title: "Modes (Agent integrations)"
 aliases: ["08 §6.2"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#62-modes"
+bw-part_of:
+  - "[[08-6-capture-and-harvest]]"
 ---
 # Modes (Agent integrations)
 
@@ -17,7 +19,4 @@ Capture points are tracked per session in `<state>/sessions/<host>/<id>.json`
 (last captured transcript offset, whether prompted capture already ran,
 taint), and episode `dedupe` keys make retries harmless. Transcript
 readers are per host and defensive: an unreadable or unknown format yields
-a `raw` episode with `taint: unknown`, or no episode, never an error.
-
-## Relations
-- part_of [[08-6-capture-and-harvest]]
+a `raw` episode with `bw-taint: unknown`, or no episode, never an error.

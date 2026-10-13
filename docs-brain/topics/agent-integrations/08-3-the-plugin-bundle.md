@@ -5,6 +5,8 @@ title: "The plugin bundle"
 aliases: ["08 §3"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#3-the-plugin-bundle"
+bw-part_of:
+  - "[[agent-integrations]]"
 ---
 # The plugin bundle
 
@@ -57,6 +59,3 @@ more; `brain connect` avoids the wait.
 ## Subsections
 - [[08-31-the-skills]]: The skills (Agent integrations)
 - [[08-32-the-static-instruction-block]]: The static instruction block
-
-## Relations
-- part_of [[agent-integrations]]

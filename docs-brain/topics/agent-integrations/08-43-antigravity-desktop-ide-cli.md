@@ -5,6 +5,8 @@ title: "Antigravity (desktop, IDE, CLI)"
 aliases: ["08 §4.3"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#43-antigravity-desktop-ide-cli"
+bw-part_of:
+  - "[[08-4-per-host-notes]]"
 ---
 # Antigravity (desktop, IDE, CLI)
 
@@ -42,6 +44,3 @@ source: "docs/design/08-agent-integrations.md#43-antigravity-desktop-ide-cli"
   seconds in interactive sessions behind a slow index; until it is ready
   the agent has no brain tools. `brain connect antigravity` (installed
   `brain`) avoids the wait.
-
-## Relations
-- part_of [[08-4-per-host-notes]]

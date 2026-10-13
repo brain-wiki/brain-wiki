@@ -5,6 +5,8 @@ title: "Agent profiles (Interfaces: CLI, MCP, agent profiles)"
 aliases: ["07 §1"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#1-agent-profiles"
+bw-part_of:
+  - "[[interfaces]]"
 ---
 # Agent profiles (Interfaces: CLI, MCP, agent profiles)
 
@@ -51,6 +53,3 @@ argument its host gave it, because the user configured that host. Profiles
 prevent accidents and limit what a confused or manipulated agent can reach;
 they do not stop a malicious program running as the user, which could read
 the files anyway ([[security-and-privacy|10]]).
-
-## Relations
-- part_of [[interfaces]]

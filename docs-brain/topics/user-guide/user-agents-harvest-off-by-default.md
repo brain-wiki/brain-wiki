@@ -4,6 +4,8 @@ type: guide
 title: "Harvest (off by default)"
 tags: [user-guide]
 source: "docs/user/agents.md#harvest-off-by-default"
+bw-part_of:
+  - "[[user-agents]]"
 ---
 # Harvest (off by default)
 
@@ -29,6 +31,3 @@ Sessions are routed to the brain their working directory belongs to; a
 session that belongs to no brain is skipped, never filed into your default
 brain. Claude Code deletes transcripts after 30 days by default, so harvest
 at least weekly.
-
-## Relations
-- part_of [[user-agents]]

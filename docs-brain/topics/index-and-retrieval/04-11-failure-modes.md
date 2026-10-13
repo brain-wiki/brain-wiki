@@ -5,6 +5,8 @@ title: "Failure modes (Index and retrieval)"
 aliases: ["04 §11"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#11-failure-modes"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Failure modes (Index and retrieval)
 
@@ -16,6 +18,3 @@ source: "docs/design/04-index-and-retrieval.md#11-failure-modes"
 | Link target ambiguous | Edge stored with `dst = NULL`; lint error lists candidates. |
 | SQLite busy beyond timeout | The read proceeds on the last committed state and the response says the index may be stale. |
 | SQLite lacks trigram | `meta.fts_trigram = 0`; CJK queries use the `LIKE` fallback; `brain doctor` reports it. |
-
-## Relations
-- part_of [[index-and-retrieval]]

@@ -5,6 +5,8 @@ title: "Ranking"
 aliases: ["04 §6.3"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#63-ranking"
+bw-part_of:
+  - "[[04-6-search]]"
 ---
 # Ranking
 
@@ -21,6 +23,3 @@ The factors are configurable under `[search]` in `brain.toml`, and their
 defaults are tuned with the bench ([[eval-bench|11]]). Recency is
 deliberately weak: an old note that is still active is still true.
 Supersession, not age, is what demotes outdated knowledge.
-
-## Relations
-- part_of [[04-6-search]]

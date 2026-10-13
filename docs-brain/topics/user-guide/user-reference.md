@@ -4,6 +4,8 @@ type: guide
 title: "Reference"
 tags: [user-guide]
 source: "docs/user/reference.md"
+bw-part_of:
+  - "[[user-guide]]"
 ---
 # Reference
 
@@ -11,6 +13,3 @@ source: "docs/user/reference.md"
 - [[user-reference-commands]]: Commands
 - [[user-reference-files]]: Files
 - [[user-reference-troubleshooting]]: Troubleshooting
-
-## Relations
-- part_of [[user-guide]]

@@ -5,6 +5,8 @@ title: "Public benchmarks"
 aliases: ["11 §5"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#5-public-benchmarks"
+bw-part_of:
+  - "[[eval-bench]]"
 ---
 # Public benchmarks
 
@@ -26,6 +28,3 @@ A method worth borrowing from recent work on LLM-compiled wikis is
 that each remains answerable from the consolidated notes. With a fixed
 question set it can run without a judge (answers checked by anchors); it
 is planned as an optional consolidation metric.
-
-## Relations
-- part_of [[eval-bench]]

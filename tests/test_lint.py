@@ -179,8 +179,8 @@ def test_fix_is_one_undoable_run(brain_dir: Path):
     with eng(brain_dir) as e:
         outcome = fix(e)
         text = (brain_dir / "topics/a/x.md").read_text()
-        assert "status: active" in text and "stage: wip" in text and "id: " in text
-        assert "- depends_on [[y]] (requires)" in text
+        assert "status: active" in text and "bw-stage: wip" in text and "id: " in text
+        assert 'bw-depends_on:\n  - "[[y]] (requires)"' in text and "## Relations" not in text
         assert (brain_dir / "topics/a/index.md").exists()  # BW404 created the hub
         undo(e, outcome.record.run)
         assert (brain_dir / "topics/a/x.md").read_text() == before

@@ -4,6 +4,8 @@ type: reference
 title: "Reading order"
 tags: [decisions]
 source: "docs/design/README.md#reading-order"
+bw-part_of:
+  - "[[decisions]]"
 ---
 # Reading order
 
@@ -27,6 +29,3 @@ source: "docs/design/README.md#reading-order"
 
 Normative documents (02, and the schemas in 04, 05, 07) use MUST, SHOULD,
 and MAY as in RFC 2119. The others explain and justify.
-
-## Relations
-- part_of [[decisions]]

@@ -5,6 +5,8 @@ title: "Storage and sync"
 aliases: ["03 §6"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#6-storage-and-sync"
+bw-part_of:
+  - "[[config-and-storage]]"
 ---
 # Storage and sync
 
@@ -17,6 +19,3 @@ source: "docs/design/03-config-and-storage.md#6-storage-and-sync"
 - [[03-65-future-private-git-remote]]: Future: private git remote
 - [[03-66-future-object-storage-through-fsspec-gcs-s3]]: Future: object storage through fsspec (GCS, S3)
 - [[03-67-future-server-mode-reading-object-storage]]: Future: server mode reading object storage
-
-## Relations
-- part_of [[config-and-storage]]

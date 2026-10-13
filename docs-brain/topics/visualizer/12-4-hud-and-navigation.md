@@ -5,6 +5,8 @@ title: "HUD and navigation"
 aliases: ["12 §4"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#4-hud-and-navigation"
+bw-part_of:
+  - "[[visualizer]]"
 ---
 # HUD and navigation
 
@@ -28,6 +30,3 @@ opened becomes a browser history entry tagged with its position in the tab's
 trail, so the top bar's back and forward buttons, the history list, `Alt-←`
 and `Alt-→`, and the browser's own buttons all move through the same stack;
 the trail survives a reload of the tab.
-
-## Relations
-- part_of [[visualizer]]

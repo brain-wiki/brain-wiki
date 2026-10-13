@@ -5,6 +5,8 @@ title: "Safety (Import)"
 aliases: ["09 §3.3"]
 tags: [import]
 source: "docs/design/09-import.md#33-safety"
+bw-part_of:
+  - "[[09-3-overlay]]"
 ---
 # Safety (Import)
 
@@ -15,6 +17,3 @@ source: "docs/design/09-import.md#33-safety"
   changing anything (in addition to the normal pre-images).
 - Files that fail to parse are never modified.
 - A conflict copy (BW112) is reported and left alone.
-
-## Relations
-- part_of [[09-3-overlay]]

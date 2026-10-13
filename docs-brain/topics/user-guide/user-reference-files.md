@@ -4,6 +4,8 @@ type: guide
 title: "Files"
 tags: [user-guide]
 source: "docs/user/reference.md#files"
+bw-part_of:
+  - "[[user-reference]]"
 ---
 # Files
 
@@ -18,6 +20,3 @@ source: "docs/user/reference.md#files"
 On Windows these live under `%APPDATA%` and `%LOCALAPPDATA%`. Override any
 of them with `BRAIN_WIKI_CONFIG`, `BRAIN_WIKI_STATE_DIR`,
 `BRAIN_WIKI_CACHE_DIR`, and `BRAIN_WIKI_DATA_DIR`.
-
-## Relations
-- part_of [[user-reference]]

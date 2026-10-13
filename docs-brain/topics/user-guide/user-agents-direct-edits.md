@@ -4,6 +4,8 @@ type: guide
 title: "Direct edits"
 tags: [user-guide]
 source: "docs/user/agents.md#direct-edits"
+bw-part_of:
+  - "[[user-agents]]"
 ---
 # Direct edits
 
@@ -20,6 +22,3 @@ Your own edits in Obsidian or an editor are never blocked. `brain check`
 lists notes that differ from their recorded version, `brain check --adopt
 PATH` records one as yours (with an undo point), and `brain restore PATH`
 puts a note back.
-
-## Relations
-- part_of [[user-agents]]

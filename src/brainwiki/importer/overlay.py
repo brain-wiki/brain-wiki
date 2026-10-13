@@ -78,7 +78,7 @@ def report(found: Survey, name: str) -> str:
         "",
         "- 0 · Adopt: adds brain.toml, AGENTS.md (managed block), rules.md, log.md, inbox/, archive/, reports/. "
         "Touches no existing note.",
-        f"- 1 · Relations: converts {sum(found.relation_props.values())} relation-like properties into ## Relations lines.",
+        f"- 1 · Relations: converts {sum(found.relation_props.values())} relation-like properties into bw- relation fields.",
         f"- 2 · Identity and status: mints ids for {counts['notes'] - counts['with_id']} notes; "
         f"maps {sum(found.statuses.values())} status values into status + stage.",
         "- 3 · Structure: creates missing hubs and lists notes in them.",

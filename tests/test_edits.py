@@ -17,7 +17,8 @@ from brainwiki.write.edits import check_edits, pending_edits, restore
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 FTS5 = "topics/search/fts5.md"
-CLAIM = "- SQLite FTS5 is the default search backend for Lumen."
+CLAIM = '  - "SQLite FTS5 is the default search backend for Lumen.'
+TRIGRAM = '  - "The trigram tokenizer requires SQLite 3.34 or newer."'
 
 
 @pytest.fixture
@@ -47,12 +48,7 @@ def _edit(root: Path, rel: str, old: str, new: str) -> None:
 
 def test_agent_edit_is_recorded_with_unverified_claims_and_undo(example: Path):
     original = (example / FTS5).read_text()
-    _edit(
-        example,
-        FTS5,
-        "- The trigram tokenizer requires SQLite 3.34 or newer.",
-        "- The trigram tokenizer requires SQLite 3.34 or newer.\n- Queries return in under 50 ms.",
-    )
+    _edit(example, FTS5, TRIGRAM, f'{TRIGRAM}\n  - "Queries return in under 50 ms."')
     _edit(example, FTS5, "were too slow", "were far too slow")
     with _agent(example) as eng:
         result = check_edits(eng, [FTS5])
@@ -61,16 +57,29 @@ def test_agent_edit_is_recorded_with_unverified_claims_and_undo(example: Path):
         assert record.kind == "edit" and record.agent == "claude-code"
         assert pending_edits(eng) == []
     text = (example / FTS5).read_text()
-    assert "Queries return in under 50 ms. <!-- id:c-" in text
-    assert "origin:agent" in text and "taint:unknown" in text
+    assert '"Queries return in under 50 ms. {id: c-' in text
+    assert "origin: agent; taint: unknown" in text
     assert f"· edit · {result['run']}" in (example / "log.md").read_text()
     assert main(["undo", result["run"]]) == 0
     assert (example / FTS5).read_text() == original
 
 
+def test_claims_added_to_a_format_1_note_are_stamped_in_place(example: Path):
+    legacy = "topics/search/legacy.md"
+    (example / legacy).write_text(
+        "---\nid: 01M4KT3JPRY4W6766VT18CQS70\n---\n# L\n\n## Claims\n- Old.\n"
+    )
+    assert main(["check", "--adopt", legacy]) == 0
+    _edit(example, legacy, "- Old.\n", "- Old.\n- New fact.\n")
+    with _agent(example) as eng:
+        assert check_edits(eng, [legacy])["status"] == "recorded"
+    text = (example / legacy).read_text()
+    assert "- Old.\n- New fact. <!-- id:c-" in text and "origin:agent; taint:unknown" in text
+
+
 def test_deleting_or_rewording_a_claim_fails_and_restore_puts_it_back(example: Path):
     original = (example / FTS5).read_text()
-    _edit(example, FTS5, CLAIM, "- SQLite FTS5 is the only search backend for Lumen.")
+    _edit(example, FTS5, CLAIM, '  - "SQLite FTS5 is the only search backend for Lumen.')
     with _agent(example) as eng:
         failed = check_edits(eng, [FTS5])
         assert failed["status"] == "failed"
@@ -88,11 +97,9 @@ def test_deleting_or_rewording_a_claim_fails_and_restore_puts_it_back(example: P
 def test_superseding_a_claim_is_the_way_to_change_it(example: Path):
     text = (example / FTS5).read_text()
     line = next(line for line in text.splitlines() if line.startswith(CLAIM))
-    struck = line.replace(CLAIM, "- ~~SQLite FTS5 is the default search backend for Lumen.~~")
-    struck = struck.replace("origin:agent;", "origin:agent; status:superseded;")
-    (example / FTS5).write_text(
-        text.replace(line, struck + "\n- SQLite FTS5 with trigram is the default backend.")
-    )
+    text = text.replace(line, '  - "SQLite FTS5 with trigram is the default backend."')
+    text = text.replace("bw-claims-superseded:\n", f"bw-claims-superseded:\n{line}\n")
+    (example / FTS5).write_text(text)
     with _agent(example) as eng:
         result = check_edits(eng, [FTS5])
     assert result["status"] == "recorded", result["problems"]

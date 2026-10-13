@@ -5,6 +5,8 @@ title: "The static instruction block"
 aliases: ["08 §3.2"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#32-the-static-instruction-block"
+bw-part_of:
+  - "[[08-3-the-plugin-bundle]]"
 ---
 # The static instruction block
 
@@ -90,6 +92,3 @@ load. A plugin installed from a marketplace, without `brain connect`, cannot
 write user instruction files; it still carries the MCP server instructions,
 the `brain` skill, and Antigravity's always-on rule, and the `brain-setup`
 skill offers to run `brain connect` with the user's approval.
-
-## Relations
-- part_of [[08-3-the-plugin-bundle]]

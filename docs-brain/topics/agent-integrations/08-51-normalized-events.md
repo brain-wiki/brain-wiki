@@ -5,6 +5,8 @@ title: "Normalized events"
 aliases: ["08 §5.1"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#51-normalized-events"
+bw-part_of:
+  - "[[08-5-hooks]]"
 ---
 # Normalized events
 
@@ -20,6 +22,3 @@ source: "docs/design/08-agent-integrations.md#51-normalized-events"
 Event names for Codex are taken from its documentation's statement that
 plugin hooks share Claude Code's event schema; confirmed by host fixtures
 in M7.
-
-## Relations
-- part_of [[08-5-hooks]]

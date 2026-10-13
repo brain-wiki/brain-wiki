@@ -4,6 +4,8 @@ type: guide
 title: "Capture (off by default)"
 tags: [user-guide]
 source: "docs/user/agents.md#capture-off-by-default"
+bw-part_of:
+  - "[[user-agents]]"
 ---
 # Capture (off by default)
 
@@ -19,6 +21,3 @@ min_turns = 5
 ```
 
 Then reconnect with capture hooks: `brain connect claude-code --capture`.
-
-## Relations
-- part_of [[user-agents]]

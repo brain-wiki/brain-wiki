@@ -5,6 +5,8 @@ title: "Matching"
 aliases: ["04 §6.2"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#62-matching"
+bw-part_of:
+  - "[[04-6-search]]"
 ---
 # Matching
 
@@ -29,6 +31,3 @@ source: "docs/design/04-index-and-retrieval.md#62-matching"
 6. An empty query skips steps 1–4: it selects the filtered nodes directly and
    orders them by `sort`, which is how an agent lists a topic or asks for the
    latest release.
-
-## Relations
-- part_of [[04-6-search]]

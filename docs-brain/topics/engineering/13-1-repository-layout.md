@@ -5,6 +5,8 @@ title: "Repository layout"
 aliases: ["13 §1"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#1-repository-layout"
+bw-part_of:
+  - "[[engineering]]"
 ---
 # Repository layout
 
@@ -50,6 +52,3 @@ The repo has no `GEMINI.md`, and its `AGENTS.md` is kept short and opens
 with a line telling any agent that is not developing brain-wiki to ignore
 it. Test item T-4 in [[14-3-verification-items|14]]
 checks this.
-
-## Relations
-- part_of [[engineering]]

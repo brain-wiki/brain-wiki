@@ -4,6 +4,8 @@ type: guide
 title: "Move a note"
 tags: [user-guide]
 source: "docs/user/maintenance.md#move-a-note"
+bw-part_of:
+  - "[[user-maintenance]]"
 ---
 # Move a note
 
@@ -15,6 +17,3 @@ brain mv topics/search/old-name.md topics/search/new-name.md
 Links that named the note by path or file name are rewritten in the same
 run. Moving files in another tool is fine too: links keep resolving through
 the index's path history, and `brain lint --fix` rewrites them.
-
-## Relations
-- part_of [[user-maintenance]]

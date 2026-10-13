@@ -4,6 +4,8 @@ type: guide
 title: "Troubleshooting"
 tags: [user-guide]
 source: "docs/user/reference.md#troubleshooting"
+bw-part_of:
+  - "[[user-reference]]"
 ---
 # Troubleshooting
 
@@ -14,6 +16,3 @@ source: "docs/user/reference.md#troubleshooting"
 | A run was interrupted | `brain doctor` rolls it back |
 | A git commit failed after a run | The files changed anyway; `brain doctor` lists the run; commit by hand |
 | Hooks do nothing | Capture and recall are off by default; check `config.toml`, then `brain connect HOST --capture` |
-
-## Relations
-- part_of [[user-reference]]

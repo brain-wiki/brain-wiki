@@ -5,6 +5,8 @@ title: "Secret scanning"
 aliases: ["10 §6"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#6-secret-scanning"
+bw-part_of:
+  - "[[security-and-privacy]]"
 ---
 # Secret scanning
 
@@ -28,6 +30,3 @@ mixes upper case, lower case, and digits, so words and URL slugs pass.
 Redaction happens before the episode touches disk, so a secret never
 enters the brain through brain-wiki. Lint cannot remove secrets that are
 already in git history; its message says to rotate the secret.
-
-## Relations
-- part_of [[security-and-privacy]]

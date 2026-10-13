@@ -4,6 +4,8 @@ type: guide
 title: "Privacy and safety"
 tags: [user-guide]
 source: "docs/user/privacy.md"
+bw-part_of:
+  - "[[user-guide]]"
 ---
 # Privacy and safety
 
@@ -13,6 +15,3 @@ source: "docs/user/privacy.md"
 - [[user-privacy-several-brains]]: Several brains
 - [[user-privacy-what-is-protected]]: What is protected
 - [[user-privacy-what-is-sent-where]]: What is sent where
-
-## Relations
-- part_of [[user-guide]]

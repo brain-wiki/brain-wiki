@@ -5,6 +5,8 @@ title: "Read"
 aliases: ["04 §7"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#7-read"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Read
 
@@ -15,8 +17,8 @@ guessing.
 | Mode | Returns |
 |---|---|
 | `outline` (default for hubs) | Frontmatter summary, headings, active claims, relations with resolved titles |
-| `full` (default for notes) | The whole file, with metadata comments removed and superseded claims marked |
-| `section` | One heading's content |
+| `full` (default for notes) | The body, then the current claims (unverified ones marked) and a count of superseded ones; no metadata |
+| `section` | One heading's content; `claims` gives the claims block |
 | `raw` | The file exactly as on disk (for agents about to edit it, [[05-23-checked-agent-edits\|05 §2.3]]) |
 
 Every relation and backlink in the result carries its handle: `id` and
@@ -53,6 +55,3 @@ error as a missing note, so existence is not revealed by reads.
 
 Claims whose `taint` is `true` or `unknown` are shown with an
 `[unverified]` marker, so an agent can weigh them accordingly.
-
-## Relations
-- part_of [[index-and-retrieval]]

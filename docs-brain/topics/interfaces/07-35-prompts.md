@@ -5,6 +5,8 @@ title: "Prompts"
 aliases: ["07 §3.5"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#35-prompts"
+bw-part_of:
+  - "[[07-3-mcp-server]]"
 ---
 # Prompts
 
@@ -17,6 +19,3 @@ naming):
 | `consolidate` | Asks the agent to run the agent-backend consolidation flow and report what changed. |
 | `capture` | Asks the agent to summarize the current session's durable learnings and log them as one episode. |
 | `harvest` | Asks the agent to run the harvest recipe: prepare, distill each session, apply, repeat until no sessions remain or the user stops; fall back to the self-read recipe if the host is unsupported. |
-
-## Relations
-- part_of [[07-3-mcp-server]]

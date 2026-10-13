@@ -5,6 +5,8 @@ title: "Codex (CLI and ChatGPT desktop)"
 aliases: ["08 §4.2"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#42-codex-cli-and-chatgpt-desktop"
+bw-part_of:
+  - "[[08-4-per-host-notes]]"
 ---
 # Codex (CLI and ChatGPT desktop)
 
@@ -25,6 +27,3 @@ source: "docs/design/08-agent-integrations.md#42-codex-cli-and-chatgpt-desktop"
   compact.
 - Hook payloads carry `session_id` (`thr_…`) and a `transcript_path` to the
   session's rollout file.
-
-## Relations
-- part_of [[08-4-per-host-notes]]

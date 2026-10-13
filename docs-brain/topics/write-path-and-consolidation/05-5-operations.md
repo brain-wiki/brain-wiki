@@ -5,6 +5,8 @@ title: "Operations"
 aliases: ["05 §5"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#5-operations"
+bw-part_of:
+  - "[[write-path-and-consolidation]]"
 ---
 # Operations
 
@@ -71,19 +73,19 @@ Semantics (what the deterministic writer does):
 
 | Op | Effect on disk |
 |---|---|
-| `add_claim` | Appends `- text <!-- id; src; origin; taint; at -->` to the note's `## Claims` (creating the section above `## Relations`, or at the end). |
+| `add_claim` | Appends `"text {id; src; origin; taint; at}"` to the note's `bw-claims`. |
 | `merge_claim` | Adds the new sources to the claim's `src` and updates `at`. The text is unchanged. |
-| `supersede_claim` | Inserts the new claim directly above the old one; rewrites the old one as `- ~~old text~~ <!-- id; status:superseded; by:<new id>; … -->`. |
-| `retract_claim` | Strikes the claim through with `status:retracted` and the reason, citing sources that show it was wrong. |
-| `add_relation` | Appends a canonical relation line to `## Relations` of the `from` note. `supersedes` also sets the target note's `status: superseded`. A relation that already exists becomes a no-op. |
-| `create_note` | Creates `topics/<topic>/<slug>.md` with frontmatter (new id, type, privacy inherited from the topic), `# title`, summary, claims, and `- part_of [[hub]]`; adds a line to the hub's `## Notes`. |
+| `supersede_claim` | Puts the new claim in the old one's place in `bw-claims` and moves the old one to `bw-claims-superseded` with `by: <new id>`, the reason, and the date. |
+| `retract_claim` | Moves the claim to `bw-claims-superseded` with `status: retracted` and the reason, citing sources that show it was wrong. |
+| `add_relation` | Appends a canonical relation to the `from` note's `bw-<verb>` field. `supersedes` also sets the target note's `status: superseded`. A relation that already exists becomes a no-op. |
+| `create_note` | Creates `topics/<topic>/<slug>.md` with frontmatter (new id, type, title, `bw-part_of` the hub, `bw-claims`, and `bw-privacy` only when a source episode is more private than the topic), `# title`, and the summary; adds a line to the hub's `## Notes`. |
 | `create_topic` | Creates the folder and a hub; adds the topic to the `AGENTS.md` block. Allowed only when the profile's `topics` is `*`. |
 | `skip_episode` | Nothing, except that the episode is archived with the run. |
 
 `new:<topic>/<slug>` refs let ops in one batch point at notes created in the
 same batch. Every op that changes a note also sets its `updated` field; the
 hub line `create_note` adds is bookkeeping and does not, so a hub one line
-under its budget can still take a new child note.
-
-## Relations
-- part_of [[write-path-and-consolidation]]
+under its budget can still take a new child note. An op that edits a format 1
+note first converts it to format 2 in the same run
+([[02-13-format-versioning|02 §13]]), and a run that writes
+format 2 files into a brain that declares format 1 raises the declaration.

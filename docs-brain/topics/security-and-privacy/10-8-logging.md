@@ -5,6 +5,8 @@ title: "Logging"
 aliases: ["10 §8"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#8-logging"
+bw-part_of:
+  - "[[security-and-privacy]]"
 ---
 # Logging
 
@@ -12,6 +14,3 @@ source: "docs/design/10-security-and-privacy.md#8-logging"
 - Default level records operations and errors without note content.
   `-v` adds content snippets for debugging; the log file says so at the top
   of each verbose session.
-
-## Relations
-- part_of [[security-and-privacy]]

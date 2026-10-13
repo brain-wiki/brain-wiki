@@ -5,6 +5,8 @@ title: "Rules for the setup skill"
 aliases: ["15 §3.3"]
 tags: [skills-onboarding-and-routines]
 source: "docs/design/15-skills-onboarding-and-routines.md#33-rules-for-the-setup-skill"
+bw-part_of:
+  - "[[15-3-onboarding]]"
 ---
 # Rules for the setup skill
 
@@ -20,6 +22,3 @@ source: "docs/design/15-skills-onboarding-and-routines.md#33-rules-for-the-setup
   from `doctor`'s view of the state.
 - **Plain language.** No internal terms (taint, profiles, ops) unless the
   user asks; the references hold the details.
-
-## Relations
-- part_of [[15-3-onboarding]]

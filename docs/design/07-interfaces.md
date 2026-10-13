@@ -348,7 +348,7 @@ Notes:
   by arguments ([05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint)).
 - `session` and `origin_turns` on `brain_log_episode` are hints from the
   model (used by the fallback harvest recipe); the episode records them but
-  keeps `captured: mcp` and `taint: unknown`. In `brain_harvest_apply`, by
+  keeps `bw-captured: mcp` and `bw-taint: unknown`. In `brain_harvest_apply`, by
   contrast, every provenance field comes from the server's own parse of the
   session.
 - `brain_consolidate_apply` validates `ops` against the schema in

@@ -5,6 +5,8 @@ title: "Freshness"
 aliases: ["04 §4"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#4-freshness"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Freshness
 
@@ -40,6 +42,3 @@ scan(brain):
 - **Cost.** A stat-only walk of 10k files takes tens of milliseconds on a
   local SSD. Network file systems and very large brains can opt into a file
   watcher later (§13).
-
-## Relations
-- part_of [[index-and-retrieval]]

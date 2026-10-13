@@ -439,7 +439,8 @@ def _index_file(
     props = {
         k: v
         for k, v in fm.items()
-        if k
+        if not k.startswith("bw-")  # brain-wiki's fields are read through their plain names
+        and k
         not in (
             "id",
             "type",

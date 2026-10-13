@@ -109,6 +109,7 @@ class Run:
         self.packet_sha256 = packet_sha256
         self.undoes = undoes
         self.warnings: list[str] = []
+        self.declared = False  # whether commit raised brain.toml's format
         self._entries: dict[str, _Entry] = {}
 
     # -- staging ---------------------------------------------------------
@@ -305,6 +306,7 @@ class Run:
                 record.finished = now_iso()
                 save_record(key, record)
                 raise
+            self.declared = self._declare_format()
             self.engine.scan(paths=self.touched_paths(), sanctioned=True)
             record.status = "applied"
             record.finished = now_iso()
@@ -314,6 +316,15 @@ class Run:
                 save_record(key, record)
         prune(key)
         return record
+
+    def _declare_format(self) -> bool:
+        from brainwiki.lifecycle import declare_format
+
+        writes = any(
+            e.final_path.endswith(".md") and e.final_path != LOG_FILE and e.final is not None
+            for e in self.entries
+        )
+        return writes and declare_format(self.engine)
 
     def _verify(self) -> None:
         for entry in self.entries:
@@ -378,7 +389,7 @@ class Run:
             return
         sha, error = git.commit_paths(
             root,
-            self.touched_paths(),
+            self.touched_paths() + (["brain.toml"] if self.declared else []),
             subject or f"brain: {self.summary or self.kind}",
             {"Brain-Run": self.id, "Brain-Agent": self.agent or "owner"},
         )

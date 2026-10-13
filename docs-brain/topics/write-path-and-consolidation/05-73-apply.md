@@ -5,6 +5,8 @@ title: "Apply"
 aliases: ["05 §7.3"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#73-apply"
+bw-part_of:
+  - "[[05-7-validation-and-apply]]"
 ---
 # Apply
 
@@ -26,6 +28,3 @@ source: "docs/design/05-write-path-and-consolidation.md#73-apply"
    `brain: consolidate 6 episodes into 3 notes` with trailers
    `Brain-Run: run-…` and `Brain-Agent: claude-code`, using the user's git
    identity. Never push.
-
-## Relations
-- part_of [[05-7-validation-and-apply]]

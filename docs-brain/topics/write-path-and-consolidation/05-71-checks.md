@@ -5,6 +5,8 @@ title: "Checks"
 aliases: ["05 §7.1"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#71-checks"
+bw-part_of:
+  - "[[05-7-validation-and-apply]]"
 ---
 # Checks
 
@@ -27,6 +29,3 @@ source: "docs/design/05-write-path-and-consolidation.md#71-checks"
 cannot delete text. Ops only append, strike through, or add metadata. The
 remaining risk is erosion of the *active* view (too much superseded at once,
 or replacements vaguer than what they replace), which V9 and V10 target.
-
-## Relations
-- part_of [[05-7-validation-and-apply]]

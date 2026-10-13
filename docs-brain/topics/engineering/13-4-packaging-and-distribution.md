@@ -5,6 +5,8 @@ title: "Packaging and distribution"
 aliases: ["13 §4"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#4-packaging-and-distribution"
+bw-part_of:
+  - "[[engineering]]"
 ---
 # Packaging and distribution
 
@@ -27,6 +29,3 @@ source: "docs/design/13-engineering.md#4-packaging-and-distribution"
   disagree.
 - An npm launcher package (`npx brain-wiki`, delegating to `uvx`) is
   deferred until there is demand.
-
-## Relations
-- part_of [[engineering]]

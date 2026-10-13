@@ -4,6 +4,8 @@ type: guide
 title: "Review (Maintenance)"
 tags: [user-guide]
 source: "docs/user/maintenance.md#review"
+bw-part_of:
+  - "[[user-maintenance]]"
 ---
 # Review (Maintenance)
 
@@ -19,6 +21,3 @@ brain review reject RUN     # its episodes stay in the inbox
 ```
 
 Agents can propose rules too; those wait for `brain rule accept ID`.
-
-## Relations
-- part_of [[user-maintenance]]

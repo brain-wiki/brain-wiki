@@ -4,6 +4,8 @@ type: guide
 title: "Several brains"
 tags: [user-guide]
 source: "docs/user/privacy.md#several-brains"
+bw-part_of:
+  - "[[user-privacy]]"
 ---
 # Several brains
 
@@ -16,6 +18,3 @@ example). Limit which brains an agent may use in the user config:
 brain = "work"
 brains = ["work"]
 ```
-
-## Relations
-- part_of [[user-privacy]]

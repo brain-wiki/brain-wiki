@@ -5,6 +5,8 @@ title: "T14: Supply chain"
 aliases: ["threat T14"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+bw-part_of:
+  - "[[10-3-threats-and-mitigations]]"
 ---
 # T14: Supply chain
 
@@ -13,6 +15,3 @@ source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 **Mitigations:** Few runtime dependencies, pinned in the lockfile; the visualizer's JavaScript built from a lockfile that resolves from the public npm registry only, with CI rebuilding the committed bundle and failing on any difference; releases built in CI with provenance.
 
 **Residual risk:** Standard open-source supply-chain risk.
-
-## Relations
-- part_of [[10-3-threats-and-mitigations]]

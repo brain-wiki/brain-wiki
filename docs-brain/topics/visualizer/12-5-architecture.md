@@ -5,6 +5,8 @@ title: "Architecture"
 aliases: ["12 §5"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#5-architecture"
+bw-part_of:
+  - "[[visualizer]]"
 ---
 # Architecture
 
@@ -46,6 +48,3 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
   `--export graph.json` and `--export graph.graphml` are unchanged, for
   other tools. Exports contain note titles; the command prints which
   privacy levels are included.
-
-## Relations
-- part_of [[visualizer]]

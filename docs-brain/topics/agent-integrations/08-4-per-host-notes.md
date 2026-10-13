@@ -5,6 +5,8 @@ title: "Per-host notes"
 aliases: ["08 §4"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#4-per-host-notes"
+bw-part_of:
+  - "[[agent-integrations]]"
 ---
 # Per-host notes
 
@@ -15,6 +17,3 @@ source: "docs/design/08-agent-integrations.md#4-per-host-notes"
 - [[08-43-antigravity-desktop-ide-cli]]: Antigravity (desktop, IDE, CLI)
 - [[08-44-openclaw]]: OpenClaw
 - [[08-45-cursor-and-generic-mcp-clients]]: Cursor and generic MCP clients
-
-## Relations
-- part_of [[agent-integrations]]

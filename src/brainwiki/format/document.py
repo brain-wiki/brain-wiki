@@ -7,6 +7,19 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from brainwiki.format.claims import Claim, parse_claim_block
+from brainwiki.format.fields import (
+    ALIAS_KEYS,
+    KNOWN,
+    PREFIX,
+    RELATION_KEYS,
+    SUPERSEDED,
+    as_items,
+    item_lines,
+    split_claim,
+)
+from brainwiki.format.fields import (
+    CLAIMS as FM_CLAIMS,
+)
 from brainwiki.format.frontmatter import Frontmatter, split
 from brainwiki.format.links import Link, extract_links, mask_code
 from brainwiki.format.meta import strip_meta_comments
@@ -104,6 +117,9 @@ def parse_document(path: str, text: str) -> ParsedDoc:
     relation_lines: set[int] = set()
     history: list[str] = []
     superseded_lines: set[int] = set()
+    claim_links: list[Link] = []
+    if fm.present and not fm.error:
+        _frontmatter_parts(doc, text, history, claim_links)
     claims_section = doc.section(CLAIMS)
     if claims_section:
         claims, problems = parse_claim_block(lines_of(claims_section))
@@ -126,11 +142,64 @@ def parse_document(path: str, text: str) -> ParsedDoc:
             else:
                 doc.relations.append(parsed)
 
-    doc.links = extract_links(body_lines, first_body, skip_lines=relation_lines)
+    doc.links = claim_links + extract_links(body_lines, first_body, skip_lines=relation_lines)
 
     body_for_index = [
         line for n, line in enumerate(body_lines, start=first_body) if n not in superseded_lines
     ]
-    doc.body_text = strip_meta_comments("\n".join(body_for_index))
+    current = [c.text for c in doc.claims if c.key == FM_CLAIMS]  # searchable like body text
+    doc.body_text = strip_meta_comments("\n".join([*body_for_index, *current]))
     doc.history_text = "\n".join(history)
     return doc
+
+
+def _frontmatter_parts(doc: ParsedDoc, text: str, history: list[str], links: list[Link]) -> None:
+    """Claims and relations held in `bw-` fields (format 2), with the lines they sit on."""
+    fm = doc.fm
+    for key in fm:
+        if key.startswith(PREFIX) and key not in KNOWN and key not in ALIAS_KEYS:
+            line = item_lines(text, key, 1)[0]
+            doc.problems.append(
+                (line, "BW302", f"unknown field {key!r}: not a relation verb or brain-wiki field")
+            )
+    for key in (FM_CLAIMS, SUPERSEDED):
+        values = as_items(fm.get(key))
+        for index, (value, line) in enumerate(
+            zip(values, item_lines(text, key, len(values)), strict=True)
+        ):
+            if not isinstance(value, str):
+                doc.problems.append((line, "BW201", f"{key} items must be strings"))
+                continue
+            body, meta = split_claim(value)
+            claim = Claim(
+                line=line,
+                last_line=line,
+                text=body,
+                meta=meta or {},
+                struck=key == SUPERSEDED,
+                has_meta=meta is not None,
+                key=key,
+                index=index,
+            )
+            doc.claims.append(claim)
+            if key == SUPERSEDED:
+                history.append(body)
+            else:
+                links.extend(extract_links([body], line))
+    for key in [k for k in fm if k in RELATION_KEYS or k in ALIAS_KEYS]:
+        verb = RELATION_KEYS.get(key) or ALIAS_KEYS[key]
+        values = as_items(fm.get(key))
+        for index, (value, line) in enumerate(
+            zip(values, item_lines(text, key, len(values)), strict=True)
+        ):
+            if not isinstance(value, str):
+                doc.problems.append(
+                    (line, "BW301", f'{key} items must be strings like "[[Target]]"')
+                )
+                continue
+            parsed = parse_relation_line(f"- {verb} {value}", line)
+            if isinstance(parsed, RelationError):
+                doc.problems.append((line, parsed.code, f"{key}: {parsed.message}"))
+                continue
+            parsed.key, parsed.index = key, index
+            doc.relations.append(parsed)

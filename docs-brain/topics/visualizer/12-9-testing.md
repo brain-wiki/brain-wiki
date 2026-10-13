@@ -5,6 +5,8 @@ title: "Testing (Visualizer)"
 aliases: ["12 §9"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#9-testing"
+bw-part_of:
+  - "[[visualizer]]"
 ---
 # Testing (Visualizer)
 
@@ -20,6 +22,3 @@ source: "docs/design/12-visualizer.md#9-testing"
 - Browser: headless Chrome screenshots of each level on the fixture and a
   generated 10k brain, interaction scripts (search, fly to a topic, select a
   note, `Esc`), and frame time.
-
-## Relations
-- part_of [[visualizer]]

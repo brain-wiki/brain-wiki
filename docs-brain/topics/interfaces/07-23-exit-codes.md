@@ -5,6 +5,8 @@ title: "Exit codes"
 aliases: ["07 §2.3"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#23-exit-codes"
+bw-part_of:
+  - "[[07-2-cli]]"
 ---
 # Exit codes
 
@@ -17,6 +19,3 @@ source: "docs/design/07-interfaces.md#23-exit-codes"
 | 4 | Conflict (stale packet, files changed since run, lock timeout) |
 | 5 | Forbidden by profile or host limits |
 | 10 | Internal error (bug) |
-
-## Relations
-- part_of [[07-2-cli]]

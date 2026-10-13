@@ -5,6 +5,8 @@ title: "User config"
 aliases: ["03 §2"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#2-user-config"
+bw-part_of:
+  - "[[config-and-storage]]"
 ---
 # User config
 
@@ -51,6 +53,3 @@ enabled = false
   platform's own credential chains (§6.6).
 - The file is created by `brain init` and edited by `brain brains add |
   remove | default`, which preserve comments and formatting.
-
-## Relations
-- part_of [[config-and-storage]]

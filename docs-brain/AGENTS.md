@@ -6,9 +6,9 @@
 - To record something, add a new file under `inbox/episodes/YYYY/MM/<ULID>.md`
   (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or `rules.md`
   directly; consolidation folds episodes into notes.
-- Relations at the bottom of notes use: part_of, has_part, depends_on, enables,
-  conflicts_with, supersedes, superseded_by, related_to. If a note is superseded or
-  conflicts with another, read both before acting.
+- A note's relations are its `bw-<verb>` frontmatter fields: part_of, has_part,
+  depends_on, enables, conflicts_with, supersedes, superseded_by, related_to. If a
+  note is superseded or conflicts with another, read both before acting.
 
 | Topic | Hub | About |
 |---|---|---|

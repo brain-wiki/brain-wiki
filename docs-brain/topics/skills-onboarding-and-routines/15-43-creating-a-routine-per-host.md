@@ -5,6 +5,8 @@ title: "Creating a routine, per host"
 aliases: ["15 §4.3"]
 tags: [skills-onboarding-and-routines]
 source: "docs/design/15-skills-onboarding-and-routines.md#43-creating-a-routine-per-host"
+bw-part_of:
+  - "[[15-4-routines]]"
 ---
 # Creating a routine, per host
 
@@ -25,6 +27,3 @@ without them, so they are not targets until remote storage exists
 `brain schedule list` shows the routines brain-wiki created or printed, per
 host; `brain schedule remove` reverses the ones it can (OpenClaw, OS
 schedulers) and prints steps for the ones it cannot (desktop apps).
-
-## Relations
-- part_of [[15-4-routines]]

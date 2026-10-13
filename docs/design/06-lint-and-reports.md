@@ -52,36 +52,37 @@ can repair it safely.
 | BW103 | Note has no `id`. | error / info | mint ULID |
 | BW104 | `id` is not a ULID. | error / warning | re-mint |
 | BW105 | Two files share an `id`. | error / error | re-mint the newer file's id (the oldest file keeps it; not offered for episodes) |
-| BW106 | `status` is not `active`, `superseded`, or `archived`. | error / info | move the value to `stage`, set `status` (mapping table in [09](09-import.md)) |
-| BW107 | `privacy` is not a declared level. | error / error | — |
-| BW108 | Note `privacy` is lower than its topic's. | error / error | raise to the topic level |
+| BW106 | `status` is not `active`, `superseded`, or `archived`. | error / info | move the value to `bw-stage`, set `status` (mapping table in [09](09-import.md)) |
+| BW107 | `bw-privacy` is not a declared level. | error / error | — |
+| BW108 | Note `bw-privacy` is lower than its topic's. | error / error | raise to the topic level |
 | BW109 | Unknown key in `brain.toml`. | warning / warning | — |
 | BW110 | Two paths differ only by letter case. | warning / warning | — |
 | BW111 | File is not valid UTF-8. | error / error | — |
 | BW112 | File looks like a sync conflict copy (Syncthing, Dropbox, iCloud, OneDrive, Google Drive naming). | warning / warning | — (needs a person) |
-| BW113 | A frontmatter property holds wikilinks that look like relations (`related`, `parent`, `up`…). | info / info | convert to `## Relations` lines |
+| BW113 | A frontmatter property holds wikilinks that look like relations (`related`, `parent`, `up`…). | info / info | convert to `bw-<verb>` relations |
 | BW114 | Leftover merge conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) outside code. | error / error | — |
 | BW115 | A database or lock file (`*.sqlite`, `*.db`, `*-wal`, `*-shm`) inside the brain; sync tools corrupt these. | warning / warning | — |
+| BW116 | Note is in format 1: `## Claims` or `## Relations` sections, or unprefixed `privacy` or `stage` ([02 §13](02-brain-format.md#13-format-versioning)). | warning / info | convert to format 2 |
 
 ### BW2xx: claims
 
 | Code | Rule | Severity | Fix |
 |---|---|---|---|
-| BW201 | Claim metadata comment is malformed. | error / warning | — |
+| BW201 | Claim metadata is malformed, or a `bw-claims` item is not a string. | error / warning | — |
 | BW202 | Duplicate claim id. | error / error | re-mint |
 | BW203 | `by:` points to a claim that does not exist. | error / warning | — |
 | BW204 | `src:` points to a missing file or a line range outside it. | warning / info | — |
 | BW205 | Claim has no metadata (human-written). | info / off | assign an id |
 | BW206 | Two active claims cite the same source span with near-identical text (likely double consolidation). | warning / warning | — |
-| BW207 | More than one `## Claims` section. | error / warning | — |
+| BW207 | More than one `## Claims` section (format 1). | error / warning | — |
 
 ### BW3xx: relations and links
 
 | Code | Rule | Severity | Fix |
 |---|---|---|---|
-| BW301 | Relation line does not parse. | error / warning | — |
-| BW302 | Unknown relation verb. | error / warning | — |
-| BW303 | Alias verb instead of canonical. | warning / info | rewrite canonically, keep the alias as qualifier |
+| BW301 | Relation does not parse. | error / warning | — |
+| BW302 | Unknown relation verb, or an unknown `bw-` field. | error / warning | — |
+| BW303 | Alias verb instead of canonical (`bw-requires`). | warning / info | move to the canonical field, keep the alias as qualifier |
 | BW304 | Relation target does not resolve. | error / warning | repair via id history when possible |
 | BW305 | Relation target is ambiguous. | error / error | — (lists candidates) |
 | BW306 | Note relates to itself. | error / error | — |
@@ -89,7 +90,7 @@ can repair it safely.
 | BW308 | Target of `supersedes` is not `status: superseded`. | warning / info | set status |
 | BW309 | Contradictory containment (A part_of B and B part_of A). | error / error | — |
 | BW310 | Body link does not resolve. | warning / info | repair via id history |
-| BW311 | More than one `## Relations` section. | error / warning | — |
+| BW311 | More than one `## Relations` section (format 1). | error / warning | — |
 | BW312 | A note links to a note with a higher privacy level (the link text reveals the target's name to anyone allowed to read the source). | warning / warning | — |
 
 ### BW4xx: structure and budgets
@@ -112,7 +113,7 @@ can repair it safely.
 |---|---|---|---|
 | BW501 | Episode changed after it was created (compared with the first hash the index saw; runs that edit an episode update it). | error / error | — |
 | BW502 | Episode path does not match `YYYY/MM/<ulid>.md` for its id. | error / warning | move it |
-| BW503 | Episode lacks required provenance fields. | error / warning | fill `origin: agent`, `taint: unknown` |
+| BW503 | Episode lacks required provenance fields. | error / warning | fill `bw-origin: agent`, `bw-taint: unknown` |
 | BW504 | A proposal references an episode that no longer exists. | warning / warning | — |
 | BW505 | Episodes pending longer than `lint.stale_inbox_days` (default 14). | info / info | — |
 

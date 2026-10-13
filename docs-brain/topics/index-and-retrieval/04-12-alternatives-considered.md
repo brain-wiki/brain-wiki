@@ -5,6 +5,8 @@ title: "Alternatives considered (Index and retrieval)"
 aliases: ["04 §12"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#12-alternatives-considered"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Alternatives considered (Index and retrieval)
 
@@ -16,6 +18,3 @@ source: "docs/design/04-index-and-retrieval.md#12-alternatives-considered"
 | DuckDB | Strong for analytics, weaker and heavier for incremental full-text search. |
 | In-memory index per process | Parsing 10k notes on every hook call costs seconds. |
 | Index inside the brain | Breaks under sync tools, is device-specific, and clutters git. |
-
-## Relations
-- part_of [[index-and-retrieval]]

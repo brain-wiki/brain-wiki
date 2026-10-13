@@ -5,6 +5,8 @@ title: "MCP server"
 aliases: ["07 §3"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#3-mcp-server"
+bw-part_of:
+  - "[[interfaces]]"
 ---
 # MCP server
 
@@ -18,6 +20,3 @@ source: "docs/design/07-interfaces.md#3-mcp-server"
 - [[07-36-errors]]: Errors
 - [[07-37-lifecycle]]: Lifecycle
 - [[07-38-not-in-v01]]: Not in v0.1
-
-## Relations
-- part_of [[interfaces]]

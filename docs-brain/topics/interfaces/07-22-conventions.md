@@ -5,6 +5,8 @@ title: "Conventions"
 aliases: ["07 §2.2"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#22-conventions"
+bw-part_of:
+  - "[[07-2-cli]]"
 ---
 # Conventions
 
@@ -24,6 +26,3 @@ source: "docs/design/07-interfaces.md#22-conventions"
 - `brain hook` and `brain mcp` never print anything to stdout except their
   protocol output; diagnostics go to stderr and to
   `<state>/logs/brain-wiki.log`.
-
-## Relations
-- part_of [[07-2-cli]]

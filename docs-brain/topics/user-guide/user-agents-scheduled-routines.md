@@ -4,6 +4,8 @@ type: guide
 title: "Scheduled routines"
 tags: [user-guide]
 source: "docs/user/agents.md#scheduled-routines"
+bw-part_of:
+  - "[[user-agents]]"
 ---
 # Scheduled routines
 
@@ -20,6 +22,3 @@ least 5 episodes are pending), `brain-harvest` (daily, harvest only, for
 your other agents), `brain-health` (weekly, read-only summary). Set
 `[consolidate] device = "<this machine>"` in `brain.toml` so consolidation
 runs on one machine only.
-
-## Relations
-- part_of [[user-agents]]

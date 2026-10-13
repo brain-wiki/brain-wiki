@@ -5,6 +5,8 @@ title: "Checked agent edits"
 aliases: ["05 §2.3"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#23-checked-agent-edits"
+bw-part_of:
+  - "[[05-2-the-write-paths]]"
 ---
 # Checked agent edits
 
@@ -27,9 +29,9 @@ recorded version:
 
 | Check | Fails when |
 |---|---|
-| Schema | Frontmatter is not valid YAML, a required key is missing, `status` or `privacy` has an unknown value, or an `id` was changed or duplicated (lint BW1xx) |
-| Links and relations | A `## Relations` line does not parse (error) or a new link does not resolve (warning) |
-| Claims | Claim metadata comments are broken, or a claim was deleted or reworded in place. Claims change only by superseding (strike through, add the new claim), so a fact's history is never lost |
+| Schema | Frontmatter is not valid YAML, a required key is missing, `status` or `bw-privacy` has an unknown value, or an `id` was changed or duplicated (lint BW1xx) |
+| Links and relations | A relation does not parse or names an unknown `bw-` field (error), or a new link does not resolve (warning) |
+| Claims | Claim metadata is broken, or a claim was deleted or reworded in place. Claims change only by superseding (move the old claim to `bw-claims-superseded`, add the new one), so a fact's history is never lost |
 | Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` |
 | Privacy | A note's privacy was lowered, or the note is above what the caller's profile may read |
 | Protected files | Any of the files above changed |
@@ -72,6 +74,3 @@ pre-image.
 
 Agents without file tools can still update notes through episodes and
 consolidation; a combined edit-and-check tool is future work.
-
-## Relations
-- part_of [[05-2-the-write-paths]]

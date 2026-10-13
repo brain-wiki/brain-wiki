@@ -53,5 +53,6 @@ Generated from `docs/design/14-roadmap-and-open-questions.md`.
   - [[t-11]]: T-11: How much does the Claude Code transcript format vary across recent…
   - [[t-12]]: T-12: Can an agent running inside each desktop app (Claude Code,…
   - [[t-13]]: T-13: Antigravity /schedule
+  - [[t-14]]: T-14: Does Obsidian treat links in list properties (bw-depends_on
 - [[14-4-future-work-after-v01]]: Future work (after v0.1)
 - [[14-prior-art]]: Prior art

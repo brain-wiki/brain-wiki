@@ -5,6 +5,8 @@ title: "`brain doctor --json`"
 aliases: ["15 §3.4"]
 tags: [skills-onboarding-and-routines]
 source: "docs/design/15-skills-onboarding-and-routines.md#34-brain-doctor---json"
+bw-part_of:
+  - "[[15-3-onboarding]]"
 ---
 # `brain doctor --json`
 
@@ -36,6 +38,3 @@ The contract the setup skill reads. Stable within a minor version.
 
 Hosts count as installed when their command is on `PATH` or their
 configuration directory exists. Nothing in `doctor` contacts the network.
-
-## Relations
-- part_of [[15-3-onboarding]]

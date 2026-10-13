@@ -5,6 +5,8 @@ title: "The skills (Skills, onboarding, and routines)"
 aliases: ["15 §2"]
 tags: [skills-onboarding-and-routines]
 source: "docs/design/15-skills-onboarding-and-routines.md#2-the-skills"
+bw-part_of:
+  - "[[skills-onboarding-and-routines]]"
 ---
 # The skills (Skills, onboarding, and routines)
 
@@ -81,6 +83,3 @@ skills/
 The routine templates and instruction texts are generated from the same
 sources the engine uses (`brainwiki/assets/`), so the skill and the CLI can
 never disagree. `scripts/sync_versions.py` regenerates them at release.
-
-## Relations
-- part_of [[skills-onboarding-and-routines]]

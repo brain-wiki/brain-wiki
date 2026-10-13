@@ -5,6 +5,8 @@ title: "Normalization rules"
 aliases: ["09 §4"]
 tags: [import]
 source: "docs/design/09-import.md#4-normalization-rules"
+bw-part_of:
+  - "[[import]]"
 ---
 # Normalization rules
 
@@ -13,6 +15,3 @@ source: "docs/design/09-import.md#4-normalization-rules"
 - [[09-41-status]]: Status
 - [[09-42-relation-like-properties]]: Relation-like properties
 - [[09-43-other-fixes-offered]]: Other fixes offered
-
-## Relations
-- part_of [[import]]

@@ -5,6 +5,8 @@ title: "Decisions needed from the maintainer"
 aliases: ["14 §2"]
 tags: [roadmap-and-open-questions]
 source: "docs/design/14-roadmap-and-open-questions.md#2-decisions-needed-from-the-maintainer"
+bw-part_of:
+  - "[[roadmap-and-open-questions]]"
 ---
 # Decisions needed from the maintainer
 
@@ -23,6 +25,3 @@ These change the design or defaults. Each has a recommendation.
 - [[q10]]: Q10: Should retrieval weigh who said it?
 - [[q11]]: Q11: How do world facts stay current? Agent knowledge about the outside…
 - [[q12]]: Q12: What may agents learn without the user? Rules always need the user's…
-
-## Relations
-- part_of [[roadmap-and-open-questions]]

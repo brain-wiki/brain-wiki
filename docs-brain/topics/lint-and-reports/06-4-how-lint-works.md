@@ -5,6 +5,8 @@ title: "How lint works"
 aliases: ["06 §4"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#4-how-lint-works"
+bw-part_of:
+  - "[[lint-and-reports]]"
 ---
 # How lint works
 
@@ -33,6 +35,3 @@ need the note's last recorded version: claims deleted or reworded in place,
 lowered privacy, large deletions, and protected files. Pending edits (a
 note that differs from its last recorded version) are reported by `brain
 check`, not by lint, so hand edits never raise warnings.
-
-## Relations
-- part_of [[lint-and-reports]]

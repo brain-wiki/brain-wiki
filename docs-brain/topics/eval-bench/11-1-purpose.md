@@ -5,6 +5,8 @@ title: "Purpose (Eval bench)"
 aliases: ["11 §1"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#1-purpose"
+bw-part_of:
+  - "[[eval-bench]]"
 ---
 # Purpose (Eval bench)
 
@@ -23,6 +25,3 @@ tuned on evidence and regressions are caught:
 
 Rule for the project: published numbers come only from this bench, with
 the command and version that produced them.
-
-## Relations
-- part_of [[eval-bench]]

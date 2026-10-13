@@ -5,6 +5,8 @@ title: "Tools"
 aliases: ["07 §3.4"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#34-tools"
+bw-part_of:
+  - "[[07-3-mcp-server]]"
 ---
 # Tools
 
@@ -157,13 +159,10 @@ Notes:
   by arguments ([[05-3-provenance-and-taint|05 §3]]).
 - `session` and `origin_turns` on `brain_log_episode` are hints from the
   model (used by the fallback harvest recipe); the episode records them but
-  keeps `captured: mcp` and `taint: unknown`. In `brain_harvest_apply`, by
+  keeps `bw-captured: mcp` and `bw-taint: unknown`. In `brain_harvest_apply`, by
   contrast, every provenance field comes from the server's own parse of the
   session.
 - `brain_consolidate_apply` validates `ops` against the schema in
   [[05-5-operations|05 §5]] itself, so a
   malformed op produces a precise, model-correctable error rather than a
   generic protocol failure.
-
-## Relations
-- part_of [[07-3-mcp-server]]

@@ -15,11 +15,24 @@ from brainwiki.consolidate.packet import Packet
 from brainwiki.consolidate.validate import Validation
 from brainwiki.errors import Conflict, InvalidOps
 from brainwiki.format.agents_md import replace_block
-from brainwiki.format.claims import format_claim
 from brainwiki.format.document import parse_document
 from brainwiki.format.edit import append_to_section
+from brainwiki.format.fields import (
+    CLAIMS,
+    SUPERSEDED,
+    add_items,
+    claim_value,
+    needs_format2,
+    quote,
+    relation_value,
+    replace_item,
+    to_format2,
+)
+from brainwiki.format.fields import (
+    field as bw_field,
+)
 from brainwiki.format.frontmatter import format_value, set_fields
-from brainwiki.format.relations import canonical_verb, format_relation
+from brainwiki.format.relations import canonical_verb
 from brainwiki.ids import claim_id, new_ulid
 from brainwiki.index.resolver import LinkNamer, Resolver, norm_key
 from brainwiki.runs import Run
@@ -30,6 +43,7 @@ if TYPE_CHECKING:
 
 TAINT_ORDER = {"false": 0, "unknown": 1, "true": 2}
 _FM_ORDER = ("id", "type", "title")
+RELATION_PART_OF = "bw-part_of"
 
 
 @dataclass
@@ -75,13 +89,6 @@ _LABELS = (
 
 def _today() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%d")
-
-
-def _replace_lines(text: str, start: int, end: int, new_lines: list[str]) -> str:
-    newline = "\r\n" if "\r\n" in text else "\n"
-    lines = text.split(newline)
-    lines[start - 1 : end] = new_lines
-    return newline.join(lines)
 
 
 class Applier:
@@ -158,10 +165,18 @@ class Applier:
         ).fetchone()[0]
         return stem if not taken else path[:-3]
 
+    def note_text(self, path: str) -> str:
+        """A note's text in format 2; a format 1 note is converted before ops edit it."""
+        text = self.read(path)
+        if needs_format2(text):
+            text = to_format2(text)
+            self.write(path, text, bookkeeping=True)
+        return text
+
     def find_claim(self, handle: str) -> tuple[str, Any]:
         claim = self.packet.claims[handle]
         path = self.path_of(claim.note)
-        doc = parse_document(path, self.read(path))
+        doc = parse_document(path, self.note_text(path))
         found = next((c for c in doc.claims if c.id == claim.claim_id), None)
         if found is None:
             raise InvalidOps(f"claim {handle} ({claim.claim_id}) is no longer in {path}")
@@ -204,25 +219,22 @@ class Applier:
             "title": op["title"],
         }
         if rank > topic_rank:
-            fields["privacy"] = self.engine.manifest.privacy.levels[rank]
+            fields[bw_field("privacy")] = self.engine.manifest.privacy.levels[rank]
         fields.update(created=_today(), updated=_today())
         lines = [
             "---",
             *[f"{k}: {format_value(v)}" for k, v in fields.items()],
-            "---",
-            f"# {op['title']}",
-            "",
         ]
-        if op.get("summary"):
-            lines += [" ".join(op["summary"].split()), ""]
-        lines.append("## Claims")
+        if hub:
+            lines.append(f"{RELATION_PART_OF}: {quote(relation_value(self.hub_link(hub)))}")
+        lines.append(f"{CLAIMS}:")
         for claim in op["claims"]:
             meta = {"id": claim_id(), **self.episode_meta(claim["sources"])}
-            lines.append(format_claim(claim["text"], meta))
-        lines += ["", "## Relations"]
-        if hub:
-            lines.append(f"- part_of [[{self.hub_link(hub)}]]")
-        self.run.create(path, "\n".join(lines) + "\n")
+            lines.append(f"  - {quote(claim_value(claim['text'], meta))}")
+        lines += ["---", f"# {op['title']}", ""]
+        if op.get("summary"):
+            lines += [" ".join(op["summary"].split()), ""]
+        self.run.create(path, "\n".join(lines).rstrip("\n") + "\n")
         self.touched.add(path)
         self.staged.created_notes.append(path)
         self.staged.stats[path]["added"] += len(op["claims"])
@@ -248,10 +260,7 @@ class Applier:
     def add_claim(self, op: dict[str, Any]) -> None:
         path = self.path_of(op["note"])
         meta = {"id": claim_id(), **self.episode_meta(op["sources"])}
-        text = append_to_section(
-            self.read(path), "claims", [format_claim(op["text"], meta)], create_before="relations"
-        )
-        self.write(path, text)
+        self.write(path, add_items(self.note_text(path), CLAIMS, [claim_value(op["text"], meta)]))
         self.staged.stats[path]["added"] += 1
 
     def merge_claim(self, op: dict[str, Any]) -> None:
@@ -268,19 +277,20 @@ class Applier:
         if taint != "false":
             meta["taint"] = taint
         meta["at"] = _today()
-        line = format_claim(claim.text, meta, struck=claim.struck)
-        self.write(path, _replace_lines(self.read(path), claim.line, claim.last_line, [line]))
+        text = replace_item(
+            self.read(path), claim.key, claim.index, [claim_value(claim.text, meta)]
+        )
+        self.write(path, text)
         self.staged.stats[path]["merged"] += 1
 
     def supersede_claim(self, op: dict[str, Any]) -> None:
         path, claim = self.find_claim(op["claim"])
         new_id = claim_id()
-        new_line = format_claim(op["text"], {"id": new_id, **self.episode_meta(op["sources"])})
-        old_meta = {**claim.meta, "status": "superseded", "by": new_id, "reason": op["reason"]}
-        old_line = format_claim(claim.text, old_meta, struck=True)
-        self.write(
-            path, _replace_lines(self.read(path), claim.line, claim.last_line, [new_line, old_line])
-        )
+        new = claim_value(op["text"], {"id": new_id, **self.episode_meta(op["sources"])})
+        old_meta = {**claim.meta, "by": new_id, "reason": op["reason"], "at": _today()}
+        old_meta.pop("status", None)  # the superseded list says it
+        text = replace_item(self.read(path), claim.key, claim.index, [new])
+        self.write(path, add_items(text, SUPERSEDED, [claim_value(claim.text, old_meta)]))
         self.staged.stats[path]["superseded"] += 1
 
     def retract_claim(self, op: dict[str, Any]) -> None:
@@ -292,8 +302,8 @@ class Applier:
                 [s for s in claim.meta.get("src", "").split(",") if s] + evidence.split(",")
             )
         )
-        line = format_claim(claim.text, meta, struck=True)
-        self.write(path, _replace_lines(self.read(path), claim.line, claim.last_line, [line]))
+        text = replace_item(self.read(path), claim.key, claim.index, [])
+        self.write(path, add_items(text, SUPERSEDED, [claim_value(claim.text, meta)]))
         self.staged.stats[path]["retracted"] += 1
 
     def add_relation(self, op: dict[str, Any]) -> None:
@@ -302,7 +312,7 @@ class Applier:
         qualifier = op.get("qualifier") or (op["verb"].lower() if is_alias else None)
         source = self.path_of(op["from"])
         target = self.path_of(op["to"])
-        text = self.read(source)
+        text = self.note_text(source)
         doc = parse_document(source, text)
         resolver = Resolver(self.engine.db)
         target_id = self.packet.notes[op["to"]].id if op["to"] in self.packet.notes else None
@@ -314,10 +324,10 @@ class Applier:
             if target_id and resolver.resolve(existing.target, source).node_id == target_id:
                 return
         attrs = {str(k): str(v) for k, v in (op.get("attrs") or {}).items()}
-        line = format_relation(
-            verb, self.link_to(op["to"]), qualifier=qualifier, attrs=attrs, note=op.get("comment")
+        value = relation_value(
+            self.link_to(op["to"]), qualifier=qualifier, attrs=attrs, note=op.get("comment")
         )
-        self.write(source, append_to_section(text, "relations", [line]))
+        self.write(source, add_items(text, f"bw-{verb}", [value]))
         self.staged.stats[source]["relations"] += 1
         if verb == "supersedes":
             self.write(

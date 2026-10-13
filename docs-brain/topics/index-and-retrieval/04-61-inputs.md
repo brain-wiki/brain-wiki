@@ -5,6 +5,8 @@ title: "Inputs"
 aliases: ["04 §6.1"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#61-inputs"
+bw-part_of:
+  - "[[04-6-search]]"
 ---
 # Inputs
 
@@ -25,6 +27,3 @@ source: "docs/design/04-index-and-retrieval.md#61-inputs"
 | `count_only` | false | Return only `total`: how many nodes match, before any limit. |
 | `facets` | false | Add counts of the matching nodes by `type`, `topic`, and `tag` (top 10 each), so the caller can narrow before reading. |
 | `format` | `text` | Text rendering style: `text` (default), or `paths` (one brain-relative path per line, for handing to file tools). The structured result is the same either way. |
-
-## Relations
-- part_of [[04-6-search]]

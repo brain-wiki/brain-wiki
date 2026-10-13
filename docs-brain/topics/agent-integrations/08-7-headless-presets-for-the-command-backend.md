@@ -5,6 +5,8 @@ title: "Headless presets for the command backend"
 aliases: ["08 §7"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#7-headless-presets-for-the-command-backend"
+bw-part_of:
+  - "[[agent-integrations]]"
 ---
 # Headless presets for the command backend
 
@@ -33,6 +35,3 @@ packet; medium took 47 seconds and low 4, all with valid ops.
 Exact flags live in code (`brainwiki.consolidate.presets`, shared by
 consolidation and harvest distillation) with tests against recorded outputs,
 because CLIs change faster than this document.
-
-## Relations
-- part_of [[agent-integrations]]

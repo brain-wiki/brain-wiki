@@ -4,6 +4,8 @@ type: design
 title: "BW5xx: inbox"
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#bw5xx-inbox"
+bw-part_of:
+  - "[[06-3-rule-catalog]]"
 ---
 # BW5xx: inbox
 
@@ -11,9 +13,6 @@ source: "docs/design/06-lint-and-reports.md#bw5xx-inbox"
 |---|---|---|---|
 | BW501 | Episode changed after it was created (compared with the first hash the index saw; runs that edit an episode update it). | error / error | — |
 | BW502 | Episode path does not match `YYYY/MM/<ulid>.md` for its id. | error / warning | move it |
-| BW503 | Episode lacks required provenance fields. | error / warning | fill `origin: agent`, `taint: unknown` |
+| BW503 | Episode lacks required provenance fields. | error / warning | fill `bw-origin: agent`, `bw-taint: unknown` |
 | BW504 | A proposal references an episode that no longer exists. | warning / warning | — |
 | BW505 | Episodes pending longer than `lint.stale_inbox_days` (default 14). | info / info | — |
-
-## Relations
-- part_of [[06-3-rule-catalog]]

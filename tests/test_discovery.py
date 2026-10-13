@@ -337,7 +337,7 @@ def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
         "topics/search/fts5.md",
         "topics/search/ripgrep.md",
     ]
-    assert "- Claims  (line" in run("outline", "fts5")
+    assert "- Use SQLite FTS5 for local search  (line" in run("outline", "fts5")
     links = run("links", "fts5")
     assert '- depends_on "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in links
     assert run("backlinks", "fts5", "--paths").split() == [

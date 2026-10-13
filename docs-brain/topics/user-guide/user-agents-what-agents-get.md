@@ -4,6 +4,8 @@ type: guide
 title: "What agents get"
 tags: [user-guide]
 source: "docs/user/agents.md#what-agents-get"
+bw-part_of:
+  - "[[user-agents]]"
 ---
 # What agents get
 
@@ -25,6 +27,3 @@ Agents fetch the briefing when they need it, guided by the instruction
 block. To inject it at the start of every session instead, connect with
 `--briefing-hook` (Claude Code, Codex, Antigravity). The plugin also ships
 three skills: `brain` (everyday use), `brain-setup`, and `brain-maintain`.
-
-## Relations
-- part_of [[user-agents]]

@@ -5,6 +5,8 @@ title: "Rules (Brain format)"
 aliases: ["02 §10"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#10-rules"
+bw-part_of:
+  - "[[brain-format]]"
 ---
 # Rules (Brain format)
 
@@ -26,6 +28,3 @@ orientation, so it is short by construction.
 - Consolidation can never write `rules.md`. Rules are added by the user
   through the CLI, or by an agent through an MCP tool that the host gates
   with a user confirmation ([[05-6-rules|05 §6]]).
-
-## Relations
-- part_of [[brain-format]]

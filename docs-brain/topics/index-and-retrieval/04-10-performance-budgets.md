@@ -5,6 +5,8 @@ title: "Performance budgets (Index and retrieval)"
 aliases: ["04 §10"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#10-performance-budgets"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Performance budgets (Index and retrieval)
 
@@ -20,6 +22,3 @@ SSD:
 | Orientation | p95 < 30 ms |
 | Full rebuild | < 30 s |
 | Incremental update, one changed file | < 50 ms |
-
-## Relations
-- part_of [[index-and-retrieval]]

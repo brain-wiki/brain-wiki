@@ -4,6 +4,8 @@ type: guide
 title: "Commands"
 tags: [user-guide]
 source: "docs/user/reference.md#commands"
+bw-part_of:
+  - "[[user-reference]]"
 ---
 # Commands
 
@@ -46,6 +48,3 @@ command's options.
 
 Exit codes: 0 success; 1 problems found (lint errors, invalid ops); 2 usage;
 3 not found; 4 conflict (stale, lock); 5 forbidden by a profile.
-
-## Relations
-- part_of [[user-reference]]

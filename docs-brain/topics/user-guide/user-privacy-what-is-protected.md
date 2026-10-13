@@ -4,6 +4,8 @@ type: guide
 title: "What is protected"
 tags: [user-guide]
 source: "docs/user/privacy.md#what-is-protected"
+bw-part_of:
+  - "[[user-privacy]]"
 ---
 # What is protected
 
@@ -13,6 +15,3 @@ source: "docs/user/privacy.md#what-is-protected"
 | A secret pasted into a session | Secret patterns are redacted before an episode is written; lint flags secrets anywhere in the brain |
 | A model loses detail by rewriting notes | Models only propose small operations; nothing is deleted; every run can be undone |
 | The visualizer reachable from the network | It listens on 127.0.0.1 only, with a random token, read-only |
-
-## Relations
-- part_of [[user-privacy]]

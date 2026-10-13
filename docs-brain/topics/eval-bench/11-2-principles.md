@@ -5,6 +5,8 @@ title: "Principles"
 aliases: ["11 §2"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#2-principles"
+bw-part_of:
+  - "[[eval-bench]]"
 ---
 # Principles
 
@@ -21,6 +23,3 @@ source: "docs/design/11-eval-bench.md#2-principles"
   that writes to it.
 - **Same code paths as production.** Model suites run through the real
   consolidation pipeline and command backends ([[05-44-backends|05 §4.4]]).
-
-## Relations
-- part_of [[eval-bench]]

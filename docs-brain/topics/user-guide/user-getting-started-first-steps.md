@@ -4,6 +4,8 @@ type: guide
 title: "First steps"
 tags: [user-guide]
 source: "docs/user/getting-started.md#first-steps"
+bw-part_of:
+  - "[[user-getting-started]]"
 ---
 # First steps
 
@@ -20,6 +22,3 @@ brain rule add "Prefer pytest for new tests." --quote "from now on use pytest"
   and records how notes relate. See [[user-maintenance|Maintenance]].
 - **Rules** are your standing instructions. Only you add them: from the
   CLI, or by confirming an agent's proposal.
-
-## Relations
-- part_of [[user-getting-started]]

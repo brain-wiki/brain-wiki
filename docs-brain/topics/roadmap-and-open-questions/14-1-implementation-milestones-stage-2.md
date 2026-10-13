@@ -5,6 +5,8 @@ title: "Implementation milestones (stage 2)"
 aliases: ["14 §1"]
 tags: [roadmap-and-open-questions]
 source: "docs/design/14-roadmap-and-open-questions.md#1-implementation-milestones-stage-2"
+bw-part_of:
+  - "[[roadmap-and-open-questions]]"
 ---
 # Implementation milestones (stage 2)
 
@@ -33,6 +35,3 @@ and trust.
 - [[m10]]: M10: Visualizer
 - [[m11]]: M11: Release readiness
 - [[m12]]: M12: Agent context and discovery (D25–D28)
-
-## Relations
-- part_of [[roadmap-and-open-questions]]

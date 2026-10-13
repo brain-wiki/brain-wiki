@@ -5,6 +5,8 @@ title: "Rules for every hook"
 aliases: ["08 §5.3"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#53-rules-for-every-hook"
+bw-part_of:
+  - "[[08-5-hooks]]"
 ---
 # Rules for every hook
 
@@ -20,6 +22,3 @@ source: "docs/design/08-agent-integrations.md#53-rules-for-every-hook"
   for every subprocess it starts, such as headless consolidation), hooks
   exit immediately. This prevents a consolidation run from capturing
   itself.
-
-## Relations
-- part_of [[08-5-hooks]]

@@ -5,6 +5,8 @@ title: "Errors"
 aliases: ["07 §3.6"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#36-errors"
+bw-part_of:
+  - "[[07-3-mcp-server]]"
 ---
 # Errors
 
@@ -28,6 +30,3 @@ itself. The message starts with a stable code:
 Protocol errors (unknown tool, malformed request) are left to the SDK.
 Unexpected exceptions are logged with a trace to the log file and reported
 as `internal` with a log reference, never with internal details.
-
-## Relations
-- part_of [[07-3-mcp-server]]

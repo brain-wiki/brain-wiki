@@ -5,6 +5,8 @@ title: "Threats and mitigations"
 aliases: ["10 §3"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+bw-part_of:
+  - "[[security-and-privacy]]"
 ---
 # Threats and mitigations
 
@@ -29,6 +31,3 @@ source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 - [[threat-t18]]: T18: Unattended routines act without the user watching
 - [[threat-t19]]: T19: A direct agent edit damages a note
 - [[threat-t17]]: T17: Over-reading agent transcripts
-
-## Relations
-- part_of [[security-and-privacy]]

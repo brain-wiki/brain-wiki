@@ -5,6 +5,8 @@ title: "Requirements (Write path and consolidation)"
 aliases: ["05 §1"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#1-requirements"
+bw-part_of:
+  - "[[write-path-and-consolidation]]"
 ---
 # Requirements (Write path and consolidation)
 
@@ -16,6 +18,3 @@ source: "docs/design/05-write-path-and-consolidation.md#1-requirements"
 | W4 | No information is deleted by consolidation. Changes in belief are recorded as supersession. | The history of a fact is part of the fact. |
 | W5 | Every run is reproducible from its record: inputs, proposals, decisions, outputs. | Debugging and multi-model comparison (G8). |
 | W6 | Any LLM the user already runs can do the proposing, with no API keys. | D8; G6. |
-
-## Relations
-- part_of [[write-path-and-consolidation]]

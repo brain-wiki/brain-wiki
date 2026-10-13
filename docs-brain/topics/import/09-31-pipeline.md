@@ -5,6 +5,8 @@ title: "Pipeline (Import)"
 aliases: ["09 §3.1"]
 tags: [import]
 source: "docs/design/09-import.md#31-pipeline"
+bw-part_of:
+  - "[[09-3-overlay]]"
 ---
 # Pipeline (Import)
 
@@ -38,6 +40,3 @@ plus terminal output) shows:
   ambiguous links, conflict copies, files that fail to parse;
 - every change each phase would make, with examples;
 - what will not change.
-
-## Relations
-- part_of [[09-3-overlay]]

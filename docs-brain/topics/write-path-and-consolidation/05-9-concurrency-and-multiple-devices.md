@@ -5,6 +5,8 @@ title: "Concurrency and multiple devices"
 aliases: ["05 §9"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#9-concurrency-and-multiple-devices"
+bw-part_of:
+  - "[[write-path-and-consolidation]]"
 ---
 # Concurrency and multiple devices
 
@@ -16,6 +18,3 @@ source: "docs/design/05-write-path-and-consolidation.md#9-concurrency-and-multip
 | Human edits a note mid-run | The hash check in §7.3 makes the run stale; nothing is overwritten. |
 | Two devices consolidate the same episodes before syncing | Both runs succeed locally; after sync the notes have duplicate claims citing the same span. Lint reports `BW-duplicate-source` and `reports/duplicates.md` lists them. Mitigation: set `[consolidate] device = "<hostname>"` so scheduled runs happen on one machine; other devices warn. |
 | Episode already archived by another device | Skipped at selection (it is no longer pending). |
-
-## Relations
-- part_of [[write-path-and-consolidation]]

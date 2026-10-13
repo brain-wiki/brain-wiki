@@ -5,6 +5,8 @@ title: "Lifecycle"
 aliases: ["07 §3.7"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#37-lifecycle"
+bw-part_of:
+  - "[[07-3-mcp-server]]"
 ---
 # Lifecycle
 
@@ -14,6 +16,3 @@ source: "docs/design/07-interfaces.md#37-lifecycle"
 - Brain selection can change per call (`brain` argument), within the
   host's limits; indexes are opened lazily and cached per brain.
 - The server exits on stdin EOF, as the transport requires.
-
-## Relations
-- part_of [[07-3-mcp-server]]

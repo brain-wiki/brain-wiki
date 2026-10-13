@@ -1,4 +1,4 @@
-"""The `<!-- key:value; key:value -->` metadata comment used by claims and rules."""
+"""The `<!-- key:value; key:value -->` metadata comment used by rules and format 1 claims."""
 
 from __future__ import annotations
 

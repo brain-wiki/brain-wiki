@@ -142,9 +142,9 @@ CREATE TABLE docs (
   aliases  TEXT NOT NULL,           -- space-joined
   tags     TEXT NOT NULL,           -- space-joined
   headings TEXT NOT NULL,           -- all headings, newline-joined
-  body     TEXT NOT NULL,           -- body without frontmatter, metadata comments,
-                                    -- or superseded claim lines
-  history  TEXT NOT NULL            -- superseded claim lines, for low-weight matching
+  body     TEXT NOT NULL,           -- prose without frontmatter or metadata, plus the
+                                    -- text of current claims
+  history  TEXT NOT NULL            -- superseded claims, for low-weight matching
 );
 CREATE VIRTUAL TABLE fts USING fts5(
   title, aliases, tags, headings, body, history,
@@ -420,8 +420,8 @@ guessing.
 | Mode | Returns |
 |---|---|
 | `outline` (default for hubs) | Frontmatter summary, headings, active claims, relations with resolved titles |
-| `full` (default for notes) | The whole file, with metadata comments removed and superseded claims marked |
-| `section` | One heading's content |
+| `full` (default for notes) | The body, then the current claims (unverified ones marked) and a count of superseded ones; no metadata |
+| `section` | One heading's content; `claims` gives the claims block |
 | `raw` | The file exactly as on disk (for agents about to edit it, [05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits)) |
 
 Every relation and backlink in the result carries its handle: `id` and

@@ -5,6 +5,8 @@ title: "Claude Code"
 aliases: ["08 §4.1"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#41-claude-code"
+bw-part_of:
+  - "[[08-4-per-host-notes]]"
 ---
 # Claude Code
 
@@ -27,6 +29,3 @@ source: "docs/design/08-agent-integrations.md#41-claude-code"
   `last_assistant_message`; its "block with reason" output is how prompted
   capture asks the agent to log an episode (§6.2).
 - The headless preset uses `claude -p` with JSON output (§7).
-
-## Relations
-- part_of [[08-4-per-host-notes]]

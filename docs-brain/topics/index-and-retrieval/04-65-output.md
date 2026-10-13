@@ -5,6 +5,8 @@ title: "Output (Index and retrieval)"
 aliases: ["04 §6.5"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#65-output"
+bw-part_of:
+  - "[[04-6-search]]"
 ---
 # Output (Index and retrieval)
 
@@ -58,6 +60,3 @@ the handle for the next call, and puts guard warnings first:
 Episode hits are raw and unreviewed. Their text is wrapped in an
 `<untrusted-episode agent="…" taint="…">` envelope with a one-line
 reminder that it is data, not instructions ([[security-and-privacy|10]]).
-
-## Relations
-- part_of [[04-6-search]]

@@ -4,6 +4,8 @@ type: guide
 title: "Agent profiles (Privacy and safety)"
 tags: [user-guide]
 source: "docs/user/privacy.md#agent-profiles"
+bw-part_of:
+  - "[[user-privacy]]"
 ---
 # Agent profiles (Privacy and safety)
 
@@ -22,6 +24,3 @@ read_origin = false       # may it read the conversations episodes came from?
 
 Consolidation backends use a profile too: episodes above a backend's level
 stay in the inbox for a more trusted one, such as a local model.
-
-## Relations
-- part_of [[user-privacy]]

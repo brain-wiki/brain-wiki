@@ -5,6 +5,8 @@ title: "Location and lifecycle"
 aliases: ["04 §2"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#2-location-and-lifecycle"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Location and lifecycle
 
@@ -23,6 +25,3 @@ source: "docs/design/04-index-and-retrieval.md#2-location-and-lifecycle"
   prompted.
 - Pragmas: `journal_mode=WAL`, `synchronous=NORMAL`, `foreign_keys=ON`,
   `busy_timeout=5000`.
-
-## Relations
-- part_of [[index-and-retrieval]]

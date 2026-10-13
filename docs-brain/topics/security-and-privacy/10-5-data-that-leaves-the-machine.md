@@ -5,6 +5,8 @@ title: "Data that leaves the machine"
 aliases: ["10 §5"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#5-data-that-leaves-the-machine"
+bw-part_of:
+  - "[[security-and-privacy]]"
 ---
 # Data that leaves the machine
 
@@ -19,6 +21,3 @@ network access in the core.
 | Harvest with distillation | Condensed turns of the selected sessions (no tool output, secrets scrubbed) | The distill preset's service (CLI), or the host's model provider (in-agent recipe); `--raw` sends nothing |
 | Bench with model backends | Synthetic scenarios only | The configured CLIs' providers |
 | Future sync | File contents | The user's own remote |
-
-## Relations
-- part_of [[security-and-privacy]]

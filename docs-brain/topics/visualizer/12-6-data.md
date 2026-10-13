@@ -5,6 +5,8 @@ title: "Data (Visualizer)"
 aliases: ["12 §6"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#6-data"
+bw-part_of:
+  - "[[visualizer]]"
 ---
 # Data (Visualizer)
 
@@ -61,6 +63,3 @@ at most 200 per flag.
 ([[06-7-reports|06 §7]]): `conflict`, `stale`, `orphan`,
 `unverified`, `over_budget`, `lint_error`. Hidden notes never appear in any
 payload, count, flow, or search result.
-
-## Relations
-- part_of [[visualizer]]

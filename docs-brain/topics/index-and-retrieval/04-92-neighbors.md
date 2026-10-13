@@ -5,6 +5,8 @@ title: "Neighbors"
 aliases: ["04 §9.2"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#92-neighbors"
+bw-part_of:
+  - "[[04-9-other-queries]]"
 ---
 # Neighbors
 
@@ -36,6 +38,3 @@ Typical uses: what a release shipped (`depends_on`, `out`), what depends on
 a decision (`depends_on`, `in`), how a fact evolved (`supersedes`, `both`,
 depth 3). Privacy filtering applies to every node; hidden neighbors are
 counted, not named, as in §5.
-
-## Relations
-- part_of [[04-9-other-queries]]

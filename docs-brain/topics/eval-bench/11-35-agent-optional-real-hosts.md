@@ -5,6 +5,8 @@ title: "`agent` (optional, real hosts)"
 aliases: ["11 §3.5"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#35-agent-optional-real-hosts"
+bw-part_of:
+  - "[[11-3-suites]]"
 ---
 # `agent` (optional, real hosts)
 
@@ -19,6 +21,3 @@ directory and check the end state and that every write was preceded by a
 dry run; check skill triggering with should-trigger and near-miss prompts
 ([[15-6-testing|15 §6]]). Expensive and host-dependent; run manually before
 releases.
-
-## Relations
-- part_of [[11-3-suites]]

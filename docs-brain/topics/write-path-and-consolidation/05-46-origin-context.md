@@ -5,6 +5,8 @@ title: "Origin context"
 aliases: ["05 §4.6"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#46-origin-context"
+bw-part_of:
+  - "[[05-4-consolidation]]"
 ---
 # Origin context
 
@@ -37,6 +39,3 @@ Rules for origin reads:
   retention period; Claude Code keeps transcripts 30 days by default). The
   tool returns `not_available` with the reason, and consolidation proceeds
   from the episode alone.
-
-## Relations
-- part_of [[05-4-consolidation]]

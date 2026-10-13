@@ -20,6 +20,7 @@ from brainwiki.format.episode import (
     render_episode,
 )
 from brainwiki.ids import new_ulid
+from brainwiki.lifecycle import declare_format
 from brainwiki.write.secrets import scrub
 
 if TYPE_CHECKING:
@@ -190,6 +191,7 @@ def write_episode(
             return EpisodeResult(found[0], found[1], deduped=True)
     if engine.store.exists(rel):
         raise UsageError(f"{rel} already exists")
+    declare_format(engine)
     engine.store.write_text(rel, text)
     engine.scan(paths=[rel])
     return EpisodeResult(ulid, rel, redacted=sorted(set(redacted)), truncated=truncated)

@@ -5,6 +5,8 @@ title: "Triggers"
 aliases: ["05 §4.2"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#42-triggers"
+bw-part_of:
+  - "[[05-4-consolidation]]"
 ---
 # Triggers
 
@@ -16,6 +18,3 @@ source: "docs/design/05-write-path-and-consolidation.md#42-triggers"
 
 v0.1 never consolidates on its own in the background. Running an LLM costs
 money and attention, and the user should choose when.
-
-## Relations
-- part_of [[05-4-consolidation]]

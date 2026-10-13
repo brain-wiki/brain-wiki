@@ -5,6 +5,8 @@ title: "Privacy model"
 aliases: ["10 §4"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#4-privacy-model"
+bw-part_of:
+  - "[[security-and-privacy]]"
 ---
 # Privacy model
 
@@ -18,6 +20,3 @@ source: "docs/design/10-security-and-privacy.md#4-privacy-model"
 Defaults: one level (`default`) is used for everything until the user
 declares more. `brain init` explains levels in the generated `brain.toml`
 comments, and `brain search --as <host>` shows what a host would see.
-
-## Relations
-- part_of [[security-and-privacy]]

@@ -5,6 +5,8 @@ title: "Goals (Import)"
 aliases: ["09 §1"]
 tags: [import]
 source: "docs/design/09-import.md#1-goals"
+bw-part_of:
+  - "[[import]]"
 ---
 # Goals (Import)
 
@@ -15,6 +17,3 @@ source: "docs/design/09-import.md#1-goals"
 | I3 | Every change is a run: undoable, logged, committed if git is on. |
 | I4 | Normalization is opt-in and incremental. The brain works before any of it. |
 | I5 | The user's own files can also be fed to consolidation as episodes, and agents' existing memory files can be brought in the same way. |
-
-## Relations
-- part_of [[import]]

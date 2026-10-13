@@ -5,6 +5,8 @@ title: "Rendering"
 aliases: ["12 §3"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#3-rendering"
+bw-part_of:
+  - "[[visualizer]]"
 ---
 # Rendering
 
@@ -56,6 +58,3 @@ source: "docs/design/12-visualizer.md#3-rendering"
 | `supersedes` | Amber, flowing old → new |
 | `related_to` | Faint violet |
 | Wikilinks (`links_to`) | Hidden by default; a dock toggle |
-
-## Relations
-- part_of [[visualizer]]

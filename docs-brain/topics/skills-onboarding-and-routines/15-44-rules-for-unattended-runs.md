@@ -5,6 +5,8 @@ title: "Rules for unattended runs"
 aliases: ["15 §4.4"]
 tags: [skills-onboarding-and-routines]
 source: "docs/design/15-skills-onboarding-and-routines.md#44-rules-for-unattended-runs"
+bw-part_of:
+  - "[[15-4-routines]]"
 ---
 # Rules for unattended runs
 
@@ -22,6 +24,3 @@ source: "docs/design/15-skills-onboarding-and-routines.md#44-rules-for-unattende
   work, so scheduled-run notifications stay meaningful.
 - **No new permissions.** A routine can do nothing the host's profile does
   not already allow; `needs` is checked when the routine is created.
-
-## Relations
-- part_of [[15-4-routines]]

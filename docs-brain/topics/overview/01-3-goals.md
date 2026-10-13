@@ -5,6 +5,8 @@ title: "Goals (Overview)"
 aliases: ["01 §3"]
 tags: [overview]
 source: "docs/design/01-overview.md#3-goals"
+bw-part_of:
+  - "[[overview]]"
 ---
 # Goals (Overview)
 
@@ -18,6 +20,3 @@ source: "docs/design/01-overview.md#3-goals"
 | G6 | **No required services or keys.** Runs offline on a laptop with Python and SQLite. | Core features pass tests with no network access. |
 | G7 | **Fast enough to sit in a hook.** | At 10,000 notes: search p95 < 50 ms warm; unchanged-tree freshness check < 150 ms; hook commands < 300 ms end to end. See [[engineering\|13]]. |
 | G8 | **Measurable.** Retrieval quality, write quality, and cross-model consistency are measured by a reproducible bench. | `brain bench` runs offline on synthetic data and produces a JSON and Markdown report. |
-
-## Relations
-- part_of [[overview]]

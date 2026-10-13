@@ -5,6 +5,8 @@ title: "Consolidation"
 aliases: ["05 §4"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#4-consolidation"
+bw-part_of:
+  - "[[write-path-and-consolidation]]"
 ---
 # Consolidation
 
@@ -16,6 +18,3 @@ source: "docs/design/05-write-path-and-consolidation.md#4-consolidation"
 - [[05-44-backends]]: Backends
 - [[05-45-instruction-contract]]: Instruction contract
 - [[05-46-origin-context]]: Origin context
-
-## Relations
-- part_of [[write-path-and-consolidation]]

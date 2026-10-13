@@ -5,6 +5,8 @@ title: "Data (Eval bench)"
 aliases: ["11 §4"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#4-data"
+bw-part_of:
+  - "[[eval-bench]]"
 ---
 # Data (Eval bench)
 
@@ -30,6 +32,3 @@ bench/scenarios/<slice>/<id>/
   copies a real run's packet, ops, and validation result into a draft
   scenario under the user's state directory. It never leaves the machine
   automatically; the user scrubs it and decides whether to contribute it.
-
-## Relations
-- part_of [[eval-bench]]

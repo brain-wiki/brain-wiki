@@ -5,6 +5,8 @@ title: "T5: Secrets stored in the brain"
 aliases: ["threat T5"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+bw-part_of:
+  - "[[10-3-threats-and-mitigations]]"
 ---
 # T5: Secrets stored in the brain
 
@@ -13,6 +15,3 @@ source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 **Mitigations:** Secret patterns are redacted at episode write; lint BW701 flags secrets anywhere; consolidation never copies redacted spans back.
 
 **Residual risk:** Pattern-based detection misses unusual formats.
-
-## Relations
-- part_of [[10-3-threats-and-mitigations]]

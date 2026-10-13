@@ -5,6 +5,8 @@ title: "Overlay"
 aliases: ["09 §3"]
 tags: [import]
 source: "docs/design/09-import.md#3-overlay"
+bw-part_of:
+  - "[[import]]"
 ---
 # Overlay
 
@@ -13,6 +15,3 @@ source: "docs/design/09-import.md#3-overlay"
 - [[09-31-pipeline]]: Pipeline (Import)
 - [[09-32-phases]]: Phases
 - [[09-33-safety]]: Safety (Import)
-
-## Relations
-- part_of [[import]]

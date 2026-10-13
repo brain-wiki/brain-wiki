@@ -5,6 +5,8 @@ title: "What brain-wiki is"
 aliases: ["01 §2"]
 tags: [overview]
 source: "docs/design/01-overview.md#2-what-brain-wiki-is"
+bw-part_of:
+  - "[[overview]]"
 ---
 # What brain-wiki is
 
@@ -41,6 +43,3 @@ A **brain** is a directory of Markdown files with a small manifest. It holds:
 
 ## Subsections
 - [[01-21-two-uses]]: Two uses
-
-## Relations
-- part_of [[overview]]

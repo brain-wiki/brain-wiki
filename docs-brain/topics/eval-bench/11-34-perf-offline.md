@@ -5,6 +5,8 @@ title: "`perf` (offline)"
 aliases: ["11 §3.4"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#34-perf-offline"
+bw-part_of:
+  - "[[11-3-suites]]"
 ---
 # `perf` (offline)
 
@@ -13,6 +15,3 @@ Generated brains of 1k and 10k notes; measures the budgets in
 rebuild, search and read latency percentiles, orientation, lint, and
 `brain hook` end to end (process start to output). Each budget is a pass
 or fail line in the report.
-
-## Relations
-- part_of [[11-3-suites]]

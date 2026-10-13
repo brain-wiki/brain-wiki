@@ -5,6 +5,8 @@ title: "Guard co-retrieval"
 aliases: ["04 §5"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#5-guard-co-retrieval"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Guard co-retrieval
 
@@ -54,6 +56,3 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
   brains show the need.
 - **Notes vs claims.** Claim-level supersession needs no query: superseded
   claims are already excluded from `body` and marked in reads.
-
-## Relations
-- part_of [[index-and-retrieval]]

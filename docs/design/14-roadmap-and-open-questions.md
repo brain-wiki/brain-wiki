@@ -81,6 +81,7 @@ result.
 | T-11 | How much does the Claude Code transcript format vary across recent versions? (Its docs call the format internal.) | Fixtures from several releases; reader tests run against all of them. |
 | T-12 | Can an agent running inside each desktop app (Claude Code, ChatGPT/Codex) create a local scheduled task with its own tools, or must the user use the app's form? | Ask the agent to create a test task; fall back to printed steps. |
 | T-13 | Antigravity `/schedule`: does it accept a full multi-line prompt, in which workspace does the scheduled run start, and does it survive restarts in the CLI as well as the desktop app? | **CLI (agy 1.3.3):** `/schedule "* * * * *" <prompt>` creates an in-session cron job; it ran each minute in the session's workspace and stopped when the session exited. `brain schedule show` now says so. Multi-line prompts (the printed line is one line) and the desktop app not tested. |
+| T-14 | Does Obsidian treat links in list properties (`bw-depends_on: ["[[Note]] — why"]`, with text after the link) as links: in backlinks and the graph, and rewritten on rename? | Open a format 2 brain in a scratch vault; rename a target note and check the property, the backlinks pane, and the graph. |
 
 ## 4. Future work (after v0.1)
 

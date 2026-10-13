@@ -13,8 +13,8 @@ undoable run.
 | `brain consolidate --backend command` | Headless, with your agent's CLI (`[consolidate] command = "claude-code"`, or `codex`, `antigravity`, `cursor`, `ollama`, or an argv list) |
 | `brain consolidate --prepare` then `--apply OPS.json --run RUN` | Driving it from your own tooling |
 
-Nothing is ever deleted: superseded claims stay in place, struck through,
-with a link to what replaced them. Episodes move to `archive/` with the run.
+Nothing is ever deleted: superseded claims move to the note's
+`bw-claims-superseded` list, with the id of what replaced them. Episodes move to `archive/` with the run.
 
 ## Review
 
@@ -44,6 +44,10 @@ brain report                     # regenerate reports/
 `reports/` holds pages you can browse in Obsidian: contradictions, stale
 dependencies, unverified claims, the inbox, duplicate claims, orphans, and
 the latest lint results.
+
+Notes written before format 2 keep claims and relations in `## Claims` and
+`## Relations` sections. They still work; lint reports them as BW116, and
+`brain lint --fix` moves them into `bw-` fields in one undoable run.
 
 ## Move a note
 

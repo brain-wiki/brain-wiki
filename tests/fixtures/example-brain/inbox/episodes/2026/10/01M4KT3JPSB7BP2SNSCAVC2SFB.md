@@ -1,12 +1,12 @@
 ---
 id: 01M4KT3JPSB7BP2SNSCAVC2SFB
 type: episode
-agent: claude-code
-origin: agent
-taint: false
-captured: mcp
+bw-agent: claude-code
+bw-origin: agent
+bw-taint: false
+bw-captured: mcp
 created: 2026-10-03T12:00:00Z
-topics: [search]
+bw-topics: [search]
 ---
 Benchmarked FTS5 prefix queries on 10k notes; p95 was 4 ms.
 

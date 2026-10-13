@@ -5,6 +5,8 @@ title: "The routines"
 aliases: ["15 §4.1"]
 tags: [skills-onboarding-and-routines]
 source: "docs/design/15-skills-onboarding-and-routines.md#41-the-routines"
+bw-part_of:
+  - "[[15-4-routines]]"
 ---
 # The routines
 
@@ -17,6 +19,3 @@ source: "docs/design/15-skills-onboarding-and-routines.md#41-the-routines"
 Harvest in a routine always uses the agent backend, so each host harvests
 its own sessions and nothing else. Consolidation runs in one place only,
 which avoids two hosts racing for the same episodes.
-
-## Relations
-- part_of [[15-4-routines]]

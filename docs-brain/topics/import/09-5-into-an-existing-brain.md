@@ -5,6 +5,8 @@ title: "Into an existing brain"
 aliases: ["09 §5"]
 tags: [import]
 source: "docs/design/09-import.md#5-into-an-existing-brain"
+bw-part_of:
+  - "[[import]]"
 ---
 # Into an existing brain
 
@@ -15,6 +17,3 @@ source: "docs/design/09-import.md#5-into-an-existing-brain"
    notes outside the source become unresolved and are reported.
 4. Apply the same normalization phases to the copies (the source stays
    untouched), as one run.
-
-## Relations
-- part_of [[import]]

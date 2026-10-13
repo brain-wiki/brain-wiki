@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from brainwiki import FORMAT_VERSION
 from brainwiki.config.manifest import MANIFEST, parse_manifest
@@ -10,6 +12,9 @@ from brainwiki.errors import Conflict, UsageError
 from brainwiki.format.agents_md import replace_block
 from brainwiki.format.rules import RULES_HEADER
 from brainwiki.ids import new_ulid
+
+if TYPE_CHECKING:
+    from brainwiki.engine import Engine
 
 BRAIN_TOML_TEMPLATE = """\
 # brain.toml: this directory is a brain-wiki brain. Settings here travel with the brain.
@@ -59,13 +64,30 @@ def default_agents_block(name: str, topics: list[tuple[str, str, str]] | None = 
             "- To record something, add a new file under `inbox/episodes/YYYY/MM/<ULID>.md`",
             "  (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or `rules.md`",
             "  directly; consolidation folds episodes into notes.",
-            "- Relations at the bottom of notes use: part_of, has_part, depends_on, enables,",
-            "  conflicts_with, supersedes, superseded_by, related_to. If a note is superseded or",
-            "  conflicts with another, read both before acting.",
+            "- A note's relations are its `bw-<verb>` frontmatter fields: part_of, has_part,",
+            "  depends_on, enables, conflicts_with, supersedes, superseded_by, related_to. If a",
+            "  note is superseded or conflicts with another, read both before acting.",
             "",
             *table,
         ]
     )
+
+
+def declare_format(engine: Engine) -> bool:
+    """Raise `format` in brain.toml to this version before writing files in it (02 §13).
+
+    One-way and outside undo: once a brain holds format 2 files, an older brain-wiki must refuse
+    it rather than misread them (it would not see `bw-privacy`). Returns whether it changed.
+    """
+    if engine.manifest.format >= FORMAT_VERSION:
+        return False
+    text = engine.store.read_text(MANIFEST)
+    new = re.sub(r"(?m)^format\s*=\s*\d+", f"format = {FORMAT_VERSION}", text, count=1)
+    if new == text:
+        return False
+    engine.store.write_text(MANIFEST, new)
+    engine.manifest.format = FORMAT_VERSION
+    return True
 
 
 def init_brain(path: Path, name: str | None = None) -> Path:

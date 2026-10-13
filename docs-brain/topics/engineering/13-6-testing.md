@@ -5,6 +5,8 @@ title: "Testing (Engineering)"
 aliases: ["13 §6"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#6-testing"
+bw-part_of:
+  - "[[engineering]]"
 ---
 # Testing (Engineering)
 
@@ -26,6 +28,3 @@ fixture may contain real personal data.
 
 Platforms in CI: Linux and macOS on every change; Windows best-effort
 (core tests only). Python 3.11 and the latest release.
-
-## Relations
-- part_of [[engineering]]

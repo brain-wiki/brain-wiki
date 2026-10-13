@@ -5,6 +5,8 @@ title: "Command tree"
 aliases: ["07 §2.1"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#21-command-tree"
+bw-part_of:
+  - "[[07-2-cli]]"
 ---
 # Command tree
 
@@ -66,6 +68,3 @@ brain version
 ```
 
 Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `-q`, `-v`.
-
-## Relations
-- part_of [[07-2-cli]]

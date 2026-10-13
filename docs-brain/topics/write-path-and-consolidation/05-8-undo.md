@@ -5,6 +5,8 @@ title: "Undo (Write path and consolidation)"
 aliases: ["05 §8"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#8-undo"
+bw-part_of:
+  - "[[write-path-and-consolidation]]"
 ---
 # Undo (Write path and consolidation)
 
@@ -40,6 +42,3 @@ Pre-images are stored next to it (`preimages/<sha256>`, zstd or gzip).
 - Undo is itself recorded (`kind: undo`) and logged in `log.md`.
 
 Retention: the last 200 runs or 90 days, whichever keeps more.
-
-## Relations
-- part_of [[write-path-and-consolidation]]

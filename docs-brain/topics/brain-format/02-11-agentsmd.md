@@ -5,6 +5,8 @@ title: "`AGENTS.md`"
 aliases: ["02 §11"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#11-agentsmd"
+bw-part_of:
+  - "[[brain-format]]"
 ---
 # `AGENTS.md`
 
@@ -18,7 +20,7 @@ outside the markers is preserved.
 - Read `rules.md` first. Topics: (table of slug, title, description)
 - To record something, create `inbox/episodes/YYYY/MM/<ULID>.md` (format …).
   Do not edit files under `topics/` directly.
-- Relations: part_of, depends_on, conflicts_with, supersedes, related_to …
+- Relations are `bw-<verb>` fields: part_of, depends_on, conflicts_with, …
 <!-- brain-wiki:end -->
 ```
 
@@ -26,6 +28,3 @@ outside the markers is preserved.
 length is limited by `budgets.agents_md_max_lines`. When the topic table
 would not fit, it is truncated to the most recently updated topics with a
 pointer to the hubs.
-
-## Relations
-- part_of [[brain-format]]

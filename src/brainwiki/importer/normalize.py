@@ -3,33 +3,34 @@
 from __future__ import annotations
 
 from brainwiki.format.document import parse_document
-from brainwiki.format.edit import append_to_section
+from brainwiki.format.fields import add_items, field
 from brainwiki.format.frontmatter import remove_field, set_fields
-from brainwiki.format.normalize import STATUSES, map_status, relation_lines_for
+from brainwiki.format.normalize import STATUSES, map_status, relation_values_for
 from brainwiki.ids import new_ulid
 
 _ORDER = ("id", "type", "title")
 
 
 def convert_relations(text: str, *, drop: bool = False) -> str:
-    """Phase 1: relation-like frontmatter becomes `## Relations` lines (properties kept unless `drop`)."""
+    """Phase 1: relation-like frontmatter (`related:`, `up:`, …) becomes `bw-<verb>` relations
+    (the original properties are kept unless `drop`)."""
     doc = parse_document("x.md", text)
     if doc.frontmatter.error:
         return text
-    existing = {" ".join(line.split()) for line in text.splitlines()}
-    lines: list[str] = []
+    have = {(r.key, r.target) for r in doc.relations}
+    adds: dict[str, list[str]] = {}
     converted: list[str] = []
-    for key, value in doc.fm.items():
-        new = [
-            line
-            for line in relation_lines_for(key, value)
-            if " ".join(line.split()) not in existing
-        ]
-        if relation_lines_for(key, value):
+    for key, value in doc.frontmatter.raw.items():
+        pairs = relation_values_for(key, value)
+        if pairs:
             converted.append(key)
-        lines += new
-    if lines:
-        text = append_to_section(text, "relations", lines)
+        for bw_key, item in pairs:
+            target = item[2 : item.index("]]")]
+            if (bw_key, target) not in have:
+                adds.setdefault(bw_key, []).append(item)
+                have.add((bw_key, target))
+    for bw_key, items in adds.items():
+        text = add_items(text, bw_key, items)
     if drop:
         for key in converted:
             text = remove_field(text, key)
@@ -49,7 +50,7 @@ def identity_and_status(text: str) -> str:
         new_status, stage = map_status(str(status))
         values["status"] = new_status
         if stage and doc.fm.get("stage") is None:
-            values["stage"] = stage
+            values[field("stage")] = stage
     for key in ("tags", "aliases"):
         raw = doc.fm.get(key)
         if isinstance(raw, str):

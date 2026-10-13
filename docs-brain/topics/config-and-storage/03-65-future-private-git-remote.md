@@ -5,6 +5,8 @@ title: "Future: private git remote"
 aliases: ["03 §6.5"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#65-future-private-git-remote"
+bw-part_of:
+  - "[[03-6-storage-and-sync]]"
 ---
 # Future: private git remote
 
@@ -24,6 +26,3 @@ The simplest remote for most users and the first one to build.
   encrypts the whole repository (`git-remote-gcrypt`). Per-file filters
   (`git-crypt`) leave file names visible and cannot revoke access, which
   users should know before choosing them.
-
-## Relations
-- part_of [[03-6-storage-and-sync]]

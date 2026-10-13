@@ -5,6 +5,8 @@ title: "Harvesting sessions"
 aliases: ["05 §2.2"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#22-harvesting-sessions"
+bw-part_of:
+  - "[[05-2-the-write-paths]]"
 ---
 # Harvesting sessions
 
@@ -30,7 +32,7 @@ discover ─► filter ─► route ─► extract ─► distill (or raw) ─�
 | Route | Each session belongs to the brain its working directory resolves to, using the same project files and host defaults as brain selection ([[03-3-choosing-a-brain\|03 §3]]) plus optional path rules in `[harvest.routes]`. Sessions that resolve to no brain are skipped, never sent to the default brain. |
 | Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Injected brain-wiki context is stripped. Secrets are scrubbed. Taint is computed from the tool calls. |
 | Distill | One call to the configured command backend with the distill instructions (`prompts/distill.md`): the model returns `{skip, summary, claims[{text, turns}], negative_findings, open_questions, topics}`. Long sessions are split into chunks of at most 30k tokens, one episode per chunk. With `--raw`, no model is called and the episode holds a condensed transcript excerpt instead; consolidation distills it later. |
-| Write | Episodes with `captured: harvest`, `agent`, `session`, `origin_turns`, `device`, and the computed `taint`. The dedupe key `<host>:<session>:<turn range>` is shared with hook capture, so a session captured by a hook is not harvested again. |
+| Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-taint`. The dedupe key `<host>:<session>:<turn range>` is shared with hook capture, so a session captured by a hook is not harvested again. |
 | Watermark | `<state>/harvest/<host>/<session>.json` records the last harvested turn, so a long-running session is harvested in increments. |
 
 **Who distills.** The distill step reaches an LLM the same three ways as
@@ -47,8 +49,8 @@ yet (Cursor, OpenClaw, new hosts), `brain_harvest_prepare` returns
 `unsupported_host`, and the skill's recipe lets the agent read its own
 session history with its own tools, at the user's request, and log one
 episode per session with `brain_log_episode`, passing `session` and
-`origin_turns` as hints. Those episodes are `captured: mcp` with
-`taint: unknown`, because neither routing nor tool use was checked by
+`origin_turns` as hints. Those episodes are `bw-captured: mcp` with
+`bw-taint: unknown`, because neither routing nor tool use was checked by
 brain-wiki. They are usable knowledge but can never feed rules.
 
 **Running it periodically.** The recipe can be run by hand; as a scheduled
@@ -66,6 +68,3 @@ distillation; `--apply` executes. Every backend is subject to the same
 profile check as consolidation: it only receives sessions routed to brains
 and privacy levels its profile may read. Sessions it may not read are
 harvested `raw` by the CLI or left for another backend.
-
-## Relations
-- part_of [[05-2-the-write-paths]]

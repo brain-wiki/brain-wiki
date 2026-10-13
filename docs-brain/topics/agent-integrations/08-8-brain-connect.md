@@ -5,6 +5,8 @@ title: "`brain connect`"
 aliases: ["08 §8"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#8-brain-connect"
+bw-part_of:
+  - "[[agent-integrations]]"
 ---
 # `brain connect`
 
@@ -38,6 +40,3 @@ source: "docs/design/08-agent-integrations.md#8-brain-connect"
 6. After registering, run the host's own listing command (where one
    exists) and report whether the plugin, server, and instruction block are
    visible.
-
-## Relations
-- part_of [[agent-integrations]]

@@ -4,6 +4,8 @@ type: guide
 title: "What is sent where"
 tags: [user-guide]
 source: "docs/user/privacy.md#what-is-sent-where"
+bw-part_of:
+  - "[[user-privacy]]"
 ---
 # What is sent where
 
@@ -15,6 +17,3 @@ when an agent you use reads it:
 | Search and read from an agent | That agent's model provider |
 | Consolidation | The model of the backend you chose |
 | Harvest with distillation | The distill preset's provider, or your in-session agent; `--raw` sends nothing |
-
-## Relations
-- part_of [[user-privacy]]

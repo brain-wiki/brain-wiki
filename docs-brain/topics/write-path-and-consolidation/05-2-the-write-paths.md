@@ -5,6 +5,8 @@ title: "The write paths"
 aliases: ["05 §2"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#2-the-write-paths"
+bw-part_of:
+  - "[[write-path-and-consolidation]]"
 ---
 # The write paths
 
@@ -38,6 +40,3 @@ Human edits are always allowed: it is the user's brain.
 - [[05-21-ways-an-episode-is-written]]: Ways an episode is written
 - [[05-22-harvesting-sessions]]: Harvesting sessions
 - [[05-23-checked-agent-edits]]: Checked agent edits
-
-## Relations
-- part_of [[write-path-and-consolidation]]

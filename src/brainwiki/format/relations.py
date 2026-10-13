@@ -1,4 +1,8 @@
-"""The `## Relations` grammar: five families, eight canonical verbs, aliases (design doc 02 §6.4)."""
+"""The relation grammar: five families, eight canonical verbs, aliases (design doc 02 §6.4).
+
+A relation is `[[Target]] (qualifier) — note`, held in a `bw-<verb>` frontmatter list, or (format 1)
+a `- verb [[Target]] …` line under `## Relations`.
+"""
 
 from __future__ import annotations
 
@@ -81,6 +85,8 @@ class Relation:
     attrs: dict[str, str] = field(default_factory=dict)
     note: str | None = None
     is_alias: bool = False
+    key: str | None = None  # the `bw-<verb>` list holding it; None for a body line
+    index: int = 0  # its position in that list
 
     @property
     def is_guard(self) -> bool:
@@ -203,24 +209,3 @@ def canonicalize_line(text: str) -> str | None:
         start = match.start("qual") - match.end("target")
         return head + tail[:start] + f"{written.lower()}, " + tail[start:]
     return head + tail
-
-
-def format_relation(
-    verb: str,
-    target_link: str,
-    *,
-    qualifier: str | None = None,
-    attrs: dict[str, str] | None = None,
-    note: str | None = None,
-) -> str:
-    """Render one relation line. `target_link` is the text inside [[...]]."""
-    parts = [f"- {verb} [[{target_link}]]"]
-    quals = ([qualifier] if qualifier else []) + [
-        f"{k}={v}" for k, v in (attrs or {}).items() if k != "tags"
-    ]
-    if quals:
-        parts.append("(" + ", ".join(quals) + ")")
-    line = " ".join(parts)
-    if note:
-        line += " — " + note.replace("\n", " ").strip()
-    return line

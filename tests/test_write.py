@@ -69,6 +69,23 @@ def test_write_episode_sets_provenance_scrubs_and_indexes(example: Path):
         assert not [p for p in lint(e).problems if p.path == result.path]
 
 
+def test_writing_raises_the_declared_format_one_way(example: Path):
+    toml = example / "brain.toml"
+    toml.write_text(toml.read_text().replace("format = 2\n", "format = 1\n", 1))
+    with eng(example) as e:
+        episode = write_episode(
+            e, EpisodeContent(summary="Noted."), origin="agent", taint="false", captured="mcp"
+        )
+    assert "format = 2\n" in toml.read_text()
+    assert "bw-origin: agent" in (example / episode.path).read_text()
+    toml.write_text(toml.read_text().replace("format = 2\n", "format = 1\n", 1))
+    with eng(example) as e:
+        record = move_note(e, "topics/search/ripgrep.md", "topics/search/rg.md")
+        assert "format = 2\n" in toml.read_text()
+        undo(e, record.run)
+    assert "format = 2\n" in toml.read_text()  # undo leaves it: other format 2 files may remain
+
+
 def test_dedupe_and_validation(brain_dir: Path):
     with eng(brain_dir) as e:
         first = write_episode(
@@ -181,14 +198,13 @@ def test_mv_rewrites_links_and_undoes(example: Path):
         links = (example / "topics/storage/links.md").read_text()
         assert "[[sqlite-policy]]" in links and "](sqlite-policy.md)" in links
         fts5 = (example / "topics/search/fts5.md").read_text()
-        assert "depends_on [[sqlite-policy]]" in fts5
+        assert '"[[sqlite-policy]] — needs the trigram tokenizer"' in fts5
         unresolved = e.db.execute("SELECT raw_target FROM edges WHERE other IS NULL").fetchall()
         assert unresolved == []
         undo(e, record.run)
         assert (example / "topics/storage/sqlite-version-policy.md").exists()
         assert (
-            "depends_on [[sqlite-version-policy]]"
-            in (example / "topics/search/fts5.md").read_text()
+            '"[[sqlite-version-policy]] — needs' in (example / "topics/search/fts5.md").read_text()
         )
 
 

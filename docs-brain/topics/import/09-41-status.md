@@ -5,10 +5,12 @@ title: "Status"
 aliases: ["09 §4.1"]
 tags: [import]
 source: "docs/design/09-import.md#41-status"
+bw-part_of:
+  - "[[09-4-normalization-rules]]"
 ---
 # Status
 
-| Original value (case-insensitive) | `status` | `stage` |
+| Original value (case-insensitive) | `status` | `bw-stage` |
 |---|---|---|
 | `active`, `superseded`, `archived` | unchanged | — |
 | `draft`, `wip`, `in progress`, `in-progress`, `todo`, `review`, `in review`, `published`, `done`, `complete`, `completed`, `approved`, `shipped`, `evergreen`, `seed`, `sprout` | `active` | the original value |
@@ -16,8 +18,5 @@ source: "docs/design/09-import.md#41-status"
 | `deprecated`, `obsolete`, `replaced`, `outdated` | `superseded` | the original value (lint then asks for a `superseded_by` relation) |
 | anything else | `active` | the original value |
 
-The original string is always preserved in `stage`, so no information is
+The original string is always preserved in `bw-stage`, so no information is
 lost and users can map it back.
-
-## Relations
-- part_of [[09-4-normalization-rules]]

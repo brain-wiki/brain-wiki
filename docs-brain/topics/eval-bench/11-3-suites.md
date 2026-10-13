@@ -5,6 +5,8 @@ title: "Suites"
 aliases: ["11 §3"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#3-suites"
+bw-part_of:
+  - "[[eval-bench]]"
 ---
 # Suites
 
@@ -15,6 +17,3 @@ source: "docs/design/11-eval-bench.md#3-suites"
 - [[11-33-consolidation-model-backends]]: `consolidation` (model backends)
 - [[11-34-perf-offline]]: `perf` (offline)
 - [[11-35-agent-optional-real-hosts]]: `agent` (optional, real hosts)
-
-## Relations
-- part_of [[eval-bench]]

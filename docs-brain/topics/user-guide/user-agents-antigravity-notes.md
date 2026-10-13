@@ -4,6 +4,8 @@ type: guide
 title: "Antigravity notes"
 tags: [user-guide]
 source: "docs/user/agents.md#antigravity-notes"
+bw-part_of:
+  - "[[user-agents-connect]]"
 ---
 # Antigravity notes
 
@@ -16,6 +18,3 @@ source: "docs/user/agents.md#antigravity-notes"
   agent proposes waits for you: `brain rule list`, then
   `brain rule accept <id>`.
 - A `/schedule` made in the CLI (`agy`) stops when that session exits.
-
-## Relations
-- part_of [[user-agents-connect]]

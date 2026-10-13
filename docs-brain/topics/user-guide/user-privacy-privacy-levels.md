@@ -4,6 +4,8 @@ type: guide
 title: "Privacy levels"
 tags: [user-guide]
 source: "docs/user/privacy.md#privacy-levels"
+bw-part_of:
+  - "[[user-privacy]]"
 ---
 # Privacy levels
 
@@ -18,11 +20,8 @@ default = "default"
 privacy = "sensitive"
 ```
 
-A note's level is the higher of its topic's level and its own `privacy:`
+A note's level is the higher of its topic's level and its own `bw-privacy:`
 property (a note can raise its level, never lower it). Agents see only
 notes up to their profile's `max_privacy`. When a hidden note supersedes or
 contradicts a visible one, the agent is told that such a note exists, not
 what it says.
-
-## Relations
-- part_of [[user-privacy]]

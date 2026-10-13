@@ -5,6 +5,8 @@ title: "Goals (Visualizer)"
 aliases: ["12 §1"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#1-goals"
+bw-part_of:
+  - "[[visualizer]]"
 ---
 # Goals (Visualizer)
 
@@ -32,6 +34,3 @@ The second design works like a map: it shows a little at every zoom level,
 reveals detail as you approach, and keeps positions stable so places stay
 where you left them. Every visual element encodes data; there is no
 decoration for its own sake.
-
-## Relations
-- part_of [[visualizer]]

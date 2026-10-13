@@ -5,6 +5,8 @@ title: "Output (Lint and reports)"
 aliases: ["06 §6"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#6-output"
+bw-part_of:
+  - "[[lint-and-reports]]"
 ---
 # Output (Lint and reports)
 
@@ -20,6 +22,3 @@ topics/search/fts5.md
 
 `--json` emits a list of `{code, severity, path, line, message, fixable}`.
 Exit codes: `0` no errors, `1` errors found, `2` usage or internal error.
-
-## Relations
-- part_of [[lint-and-reports]]

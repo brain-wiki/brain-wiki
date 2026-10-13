@@ -63,8 +63,8 @@ plus terminal output) shows:
 | Phase | Changes | Touches existing notes? |
 |---|---|---|
 | 0 · Adopt | Adds `brain.toml`, `AGENTS.md` (or a managed block in an existing one), `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain. | **No** |
-| 1 · Relations | Converts relation-like frontmatter into `## Relations` lines (§4.2), keeps the original properties unless `--drop-converted` is given. | Yes, appends a section |
-| 2 · Identity and status | Mints `id:` for notes without one; maps non-standard `status` values into `status` + `stage` (§4.1). | Yes, frontmatter lines only |
+| 1 · Relations | Converts relation-like frontmatter into `bw-<verb>` relations (§4.2), keeps the original properties unless `--drop-converted` is given. | Yes, frontmatter lines only |
+| 2 · Identity and status | Mints `id:` for notes without one; maps non-standard `status` values into `status` + `bw-stage` (§4.1). | Yes, frontmatter lines only |
 | 3 · Structure | Creates missing hubs, adds missing notes to hub `## Notes` lists. | Hubs only |
 
 Phase 0 alone gives a fully searchable brain: notes without ids are
@@ -87,7 +87,7 @@ review each diff on its own.
 
 ### 4.1 Status
 
-| Original value (case-insensitive) | `status` | `stage` |
+| Original value (case-insensitive) | `status` | `bw-stage` |
 |---|---|---|
 | `active`, `superseded`, `archived` | unchanged | — |
 | `draft`, `wip`, `in progress`, `in-progress`, `todo`, `review`, `in review`, `published`, `done`, `complete`, `completed`, `approved`, `shipped`, `evergreen`, `seed`, `sprout` | `active` | the original value |
@@ -95,21 +95,21 @@ review each diff on its own.
 | `deprecated`, `obsolete`, `replaced`, `outdated` | `superseded` | the original value (lint then asks for a `superseded_by` relation) |
 | anything else | `active` | the original value |
 
-The original string is always preserved in `stage`, so no information is
+The original string is always preserved in `bw-stage`, so no information is
 lost and users can map it back.
 
 ### 4.2 Relation-like properties
 
-| Property (case-insensitive) | Relation written |
+| Property (case-insensitive) | Field written |
 |---|---|
-| `parent`, `up`, `part_of`, `topic`, `moc` | `part_of` |
-| `children`, `down`, `has_part` | `has_part` |
-| `related`, `see_also`, `links` | `related_to` |
-| `depends_on`, `requires`, `prerequisite` | `depends_on` |
-| `supersedes`, `replaces` | `supersedes` |
-| `superseded_by`, `replaced_by` | `superseded_by` |
-| `next`, `prev`, `previous` | `related_to (next)` / `related_to (previous)` |
-| `source`, `sources` (when the value is a wikilink) | `depends_on (source)` |
+| `parent`, `up`, `part_of`, `topic`, `moc` | `bw-part_of` |
+| `children`, `down`, `has_part` | `bw-has_part` |
+| `related`, `see_also`, `links` | `bw-related_to` |
+| `depends_on`, `requires`, `prerequisite` | `bw-depends_on` |
+| `supersedes`, `replaces` | `bw-supersedes` |
+| `superseded_by`, `replaced_by` | `bw-superseded_by` |
+| `next`, `prev`, `previous` | `bw-related_to` with qualifier `(next)` / `(previous)` |
+| `source`, `sources` (when the value is a wikilink) | `bw-depends_on` with qualifier `(source)` |
 
 Accepted value shapes: a YAML list of wikilinks, a quoted single wikilink,
 a comma-joined string of several wikilinks (`"[[A]], [[B]]"`, a common
@@ -141,14 +141,14 @@ curated notes. It suits note dumps, exported chats, meeting transcripts, and
 clippings.
 
 - Documents are split on headings into chunks of at most 8 KiB; each chunk
-  becomes one episode with `captured: import`, `origin: import`, and a
+  becomes one episode with `bw-captured: import`, `bw-origin: import`, and a
   `source:` property naming the original file and heading.
 - `taint` is `false` for the user's own files, or `true` with `--untrusted`
   (clippings, documents written by others).
 - The original files are not modified or moved.
 
 `--from <host>` knows where hosts keep their own memory and imports those
-files as episodes attributed to the host (`origin: agent`, `taint:
+files as episodes attributed to the host (`bw-origin: agent`, `bw-taint:
 unknown`):
 
 | Host | Files (defaults; overridable with `--path`) |

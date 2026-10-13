@@ -5,6 +5,8 @@ title: "Reports"
 aliases: ["06 §7"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#7-reports"
+bw-part_of:
+  - "[[lint-and-reports]]"
 ---
 # Reports
 
@@ -28,6 +30,3 @@ and are never indexed as knowledge or injected into prompts.
 `[reports] after_consolidate = true` (default). Report files are excluded
 from git commits made by brain-wiki unless the user opts in, because they
 churn on every run.
-
-## Relations
-- part_of [[lint-and-reports]]

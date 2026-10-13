@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from functools import cache
 from typing import Any
 
+from brainwiki.format.fields import alias_fields
+
 
 @cache
 def _yaml() -> tuple[Any, type]:
@@ -27,6 +29,8 @@ class Frontmatter:
     present: bool = False
     error: str | None = None
     nested_keys: list[str] = field(default_factory=list)
+    raw: dict[str, Any] = field(default_factory=dict)  # as written, before `bw-` fields are mapped
+    legacy_fields: list[str] = field(default_factory=list)  # brain-wiki fields written unprefixed
     end_line: int = 0  # 1-based line number of the closing delimiter; 0 when absent
     body: str = ""
     body_start_line: int = 1
@@ -71,6 +75,8 @@ def split(text: str) -> Frontmatter:
                 fm.error = "frontmatter is not a mapping"
                 return fm
             fm.data = {str(k): _normalize(v) for k, v in loaded.items()}
+            fm.raw = dict(fm.data)
+            fm.legacy_fields = alias_fields(fm.data)
             fm.nested_keys = [
                 k
                 for k, v in fm.data.items()
@@ -146,6 +152,8 @@ def set_fields(text: str, values: dict[str, Any], *, order_first: tuple[str, ...
                     for k in order_first[: order_first.index(key)]
                     if _key_span(lines, 1, close, k)
                 )
+            elif not key.startswith("bw-"):  # brain-wiki's fields stay together, at the end
+                insert_at = next((i for i in range(1, close) if lines[i].startswith("bw-")), close)
             lines.insert(insert_at, rendered)
             close += 1
     return "".join(lines)

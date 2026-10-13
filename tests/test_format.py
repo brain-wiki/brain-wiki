@@ -3,15 +3,50 @@ from __future__ import annotations
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from brainwiki.format.claims import clean_claim_text, format_claim, parse_claim_block
 from brainwiki.format.document import parse_document
 from brainwiki.format.edit import append_to_section
-from brainwiki.format.frontmatter import set_fields, split
+from brainwiki.format.fields import (
+    claim_value,
+    list_values,
+    move_item,
+    needs_format2,
+    quote,
+    relation_value,
+    replace_item,
+    to_format2,
+)
+from brainwiki.format.frontmatter import _yaml, set_fields, split
 from brainwiki.format.links import extract_links
 from brainwiki.format.meta import format_meta, parse_meta
-from brainwiki.format.relations import RelationError, format_relation, parse_relation_line
+from brainwiki.format.relations import RelationError, parse_relation_line
 
 NOTE = """---
+id: 01J9Z7Q2V8K3M4N5P6R7S8T9U0
+type: decision
+aliases: [FTS5 decision]
+tags:
+  - search
+  - storage
+created: 2026-10-07
+bw-privacy: sensitive
+bw-part_of: "[[search]]"
+bw-depends_on:
+  - "[[SQLite version policy]] — needs the trigram tokenizer"
+bw-unless:
+  - "[[Vector-only search proposal]] (unless: embeddings enabled)"
+bw-supersedes: ["[[Use ripgrep for search]]"]
+bw-claims:
+  - "SQLite FTS5 is the default search backend. {id: c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; src: inbox/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7.md#L4-L6; origin: agent; at: 2026-10-07}"
+  - "Trigram search needs SQLite 3.34 or newer."
+bw-claims-superseded:
+  - "Search shells out to ripgrep. {id: c-01J8XQ4R6S8T0V2W4X6Y8Z0A2B; by: c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; at: 2026-10-07}"
+---
+# Use SQLite FTS5 for local search
+
+Prose with a [[SQLite version policy]] link and `[[not a link]]`.
+"""
+
+NOTE_V1 = """---
 id: 01J9Z7Q2V8K3M4N5P6R7S8T9U0
 type: decision
 aliases: [FTS5 decision]
@@ -52,6 +87,37 @@ def test_frontmatter_parses_dates_and_lists():
 def test_document_structure():
     doc = parse_document("topics/search/fts5.md", NOTE)
     assert doc.title == "Use SQLite FTS5 for local search"
+    assert doc.fm["privacy"] == "sensitive" and not doc.frontmatter.legacy_fields
+    assert [(c.status, c.key) for c in doc.claims] == [
+        ("active", "bw-claims"),
+        ("active", "bw-claims"),
+        ("superseded", "bw-claims-superseded"),
+    ]
+    assert doc.claims[0].id == "c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C"
+    assert doc.claims[0].sources == ["inbox/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7.md#L4-L6"]
+    assert doc.claims[1].has_meta is False
+    lines = NOTE.splitlines()
+    assert lines[doc.claims[1].line - 1].strip() == '- "Trigram search needs SQLite 3.34 or newer."'
+    rels = {(r.verb, r.target, r.qualifier) for r in doc.relations}
+    assert rels == {
+        ("part_of", "search", None),
+        ("depends_on", "SQLite version policy", None),
+        ("conflicts_with", "Vector-only search proposal", "unless"),
+        ("supersedes", "Use ripgrep for search", None),
+    }
+    depends = next(r for r in doc.relations if r.verb == "depends_on")
+    assert depends.note == "needs the trigram tokenizer" and depends.key == "bw-depends_on"
+    assert lines[depends.line - 1].strip().startswith('- "[[SQLite version policy]]')
+    assert next(r for r in doc.relations if r.verb == "conflicts_with").is_alias
+    assert [link.target for link in doc.links] == ["SQLite version policy"]
+    assert "default search backend" in doc.body_text
+    assert "shells out" not in doc.body_text and "shells out" in doc.history_text
+    assert not needs_format2(NOTE)
+
+
+def test_format1_still_parses_and_converts():
+    doc = parse_document("topics/search/fts5.md", NOTE_V1)
+    assert doc.title == "Use SQLite FTS5 for local search"
     assert [c.status for c in doc.claims] == ["active", "superseded", "active"]
     assert doc.claims[0].id == "c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C"
     assert doc.claims[2].has_meta is False
@@ -65,6 +131,23 @@ def test_document_structure():
     assert targets == ["SQLite version policy"]
     assert "shells out" not in doc.body_text and "shells out" in doc.history_text
     assert "<!--" not in doc.body_text
+    assert needs_format2(NOTE_V1)
+
+    out = to_format2(NOTE_V1)
+    new = parse_document("topics/search/fts5.md", out)
+    assert not needs_format2(out) and not new.problems[1:]
+    assert [(c.text, c.id, c.status) for c in new.claims] == [
+        (c.text, c.id, c.status) for c in sorted(doc.claims, key=lambda c: c.status != "active")
+    ]
+    assert {(r.verb, r.target, r.qualifier) for r in new.relations} == {
+        (r.verb, r.target, r.qualifier) for r in doc.relations
+    }
+    assert "## Claims" not in out
+    assert "- frobnicates [[Nothing]]" in out  # a line that does not parse stays put
+    assert out.endswith(
+        "# Use SQLite FTS5 for local search\n\nProse with a [[SQLite version policy]] link and `[[not a link]]`.\n\n```\n[[also not a link]]\n```\n\n## Relations\n- frobnicates [[Nothing]]\n"
+    )
+    assert to_format2(out) == out
 
 
 def test_relation_inverses_store_one_direction():
@@ -86,12 +169,10 @@ def test_relation_inverses_store_one_direction():
     assert not isinstance(md, RelationError) and md.target == "../x/Other note.md"
 
 
-def test_relation_format_roundtrip():
-    line = format_relation(
-        "depends_on", "B", qualifier="builds_on", attrs={"weight": "0.5"}, note="why"
-    )
-    parsed = parse_relation_line(line, 1)
-    assert not isinstance(parsed, RelationError)
+def test_relation_value_roundtrip():
+    value = relation_value("B", qualifier="builds_on", attrs={"weight": "0.5"}, note="why")
+    doc = parse_document("x.md", f"---\nbw-depends_on:\n  - {quote(value)}\n---\n")
+    (parsed,) = doc.relations
     assert (parsed.verb, parsed.target, parsed.qualifier, parsed.attrs, parsed.note) == (
         "depends_on",
         "B",
@@ -99,6 +180,24 @@ def test_relation_format_roundtrip():
         {"weight": "0.5"},
         "why",
     )
+
+
+def test_list_edits_change_only_their_field():
+    out = replace_item(NOTE, "bw-claims", 1, [claim_value("Needs 3.35.", {"id": "c-2"})])
+    assert list_values(out, "bw-claims")[1] == "Needs 3.35. {id: c-2}"
+    changed = [a for a, b in zip(NOTE.splitlines(), out.splitlines(), strict=True) if a != b]
+    assert changed == ['  - "Trigram search needs SQLite 3.34 or newer."']
+    moved = move_item(
+        NOTE,
+        "bw-unless",
+        "[[Vector-only search proposal]] (unless: embeddings enabled)",
+        "bw-conflicts_with",
+        "[[Vector-only search proposal]] (unless: embeddings enabled)",
+    )
+    assert "bw-unless" not in moved and split(moved).data["bw-conflicts_with"] == [
+        "[[Vector-only search proposal]] (unless: embeddings enabled)"
+    ]
+    assert moved.split("\n---\n", 1)[1] == NOTE.split("\n---\n", 1)[1]
 
 
 def test_links_skip_code_and_capture_md_and_embeds():
@@ -124,6 +223,13 @@ def test_set_fields_inserts_and_replaces_block_lists():
     fm = split(out)
     assert fm.data["status"] == "superseded" and fm.data["tags"] == ["a"]
     assert out.split("---", 2)[2] == NOTE.split("---", 2)[2]
+
+
+def test_new_fields_land_before_brain_wiki_fields():
+    out = set_fields(NOTE, {"source": "a book"})
+    keys = [line.split(":")[0] for line in out.split("\n---\n")[0].splitlines()[1:]]
+    keys = [k for k in keys if not k.startswith(" ")]
+    assert keys.index("source") == keys.index("bw-privacy") - 1
 
 
 def test_set_fields_creates_frontmatter():
@@ -156,18 +262,24 @@ def test_set_fields_never_touches_body(body_lines, value):
     assert out.split("\n---\n", 1)[1] == text.split("\n---\n", 1)[1]
 
 
+@settings(max_examples=300)
+@given(st.text(max_size=80))
+def test_quote_is_valid_yaml(text):
+    yaml, loader = _yaml()
+    assert yaml.load(f"k: {quote(text)}", Loader=loader)["k"] == " ".join(text.split())  # noqa: S506
+
+
 @settings(max_examples=150)
 @given(
-    # A claim has words once comment markers are removed; writers never emit an empty one.
-    st.text(min_size=1, max_size=120).filter(lambda s: clean_claim_text(s) and "~~" not in s),
+    # Writers never emit an empty claim.
+    st.text(min_size=1, max_size=120).filter(lambda s: s.split()),
     st.booleans(),
 )
-def test_claim_roundtrip(text, struck):
-    line = format_claim(
-        text, {"id": "c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C", "at": "2026-10-10"}, struck=struck
-    )
-    claims, problems = parse_claim_block([(1, line)])
-    assert not problems
-    assert claims[0].struck == struck
-    assert claims[0].text == " ".join(text.replace("<!--", "").replace("-->", "").split())
-    assert claims[0].id == "c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C"
+def test_claim_roundtrip(text, superseded):
+    key = "bw-claims-superseded" if superseded else "bw-claims"
+    value = claim_value(text, {"id": "c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C", "at": "2026-10-10"})
+    doc = parse_document("x.md", f"---\n{key}:\n  - {quote(value)}\n---\n# T\n")
+    (claim,) = doc.claims
+    assert claim.status == ("superseded" if superseded else "active")
+    assert claim.text == " ".join(text.replace("{", "(").replace("}", ")").split())
+    assert claim.id == "c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C" and claim.line == 3

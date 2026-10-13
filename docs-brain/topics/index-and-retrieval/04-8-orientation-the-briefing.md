@@ -5,6 +5,8 @@ title: "Orientation (the briefing)"
 aliases: ["04 §8"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#8-orientation-the-briefing"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Orientation (the briefing)
 
@@ -36,6 +38,3 @@ included in full:
 Everything in it is filtered by the caller's profile, so hidden notes are
 never counted or named. The same function generates the managed block of
 `AGENTS.md`, with the profile `default`.
-
-## Relations
-- part_of [[index-and-retrieval]]

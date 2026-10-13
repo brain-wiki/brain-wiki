@@ -5,6 +5,8 @@ title: "`brain.toml`"
 aliases: ["02 §3"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#3-braintoml"
+bw-part_of:
+  - "[[brain-format]]"
 ---
 # `brain.toml`
 
@@ -13,7 +15,7 @@ it. Settings that belong to a user or a machine (where brains are, which
 brain is the default) live in the user config ([[config-and-storage|03]]).
 
 ```toml
-format = 1                                  # format version (required)
+format = 2                                  # format version (required, §13)
 id = "01J9Z7M0W4K8P2R6T9V3X5Z7A1"           # brain id, a ULID (required, never changes)
 name = "personal"                           # display name (optional)
 description = "Personal notes and projects" # one line shown by brain_list (optional)
@@ -96,6 +98,3 @@ Rules:
   a non-default path (for imported vaults).
 - Topic slugs match `^[a-z0-9][a-z0-9-]{0,63}$`.
 - Agent profile names are host ids ([[08-2-host-ids|08]]).
-
-## Relations
-- part_of [[brain-format]]

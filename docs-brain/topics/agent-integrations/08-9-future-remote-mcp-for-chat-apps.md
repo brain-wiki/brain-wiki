@@ -5,6 +5,8 @@ title: "Future: remote MCP for chat apps"
 aliases: ["08 §9"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#9-future-remote-mcp-for-chat-apps"
+bw-part_of:
+  - "[[agent-integrations]]"
 ---
 # Future: remote MCP for chat apps
 
@@ -32,6 +34,3 @@ toward.
 
 Per-client tokens map to agent profiles (`chatgpt-web`, `claude-web`,
 `gemini-app`), read-only and `default` privacy by default.
-
-## Relations
-- part_of [[agent-integrations]]

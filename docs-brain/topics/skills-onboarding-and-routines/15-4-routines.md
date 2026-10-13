@@ -5,6 +5,8 @@ title: "Routines"
 aliases: ["15 §4"]
 tags: [skills-onboarding-and-routines]
 source: "docs/design/15-skills-onboarding-and-routines.md#4-routines"
+bw-part_of:
+  - "[[skills-onboarding-and-routines]]"
 ---
 # Routines
 
@@ -17,6 +19,3 @@ scheduler they already use.
 - [[15-42-template-format]]: Template format
 - [[15-43-creating-a-routine-per-host]]: Creating a routine, per host
 - [[15-44-rules-for-unattended-runs]]: Rules for unattended runs
-
-## Relations
-- part_of [[skills-onboarding-and-routines]]

@@ -4,11 +4,10 @@ type: guide
 title: "Next"
 tags: [user-guide]
 source: "docs/user/getting-started.md#next"
+bw-part_of:
+  - "[[user-getting-started]]"
 ---
 # Next
 
 - [[user-agents|Connect your agents]].
 - Open the map: `brain viz`.
-
-## Relations
-- part_of [[user-getting-started]]

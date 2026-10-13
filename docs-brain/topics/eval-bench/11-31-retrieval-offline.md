@@ -5,6 +5,8 @@ title: "`retrieval` (offline)"
 aliases: ["11 §3.1"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#31-retrieval-offline"
+bw-part_of:
+  - "[[11-3-suites]]"
 ---
 # `retrieval` (offline)
 
@@ -20,6 +22,3 @@ synonym substitution) plus hand-written queries for the example brain.
 | Newest-successor correctness through chains | **100%** |
 | **Privacy leaks**: any result, snippet, guard, or count derived from a note above the profile's level, other than the hidden-guard count | **0** |
 | Hidden-guard counts | exact |
-
-## Relations
-- part_of [[11-3-suites]]

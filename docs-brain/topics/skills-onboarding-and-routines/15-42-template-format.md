@@ -5,6 +5,8 @@ title: "Template format"
 aliases: ["15 §4.2"]
 tags: [skills-onboarding-and-routines]
 source: "docs/design/15-skills-onboarding-and-routines.md#42-template-format"
+bw-part_of:
+  - "[[15-4-routines]]"
 ---
 # Template format
 
@@ -43,6 +45,3 @@ This run may be a catch-up after missed runs; all steps are safe to repeat.
 Placeholders (`{brain}`, `{brain_path}`, `{host}`) are filled by
 `brain schedule show`. The working directory is the brain folder itself, so
 a scheduled session also sees the brain's `AGENTS.md`.
-
-## Relations
-- part_of [[15-4-routines]]

@@ -1,11 +1,11 @@
-"""Claims: list items under `## Claims` with an optional metadata comment (design doc 02 §6.3)."""
+"""Claims: `bw-claims` strings, or (format 1) list items under `## Claims` (design doc 02 §6.3)."""
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
 
-from brainwiki.format.meta import format_meta, split_meta
+from brainwiki.format.meta import split_meta
 
 _ITEM_RE = re.compile(r"^(?P<bullet>[-*+])\s+(?P<rest>.*)$")
 _STRUCK_RE = re.compile(r"^~~(?P<text>.+?)~~\s*$")
@@ -17,8 +17,10 @@ class Claim:
     last_line: int  # line holding the metadata comment
     text: str
     meta: dict[str, str] = field(default_factory=dict)
-    struck: bool = False
+    struck: bool = False  # superseded: struck through (format 1) or in `bw-claims-superseded`
     has_meta: bool = False
+    key: str | None = None  # the frontmatter list holding it (`bw-claims`); None for a body line
+    index: int = 0  # its position in that list
 
     @property
     def id(self) -> str | None:
@@ -85,13 +87,3 @@ def parse_claim_block(lines: list[tuple[int, str]]) -> tuple[list[Claim], list[t
 
 def clean_claim_text(text: str) -> str:
     return " ".join(text.replace("<!--", "").replace("-->", "").split())
-
-
-def format_claim(text: str, meta: dict[str, str] | None = None, *, struck: bool = False) -> str:
-    body = clean_claim_text(text)
-    if struck:
-        body = f"~~{body}~~"
-    line = f"- {body}"
-    if meta:
-        line += " " + format_meta(meta)
-    return line

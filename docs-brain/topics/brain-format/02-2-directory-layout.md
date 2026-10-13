@@ -5,6 +5,8 @@ title: "Directory layout"
 aliases: ["02 §2"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#2-directory-layout"
+bw-part_of:
+  - "[[brain-format]]"
 ---
 # Directory layout
 
@@ -58,6 +60,3 @@ brain would make sync tools and git fight over it. The one piece of
 consolidation state that must travel, "which episodes are done", is encoded
 by location: pending episodes live in `inbox/episodes/`, consolidated ones
 in `archive/episodes/`.
-
-## Relations
-- part_of [[brain-format]]

@@ -1,6 +1,6 @@
 # 02 · Brain format
 
-Status: draft for review · Format version: 1 · Normative
+Status: draft for review · Format version: 2 · Normative
 
 This document defines what a brain looks like on disk. It is the contract
 between brain-wiki, every agent host, and the user's other tools. The key
@@ -11,8 +11,8 @@ words MUST, MUST NOT, SHOULD, and MAY are used as in RFC 2119.
 | Requirement | Consequence |
 |---|---|
 | Readable and editable by people in any editor, and by Obsidian | Markdown files, YAML frontmatter, `[[wikilinks]]`, no binary state in the brain |
-| Writable by LLMs without corrupting structure | One fact or relation per line; no nested YAML; append-friendly sections |
-| Parseable with simple, fast code | Line-oriented grammars for claims and relations; flat frontmatter |
+| Writable by LLMs without corrupting structure | One fact or relation per line; flat frontmatter lists; no nested YAML |
+| Parseable with simple, fast code | Claims and relations are frontmatter strings with small grammars; the body stays prose |
 | Survives renames and moves | Permanent ULID ids; link repair by id |
 | Safe under concurrent agents and devices | Inbox files are append-only and uniquely named; curated files change only in validated runs |
 | Diff- and merge-friendly in git | Stable ordering, one item per line, no reflowing of untouched lines |
@@ -77,7 +77,7 @@ it. Settings that belong to a user or a machine (where brains are, which
 brain is the default) live in the user config ([03](03-config-and-storage.md)).
 
 ```toml
-format = 1                                  # format version (required)
+format = 2                                  # format version (required, §13)
 id = "01J9Z7M0W4K8P2R6T9V3X5Z7A1"           # brain id, a ULID (required, never changes)
 name = "personal"                           # display name (optional)
 description = "Personal notes and projects" # one line shown by brain_list (optional)
@@ -170,9 +170,19 @@ Rules:
 - **Frontmatter values are scalars or lists of scalars.** Nested mappings
   MUST NOT be used. Reasons: Obsidian's properties editor only handles flat
   properties; LLMs frequently break nested YAML; flat values index trivially.
-- Wikilinks inside frontmatter are not relations. Typed connections belong
-  in `## Relations` (§7). Importers convert common frontmatter link
-  properties into relations ([09](09-import.md)).
+- **brain-wiki's fields carry the `bw-` prefix.** Relations (§6.4), claims
+  (§6.3), `bw-privacy`, `bw-stage`, and episode provenance (§9) are fields
+  named `bw-…`. Shared note metadata stays unprefixed: `id`, `type`, `title`,
+  `aliases`, `tags`, `status`, `created`, `updated`. Reasons: the prefix
+  marks what brain-wiki parses and validates, keeps those fields together in
+  Obsidian's Properties view, and cannot clash with another tool's property
+  names. The prefix is reserved: lint reports unknown `bw-` fields (BW302).
+- Claims and relations are strings, written double-quoted, one list item
+  per line. Obsidian shows and edits them as list properties, and quoted
+  `"[[links]]"` stay live links.
+- Other frontmatter wikilinks (`up:`, `related:`) are not relations.
+  Importers convert common link properties into `bw-` relations
+  ([09](09-import.md)).
 - Writers change only the lines they mean to change. They MUST NOT reformat
   frontmatter or reflow prose they did not edit.
 
@@ -201,11 +211,23 @@ id: 01J9Z7Q2V8K3M4N5P6R7S8T9U0
 type: decision
 title: Use SQLite FTS5 for local search
 status: active
-privacy: default
 aliases: [FTS5 decision]
 tags: [search, storage]
 created: 2026-10-07
 updated: 2026-10-09
+bw-privacy: default
+bw-part_of: "[[search]]"
+bw-depends_on:
+  - "[[SQLite version policy]] — needs the trigram tokenizer"
+bw-conflicts_with:
+  - "[[Vector-only search proposal]] (unless: embeddings enabled)"
+bw-supersedes:
+  - "[[Use ripgrep for search]]"
+bw-claims:
+  - "SQLite FTS5 is the default search backend. {id: c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; src: inbox/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7.md#L4-L6; origin: agent; at: 2026-10-07}"
+  - "Trigram search needs SQLite 3.34 or newer."
+bw-claims-superseded:
+  - "Search shells out to ripgrep. {id: c-01J8XQ4R6S8T0V2W4X6Y8Z0A2B; by: c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; at: 2026-10-07}"
 ---
 ```
 
@@ -215,11 +237,13 @@ updated: 2026-10-09
 | `type` | no (default `note`) | lowercase string | Open vocabulary. Suggested: `note`, `hub`, `concept`, `decision`, `howto`, `reference`, `person`, `project`, `source`, `meeting`. |
 | `title` | no | string | Default: first `# ` heading, else file name without `.md`. |
 | `status` | no (default `active`) | `active` \| `superseded` \| `archived` | Closed set; the retrieval engine only reasons about these three. |
-| `stage` | no | string | Free workflow state (`draft`, `shipped`, `abandoned`…). Importers move non-standard `status` values here. |
-| `privacy` | no (inherits) | one of `privacy.levels` | MAY raise the level above the topic's, MUST NOT lower it. |
 | `aliases` | no | list of strings | Same meaning as in Obsidian; used for link resolution and search. |
 | `tags` | no | list of strings | Without `#`. |
 | `created`, `updated` | no | ISO 8601 date or date-time | Writers set `updated` when they change a note. |
+| `bw-stage` | no | string | Free workflow state (`draft`, `shipped`, `abandoned`…). Importers move non-standard `status` values here. |
+| `bw-privacy` | no (inherits) | one of `privacy.levels` | MAY raise the level above the topic's, MUST NOT lower it. |
+| `bw-<verb>` | no | string or list of strings | Relations, one field per canonical verb (§6.4). |
+| `bw-claims`, `bw-claims-superseded` | no | list of strings | Current claims, and claims that were superseded or retracted (§6.3). |
 
 Any other scalar or list property MAY be present and is preserved and
 stored (for example `source`, `url`, `author`). Fields reserved for future
@@ -231,64 +255,63 @@ use: `valid_from`, `valid_until`, `confidence`.
 # Use SQLite FTS5 for local search
 
 Free prose: context, summary, reasoning. Humans and agents may write
-anything here. Consolidation never edits prose; it only touches the two
-structured sections below.
-
-## Claims
-- SQLite FTS5 is the default search backend. <!-- id:c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; src:inbox/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7.md#L4-L6; origin:agent; at:2026-10-07 -->
-- ~~Search shells out to ripgrep.~~ <!-- id:c-01J8XQ4R6S8T0V2W4X6Y8Z0A2B; status:superseded; by:c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; at:2026-10-07 -->
-- Trigram search needs SQLite 3.34 or newer.
-
-## Relations
-- part_of [[search]]
-- depends_on [[SQLite version policy]] — needs the trigram tokenizer
-- conflicts_with [[Vector-only search proposal]] (unless: embeddings enabled)
-- supersedes [[Use ripgrep for search]]
+anything here.
 ```
 
-The section headings `## Claims` and `## Relations` are reserved. Their
-matching is case-insensitive. Each MAY appear at most once per note. All
-other headings are free.
+The body is free Markdown with no reserved headings. Consolidation never
+edits prose; it changes only `bw-` fields. Body links are `links_to` edges
+(§6.5).
 
 ### 6.3 Claims
 
-A claim is one list item under `## Claims`.
+A claim is one string in `bw-claims`. A claim that was superseded or
+retracted moves to `bw-claims-superseded`.
 
 ```text
-claim      = "- " text [ " " meta ] EOL
-superseded = "- ~~" text "~~ " meta EOL
-meta       = "<!-- " pair *( "; " pair ) " -->"
-pair       = key ":" value
-key        = "id" | "src" | "origin" | "taint" | "at" | "status" | "by"
+claim      = text [ " " meta ]
+meta       = "{" pair *( "; " pair ) "}"
+pair       = key ": " value             ; value double-quoted when it holds ";"
+key        = "id" | "status" | "by" | "reason" | "src" | "origin" | "taint" | "at"
 ```
 
 | Key | Meaning |
 |---|---|
 | `id` | Claim id. Present on every claim written by brain-wiki. Claims a human writes without metadata are valid; `lint --fix` can assign ids. |
+| `status` | Only in `bw-claims-superseded`, and only as `retracted`; a superseded claim needs no status. |
+| `by` | For superseded claims: the id of the claim that replaced it. |
+| `reason` | Why the claim was superseded or retracted. |
 | `src` | One or more comma-separated sources: `<brain path>#L<start>-L<end>` for episode spans, `<host>:<session>#T<start>-T<end>` for turns of an agent conversation, or a URL. |
 | `origin` | `owner`, `agent`, `import`, or `system`, from the source episodes. |
 | `taint` | `true` or `unknown` when any source episode was tainted or of unknown taint. Omitted when false. |
 | `at` | Date or date-time the claim was last asserted. |
-| `status` | Omitted when active. `superseded` or `retracted`. |
-| `by` | For superseded claims: the id of the claim that replaced it. |
 
-Why an HTML comment: it keeps one claim on one line, it is hidden in
-Obsidian reading view and on GitHub, and every Markdown tool leaves it
-alone. The cost is noise in source view, which we accept for parseability.
-Superseded claims stay in place, struck through, so the history of a fact
-is visible where the fact lives. Lint enforces that `by` points to an
-existing claim.
+Choices behind the form:
 
-Claims MAY wrap onto continuation lines indented by two or more spaces;
-the metadata comment, if any, MUST be on the last line of the item.
+- **Strings, not nested objects.** Obsidian's Properties view shows and
+  edits a list of strings but not nested mappings (§4), and one claim per
+  line keeps diffs and model edits local.
+- **A trailing `{…}` block.** It reads as metadata to people and is easy to
+  split off. It counts as metadata only when it holds known keys, and
+  writers replace braces inside claim text with parentheses.
+- **A separate list for history.** `bw-claims` shows only what is current;
+  the history of a fact stays in the note where the fact lives. Lint
+  enforces that `by` points to an existing claim.
 
 ### 6.4 Relations
 
-A relation is one list item under `## Relations`:
+A relation is one string in a `bw-<verb>` field, one field per canonical
+verb:
+
+```yaml
+bw-depends_on:
+  - "[[SQLite version policy]] — needs the trigram tokenizer"
+bw-conflicts_with: "[[Vector-only search proposal]] (unless: embeddings enabled)"
+```
 
 ```text
-relation   = "- " verb " " target [ " " qualifiers ] [ " " sep " " note ] EOL
+field      = "bw-" verb ": " ( relation | list of relation )
 verb       = canonical | alias                       ; table below
+relation   = target [ " " qualifiers ] [ " " sep " " note ]
 target     = "[[" link "]]" | "[" label "](" path ")"
 qualifiers = "(" qualifier *( ", " qualifier ) ")"
 qualifier  = word | key ( "=" | ": " ) value         ; e.g. supplies_to, weight=0.7, unless: x
@@ -296,15 +319,15 @@ sep        = "—" | "–" | "--" | "-"
 ```
 
 **Canonical vocabulary.** Five families, eight verbs. The verb is always
-written from the point of view of the note that contains the line.
+written from the point of view of the note that holds the field.
 
-| Family | Verb on note A | Meaning | Inverse (written on B) | Stored as | Guard |
+| Family | Field on note A | Meaning | Inverse (on B) | Stored as | Guard |
 |---|---|---|---|---|---|
-| Containment | `part_of [[B]]` | A is a part, child, or member of B | `has_part [[A]]` | `A part_of B` | no |
-| Dependency | `depends_on [[B]]` | A requires, builds on, or is caused by B | `enables [[A]]` | `A depends_on B` | no |
-| Conflict | `conflicts_with [[B]]` | A contradicts B, or B is an exception that defeats A | `conflicts_with [[A]]` (symmetric) | `A conflicts_with B` | **yes** |
-| Lineage | `supersedes [[B]]` | A replaces B; B is outdated | `superseded_by [[A]]` | `A supersedes B` | **yes** |
-| Peer | `related_to [[B]]` | A and B are related without a stronger claim | `related_to [[A]]` (symmetric) | `A related_to B` | no |
+| Containment | `bw-part_of: "[[B]]"` | A is a part, child, or member of B | `bw-has_part: "[[A]]"` | `A part_of B` | no |
+| Dependency | `bw-depends_on: "[[B]]"` | A requires, builds on, or is caused by B | `bw-enables: "[[A]]"` | `A depends_on B` | no |
+| Conflict | `bw-conflicts_with: "[[B]]"` | A contradicts B, or B is an exception that defeats A | `bw-conflicts_with: "[[A]]"` (symmetric) | `A conflicts_with B` | **yes** |
+| Lineage | `bw-supersedes: "[[B]]"` | A replaces B; B is outdated | `bw-superseded_by: "[[A]]"` | `A supersedes B` | **yes** |
+| Peer | `bw-related_to: "[[B]]"` | A and B are related without a stronger claim | `bw-related_to: "[[A]]"` (symmetric) | `A related_to B` | no |
 
 Choices behind the table:
 
@@ -316,17 +339,17 @@ Choices behind the table:
   relation; the index stores it once in canonical direction. This is what
   makes guard retrieval work no matter which note the author edited.
 - **Domain meaning lives in qualifiers.** A finance note might write
-  `- enables [[Cloud capex]] (supplies_to, weight=0.6, lag=1Q)`, a legal
-  note `- conflicts_with [[Clause 7.2]] (exception)`, a research note
-  `- depends_on [[Prior result]] (replicates)`. The family drives retrieval
+  `bw-enables: "[[Cloud capex]] (supplies_to, weight=0.6, lag=1Q)"`, a legal
+  note `bw-conflicts_with: "[[Clause 7.2]] (exception)"`, a research note
+  `bw-depends_on: "[[Prior result]] (replicates)"`. The family drives retrieval
   and lint; the qualifier and note are stored and displayed but never
   change engine behavior. No vocabulary file to load, no compiler.
 - **Guards are the reason typed relations exist.** See §7.
 
-**Aliases.** The parser accepts common synonyms so people can write
-naturally, normalizes them, and records the original word as the first
-qualifier. Lint (`migrate` profile: info; `strict`: warning) suggests the
-canonical form, and `--fix` rewrites it.
+**Aliases.** The parser accepts alias fields (`bw-requires`, `bw-contains`…)
+so people can write naturally, normalizes them, and records the alias as
+the first qualifier. Lint (`migrate` profile: info; `strict`: warning)
+suggests the canonical field, and `--fix` moves the item there.
 
 | Alias | Canonical |
 |---|---|
@@ -400,8 +423,9 @@ top-k results. The only exception is privacy. If a guard neighbor is above
 the caller's privacy level, the caller is told that a hidden superseding or
 conflicting note exists, but not its content ([04](04-index-and-retrieval.md#5-guard-co-retrieval)).
 
-Claim-level supersession (§6.3) is shown inline: superseded claims are
-marked as such in every read and are excluded from search snippets.
+Claim-level supersession (§6.3) stays out of the way: reads list current
+claims and say how many were superseded or retracted, and superseded claims
+are excluded from search snippets.
 
 ## 8. Topic hubs
 
@@ -413,6 +437,7 @@ folder. Hubs give a person or an agent a one-page entry point.
 id: 01J9Z7M3…
 type: hub
 title: Search
+bw-related_to: "[[storage]]"
 ---
 # Search
 
@@ -421,15 +446,13 @@ How local search works in this project and why.
 ## Notes
 - [[Use SQLite FTS5 for local search]]: why FTS5 over alternatives
 - [[SQLite version policy]]: minimum versions and fallbacks
-
-## Relations
-- related_to [[storage]]
 ```
 
 - Hubs MUST stay within `budgets.hub_max_lines`. When consolidation would
   push a hub over budget, it must create a child note
-  (`part_of [[hub]]`) instead, and the hub gains one link line.
-- `## Notes` lists the topic's notes with a short gloss. `brain lint --fix`
+  (`bw-part_of: "[[hub]]"`) instead, and the hub gains one link line.
+- `## Notes` lists the topic's notes with a short gloss. It stays in the
+  body because it is navigation people read, not data. `brain lint --fix`
   can add missing entries; it never removes lines a person wrote.
 
 ## 9. Episodes
@@ -444,16 +467,16 @@ of the ULID's timestamp.
 ---
 id: 01JA0C5D8E2F4G6H8J0K2M4N6P
 type: episode
-agent: claude-code
-session: 5f2c9a1e-…              # host session id, if known
-origin_turns: 12-48              # turns of that session this episode covers, if known
-device: laptop                   # device the session ran on (user config name)
-origin: agent                    # owner | agent | import | system
-taint: unknown                   # true | false | unknown
-captured: mcp                    # hook | mcp | harvest | cli | import | file
 created: 2026-10-10T19:22:11Z
-topics: [search]                 # hints only
-privacy: default
+bw-agent: claude-code
+bw-session: 5f2c9a1e-…           # host session id, if known
+bw-turns: 12-48                  # turns of that session this episode covers, if known
+bw-device: laptop                # device the session ran on (user config name)
+bw-origin: agent                 # owner | agent | import | system
+bw-taint: unknown                # true | false | unknown
+bw-captured: mcp                 # hook | mcp | harvest | cli | import | file
+bw-topics: [search]              # hints only
+bw-privacy: default
 ---
 Switched the search path to FTS5 after ripgrep was too slow on 10k notes.
 
@@ -472,10 +495,13 @@ Rules:
 
 - Episodes are **immutable**. After creation no tool edits them. Lint
   records each episode's hash in the index and reports changes.
-- `origin`, `taint`, `captured`, and `agent` are set by the code path that
-  writes the episode (hook, MCP server, harvest, CLI), never taken from
-  model-written text. See [05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint).
-- `session`, `origin_turns`, and `device` point back to the conversation the
+- `bw-origin`, `bw-taint`, `bw-captured`, and `bw-agent` are set by the
+  code path that writes the episode (hook, MCP server, harvest, CLI), never
+  taken from model-written text. See [05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint).
+  Episodes written before format 2 use the names without `bw-` (and
+  `origin_turns` for `bw-turns`); they are never rewritten, and readers
+  accept both.
+- `bw-session`, `bw-turns`, and `bw-device` point back to the conversation the
   episode came from, so tools on that device can show it
   ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)). They
   never hold file paths. An episode must be understandable on its own:
@@ -484,13 +510,14 @@ Rules:
 - The body is free Markdown. `## Claims`, `## Negative findings` (what was
   tried and did not work, so later agents do not repeat it), and
   `## Open questions` are suggested sections that consolidation prompts
-  look for; none is required.
+  look for; none is required. Unlike a note, an episode keeps its claims
+  in the body: it is raw capture that consolidation reads as text.
 - Consolidation moves processed episodes to `archive/episodes/` with the
   same relative path. Archived episodes are kept as provenance: claim `src`
   references still resolve.
 - Files dropped into `inbox/agents/<agent>/` by host-native memory features
   are treated as episodes by consolidation without needing frontmatter.
-  Their `origin` is `agent` and their `taint` is `unknown`. Consolidation
+  Their origin is `agent` and their taint is `unknown`. Consolidation
   archives them to `archive/agents/<agent>/` unchanged.
 
 ## 10. Rules
@@ -526,7 +553,7 @@ outside the markers is preserved.
 - Read `rules.md` first. Topics: (table of slug, title, description)
 - To record something, create `inbox/episodes/YYYY/MM/<ULID>.md` (format …).
   Do not edit files under `topics/` directly.
-- Relations: part_of, depends_on, conflicts_with, supersedes, related_to …
+- Relations are `bw-<verb>` fields: part_of, depends_on, conflicts_with, …
 <!-- brain-wiki:end -->
 ```
 
@@ -550,8 +577,30 @@ run records ([05 §8](05-write-path-and-consolidation.md#8-undo)).
 
 ## 13. Format versioning
 
-- `format` in `brain.toml` is an integer. This document defines format 1.
-- A tool MUST refuse to write to a brain with a higher format than it
-  supports, and SHOULD still read it on a best-effort basis.
-- Format changes ship with a `brain migrate` step that has a dry run and
-  writes a single commit (or undo point) per migration.
+- `format` in `brain.toml` is an integer: the newest file format the brain
+  may contain. This document defines format 2.
+- A tool MUST refuse to open a brain with a higher format than it supports.
+  A best-effort read is not safe: an older reader ignores fields it does
+  not know, such as `bw-privacy`, and would show what it should hide.
+- A tool that writes files in a newer format first raises `format`. The
+  change is one-way: undoing the run that raised it does not lower it,
+  because other files in the new format may remain.
+- Readers accept every older format. A format change ships with a fix that
+  converts files, has a dry run, and writes one undo point.
+
+**Format 1** kept claims and relations in the body, wrote `privacy` and
+`stage` without the prefix, and wrote episode provenance without it:
+
+```markdown
+## Claims
+- SQLite FTS5 is the default search backend. <!-- id:c-01J9…; src:…; at:2026-10-07 -->
+- ~~Search shells out to ripgrep.~~ <!-- id:c-01J8…; status:superseded; by:c-01J9… -->
+
+## Relations
+- depends_on [[SQLite version policy]] — needs the trigram tokenizer
+```
+
+`## Claims` and `## Relations` were reserved headings, at most once each;
+claims could wrap onto indented continuation lines. `brain lint --fix`
+(BW116) converts such notes to format 2, and consolidation converts a note
+before it edits it. Episodes keep format 1 because they are immutable.

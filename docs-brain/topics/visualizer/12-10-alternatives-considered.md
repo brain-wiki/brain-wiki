@@ -5,6 +5,8 @@ title: "Alternatives considered (Visualizer)"
 aliases: ["12 §10"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#10-alternatives-considered"
+bw-part_of:
+  - "[[visualizer]]"
 ---
 # Alternatives considered (Visualizer)
 
@@ -16,6 +18,3 @@ source: "docs/design/12-visualizer.md#10-alternatives-considered"
 | React | Preact gives the same model at a fraction of the size. |
 | Obsidian's built-in graph | No typed relations, guards, or health flags; fine as a complement. |
 | Server-side rendering to images | No interaction. |
-
-## Relations
-- part_of [[visualizer]]

@@ -5,6 +5,8 @@ title: "Open-source hygiene"
 aliases: ["13 §10"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#10-open-source-hygiene"
+bw-part_of:
+  - "[[engineering]]"
 ---
 # Open-source hygiene
 
@@ -15,6 +17,3 @@ source: "docs/design/13-engineering.md#10-open-source-hygiene"
   context cannot slip into commits. The denylist itself never enters the
   repository.
 - `SECURITY.md` explains how to report vulnerabilities privately.
-
-## Relations
-- part_of [[engineering]]

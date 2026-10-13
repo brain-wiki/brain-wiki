@@ -5,6 +5,8 @@ title: "Package structure"
 aliases: ["13 §2"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#2-package-structure"
+bw-part_of:
+  - "[[engineering]]"
 ---
 # Package structure
 
@@ -35,6 +37,3 @@ cli ─► mcp, hosts, viz, bench, importer ─► consolidate, lint ─► inde
 
 `format`, `store`, and `config` import nothing from the rest. The MCP SDK,
 the visualizer, and the bench are leaves: nothing in the core imports them.
-
-## Relations
-- part_of [[engineering]]

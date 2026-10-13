@@ -32,6 +32,9 @@ _RULES = [
     RuleInfo("BW113", "info", "info", True, "frontmatter property holds relation-like links"),
     RuleInfo("BW114", "error", "error", False, "leftover merge conflict markers"),
     RuleInfo("BW115", "warning", "warning", False, "database or lock file inside the brain"),
+    RuleInfo(
+        "BW116", "warning", "info", True, "note is in format 1 (body sections, unprefixed fields)"
+    ),
     RuleInfo("BW201", "error", "warning", False, "claim metadata comment is malformed"),
     RuleInfo("BW202", "error", "error", True, "duplicate claim id"),
     RuleInfo("BW203", "error", "warning", False, "by: points to a claim that does not exist"),
@@ -40,7 +43,7 @@ _RULES = [
     RuleInfo("BW206", "warning", "warning", False, "near-identical claims cite the same span"),
     RuleInfo("BW207", "error", "warning", False, "more than one ## Claims section"),
     RuleInfo("BW301", "error", "warning", False, "relation line does not parse"),
-    RuleInfo("BW302", "error", "warning", False, "unknown relation verb"),
+    RuleInfo("BW302", "error", "warning", False, "unknown relation verb or bw- field"),
     RuleInfo("BW303", "warning", "info", True, "alias verb instead of canonical"),
     RuleInfo("BW304", "error", "warning", True, "relation target does not resolve"),
     RuleInfo("BW305", "error", "error", False, "relation target is ambiguous"),

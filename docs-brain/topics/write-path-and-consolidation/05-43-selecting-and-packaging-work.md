@@ -5,6 +5,8 @@ title: "Selecting and packaging work"
 aliases: ["05 §4.3"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#43-selecting-and-packaging-work"
+bw-part_of:
+  - "[[05-4-consolidation]]"
 ---
 # Selecting and packaging work
 
@@ -58,6 +60,3 @@ Handles replace paths and ids so models never copy long identifiers:
 Episode `lines` are numbered exactly as in the file body, so a citation
 `E1#L3-L4` maps to a real span. Note `hash` values pin the version the
 proposal was made against (§7.3).
-
-## Relations
-- part_of [[05-4-consolidation]]

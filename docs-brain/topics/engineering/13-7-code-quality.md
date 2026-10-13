@@ -5,6 +5,8 @@ title: "Code quality"
 aliases: ["13 §7"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#7-code-quality"
+bw-part_of:
+  - "[[engineering]]"
 ---
 # Code quality
 
@@ -13,6 +15,3 @@ source: "docs/design/13-engineering.md#7-code-quality"
 - Coverage target: 90% lines for the core packages listed above.
 - No `shell=True`, no `eval`, no network access in core code; enforced by a
   ruff rule set and a test that greps the core packages.
-
-## Relations
-- part_of [[engineering]]

@@ -4,6 +4,8 @@ type: guide
 title: "Lint and reports"
 tags: [user-guide]
 source: "docs/user/maintenance.md#lint-and-reports"
+bw-part_of:
+  - "[[user-maintenance]]"
 ---
 # Lint and reports
 
@@ -19,5 +21,6 @@ brain report                     # regenerate reports/
 dependencies, unverified claims, the inbox, duplicate claims, orphans, and
 the latest lint results.
 
-## Relations
-- part_of [[user-maintenance]]
+Notes written before format 2 keep claims and relations in `## Claims` and
+`## Relations` sections. They still work; lint reports them as BW116, and
+`brain lint --fix` moves them into `bw-` fields in one undoable run.

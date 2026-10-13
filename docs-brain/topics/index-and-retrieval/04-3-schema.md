@@ -5,6 +5,8 @@ title: "Schema"
 aliases: ["04 §3"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#3-schema"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Schema
 
@@ -117,9 +119,9 @@ CREATE TABLE docs (
   aliases  TEXT NOT NULL,           -- space-joined
   tags     TEXT NOT NULL,           -- space-joined
   headings TEXT NOT NULL,           -- all headings, newline-joined
-  body     TEXT NOT NULL,           -- body without frontmatter, metadata comments,
-                                    -- or superseded claim lines
-  history  TEXT NOT NULL            -- superseded claim lines, for low-weight matching
+  body     TEXT NOT NULL,           -- prose without frontmatter or metadata, plus the
+                                    -- text of current claims
+  history  TEXT NOT NULL            -- superseded claims, for low-weight matching
 );
 CREATE VIRTUAL TABLE fts USING fts5(
   title, aliases, tags, headings, body, history,
@@ -171,6 +173,3 @@ Notes on the schema:
   still be findable ("what did we used to think about X?"), but must not
   outrank current text or appear in snippets. A separate column with a low
   bm25 weight does both.
-
-## Relations
-- part_of [[index-and-retrieval]]

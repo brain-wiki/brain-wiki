@@ -29,7 +29,7 @@ Refer to things only by the handles in the packet:
 |---|---|---|
 | `add_claim` | `note`, `text`, `sources` | An episode states a new fact that belongs in an existing note. |
 | `merge_claim` | `claim`, `sources` | An episode confirms an existing claim. The text stays as it is. |
-| `supersede_claim` | `claim`, `text`, `sources`, `reason` | An episode changes or contradicts an existing claim. The old claim is kept, struck through. |
+| `supersede_claim` | `claim`, `text`, `sources`, `reason` | An episode changes or contradicts an existing claim. The old claim moves to the note's superseded list. |
 | `retract_claim` | `claim`, `sources`, `reason` | An episode shows an existing claim was simply wrong, with nothing to replace it. |
 | `add_relation` | `from`, `verb`, `to`, optional `qualifier`, `comment`, `sources` | An episode states how two notes relate. |
 | `create_note` | `ref`, `title`, `claims` (each `text` + `sources`), optional `type`, `summary` | No candidate note fits the knowledge. |

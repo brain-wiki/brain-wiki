@@ -5,6 +5,8 @@ title: "Search"
 aliases: ["04 §6"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#6-search"
+bw-part_of:
+  - "[[index-and-retrieval]]"
 ---
 # Search
 
@@ -15,6 +17,3 @@ source: "docs/design/04-index-and-retrieval.md#6-search"
 - [[04-63-ranking]]: Ranking
 - [[04-64-graph-expansion]]: Graph expansion
 - [[04-65-output]]: Output (Index and retrieval)
-
-## Relations
-- part_of [[index-and-retrieval]]

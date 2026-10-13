@@ -5,6 +5,8 @@ title: "Users and scenarios"
 aliases: ["01 §6"]
 tags: [overview]
 source: "docs/design/01-overview.md#6-users-and-scenarios"
+bw-part_of:
+  - "[[overview]]"
 ---
 # Users and scenarios
 
@@ -30,6 +32,3 @@ agent-readable without restructuring it.
 | S9 | **Inspect the brain.** | `brain viz` opens a 3D map of topics, notes, and relations. [[visualizer\|12]] |
 | S10 | **Compare models.** | `brain bench` runs the same consolidation scenarios through several headless CLIs and reports validity and agreement. [[eval-bench\|11]] |
 | S11 | **An agent builds its own knowledge.** A long-running assistant learns how the user's tools, services, and projects behave. | It logs episodes as it works; a scheduled routine consolidates them unattended into agent-origin claims, marked unverified when web or tool output influenced them; later sessions on any host recall them with their sources. [[write-path-and-consolidation\|05]], [[skills-onboarding-and-routines\|15]] |
-
-## Relations
-- part_of [[overview]]

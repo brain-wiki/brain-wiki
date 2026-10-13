@@ -5,6 +5,8 @@ title: "What gets skipped"
 aliases: ["08 §6.1"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#61-what-gets-skipped"
+bw-part_of:
+  - "[[08-6-capture-and-harvest]]"
 ---
 # What gets skipped
 
@@ -17,6 +19,3 @@ source: "docs/design/08-agent-integrations.md#61-what-gets-skipped"
   `min_user_turns` user messages for harvest.
 - For harvest: sessions still in progress, and sessions whose working
   directory routes to no brain.
-
-## Relations
-- part_of [[08-6-capture-and-harvest]]

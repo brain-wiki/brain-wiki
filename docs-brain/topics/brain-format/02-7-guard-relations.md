@@ -5,6 +5,8 @@ title: "Guard relations"
 aliases: ["02 §7"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#7-guard-relations"
+bw-part_of:
+  - "[[brain-format]]"
 ---
 # Guard relations
 
@@ -23,8 +25,6 @@ top-k results. The only exception is privacy. If a guard neighbor is above
 the caller's privacy level, the caller is told that a hidden superseding or
 conflicting note exists, but not its content ([[04-5-guard-co-retrieval|04]]).
 
-Claim-level supersession (§6.3) is shown inline: superseded claims are
-marked as such in every read and are excluded from search snippets.
-
-## Relations
-- part_of [[brain-format]]
+Claim-level supersession (§6.3) stays out of the way: reads list current
+claims and say how many were superseded or retracted, and superseded claims
+are excluded from search snippets.
