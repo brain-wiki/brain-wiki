@@ -46,17 +46,20 @@ bw-part_of:
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
   inside their constellation, a parent topic at the center of the
-  constellation its sub-topics form; notes are packed per topic as nested
-  circles of its folders, facing the camera: each folder is a circle holding
-  its notes and its sub-folders' circles, so containment shows the hierarchy
-  and the tree needs no lines. A folder's own notes pack as one cluster
-  beside its sub-folders, with the folder note (and, at the top, the topic
-  index) first. A note's room grows with its length (radius with the fourth
-  root of its lines), so dense notes stand out. Each nesting level sits one
-  tier farther back from the camera, straight along the view, so depth never
-  moves a star on screen. Typed links are drawn but do not move stars. The
-  same brain always produces the same map, and no layout ever spans the
-  whole brain.
+  constellation its sub-topics form; notes are laid out per topic by gravity
+  and linked by folder, facing the camera. Each folder is a circle. At its
+  core, its own notes form a sunflower: the folder note (at the top, the
+  topic index) in the middle, then the rest by length on the golden angle, so
+  long notes gather at the core and short ones ring the rim. A note's room
+  grows with its length (radius with the fourth root of its lines). The
+  folder's sub-folders orbit that core, each in a wedge of its own, the
+  largest first; an empty wedge keeps the way in from the parent clear. A
+  line runs from each folder's core to its parent's, and since every circle
+  stays inside its wedge, no link crosses another or runs through a folder it
+  does not join. Each nesting level sits one tier farther back from the
+  camera, straight along the view, so depth never moves a star on screen.
+  Typed links are drawn but do not move stars. The same brain always produces
+  the same map, and no layout ever spans the whole brain.
 - **Labels say what things are.** The galaxy is the look, not the vocabulary:
   the interface says Overview, Group (of topics), Topic, and Note, never
   galaxy or constellation; *issues*, not flags; *session captures*, not
@@ -65,9 +68,10 @@ bw-part_of:
   Replaces, Replaced by, Related to), and every number names its unit.
 - **The hierarchy follows the folders.** Inside a topic, the map's tree is
   the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
-  folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) sits at the heart of
-  its circle; a folder without one is still a circle. Each circle is labeled
-  at its top. A folder's label
+  folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is its core, where
+  its links meet; a folder without one is still a circle, with its longest
+  note at the core, or, when it holds only sub-folders, an empty junction.
+  Each circle is labeled at its top. A folder's label
   drops the leading ` · ` parts its parent folders' titles already say
   ("Lumen guide · Sync · Conflicts" reads "Conflicts"). A written `part_of` that
   points elsewhere is a relation, not the note's place.
@@ -75,7 +79,7 @@ bw-part_of:
 
 | Relation | Trail |
 |---|---|
-| `part_of` | The folder tree (the dock's **Folders** chip, on by default): each folder's faint circle; a note's place in its circle says which folder holds it, so notes draw no lines |
+| `part_of` | The folder tree (the dock's **Folders** chip, on by default): each folder's faint circle, and one line from its core to its parent's, brighter at the parent end; a note's place in its circle says which folder holds it, so notes draw no lines |
 | `depends_on` | Blue, flowing prerequisite → dependent |
 | `conflicts_with` | Red, always shown when either end is visible |
 | `supersedes` | Amber, flowing old → new |
