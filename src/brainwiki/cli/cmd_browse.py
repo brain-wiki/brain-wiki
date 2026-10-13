@@ -77,7 +77,7 @@ def topics(args: Any) -> int:
         walk(slug, 0)
 
     def line(r: dict[str, Any]) -> str:
-        own = f"{r['notes']} notes"
+        own = f"{r['notes']} note{'' if r['notes'] == 1 else 's'}"
         if r["sub_topics"]:
             own += f", {r['total_notes']} with sub-topics"
         return f"{'  ' * r['depth']}- {r['slug']}: {r['title']}  ({own})  [{r['path']}]"

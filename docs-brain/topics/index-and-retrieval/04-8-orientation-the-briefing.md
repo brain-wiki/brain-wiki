@@ -25,7 +25,8 @@ included in full:
    largest topics, the topics that hold people or meetings when notes of
    those types exist, and open issues (active conflicts, unverified claims).
 4. Topic table: the top-level topics, each with slug, title, one-line
-   description, note count (sub-topics included), last update, number of
+   description, note count (sub-topics included; a hub is the topic's index
+   and is not counted, here or in any other note count), last update, number of
    active conflicts, and its sub-topics (count, and the most recently active
    few by slug). Most recently active first; truncated with a pointer to
    browsing (`brain_search("", topic=[…], facets=true)`, whose topic facet

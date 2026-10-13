@@ -129,7 +129,7 @@ def test_a_new_hub_makes_a_sub_topic_and_moves_notes_into_it(people: Path):
 def test_topics_command_prints_the_tree(people: Path, capsys: pytest.CaptureFixture[str]):
     assert main(["topics"]) == 0
     out = capsys.readouterr().out
-    assert "- people: People  (1 notes, 3 with sub-topics)" in out
+    assert "- people: People  (0 notes, 1 with sub-topics)" in out
     assert "  - rin-sato: Rin Sato" in out
     assert main(["topics", "rin-sato"]) == 0
     assert capsys.readouterr().out.startswith("- rin-sato")

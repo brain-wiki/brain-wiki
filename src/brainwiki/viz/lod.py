@@ -319,6 +319,7 @@ class Atlas:
                     for flag in node["flags"]:
                         flags[flag] = flags.get(flag, 0) + 1
                 dates = [n["updated"] for n in members if n["updated"]]
+                notes = [n for n in members if n["kind"] == "note"]  # the hub is the index
                 out.append(
                     {
                         "slug": slug,
@@ -327,10 +328,10 @@ class Atlas:
                         "parent": topic.get("parent"),
                         "color": self.colors[slug],
                         "constellation": self.constellation_of[slug],
-                        "notes": len(members),
+                        "notes": len(notes),
                         "hub": topic.get("hub"),
                         "updated": max(dates) if dates else None,
-                        "recent": sum(1 for d in dates if d >= cutoff),
+                        "recent": sum(1 for n in notes if (n["updated"] or "") >= cutoff),
                         "flags": flags,
                         "flagged": sum(1 for n in members if n["flags"]),
                     }

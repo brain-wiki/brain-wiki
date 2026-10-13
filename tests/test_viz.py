@@ -101,7 +101,7 @@ def test_graph_nodes_links_and_flags(example: Path):
 
     topics = {t["slug"]: t for t in graph["topics"]}
     assert set(topics) == {"budget", "search", "storage"}
-    assert topics["search"]["notes"] == 4
+    assert topics["search"]["notes"] == 3  # its hub is the topic's index, not one of its notes
     assert topics["search"]["hub"] == "01M4KT3JPRY4W6766VT18CQS90"
     assert topics["search"]["description"] == "How local search works and why."
     assert len({t["color"] for t in topics.values()}) == 3
@@ -253,7 +253,7 @@ def test_world_shape_and_totals(example: Path):
     assert re.fullmatch(r"#[0-9a-f]{6}", only["color"])
     topics = {t["slug"]: t for t in world["topics"]}
     search = topics["search"]
-    assert search["notes"] == 4
+    assert search["notes"] == 3
     assert search["hub"] == "01M4KT3JPRY4W6766VT18CQS90"
     assert search["description"] == "How local search works and why."
     assert search["constellation"] == "c1"
@@ -270,9 +270,14 @@ def test_world_recent_counts_last_week(example: Path):
     with engine_for(example) as eng:
         graph = build_graph(eng)
     dates = sorted(n["updated"] for n in graph["nodes"] if n["topic"] == "search" and n["updated"])
+    notes = sorted(
+        n["updated"]
+        for n in graph["nodes"]
+        if n["topic"] == "search" and n["kind"] == "note" and n["updated"]
+    )
     from datetime import date
 
-    latest = date.fromisoformat(dates[-1])
+    latest = date.fromisoformat(notes[-1])
     topics = {t["slug"]: t for t in Atlas(graph, today=latest).world()["topics"]}
     assert topics["search"]["updated"] == dates[-1]
     assert topics["search"]["recent"] >= 1

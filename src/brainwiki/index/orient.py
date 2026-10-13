@@ -22,6 +22,8 @@ def brief_stats(engine: Engine) -> dict[str, Any]:
 
     A pass over 10k notes costs about 10 ms even from a covering index, so the topic table,
     the totals, the type counts, and where people and meetings live share this one query.
+    Counts are of notes: a topic's hub is its index, not one of its notes, so it only dates
+    the topic.
     """
     week_ago = (datetime.now(UTC) - timedelta(days=7)).strftime("%Y-%m-%d")
     by_topic: dict[str, dict[str, Any]] = {}
@@ -33,14 +35,15 @@ def brief_stats(engine: Engine) -> dict[str, Any]:
             FROM nodes n WHERE kind IN ('note', 'hub')
             GROUP BY kind, topic, type"""
     ):
-        notes += row["c"]
         latest = (row["l"] or "")[:10]
         last = max(last, latest)
+        note = row["kind"] == "note"
+        notes += row["c"] if note else 0
         if row["topic"] is not None:
             topic = by_topic.setdefault(row["topic"], {"notes": 0, "updated": ""})
-            topic["notes"] += row["c"]
+            topic["notes"] += row["c"] if note else 0
             topic["updated"] = max(topic["updated"], latest)
-        if row["kind"] == "note":
+        if note:
             types[row["type"]] = types.get(row["type"], 0) + row["c"]
             if row["type"] in _PEOPLE_TYPES and row["topic"] is not None:
                 where = homes.setdefault(row["type"], {})
@@ -54,7 +57,7 @@ def brief_stats(engine: Engine) -> dict[str, Any]:
     first = (oldest["updated"] or "")[:10] if oldest else ""
     week = engine.db.execute(
         """SELECT COUNT(*) FROM nodes n INDEXED BY nodes_updated
-            WHERE updated >= ? AND kind IN ('note', 'hub')""",
+            WHERE updated >= ? AND kind = 'note'""",
         (week_ago,),
     ).fetchone()[0]
     episodes = engine.db.execute(

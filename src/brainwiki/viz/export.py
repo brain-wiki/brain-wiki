@@ -190,7 +190,7 @@ def _topics(
     counts: dict[str, int] = {}
     hubs: dict[str, str] = {}
     for node in nodes:
-        if node["topic"] and node["kind"] in ("note", "hub"):
+        if node["topic"] and node["kind"] == "note":  # the hub is the topic's index, not a note
             counts[node["topic"]] = counts.get(node["topic"], 0) + 1
         if node["kind"] == "hub" and node["topic"]:
             hubs.setdefault(node["topic"], node["id"])
