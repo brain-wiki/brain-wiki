@@ -100,8 +100,8 @@ class Applier:
         self.namer = LinkNamer(engine.db)
         self.staged = Staged(run)
         self.new_paths: dict[str, str] = {}  # new:<topic>/<slug> -> path
-        self.new_topics: dict[str, tuple[str, str]] = {}  # slug -> (folder, hub path)
-        self.topic_meta: dict[str, tuple[str, str]] = {}  # slug -> (title, description)
+        self.new_topics: dict[str, tuple[str, str, int]] = {}  # slug -> (folder, hub path, rank)
+        self.topic_meta: dict[str, tuple[str, str, str | None]] = {}  # title, description, parent
         self.touched: set[str] = set()
         self.changed_by_ops: set[str] = set()  # files an op changed; these get `updated`
         self.hubs: set[str] = set()
@@ -184,8 +184,13 @@ class Applier:
 
     # -- ops -------------------------------------------------------------
     def create_topic(self, op: dict[str, Any]) -> None:
-        slug = op["slug"]
-        folder = f"{self.layout.topics_dir}/{slug}"
+        slug, parent = op["slug"], op.get("parent")
+        base, rank = self.layout.topics_dir, self.engine.manifest.privacy_rank(None)
+        if parent in self.new_topics:  # a sub-topic sits in its parent's folder (02 §2)
+            base, _, rank = self.new_topics[parent]
+        elif parent:
+            base, rank = self.packet.topics[parent].path, self.packet.topics[parent].privacy_rank
+        folder = f"{base}/{slug}"
         hub = f"{folder}/{self.layout.hub_filename.replace('{folder}', slug)}"
         fields = {"id": new_ulid(), "type": "hub", "title": op["title"]}
         if op.get("description"):
@@ -199,15 +204,14 @@ class Applier:
         )
         self.run.create(hub, "\n".join(head + body))
         self.touched.add(hub)
-        self.new_topics[slug] = (folder, hub)
-        self.topic_meta[slug] = (op["title"], op.get("description") or "")
+        self.new_topics[slug] = (folder, hub, rank)
+        self.topic_meta[slug] = (op["title"], op.get("description") or "", parent)
         self.staged.created_topics.append(folder)
 
     def create_note(self, op: dict[str, Any], rank: int) -> None:
         topic, slug = op["ref"][4:].split("/", 1)
         if topic in self.new_topics:
-            folder, hub = self.new_topics[topic]
-            topic_rank = self.engine.manifest.privacy_rank(None)
+            folder, hub, topic_rank = self.new_topics[topic]
         else:
             ref = self.packet.topics[topic]
             folder, hub, topic_rank = ref.path, ref.hub_path, ref.privacy_rank
@@ -389,7 +393,7 @@ def stage(
     for path in (
         applier.changed_by_ops
         - set(applier.staged.created_notes)
-        - {h for _, h in applier.new_topics.values()}
+        - {h for _, h, _ in applier.new_topics.values()}
     ):
         run.write(
             path, set_fields(run.read(path) or "", {"updated": _today()}, order_first=_FM_ORDER)
@@ -414,9 +418,10 @@ def stage(
             "path": folder,
             "hub": hub,
             "description": applier.topic_meta[slug][1],
+            "parent": applier.topic_meta[slug][2],
             "updated": _today(),
         }
-        for slug, (folder, hub) in applier.new_topics.items()
+        for slug, (folder, hub, _) in applier.new_topics.items()
     ]
     current = run.read("AGENTS.md")
     if current is not None:

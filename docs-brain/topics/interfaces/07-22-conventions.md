@@ -21,6 +21,8 @@ bw-part_of:
 - Listing commands share `--count` (print only the total), `--facets` (counts
   by type, topic, and tag), `--paths` (one path per line, for piping into
   file tools), `--limit`, and `--cursor`.
+- `--topic T` (and the MCP `topic` filter) includes T's sub-topics, the same
+  way an agent allowed a topic may read its sub-topics (02 §2).
 - `brain log -` reads the episode body from stdin, so other tools can pipe
   into the inbox.
 - `brain hook` and `brain mcp` never print anything to stdout except their

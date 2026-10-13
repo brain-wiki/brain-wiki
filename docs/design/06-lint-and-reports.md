@@ -100,7 +100,7 @@ can repair it safely.
 | BW401 | Hub exceeds `hub_max_lines`. | error / warning | — |
 | BW402 | `rules.md` exceeds its line or character budget. | error / error | — |
 | BW403 | `AGENTS.md` exceeds its budget. | error / warning | regenerate the block |
-| BW404 | Topic folder has no hub. | warning / info | create a hub |
+| BW404 | A top-level topic folder has no hub. (A deeper folder without a hub is not a topic, 02 §2.) | warning / info | create a hub |
 | BW405 | Note is missing from its hub's `## Notes`, and no `part_of` chain leads from it to the hub or to a note the hub lists. | info / off | append a line |
 | BW406 | Orphan: no incoming links and not listed in a hub. | info / off | — |
 | BW407 | Note outside any topic. | info / off | — |

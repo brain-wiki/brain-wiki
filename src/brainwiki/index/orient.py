@@ -25,9 +25,10 @@ def visibility(
     profile = profile or engine.profile
     clause = f"{alias}.privacy_rank <= ?"
     params: list[Any] = [engine.manifest.privacy_rank(profile.max_privacy)]
-    if "*" not in profile.topics:
-        clause += f" AND {alias}.topic IN ({','.join('?' * len(profile.topics))})"
-        params += list(profile.topics)
+    allowed = engine.allowed_topics(profile)
+    if allowed is not None:
+        clause += f" AND {alias}.topic IN ({','.join('?' * len(allowed)) or 'NULL'})"
+        params += sorted(allowed)
     return clause, params
 
 
@@ -115,10 +116,11 @@ def topic_rows(
 ) -> list[dict[str, Any]]:
     """Topics visible to `profile` (default: the engine's), most recently updated first.
 
-    Counts include only notes the profile may see, so a hidden note is never counted."""
-    from brainwiki.index.scanner import discovered_topics
-
+    Every topic of the tree gets a row with its own counts, its visible `parent`, and `total_*`
+    counts that include its sub-topics. Counts include only notes the profile may see, so a hidden
+    note is never counted."""
     conn = engine.db
+    tree = engine.topics
     profile = profile or engine.profile
     max_rank = engine.manifest.privacy_rank(profile.max_privacy)
     stats = stats or brief_stats(engine, profile)
@@ -129,12 +131,12 @@ def topic_rows(
     ):
         hubs.setdefault(r["topic"], r)
     rows = []
-    for slug, path in sorted(discovered_topics(engine).items()):
+    for slug, path in sorted(tree.paths.items()):
         declared = engine.manifest.topics.get(slug)
-        privacy = (
-            declared.privacy if declared and declared.privacy else engine.manifest.privacy.default
-        )
-        if engine.manifest.privacy_rank(privacy) > max_rank or not profile.topic_allowed(slug):
+        privacy = tree.privacy(slug) or engine.manifest.privacy.default
+        if engine.manifest.privacy_rank(privacy) > max_rank or not engine.topic_allowed(
+            slug, profile
+        ):
             continue
         stat = by_topic.get(slug, {"notes": 0, "updated": ""})
         hub = hubs.get(slug)
@@ -156,6 +158,17 @@ def topic_rows(
                 "conflicts": conflict_counts.get(slug, 0),
             }
         )
+    visible = {r["slug"]: r for r in rows}
+    for row in rows:
+        parent = next((a for a in tree.ancestors(row["slug"]) if a in visible), None)
+        below = [visible[d] for d in tree.descendants(row["slug"]) if d in visible]
+        row["parent"] = parent
+        row["sub_topics"] = [
+            r["slug"] for r in sorted(below, key=lambda r: r["updated"], reverse=True)
+        ]
+        row["total_notes"] = row["notes"] + sum(r["notes"] for r in below)
+        row["total_updated"] = max([row["updated"], *(r["updated"] for r in below)])
+        row["total_conflicts"] = row["conflicts"] + sum(r["conflicts"] for r in below)
     rows.sort(key=lambda r: r["updated"], reverse=True)
     return rows
 
@@ -318,9 +331,17 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         bits = [f"- **{t['slug']}**: {t['title']}"]
         if t["description"]:
             bits.append(f"— {t['description']}")
+        subs = t["sub_topics"]
         bits.append(
-            f"({t['notes']} notes, updated {t['updated'] or 'n/a'}"
-            + (f", {t['conflicts']} open conflicts" if t["conflicts"] else "")
+            f"({t['total_notes']} notes, updated {t['total_updated'] or 'n/a'}"
+            + (f", {t['total_conflicts']} open conflicts" if t["total_conflicts"] else "")
+            + (
+                f"; {len(subs)} sub-topics: "
+                + ", ".join(subs[:4])
+                + (", …" if len(subs) > 4 else "")
+                if subs
+                else ""
+            )
             + ")"
         )
         return " ".join(bits)
@@ -335,17 +356,20 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
     used += size(change_lines) + size(["## Topics"]) + 80
     topic_lines = ["## Topics"]
     shown = 0
-    for t in topics:
+    roots = sorted(
+        (t for t in topics if t["parent"] is None), key=lambda t: t["total_updated"], reverse=True
+    )
+    for t in roots:
         line = topic_line(t)
         if used + len(line) + 1 > budget_chars:
             break
         topic_lines.append(line)
         used += len(line) + 1
         shown += 1
-    if shown < len(topics):
-        rest = topics[shown]
+    if shown < len(roots):
+        rest = roots[shown]
         topic_lines.append(
-            f'- … {len(topics) - shown} more topics; list one with brain_search("", topic=["{rest["slug"]}"]).'
+            f'- … {len(roots) - shown} more topics; list one with brain_search("", topic=["{rest["slug"]}"]).'
         )
     if not topics:
         topic_lines.append("(no topics yet)")
@@ -382,14 +406,21 @@ def agents_block(engine: Engine, extra: list[dict[str, Any]] | None = None) -> s
     from brainwiki.format.agents_md import extract_block
     from brainwiki.lifecycle import default_agents_block
 
-    rows = topic_rows(engine, engine.manifest.profile("default"))
+    rows = [
+        r for r in topic_rows(engine, engine.manifest.profile("default")) if r["parent"] is None
+    ]
     known = {r["slug"] for r in rows}
-    rows = [r for r in extra or [] if r["slug"] not in known] + rows
+    rows = [r for r in extra or [] if r["slug"] not in known and not r.get("parent")] + rows
     name = engine.brain.display_name
 
     def render(selected: list[dict[str, Any]], hidden: int) -> str:
         table = [
-            (r["slug"], r["hub"] or r["path"], r["description"] or r["title"])
+            (
+                r["slug"],
+                r["hub"] or r["path"],
+                (r["description"] or r["title"])
+                + (f" ({len(r['sub_topics'])} sub-topics)" if r.get("sub_topics") else ""),
+            )
             for r in sorted(selected, key=lambda r: r["slug"])
         ]
         if hidden:

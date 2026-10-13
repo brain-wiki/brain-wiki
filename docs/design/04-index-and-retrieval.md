@@ -57,12 +57,12 @@ CREATE TABLE nodes (
   id           TEXT PRIMARY KEY,    -- ULID from frontmatter, or 'path:' || path when absent
   path         TEXT NOT NULL UNIQUE,
   kind         TEXT NOT NULL CHECK (kind IN ('note','hub','episode','archived_episode')),
-  topic        TEXT,                -- topic slug, NULL when outside topics
+  topic        TEXT,                -- slug of the nearest enclosing topic, NULL outside topics
   title        TEXT NOT NULL,
   type         TEXT NOT NULL DEFAULT 'note',
   status       TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','superseded','archived')),
   stage        TEXT,
-  privacy      TEXT NOT NULL,       -- effective level: max(topic level, note level)
+  privacy      TEXT NOT NULL,       -- effective level: max(topic and its ancestors, note level)
   privacy_rank INTEGER NOT NULL,    -- index into [privacy].levels
   created      TEXT,
   updated      TEXT,                -- frontmatter 'updated', else file mtime (ISO 8601)
@@ -235,7 +235,7 @@ scan(brain):
 ## 5. Guard co-retrieval
 
 Given the set of hit node ids `H` and the caller's profile (maximum privacy
-rank `P`, topic allowlist `T`):
+rank `P`, topic allowlist `T`, expanded to its sub-topics):
 
 ```sql
 SELECT e.rel, e.verb, e.qualifier, e.note,
@@ -289,7 +289,7 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
 |---|---|---|
 | `query` | `""` | Free text. **Empty means browse**: no text matching, results ordered by `sort` (default `recent`) within the filters. |
 | `limit` | 8 | Primary results, before expansion and guards. Max 50. |
-| `topic` | all allowed | Restrict to one or more topics. |
+| `topic` | all allowed | Restrict to one or more topics, each with its sub-topics. |
 | `type` | any | Restrict to note types (`decision`, `release`, `person`…), as in frontmatter. |
 | `tag` | any | Restrict to notes carrying all of these tags. |
 | `where` | none | Frontmatter property equality, e.g. `{"stage": "open"}`; values compare as strings, lists match any item. |
@@ -475,9 +475,12 @@ included in full:
 3. **What's in this brain:** note counts by type (largest first), the
    largest topics, the topics that hold people or meetings when notes of
    those types exist, and open issues (active conflicts, unverified claims).
-4. Topic table: slug, title, one-line description, note count, last update,
-   number of active conflicts. Most recently active first; truncated with a
-   pointer to browsing (`brain_search("", topic=[…])`).
+4. Topic table: the top-level topics, each with slug, title, one-line
+   description, note count (sub-topics included), last update, number of
+   active conflicts, and its sub-topics (count, and the most recently active
+   few by slug). Most recently active first; truncated with a pointer to
+   browsing (`brain_search("", topic=[…], facets=true)`, whose topic facet
+   lists the sub-topics).
 5. Recent changes: the last 5 `log.md` entries, one line each, and the number
    of notes updated in the last 7 days.
 6. Inbox status: pending episode count, oldest pending age, and a hint to

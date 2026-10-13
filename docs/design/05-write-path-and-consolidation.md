@@ -500,7 +500,8 @@ The response schema (JSON Schema 2020-12, abbreviated):
                                                         "sources": {"$ref": "#/$defs/srcs"}}}}}},
     "create_topic":    {"required": ["op","slug","title"],
                         "properties": {"op": {"const": "create_topic"}, "slug": {"pattern": "^[a-z0-9][a-z0-9-]{0,63}$"},
-                                       "title": {"type": "string"}, "description": {"type": "string", "maxLength": 300}}},
+                                       "title": {"type": "string"}, "description": {"type": "string", "maxLength": 300},
+                                       "parent": {"pattern": "^[a-z0-9][a-z0-9-]{0,63}$"}}},
     "skip_episode":    {"required": ["op","episode","reason"],
                         "properties": {"op": {"const": "skip_episode"}, "episode": {"pattern": "^E[0-9]+$"},
                                        "reason": {"type": "string", "maxLength": 200}}}
@@ -518,7 +519,7 @@ Semantics (what the deterministic writer does):
 | `retract_claim` | Moves the claim to `bw-claims-superseded` with `status: retracted` and the reason, citing sources that show it was wrong. |
 | `add_relation` | Appends a canonical relation to the `from` note's `bw-<verb>` field. `supersedes` also sets the target note's `status: superseded`. A relation that already exists becomes a no-op. |
 | `create_note` | Creates `topics/<topic>/<slug>.md` with frontmatter (new id, type, title, `bw-part_of` the hub, `bw-claims`, and `bw-privacy` only when a source episode is more private than the topic), `# title`, and the summary; adds a line to the hub's `## Notes`. |
-| `create_topic` | Creates the folder and a hub; adds the topic to the `AGENTS.md` block. Allowed only when the profile's `topics` is `*`. |
+| `create_topic` | Creates the folder and a hub, inside the `parent` topic's folder when given (a sub-topic, 02 §2); adds the topic to the `AGENTS.md` block. Allowed only when the profile's `topics` is `*`. |
 | `skip_episode` | Nothing, except that the episode is archived with the run. |
 
 `new:<topic>/<slug>` refs let ops in one batch point at notes created in the

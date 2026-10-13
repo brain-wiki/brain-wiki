@@ -33,7 +33,7 @@ Refer to things only by the handles in the packet:
 | `retract_claim` | `claim`, `sources`, `reason` | An episode shows an existing claim was simply wrong, with nothing to replace it. |
 | `add_relation` | `from`, `verb`, `to`, optional `qualifier`, `comment`, `sources` | An episode states how two notes relate. |
 | `create_note` | `ref`, `title`, `claims` (each `text` + `sources`), optional `type`, `summary` | No candidate note fits the knowledge. |
-| `create_topic` | `slug`, `title`, optional `description` | At least three episodes in this packet share a theme no topic covers. |
+| `create_topic` | `slug`, `title`, optional `description`, `parent` | At least three episodes in this packet share a theme no topic covers. Give `parent` (an existing topic) when the theme belongs inside it, e.g. a new person inside `people`. |
 | `skip_episode` | `episode`, `reason` | The episode holds nothing durable. |
 
 Relation verbs, always from the point of view of the `from` note:

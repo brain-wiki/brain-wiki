@@ -193,15 +193,16 @@ def node_filters(
         f"n.status IN ({','.join('?' * len(statuses))})",
     ]
     params: list[Any] = [engine.max_rank, *kinds, *statuses]
-    allowed = engine.profile.topics
-    if "*" not in allowed:
+    allowed = engine.allowed_topics()
+    if allowed is not None:
         clauses.append(
-            f"(n.topic IN ({','.join('?' * len(allowed))}) OR n.kind IN ('episode','archived_episode'))"
+            f"(n.topic IN ({','.join('?' * len(allowed)) or 'NULL'}) OR n.kind IN ('episode','archived_episode'))"
         )
-        params.extend(allowed)
-    if topics:
-        clauses.append(f"n.topic IN ({','.join('?' * len(topics))})")
-        params.extend(topics)
+        params.extend(sorted(allowed))
+    if topics:  # a topic filter includes its sub-topics (02 §2)
+        wanted = sorted(engine.topics.expand(topics))
+        clauses.append(f"n.topic IN ({','.join('?' * len(wanted))})")
+        params.extend(wanted)
     if types:
         clauses.append(f"lower(n.type) IN ({','.join('?' * len(types))})")
         params.extend(t.lower() for t in types)

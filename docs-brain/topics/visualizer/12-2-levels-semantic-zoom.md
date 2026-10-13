@@ -39,8 +39,9 @@ bw-part_of:
   Clicking still selects directly: the camera flies there and a history
   entry is added. A selected note stays selected while its topic is on
   screen. `Esc` goes up one level.
-- **Constellations** come from the topic hierarchy once nested topics exist
-  (the topic hierarchy design). For flat brains the server groups topics by their
-  typed links (modularity clustering, deterministic), aiming for about
-  √(topics) groups of 4–40 topics. A brain with 12 topics or fewer has one
-  constellation and opens at the constellation level.
+- **Constellations** come from the topic tree (02 §2): each top-level topic
+  that has sub-topics is a constellation of itself and everything below it,
+  named by its title. The remaining topics, and every topic of a flat brain,
+  are grouped by their typed links (modularity clustering, deterministic),
+  aiming for about √(topics) groups of 4–40 topics. A brain with 12 topics or
+  fewer has one constellation and opens at the constellation level.

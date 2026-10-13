@@ -11,7 +11,7 @@ bw-part_of:
 # Guard co-retrieval
 
 Given the set of hit node ids `H` and the caller's profile (maximum privacy
-rank `P`, topic allowlist `T`):
+rank `P`, topic allowlist `T`, expanded to its sub-topics):
 
 ```sql
 SELECT e.rel, e.verb, e.qualifier, e.note,

@@ -56,7 +56,16 @@ def validate(engine: Engine, packet: Packet, payload: Any, profile: Profile) -> 
         return result
     ops: list[dict[str, Any]] = payload["ops"]
     manifest = engine.manifest
-    created_topics = {op["slug"] for op in ops if op["op"] == "create_topic"}
+    created_topics: dict[str, str] = {}  # slug -> folder; a sub-topic goes inside its parent
+    for op in ops:
+        if op["op"] == "create_topic":
+            parent = op.get("parent")
+            base = (
+                packet.topics[parent].path
+                if parent in packet.topics
+                else created_topics.get(parent or "", manifest.layout.topics_dir)
+            )
+            created_topics[op["slug"]] = f"{base}/{op['slug']}"
     new_refs = Counter(op["ref"] for op in ops if op["op"] == "create_note")
     for ref, count in new_refs.items():
         if count > 1:
@@ -114,7 +123,7 @@ def validate(engine: Engine, packet: Packet, payload: Any, profile: Profile) -> 
             err(index, f"{ref} is neither a note in the packet nor created in this batch")
             return
         note_rank, topic = info
-        if not profile.topic_allowed(topic):
+        if not engine.topic_allowed(topic, profile):
             err(index, f"topic {topic!r} is outside this backend's profile")
         if rank > note_rank and not ref.startswith("new:"):
             err(
@@ -125,15 +134,26 @@ def validate(engine: Engine, packet: Packet, payload: Any, profile: Profile) -> 
         if topic and packet.topics.get(topic) and packet.topics[topic].review == "always":
             result.review.append(f"topic {topic} requires review")
 
+    created_earlier: set[str] = set()
     for index, op in enumerate(ops):
         kind = op["op"]
         if kind in ("add_claim", "supersede_claim"):
             check_text(index, op["text"])
         if kind == "create_topic":
             slug = op["slug"]
+            parent = op.get("parent")
             if "*" not in profile.topics:
                 err(index, "creating topics needs a profile with topics = ['*']")
-            if slug in packet.topics or engine.store.exists(f"{manifest.layout.topics_dir}/{slug}"):
+            if parent and parent not in packet.topics and parent not in created_earlier:
+                err(
+                    index, f"unknown parent topic {parent!r}; create a parent before its sub-topics"
+                )
+            created_earlier.add(slug)
+            if (
+                slug in packet.topics
+                or slug in engine.topics.paths
+                or engine.store.exists(created_topics[slug])
+            ):
                 err(index, f"topic {slug!r} already exists")
             if not SLUG_RE.match(slug):
                 err(index, f"invalid slug {slug!r}")
@@ -145,12 +165,12 @@ def validate(engine: Engine, packet: Packet, payload: Any, profile: Profile) -> 
                     index,
                     f"unknown topic {topic!r}; create it first with create_topic or use an existing one",
                 )
-            elif not profile.topic_allowed(topic):
+            elif not engine.topic_allowed(topic, profile):
                 err(index, f"topic {topic!r} is outside this backend's profile")
             folder = (
                 packet.topics[topic].path
                 if topic in packet.topics
-                else f"{manifest.layout.topics_dir}/{topic}"
+                else created_topics.get(topic, f"{manifest.layout.topics_dir}/{topic}")
             )
             if engine.store.exists(f"{folder}/{slug}.md"):
                 err(index, f"{folder}/{slug}.md already exists; add claims to it instead")

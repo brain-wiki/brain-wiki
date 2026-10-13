@@ -69,7 +69,7 @@ def _manifest_checks(engine: Engine) -> list[Problem]:
             f"topics.{slug}.agent_edits must be allow, review, or deny (now treated as deny)",
         )
         for slug, topic in engine.manifest.topics.items()
-        if topic.agent_edits not in AGENT_EDITS
+        if topic.agent_edits is not None and topic.agent_edits not in AGENT_EDITS
     ]
     return out
 
@@ -284,7 +284,7 @@ def _edge_checks(conn: sqlite3.Connection) -> list[Problem]:
 
     unresolved = conn.execute(
         f"SELECT {_EDGE_COLS}, n.path AS from_path FROM edges e JOIN nodes n ON n.id = e.declared_in "  # noqa: S608
-        "WHERE e.other IS NULL"
+        "WHERE e.other IS NULL AND e.line > 0"  # a folder edge's missing hub is BW404's to report
     ).fetchall()
     if unresolved:
         history: dict[str, str] = {}

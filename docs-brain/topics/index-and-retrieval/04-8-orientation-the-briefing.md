@@ -24,9 +24,12 @@ included in full:
 3. **What's in this brain:** note counts by type (largest first), the
    largest topics, the topics that hold people or meetings when notes of
    those types exist, and open issues (active conflicts, unverified claims).
-4. Topic table: slug, title, one-line description, note count, last update,
-   number of active conflicts. Most recently active first; truncated with a
-   pointer to browsing (`brain_search("", topic=[…])`).
+4. Topic table: the top-level topics, each with slug, title, one-line
+   description, note count (sub-topics included), last update, number of
+   active conflicts, and its sub-topics (count, and the most recently active
+   few by slug). Most recently active first; truncated with a pointer to
+   browsing (`brain_search("", topic=[…], facets=true)`, whose topic facet
+   lists the sub-topics).
 5. Recent changes: the last 5 `log.md` entries, one line each, and the number
    of notes updated in the last 7 days.
 6. Inbox status: pending episode count, oldest pending age, and a hint to

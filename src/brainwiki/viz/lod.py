@@ -56,6 +56,31 @@ def group_topics(slugs: list[str], adj: Adjacency) -> list[list[str]]:
     return sorted(groups, key=lambda g: (-len(g), g[0]))
 
 
+def tree_groups(
+    slugs: list[str], parents: dict[str, str | None], adj: Adjacency
+) -> list[list[str]]:
+    """Constellations from the topic tree (02 §2): each top-level topic that has sub-topics, with
+    everything below it; the remaining topics are grouped by their links (`group_topics`)."""
+    present = sorted(set(slugs))
+    if len(present) <= SINGLE_MAX:
+        return [present] if present else []
+
+    def root(slug: str) -> str:
+        seen = {slug}
+        while (parent := parents.get(slug)) in present and parent not in seen:
+            slug = parent
+            seen.add(slug)
+        return slug
+
+    by_root: dict[str, list[str]] = {}
+    for slug in present:
+        by_root.setdefault(root(slug), []).append(slug)
+    trees = [members for members in by_root.values() if len(members) > 1]
+    rest = [members[0] for members in by_root.values() if len(members) == 1]
+    groups = trees + (group_topics(rest, adj) if rest else [])
+    return sorted(groups, key=lambda g: (-len(g), g[0]))
+
+
 def _chunks(slugs: list[str]) -> list[list[str]]:
     return [slugs[i : i + GROUP_MAX] for i in range(0, len(slugs), GROUP_MAX)]
 
@@ -197,7 +222,8 @@ class Atlas:
         ]
         self._topic_of = {n["id"]: n["topic"] for n in self.notes}
         self._adj = topic_weights(self.notes, graph["links"])
-        self.groups = group_topics(list(self.topics), self._adj)
+        self._parents = {s: t.get("parent") for s, t in self.topics.items()}
+        self.groups = tree_groups(list(self.topics), self._parents, self._adj)
         self.colors = topic_colors(self.groups)
         self.constellation_of = {s: f"c{i + 1}" for i, g in enumerate(self.groups) for s in g}
         self._inner: dict[str, list[dict[str, Any]]] = {}
@@ -228,7 +254,7 @@ class Atlas:
         constellations = []
         for i, group in enumerate(self.groups):
             ranked = sorted(group, key=lambda s: (-self.topics[s]["notes"], s))
-            hub = self._hub_topic(group)
+            hub = self._tree_root(group) or self._hub_topic(group)
             if hub:  # the map labels a constellation by its first topic
                 ranked = [hub, *(s for s in ranked if s != hub)]
             titles = [self.topics[s]["title"] for s in ranked[:3]]
@@ -259,6 +285,12 @@ class Atlas:
             "episodes": {"count": self._episode_count()},
             "runs": [self._run(r) for r in g["runs"]],
         }
+
+    def _tree_root(self, group: list[str]) -> str | None:
+        """The topic every other topic in the group sits under, for a group from the tree."""
+        inside = set(group)
+        tops = [s for s in group if self._parents.get(s) not in inside]
+        return tops[0] if len(tops) == 1 and len(group) > 1 else None
 
     def _hub_topic(self, group: list[str]) -> str | None:
         """The topic typed-linked to at least half of the others in its group (investing and
@@ -293,6 +325,7 @@ class Atlas:
                         "slug": slug,
                         "title": topic["title"],
                         "description": topic.get("description") or "",
+                        "parent": topic.get("parent"),
                         "color": self.colors[slug],
                         "constellation": self.constellation_of[slug],
                         "notes": len(members),

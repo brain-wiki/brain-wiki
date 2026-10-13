@@ -53,6 +53,38 @@ def _listing(
     return 0
 
 
+def topics(args: Any) -> int:
+    """The topic tree as this host sees it: slug, title, notes, and sub-topics indented below."""
+    from brainwiki.errors import NotFound
+    from brainwiki.index.orient import topic_rows
+
+    with _engine(args) as engine:
+        engine.scan()
+        rows = {r["slug"]: r for r in topic_rows(engine)}
+    if args.topic and args.topic not in rows:
+        raise NotFound(f"no topic {args.topic!r} visible to this profile")
+    starts = (
+        [args.topic] if args.topic else sorted(s for s, r in rows.items() if r["parent"] is None)
+    )
+    items: list[dict[str, Any]] = []
+
+    def walk(slug: str, depth: int) -> None:
+        items.append({**rows[slug], "depth": depth})
+        for child in sorted(s for s, r in rows.items() if r["parent"] == slug):
+            walk(child, depth + 1)  # `parent` is the nearest visible ancestor
+
+    for slug in starts:
+        walk(slug, 0)
+
+    def line(r: dict[str, Any]) -> str:
+        own = f"{r['notes']} notes"
+        if r["sub_topics"]:
+            own += f", {r['total_notes']} with sub-topics"
+        return f"{'  ' * r['depth']}- {r['slug']}: {r['title']}  ({own})  [{r['path']}]"
+
+    return _listing(args, items, line, empty="(no topics)")
+
+
 def notes(args: Any) -> int:
     from brainwiki.index.search import format_search_text, search
 

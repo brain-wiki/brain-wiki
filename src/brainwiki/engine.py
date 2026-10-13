@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from brainwiki.config.manifest import Profile
 from brainwiki.config.resolve import Brain, resolve_brain
 from brainwiki.config.user import UserConfig, load_user_config
 from brainwiki.store import LocalStore
+
+if TYPE_CHECKING:
+    from brainwiki.index.topics import TopicTree
 
 
 class Engine:
@@ -44,6 +48,7 @@ class Engine:
             self._db.close()
         self._db = open_index(self.brain.key, self.brain.root, self.manifest, rebuild=True)
         self.last_scan_ns = 0
+        self._hub_files = None
         return self.scan(force=True)
 
     def fresh(self) -> Engine:
@@ -60,8 +65,24 @@ class Engine:
     def max_rank(self) -> int:
         return self.manifest.privacy_rank(self.profile.max_privacy)
 
+    @property
+    def topics(self) -> TopicTree:
+        """The topic tree (02 §2)."""
+        from brainwiki.index.topics import topic_tree
+
+        return topic_tree(self)
+
+    def allowed_topics(self, profile: Profile | None = None) -> frozenset[str] | None:
+        """Topics a profile may read, sub-topics included; None when it may read all."""
+        profile = profile or self.profile
+        return None if "*" in profile.topics else self.topics.allowed(profile.topics)
+
+    def topic_allowed(self, topic: str | None, profile: Profile | None = None) -> bool:
+        allowed = self.allowed_topics(profile)
+        return allowed is None or (topic is not None and topic in allowed)
+
     def visible(self, privacy_rank: int, topic: str | None) -> bool:
-        return privacy_rank <= self.max_rank and self.profile.topic_allowed(topic)
+        return privacy_rank <= self.max_rank and self.topic_allowed(topic)
 
     @property
     def reads_everything(self) -> bool:

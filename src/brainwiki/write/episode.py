@@ -142,9 +142,9 @@ def write_episode(
     hints = [t.strip() for t in topics or [] if t and t.strip()][:5]
     levels = [privacy] if privacy else []
     for slug in hints:
-        topic = manifest.topics.get(slug)
-        if topic and topic.privacy:
-            levels.append(topic.privacy)
+        level = engine.topics.privacy(slug)
+        if level:
+            levels.append(level)
     for level in levels:
         if not manifest.is_privacy_level(level):
             raise UsageError(f"unknown privacy level {level!r}")

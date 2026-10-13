@@ -409,3 +409,39 @@ def test_created_topic_keeps_agents_block_current(example: Path):
             in (example / "AGENTS.md").read_text()
         )
         assert not [p for p in lint(e).problems if p.code == "BW408"]
+
+
+def test_create_topic_inside_a_parent_makes_a_sub_topic(example: Path):
+    with eng(example) as e:
+        path = log(e, "CJK queries of three characters use the trigram table.")
+        packet = pipeline.prepare(e, e.profile)
+        h = handle_for(packet, path)
+        line = packet.episodes[h].first_line
+        claim = {"text": "CJK queries use the trigram table.", "sources": [f"{h}#L{line}"]}
+        ops = {
+            "ops": [
+                {"op": "create_topic", "slug": "cjk", "title": "CJK search", "parent": "search"},
+                {
+                    "op": "create_note",
+                    "ref": "new:cjk/trigram",
+                    "title": "Trigram",
+                    "claims": [claim],
+                },
+            ]
+            + [
+                {"op": "skip_episode", "episode": x, "reason": "t"}
+                for x in packet.episodes
+                if x != h
+            ]
+        }
+        assert pipeline.apply(e, packet, ops, e.profile).status == "applied", "applied"
+        assert (example / "topics/search/cjk/index.md").exists()
+        assert (example / "topics/search/cjk/trigram.md").exists()
+        e.scan()
+        assert e.topics.parent("cjk") == "search"
+        bad = {"op": "create_topic", "slug": "x", "title": "X", "parent": "nowhere"}
+        packet = pipeline.prepare(e, e.profile) or packet
+        result = pipeline.apply(e, packet, {"ops": [bad]}, e.profile)
+        assert result.status == "invalid" and any(
+            "unknown parent topic" in m for m in result.errors
+        )

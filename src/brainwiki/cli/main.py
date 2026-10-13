@@ -17,6 +17,7 @@ HANDLERS: dict[str, str] = {
     "search": "brainwiki.cli.cmd_read:search",
     "read": "brainwiki.cli.cmd_read:read",
     "neighbors": "brainwiki.cli.cmd_read:neighbors",
+    "topics": "brainwiki.cli.cmd_browse:topics",
     "notes": "brainwiki.cli.cmd_browse:notes",
     "outline": "brainwiki.cli.cmd_browse:outline",
     "links": "brainwiki.cli.cmd_browse:links",
@@ -145,6 +146,8 @@ def build_parser() -> argparse.ArgumentParser:
         p.add_argument("--count", action="store_true", help="print only the total")
         p.add_argument("--paths", action="store_true", help="one path per line")
 
+    p = cmd("topics", "the topic tree with note counts")
+    p.add_argument("topic", nargs="?", help="show only this topic and its sub-topics")
     p = cmd("notes", "list notes (search with an empty query)")
     p.add_argument("--topic", action="append")
     p.add_argument("--type", dest="types", action="append", metavar="TYPE")
@@ -196,7 +199,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = cmd("restore", "put back a note's last recorded version")
     p.add_argument("path")
 
-    p = cmd("mv", "move a note and rewrite links to it")
+    p = cmd("mv", "move a note, or a topic folder with its notes, rewriting links")
     p.add_argument("src")
     p.add_argument("dst")
     p.add_argument("--dry-run", action="store_true")

@@ -19,7 +19,6 @@ from brainwiki.consolidate.schema import CLAIM_MAX_CHARS, MAX_OPS
 from brainwiki.errors import Expired, NotFound
 from brainwiki.format.document import parse_document
 from brainwiki.format.relations import CANONICAL
-from brainwiki.index.scanner import discovered_topics
 from brainwiki.origin import available as origin_available
 from brainwiki.store import sha256_bytes
 
@@ -253,7 +252,8 @@ def pending_episodes(engine: Engine, profile: Profile, *, topic: str | None = No
         hints = _hints(row["props"])
         if topic and topic not in hints:
             continue
-        if "*" not in profile.topics and hints and not any(h in profile.topics for h in hints):
+        allowed = engine.allowed_topics(profile)
+        if allowed is not None and hints and not any(h in allowed for h in hints):
             continue
         out.append(row)
     return out
@@ -348,7 +348,7 @@ def build_packet(
         for r in engine.db.execute(
             "SELECT id, topic, privacy_rank FROM nodes WHERE kind IN ('note', 'hub')"
         )
-        if r["privacy_rank"] <= max_rank and profile.topic_allowed(r["topic"])
+        if r["privacy_rank"] <= max_rank and engine.topic_allowed(r["topic"], profile)
     }
     packet = Packet(
         run=run,
@@ -464,11 +464,11 @@ def build_packet(
         return None
 
     topics_out = []
-    for slug, path in sorted(discovered_topics(engine).items()):
+    tree = engine.topics
+    for slug, path in sorted(tree.paths.items()):
         declared = manifest.topics.get(slug)
-        privacy = declared.privacy if declared and declared.privacy else manifest.privacy.default
-        rank = manifest.privacy_rank(privacy)
-        if rank > max_rank or not profile.topic_allowed(slug):
+        rank = manifest.privacy_rank(tree.privacy(slug) or manifest.privacy.default)
+        if rank > max_rank or not engine.topic_allowed(slug, profile):
             continue
         hub = engine.db.execute(
             "SELECT id, path, title FROM nodes WHERE topic = ? AND kind = 'hub' ORDER BY path LIMIT 1",
@@ -484,7 +484,7 @@ def build_packet(
             hub_handle,
             hub["path"] if hub else None,
             rank,
-            declared.review if declared else None,
+            tree.setting(slug, "review"),
         )
         entry = {
             "slug": slug,
@@ -493,6 +493,9 @@ def build_packet(
             "description": (declared.description if declared else None) or "",
             "notes": sorted(h for h, n in packet.notes.items() if n.topic == slug),
         }
+        parent = tree.parent(slug)
+        if parent and engine.topic_allowed(parent, profile):
+            entry["parent"] = parent
         if hub_handle:
             entry["hub"] = hub_handle
         topics_out.append(entry)

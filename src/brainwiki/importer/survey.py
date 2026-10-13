@@ -12,7 +12,7 @@ from typing import Any
 from brainwiki.format.document import parse_document
 from brainwiki.format.normalize import RELATION_PROPERTIES, STATUSES, property_links
 from brainwiki.index.resolver import norm_key
-from brainwiki.index.scanner import slugify
+from brainwiki.index.topics import slugify
 
 DAILY = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
 HUB_NAMES = ("index.md", "_index.md", "README.md")

@@ -182,14 +182,12 @@ def _diff(change: _Change, limit: int = DIFF_LINES) -> str:
 
 
 def _privacy(engine: Engine, rel: str, data: bytes | None) -> tuple[int, str | None]:
-    from brainwiki.index.scanner import discovered_topics
-
     manifest = engine.manifest
-    topic = manifest.topic_for_path(rel, discovered_topics(engine))
+    topic = engine.topics.for_path(rel)
     levels = []
-    declared = manifest.topics.get(topic) if topic else None
-    if declared and declared.privacy and manifest.is_privacy_level(declared.privacy):
-        levels.append(declared.privacy)
+    inherited = engine.topics.privacy(topic)
+    if inherited:
+        levels.append(inherited)
     if data is not None:
         level = parse_document(rel, _text(data)).fm.get("privacy")
         if isinstance(level, str) and manifest.is_privacy_level(level):
@@ -397,7 +395,7 @@ def _validate(engine: Engine, change: _Change, *, allow_shrink: bool) -> list[Cl
                 rel, "privacy_lowered", "the note's privacy was lowered; only the user may do that"
             )
         )
-    if max(before_rank, after_rank) > engine.max_rank or not engine.profile.topic_allowed(topic):
+    if max(before_rank, after_rank) > engine.max_rank or not engine.topic_allowed(topic):
         change.problems.append(
             Problem(rel, "privacy_above_profile", "this note is outside what your profile may read")
         )
@@ -424,11 +422,8 @@ def _validate(engine: Engine, change: _Change, *, allow_shrink: bool) -> list[Cl
 
 def _policy(engine: Engine, rel: str) -> str:
     from brainwiki.config.manifest import AGENT_EDITS
-    from brainwiki.index.scanner import discovered_topics
 
-    slug = engine.manifest.topic_for_path(rel, discovered_topics(engine))
-    declared = engine.manifest.topics.get(slug) if slug else None
-    policy = declared.agent_edits if declared else "allow"
+    policy = engine.topics.setting(engine.topics.for_path(rel), "agent_edits") or "allow"
     return policy if policy in AGENT_EDITS else "deny"
 
 

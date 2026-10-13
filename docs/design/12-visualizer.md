@@ -61,11 +61,12 @@ decoration for its own sake.
   Clicking still selects directly: the camera flies there and a history
   entry is added. A selected note stays selected while its topic is on
   screen. `Esc` goes up one level.
-- **Constellations** come from the topic hierarchy once nested topics exist
-  (the topic hierarchy design). For flat brains the server groups topics by their
-  typed links (modularity clustering, deterministic), aiming for about
-  √(topics) groups of 4–40 topics. A brain with 12 topics or fewer has one
-  constellation and opens at the constellation level.
+- **Constellations** come from the topic tree (02 §2): each top-level topic
+  that has sub-topics is a constellation of itself and everything below it,
+  named by its title. The remaining topics, and every topic of a flat brain,
+  are grouped by their typed links (modularity clustering, deterministic),
+  aiming for about √(topics) groups of 4–40 topics. A brain with 12 topics or
+  fewer has one constellation and opens at the constellation level.
 
 ## 3. Rendering
 
@@ -194,7 +195,7 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
              "links": 29935, "flagged": 1925},
   "constellations": [{"id": "c1", "title": "Bispai · Ditpi · …", "color": "#6aa9ff",
                       "topics": ["bispai", "ditpi"]}],
-  "topics": [{"slug": "search", "title": "Search", "description": "…",
+  "topics": [{"slug": "search", "title": "Search", "description": "…", "parent": null,
               "color": "#6aa9ff", "constellation": "c1", "notes": 12,
               "hub": "01J9…", "updated": "2026-10-09", "recent": 3,
               "flags": {"conflict": 2}, "flagged": 2}],
@@ -208,10 +209,11 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
 
 - `recent`: notes updated in the last 7 days. `flows`: typed links between
   topics (body links excluded), `a` < `b`.
-- Constellation titles lead with the group's hub topic, one typed-linked to
-  at least half of the other topics in it (a portfolio and its tickers);
-  otherwise they name the largest topics. The map labels a constellation by
-  its first topic. The topic hierarchy will supply real names.
+- A constellation from the topic tree is titled by its top topic. A grouped
+  one leads with its hub topic, one typed-linked to at least half of the
+  other topics in it (a portfolio and its tickers); otherwise it names the
+  largest topics. The map labels a constellation by its first topic.
+  Topics carry their `parent` slug.
 
 `/api/topic/<slug>`: `{slug, title, color, hub, nodes: [...], links: [...],
 external: [...]}`. `nodes` use the node shape below; `links` are relations

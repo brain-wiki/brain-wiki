@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from brainwiki.viz.lod import group_topics, topic_colors, topic_weights
+from brainwiki.viz.lod import topic_colors, topic_weights, tree_groups
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
@@ -28,7 +28,7 @@ def build_graph(engine: Engine, *, topics: list[str] | None = None) -> dict[str,
     from brainwiki.index.orient import topic_rows
 
     engine.scan()
-    wanted = set(topics) if topics else None
+    wanted = engine.topics.expand(topics) if topics else None  # with their sub-topics
     rows = _visible_nodes(engine, wanted)
     ids = {row["id"] for row in rows}
     links = _links(engine, ids)
@@ -212,13 +212,16 @@ def _topics(
         (r for r in rows if wanted is None or r["slug"] in wanted), key=lambda r: r["slug"]
     )
     notes = [n for n in nodes if n["kind"] in ("note", "hub")]
-    groups = group_topics([r["slug"] for r in rows], topic_weights(notes, links))
+    shown = {r["slug"] for r in rows}
+    parents = {r["slug"]: r.get("parent") if r.get("parent") in shown else None for r in rows}
+    groups = tree_groups([r["slug"] for r in rows], parents, topic_weights(notes, links))
     colors = topic_colors(groups)
     return [
         {
             "slug": row["slug"],
             "title": row["title"],
             "description": row.get("description") or "",
+            "parent": parents[row["slug"]],
             "color": colors[row["slug"]],
             "notes": counts.get(row["slug"], 0),
             "hub": hubs.get(row["slug"]),

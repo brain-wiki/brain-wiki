@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 import sqlite3
 import time
 import zlib
@@ -14,6 +13,13 @@ from typing import TYPE_CHECKING, Any
 from brainwiki.format.document import ParsedDoc, parse_document
 from brainwiki.ids import is_ulid
 from brainwiki.index.resolver import Resolver, name_rows
+from brainwiki.index.topics import (
+    TopicTree,
+    hub_name,
+    note_hub_changes,
+    set_hub_files,
+    topic_tree,
+)
 from brainwiki.store import sha256_bytes
 
 if TYPE_CHECKING:
@@ -61,52 +67,9 @@ class ScanStats:
         return bool(self.added or self.changed or self.removed)
 
 
-def slugify(name: str) -> str:
-    name = re.sub(r"^\d+[\s._-]+", "", name.strip())
-    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-    return slug[:64] or "topic"
-
-
 def discovered_topics(engine: Engine) -> dict[str, str]:
-    """Folders directly under the topics directory, plus declared topics.
-
-    Cached on the topics folder's modification time, which changes when a folder is added,
-    removed, or renamed, so incremental scans do not list the folder every time.
-    """
-    base = engine.brain.root / engine.manifest.layout.topics_dir
-    try:
-        stamp = base.stat().st_mtime_ns
-    except OSError:
-        stamp = None
-    cached = getattr(engine, "_topics_cache", None)
-    if cached is not None and cached[0] == stamp:
-        return dict(cached[1])
-    topics = _list_topics(engine)
-    engine._topics_cache = (stamp, topics)  # type: ignore[attr-defined]
-    return dict(topics)
-
-
-def _list_topics(engine: Engine) -> dict[str, str]:
-    layout = engine.manifest.layout
-    topics: dict[str, str] = {}
-    base = engine.brain.root / layout.topics_dir
-    reserved = {layout.inbox_dir, layout.archive_dir, layout.reports_dir}
-    declared = set(engine.manifest.topic_paths().values())  # a declared slug wins for its folder
-    prefix = "" if layout.topics_dir in (".", "") else f"{layout.topics_dir}/"
-    if base.is_dir():
-        for child in sorted(base.iterdir()):
-            rel = f"{prefix}{child.name}"
-            if (
-                not child.is_dir()
-                or child.name.startswith(".")
-                or rel in reserved
-                or rel in declared
-                or engine.manifest.is_ignored(rel)
-            ):
-                continue
-            topics.setdefault(slugify(child.name), rel)
-    topics.update(engine.manifest.topic_paths())
-    return topics
+    """Every topic as slug -> folder: the topic tree's paths (design doc 02 §2)."""
+    return dict(topic_tree(engine).paths)
 
 
 def classify(engine: Engine, rel: str, topics: dict[str, str]) -> str:
@@ -176,7 +139,6 @@ def scan(
         and now_ns - engine.last_scan_ns < engine.manifest.search.freshness_ms * 1_000_000
     ):
         return stats
-    topics = discovered_topics(engine)
     if paths is None:
         rows = conn.execute("SELECT path, mtime_ns, size, sha256, node_id FROM files")
     else:
@@ -205,13 +167,36 @@ def scan(
                 seen[rel] = FileStat(rel, st.st_size, st.st_mtime_ns)
         candidates = list(seen)
         deleted = [p for p in paths if p not in seen and p in known]
+    if paths is None:
+        set_hub_files(engine, seen)
+    else:
+        note_hub_changes(engine, seen, [p for p in paths if p not in seen])
+    tree = topic_tree(engine)
+    topics = tree.paths
+    stored_tree = conn.execute("SELECT value FROM meta WHERE key='topic_tree'").fetchone()
+    tree_changed = stored_tree is None or stored_tree[0] != tree.signature
+    force: set[str] = set()  # re-indexed although unchanged: the topic tree moved under them
+    if tree_changed:
+        for rel in _retopic(conn, tree, stored_tree[0] if stored_tree else None):
+            if rel in deleted:
+                continue
+            if rel not in seen:
+                target = engine.store.abspath(rel)
+                if not target.is_file():
+                    continue
+                from brainwiki.store import FileStat
+
+                st = target.stat()
+                seen[rel] = FileStat(rel, st.st_size, st.st_mtime_ns)
+                candidates.append(rel)
+            force.add(rel)
 
     to_parse: list[tuple[str, bytes]] = []
     touch_only: list[tuple[str, int, int]] = []
     rebase: list[str] = []  # unchanged notes a recorded run vouches for (a checked agent edit)
     for rel in candidates:
         st = seen[rel]
-        row = known.get(rel)
+        row = known.get(rel) if rel not in force else None
         if row and row["mtime_ns"] == st.mtime_ns and row["size"] == st.size:
             stats.unchanged += 1
             if sanctioned:
@@ -231,7 +216,7 @@ def scan(
     if sanctioned and paths is not None:
         rebase += [p for p in paths if p not in seen]  # deleted by the run: forget its baseline
 
-    if not to_parse and not deleted and not touch_only and not rebase:
+    if not to_parse and not deleted and not touch_only and not rebase and not tree_changed:
         if paths is None:
             engine.last_scan_ns = now_ns
             conn.execute("UPDATE meta SET value=? WHERE key='last_scan_ns'", (str(now_ns),))
@@ -275,7 +260,7 @@ def scan(
             kind = classify(engine, rel, topics)
             is_new = rel not in known
             node_id, changed_names = _index_file(
-                engine, conn, rel, data, st.mtime_ns, st.size, kind, topics, sanctioned, orphaned
+                engine, conn, rel, data, st.mtime_ns, st.size, kind, tree, sanctioned, orphaned
             )
             if kind in NOTE_KINDS:
                 if sanctioned or fresh:
@@ -316,6 +301,11 @@ def scan(
             _resolve_edge_ids(conn, resolver, orphaned)
         if paths is None:
             conn.execute("UPDATE meta SET value=? WHERE key='last_scan_ns'", (str(now_ns),))
+        if tree_changed:
+            conn.execute(
+                "INSERT OR REPLACE INTO meta(key, value) VALUES ('topic_tree', ?)",
+                (tree.signature,),
+            )
         conn.execute("COMMIT")
     except BaseException:
         conn.execute("ROLLBACK")
@@ -327,6 +317,24 @@ def scan(
         engine.last_scan_ns = now_ns
     stats.seconds = time.monotonic() - started
     return stats
+
+
+def _bare_key(target: str) -> str:
+    key = target.split("|", 1)[0].strip().casefold()
+    return key[:-3] if key.endswith(".md") else key
+
+
+def _retopic(conn: sqlite3.Connection, tree: TopicTree, stored: str | None) -> list[str]:
+    """Notes and hubs to re-index after the topic tree changed: their topic is different now, or
+    their topic moved, gained a parent, or inherits a different privacy level."""
+    old = json.loads(stored) if stored else {}
+    new = json.loads(tree.signature)
+    changed = {s for s in old.keys() | new.keys() if old.get(s) != new.get(s)}
+    return [
+        row["path"]
+        for row in conn.execute("SELECT path, topic FROM nodes WHERE kind IN ('note', 'hub')")
+        if row["topic"] in changed or tree.for_path(row["path"]) != row["topic"]
+    ]
 
 
 def _delete_node(conn: sqlite3.Connection, node_id: str, orphaned: list[int] | None = None) -> None:
@@ -375,7 +383,7 @@ def _index_file(
     mtime_ns: int,
     size: int,
     kind: str,
-    topics: dict[str, str],
+    tree: TopicTree,
     sanctioned: bool = False,
     orphaned: list[int] | None = None,
 ) -> tuple[str | None, bool]:
@@ -410,7 +418,7 @@ def _index_file(
     doc = parse_document(rel, text)
     manifest = engine.manifest
     fm = doc.fm
-    topic = manifest.topic_for_path(rel, topics) if kind in ("note", "hub") else None
+    topic = tree.for_path(rel) if kind in ("note", "hub") else None
     fm_id = str(fm.get("id")) if fm.get("id") is not None else None
     node_id = fm_id if fm_id and is_ulid(fm_id) else f"path:{rel}"
     if node_id != f"path:{rel}":
@@ -425,7 +433,7 @@ def _index_file(
     )
     if note_type == "hub" and kind == "note":
         kind = "hub"
-    topic_privacy = manifest.topics[topic].privacy if topic and topic in manifest.topics else None
+    topic_privacy = tree.privacy(topic)
     levels = [
         lvl
         for lvl in (topic_privacy, fm.get("privacy"))
@@ -566,6 +574,18 @@ def _index_file(
                 relation.target,
             ),
         )
+    parent = tree.parent(topic) if kind == "hub" and topic else None
+    if parent and parent in tree.paths:
+        # The folder makes a sub-topic's hub part_of its parent's hub (02 §2); no line holds it.
+        parent_hub = f"{tree.paths[parent]}/{hub_name(manifest.layout, tree.paths[parent])}"
+        written = {_bare_key(r.target) for r in doc.relations if r.verb == "part_of"}
+        if _bare_key(parent_hub) not in written:
+            conn.execute(
+                """INSERT INTO edges(src, dst, rel, is_guard, symmetric, verb, written, qualifier, attrs,
+                                     note, declared_in, other, flip, line, raw_target)
+                   VALUES (?, NULL, 'part_of', 0, 0, 'part_of', 'folder', NULL, '{}', NULL, ?, NULL, 0, 0, ?)""",
+                (node_id, node_id, parent_hub),
+            )
     for link in doc.links:
         conn.execute(
             """INSERT INTO edges(src, dst, rel, is_guard, symmetric, verb, written, qualifier, attrs, note,

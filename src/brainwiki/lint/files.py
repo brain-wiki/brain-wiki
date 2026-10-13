@@ -46,6 +46,7 @@ from brainwiki.write.secrets import find_secrets
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
+    from brainwiki.index.topics import TopicTree
     from brainwiki.runs import Run
 
 LINT_VERSION = "1"
@@ -74,18 +75,19 @@ _INJECTION = re.compile(
 @dataclass
 class FileContext:
     manifest: Manifest
-    topics: dict[str, str]  # slug -> folder
+    tree: TopicTree
+
+    @property
+    def topics(self) -> dict[str, str]:  # slug -> folder
+        return self.tree.paths
 
     @classmethod
     def for_engine(cls, engine: Engine) -> FileContext:
-        from brainwiki.index.scanner import discovered_topics
-
-        return cls(engine.manifest, discovered_topics(engine))
+        return cls(engine.manifest, engine.topics)
 
     def topic_privacy(self, rel: str) -> str | None:
-        slug = self.manifest.topic_for_path(rel, self.topics)
-        topic = self.manifest.topics.get(slug) if slug else None
-        return topic.privacy if topic else None
+        """The privacy a note's topic gives it, inherited from its ancestors (02 §2)."""
+        return self.tree.privacy(self.tree.for_path(rel))
 
 
 def _fm_line(doc: ParsedDoc, key: str) -> int:

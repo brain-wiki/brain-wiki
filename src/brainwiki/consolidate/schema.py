@@ -99,6 +99,7 @@ OP_SCHEMAS: dict[str, dict[str, Any]] = {
             "slug": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"},
             "title": {"type": "string", "minLength": 1, "maxLength": 100},
             "description": {"type": "string", "maxLength": 300},
+            "parent": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"},
         },
     ),
     "skip_episode": _op(

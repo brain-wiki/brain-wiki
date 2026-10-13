@@ -13,7 +13,7 @@ bw-part_of:
 | Term | Meaning |
 |---|---|
 | **brain** | A directory with a `brain.toml` manifest; the unit of storage, privacy, and selection. |
-| **topic** | A folder of related notes with one **hub** page that summarizes it and links its notes. |
+| **topic** | A folder of related notes with one **hub** page that summarizes it and links its notes. Topics nest: a folder with a hub inside a topic is a sub-topic. |
 | **note** | A curated Markdown file: frontmatter (with claims and relations in `bw-` fields) and free prose. |
 | **claim** | One item in a note's `bw-claims` list, with an id and provenance metadata. The unit consolidation operates on. |
 | **relation** | A typed, directed link held in a note's `bw-<verb>` field, such as `bw-depends_on: "[[Other note]]"`. |

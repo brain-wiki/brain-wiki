@@ -11,7 +11,7 @@ from urllib.parse import quote, unquote
 from brainwiki.importer.normalize import convert_relations, identity_and_status
 from brainwiki.importer.survey import survey
 from brainwiki.index.resolver import norm_key
-from brainwiki.index.scanner import slugify
+from brainwiki.index.topics import slugify
 from brainwiki.runs import Run
 
 if TYPE_CHECKING:

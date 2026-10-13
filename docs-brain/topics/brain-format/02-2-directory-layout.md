@@ -23,7 +23,9 @@ Default layout (every path is configurable in `[layout]`, see §3):
 │   └── <topic>/
 │       ├── index.md            hub page for the topic (budgeted)
 │       ├── <note>.md           curated notes
-│       └── <subfolder>/…       optional further organization
+│       ├── <subfolder>/…       further organization inside the topic
+│       └── <sub-topic>/        a folder with its own hub is a topic too, at any depth
+│           └── index.md
 ├── inbox/
 │   ├── episodes/
 │   │   └── YYYY/MM/<ulid>.md   immutable episodes, UTC year and month
@@ -53,6 +55,37 @@ privacy defaults, and the unit a hub summarizes. A folder makes that
 visible in every file browser and in Obsidian without extra tooling. Notes
 MAY also live outside any topic (for example in an imported vault); they
 belong to no topic and lint can warn about it.
+
+**Topics form a tree.**
+
+- A topic is a folder directly under `topics/`, or a folder at any depth
+  below it that has a hub (`layout.hub_filename`, §8). There are no named
+  levels: `people/` and `people/rin-sato/` are both topics.
+- A folder without a hub inside a topic is plain organization; its notes
+  belong to the enclosing topic.
+- A topic's **parent** is the nearest enclosing topic. A sub-topic's hub is
+  `part_of` its parent's hub without anyone writing it (an implicit
+  relation, §6.4); an explicit `bw-part_of` adds further parents.
+- Every topic has a **slug**, unique in the brain: its folder name,
+  slugified (`03 People` → `people`). When two folders would get the same
+  slug, the deeper one takes its parent's slug as a prefix (`rin-sato-notes`).
+  Declaring a topic in `brain.toml` (§3) can name it. The slug, not the
+  path, is the topic's identity.
+- **Access inherits down the tree.** A topic's privacy level is the
+  strictest of its own declared level and its ancestors'; a note may raise
+  it further (§6.1). An agent allowed a topic (`topics = ["people"]`) may
+  read its sub-topics.
+- **Reorganizing is moving folders.** `brain mv` moves a topic folder with
+  its notes and rewrites the links that named them by path, as one undoable
+  run; a move by hand works too, and `brain lint --fix` repairs path links
+  from the index's history. Because a topic is known by its slug, agent
+  allowlists, links by file name, and run records survive the move.
+
+Why a tree rather than flat topics: a brain grows many small topics (a
+person, a project, a ticker) that fall into a few natural groups. Flat, they
+made the briefing's topic list long, scattered the folder view, and left the
+map to guess the groups. Folders already say how a person groups them, in
+every editor.
 
 **Why no state directory inside the brain.** Machine state (index, run
 records) is either rebuildable or device-specific, and putting it in the

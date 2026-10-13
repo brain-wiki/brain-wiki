@@ -34,12 +34,12 @@ CREATE TABLE nodes (
   id           TEXT PRIMARY KEY,    -- ULID from frontmatter, or 'path:' || path when absent
   path         TEXT NOT NULL UNIQUE,
   kind         TEXT NOT NULL CHECK (kind IN ('note','hub','episode','archived_episode')),
-  topic        TEXT,                -- topic slug, NULL when outside topics
+  topic        TEXT,                -- slug of the nearest enclosing topic, NULL outside topics
   title        TEXT NOT NULL,
   type         TEXT NOT NULL DEFAULT 'note',
   status       TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','superseded','archived')),
   stage        TEXT,
-  privacy      TEXT NOT NULL,       -- effective level: max(topic level, note level)
+  privacy      TEXT NOT NULL,       -- effective level: max(topic and its ancestors, note level)
   privacy_rank INTEGER NOT NULL,    -- index into [privacy].levels
   created      TEXT,
   updated      TEXT,                -- frontmatter 'updated', else file mtime (ISO 8601)

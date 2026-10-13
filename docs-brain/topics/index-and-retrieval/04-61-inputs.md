@@ -14,7 +14,7 @@ bw-part_of:
 |---|---|---|
 | `query` | `""` | Free text. **Empty means browse**: no text matching, results ordered by `sort` (default `recent`) within the filters. |
 | `limit` | 8 | Primary results, before expansion and guards. Max 50. |
-| `topic` | all allowed | Restrict to one or more topics. |
+| `topic` | all allowed | Restrict to one or more topics, each with its sub-topics. |
 | `type` | any | Restrict to note types (`decision`, `release`, `person`…), as in frontmatter. |
 | `tag` | any | Restrict to notes carrying all of these tags. |
 | `where` | none | Frontmatter property equality, e.g. `{"stage": "open"}`; values compare as strings, lists match any item. |

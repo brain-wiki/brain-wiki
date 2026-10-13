@@ -79,6 +79,12 @@ keys with defined types: `weight` (number in [-1, 1]), `sign` (`+`/`-`),
 interpret attributes (for example signed propagation over `depends_on`);
 the core does not.
 
+**Implicit containment.** A sub-topic's hub is `part_of` its parent
+topic's hub because of where its folder sits (§2). The index stores this
+like a written relation, so retrieval, `brain_neighbors`, and the map see the
+topic tree; it has no line in any file, and writing it explicitly changes
+nothing.
+
 **Consistency rules** enforced by lint ([[lint-and-reports|06]]):
 
 - If A `supersedes` B, then B's `status` SHOULD be `superseded`.

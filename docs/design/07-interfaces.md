@@ -74,6 +74,7 @@ brain search [QUERY] [--limit N] [--topic T]... [--type T]... [--tag T]... [--wh
 brain read TARGET [--mode outline|full|section|raw] [--section HEADING]
 brain neighbors TARGET [--rel R]... [--direction out|in|both] [--depth N] [--limit N]
 
+brain topics [TOPIC]                                     # the topic tree with note counts
 brain notes [--topic T] [--type T] [--tag T] [--sort recent|title] [--facets]  # browse
 brain outline TARGET                                     # headings
 brain links TARGET | backlinks TARGET                    # one hop out / in
@@ -101,7 +102,7 @@ brain lint [PATH]... [--fix] [--dry-run] [--profile strict|migrate] [--select CO
 brain lint --install-hook
 brain report
 brain index [--rebuild | --status]
-brain mv SRC DST [--dry-run]
+brain mv SRC DST [--dry-run]                             # a note, or a topic folder with its notes
 
 brain import PATH --overlay [--dry-run | --apply]
 brain import PATH --into BRAIN [--dry-run | --apply]
@@ -132,6 +133,8 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `-q`, `-v`.
 - Listing commands share `--count` (print only the total), `--facets` (counts
   by type, topic, and tag), `--paths` (one path per line, for piping into
   file tools), `--limit`, and `--cursor`.
+- `--topic T` (and the MCP `topic` filter) includes T's sub-topics, the same
+  way an agent allowed a topic may read its sub-topics (02 §2).
 - `brain log -` reads the episode body from stdin, so other tools can pipe
   into the inbox.
 - `brain hook` and `brain mcp` never print anything to stdout except their

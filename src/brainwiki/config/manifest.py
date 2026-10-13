@@ -108,11 +108,14 @@ class ReportsCfg:
 class TopicCfg:
     slug: str
     path: str
+    path_declared: bool = False  # without one, the folder whose slug matches, at any depth
     title: str | None = None
     description: str | None = None
     privacy: str | None = None
     review: str | None = None
-    agent_edits: str = "allow"  # values outside AGENT_EDITS act as "deny" and are a lint warning
+    agent_edits: str | None = (
+        None  # None inherits (allow at the top); others outside AGENT_EDITS deny
+    )
 
 
 @dataclass
@@ -125,11 +128,6 @@ class Profile:
 
     def can(self, capability: str) -> bool:
         return capability in self.write
-
-    def topic_allowed(self, topic: str | None) -> bool:
-        if "*" in self.topics:
-            return True
-        return topic is not None and topic in self.topics
 
 
 _SECTIONS: dict[str, type] = {
@@ -199,23 +197,6 @@ class Manifest:
             read_origin=bool(raw.get("read_origin", False)),
         )
 
-    # -- topics --------------------------------------------------------
-    def topic_paths(self) -> dict[str, str]:
-        """Declared topics as slug -> path."""
-        return {slug: t.path for slug, t in self.topics.items()}
-
-    def topic_for_path(self, rel: str, discovered: dict[str, str] | None = None) -> str | None:
-        candidates = dict(discovered or {})
-        candidates.update(self.topic_paths())
-        best: tuple[int, str] | None = None
-        for slug, path in candidates.items():
-            prefix = path.rstrip("/") + "/"
-            if (rel.startswith(prefix) or path in (".", "")) and (
-                best is None or len(path) > best[0]
-            ):
-                best = (len(path), slug)
-        return best[1] if best else None
-
     def is_ignored(self, rel: str) -> bool:
         if rel.startswith(".") or "/." in rel:
             return True
@@ -268,11 +249,12 @@ def parse_manifest(text: str) -> Manifest:
         topics[slug] = TopicCfg(
             slug=slug,
             path=str(raw.get("path", f"{layout.topics_dir}/{slug}")).rstrip("/"),
+            path_declared="path" in raw,
             title=raw.get("title"),
             description=raw.get("description"),
             privacy=raw.get("privacy"),
             review=raw.get("review"),
-            agent_edits=str(raw.get("agent_edits", "allow")),
+            agent_edits=str(raw["agent_edits"]) if "agent_edits" in raw else None,
         )
     agents = {str(k): dict(v) for k, v in (data.get("agents") or {}).items() if isinstance(v, dict)}
     manifest = Manifest(

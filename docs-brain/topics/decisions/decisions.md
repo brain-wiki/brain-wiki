@@ -42,3 +42,4 @@ Generated from `docs/design/README.md`.
   - [[d27]]: D27: Agents may read a brain's files directly
   - [[d28]]: D28: Agents may edit notes directly when their profile has edit and the…
   - [[d29]]: D29: brain-wiki's own frontmatter fields carry a bw- prefix
+  - [[d30]]: D30: Topics form a tree
