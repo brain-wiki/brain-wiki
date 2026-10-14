@@ -14,9 +14,9 @@ bw-part_of:
 |---|---|---|---|---|
 | Plugin validates and loads | `claude plugin validate`, install | marketplace add, install | `agy plugin install ./` | `plugins install --link`, `inspect` |
 | MCP tools listed and callable | ✓ | ✓ | ✓ | ✓ |
-| Orientation injected at start | ✓ | ✓ | ✓ (first call only) | hook pack |
+| Orientation injected at start | ✓ | ✓ | ✓ (first call only) | — (no hooks) |
 | Prompted capture asks once | ✓ | ✓ | ✓ | — |
-| Raw capture produces one episode per compaction | ✓ | ✓ | stop only | hook pack |
+| Raw capture produces one episode per compaction | ✓ | ✓ | stop only | — |
 | Self-exclusion during headless harvest | ✓ | ✓ | ✓ | — |
 | Session reader parses recorded fixtures; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
 | Origin lookup returns the right window, and `not_available` when deleted | ✓ | ✓ | ✓ | — |

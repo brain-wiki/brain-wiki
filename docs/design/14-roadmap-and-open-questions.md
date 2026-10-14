@@ -10,18 +10,18 @@ self-contained commits. Later milestones depend only on earlier ones.
 | # | Milestone | Delivers | Exit criteria |
 |---|---|---|---|
 | M0 | Skeleton | `pyproject.toml`, package layout, `brain` entry point with lazy subcommands, platform dirs, user config, ULIDs, `LocalStore` (atomic writes, `O_EXCL`), `scripts/check.py` | `brain version`; `brain init` creates a valid brain and registers it; CI script green |
-| M1 | Format | Parsers and line-preserving writers: frontmatter, claims, relations (with aliases and inverses), links, episodes, rules, `AGENTS.md` block | Round-trip and locality property tests; golden files |
-| M2 | Index and retrieval | Schema, scanner with freshness and renames, link resolution, search (FTS5 + trigram + fallback), guards with chains and caps, read, orient; `brain search/read/orient/index` | Retrieval suite on generated brains: guard recall 100%, no privacy leaks; perf at 1k within budget |
+| M1 | Format | Parsers and line-preserving writers: frontmatter, claims, relations (with aliases and inverses), links, episodes, rules, `AGENTS.md` block | Round-trip and locality property tests |
+| M2 | Index and retrieval | Schema, scanner with freshness and renames, link resolution, search (FTS5 + trigram + fallback), guards with chains and caps, read, orient; `brain search/read/orient/index` | Retrieval suite on generated brains: guard recall 100%; perf at 1k within budget |
 | M3 | Lint and reports | Rule catalog, profiles and overrides, fixes as runs, reports, pre-commit hook | Lint suite 100% on its corpus; fix idempotency |
 | M4 | Write path and runs | Episode writer with secret scrubbing and dedupe; `brain log`; rules via CLI; run records, pre-images, undo, locks, git integration; `brain mv`; `brain doctor` | Undo restores exact bytes; git commits contain only touched files |
-| M5 | Consolidation | Selection and packets, ops schema and validator, deterministic applier, review proposals, agent backend (prepare/apply); headless presets for the bench (a command backend was built, then removed before 0.1) | Golden tests per op; consolidation suite runs against at least one real preset |
+| M5 | Consolidation | Selection and packets, ops schema and validator, deterministic applier, review proposals, agent backend (prepare/apply); headless presets for the bench (a command backend was built, then removed before 0.1) | Tests per op; consolidation suite runs against at least one real preset |
 | M6 | MCP server | Ten tools, three prompts, error codes, instructions, cache hints (the harvest tools are wired in M8) | In-memory client tests for every tool and error path |
 | M7 | Agent integrations and skills | Root plugin files for each host, `brain connect`, `brain hook` adapters, opt-in capture, recall markers; the three skills; `brain doctor --json`, `brain setup` (routine templates and `brain schedule` were built, then removed before 0.1: [proposal](../proposals/scheduled-maintenance.md)) | Hook fixture tests per host; plugin validation; manual smoke test in each host available on the build machine |
 | M8 | Import and harvest | Overlay (phases 0–3), into, to-episodes, from-host presets; session readers for Claude Code, Codex, and Antigravity; `brain harvest` (dry run, routing, raw and distill); the in-agent recipe (`brain_harvest_prepare` / `brain_harvest_apply`, `harvest` prompt, skill section, self-read fallback); origin lookup (`brain origin`, `brain_read_origin`) | Import of a generated messy vault: phase 0 changes no existing file; each phase undoable. Harvest on recorded fixtures: correct routing and skips, one episode per session chunk, no duplicates with hook capture |
-| M9 | Bench | Generator, suites, graders, report, compare, capture | Offline suites in CI; a consolidation run across two presets produces a report |
-| M10 | Visualizer | Graph export, local server, vendored assets with lock check, static app, exports | Manual checklist on a 10k brain; escaping tests |
+| M9 | Bench | Generator, suites, graders, report, compare (capture, the larger scenario set, and the `agent` suite were not built: [proposal](../proposals/consolidation-bench.md)) | Offline suites in `scripts/check.py`; a consolidation run across two presets produces a report |
+| M10 | Visualizer | Graph export, level-of-detail API, local server, the committed build of brain-wiki-viz (D17), exports | Manual checklist on a 10k brain; escaping tests |
 | M11 | Release readiness | User guide, README, CONTRIBUTING, SECURITY, CHANGELOG, version sync, registry files | `scripts/check.py` runs every check; a fresh machine can install and connect one host following the guide |
-| M12 | Agent context and discovery (D25–D28) | Static instruction block written by `brain connect` per host; `brain_list`; briefing with "what's in this brain"; search filters, browse, counts, facets, paths output; handles in reads; `brain_neighbors`; Obsidian-style CLI commands; checked agent edits (`brain check`, pending edits, `brain restore`, `edit` capability, topic `agent_edits`) | Unit and MCP tests per tool; connect writes and uninstalls the block for every host in fixtures; edits that delete a claim, lower privacy, or touch protected files are refused; the retrieval failures found on the OpenClaw sample ("latest release", "what changed last week", sentence queries) pass as typed calls |
+| M12 | Agent context and discovery (D25–D28) | Static instruction block written by `brain connect` per host; `brain_list`; briefing with "what's in this brain"; search filters, browse, counts, facets, paths output; handles in reads; `brain_neighbors`; Obsidian-style CLI commands; checked agent edits (`brain check`, pending edits, `brain restore`, `edit` capability, topic `agent_edits`) | Unit and MCP tests per tool; connect writes and uninstalls the block for every host in fixtures; edits that delete a claim or touch protected files are refused; the retrieval failures found on the OpenClaw sample ("latest release", "what changed last week", sentence queries) pass as typed calls |
 
 Order rationale: M1–M4 are the foundation everything else touches; M5 and
 M6 are the core value; M7 makes it usable in hosts; M8–M10 widen adoption
@@ -29,16 +29,27 @@ and trust.
 
 ### 1.1 Status (2026-10-11)
 
-All milestones are implemented on `main` with tests (`uv run scripts/check.py`
-runs every check). What the code does not yet prove:
+The milestones are implemented on `main` with tests (`uv run scripts/check.py`
+runs every check), except these parts of their designs:
+
+| Not built | Where it is now |
+|---|---|
+| Scheduled maintenance: routine templates, `brain schedule`, the headless consolidation backend (built, then removed) | [Scheduled maintenance proposal](../proposals/scheduled-maintenance.md) |
+| Bench: harvest-distillation slice, LLM judge, multi-model agreement metrics, scenario files, `brain bench capture`, the `agent` suite | [Consolidation bench proposal](../proposals/consolidation-bench.md) |
+| OpenClaw hook pack; per-prompt recall installed by `brain connect` | [Backlog](../proposals/README.md#backlog) (Hosts) |
+| Unharvested-session count in orientation | [Backlog](../proposals/README.md#backlog) (Harvest) |
+| MCP review tools | [Backlog](../proposals/README.md#backlog) (Consolidation) |
+| Privacy levels inside a brain (built, then removed) | [Privacy proposal](../proposals/privacy.md) |
+
+What the built code does not yet prove:
 
 | Area | Gap | Covered by |
 |---|---|---|
 | Real hosts | The Antigravity CLI (1.3.3) was run with the plugin installed: skills, MCP, rules, orientation, taint payloads, rule proposals, and the headless preset work. Claude Code, Codex, OpenClaw, and Cursor were tested only with fixtures and the SDK's clients; the build machine has none of their CLIs | T-4, T-7, T-8, T-9 (other hosts) |
 | Session readers | Claude Code and Antigravity readers were checked against local transcripts (structure only); the Codex reader follows the published source, not recorded files | T-6, T-11 |
 | Marketplace start-up | The bundle ships no hooks, so none depends on online `uvx` (08 §3). The MCP server still does, by choice (D23): it delayed Antigravity's brain tools by up to two minutes behind a slow index; `brain connect` is the fast path | T-10 (macOS) |
-| Performance | Every doc 13 §5 budget passes on the bench's generated 10k brain (after M12: rebuild 26.4 s, one-file update 40 ms p95, search 33 ms p95, orientation 29.9 ms p95, warm lint 0.87 s, session-start hook 277 ms); orientation and the hook have the least margin | `brain bench perf --sizes 10k` |
-| Consolidation quality | One real consolidation ran through the `antigravity` preset and applied; the model-backed bench slices (A–D, H) were not run | `brain bench consolidation --backends …` |
+| Performance | Every budget the perf suite measures (doc 13 §5) passes on the bench's generated 10k brain (after M12: rebuild 26.4 s, one-file update 40 ms p95, search 33 ms p95, orientation 29.9 ms p95, warm lint 0.87 s, session-start hook 277 ms); orientation and the hook have the least margin | `brain bench perf --sizes 10k` |
+| Consolidation quality | One real consolidation ran through the `antigravity` preset and applied; the model-backed bench slices (A–D) were not run | `brain bench consolidation --backends …` |
 
 ## 2. Decisions needed from the maintainer
 

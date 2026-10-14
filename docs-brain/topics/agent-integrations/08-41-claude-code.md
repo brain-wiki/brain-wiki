@@ -11,8 +11,8 @@ bw-part_of:
 # Claude Code
 
 - Install from this repository as a marketplace, or with
-  `brain connect claude-code`. The plugin contributes the skill, the MCP
-  server, and hooks.
+  `brain connect claude-code`. The plugin contributes the skills and the
+  MCP server; hooks come only from `brain connect` (§3).
 - MCP tool names appear as `mcp__plugin_brain-wiki_brain-wiki__brain_search`
   (well within limits). Tool descriptions and server instructions are
   truncated past 2,048 characters, so the important sentence comes first.

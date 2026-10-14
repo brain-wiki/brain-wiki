@@ -27,5 +27,5 @@ bw-part_of:
 | 14 | [[roadmap-and-open-questions\|Roadmap and open questions]] | Implementation milestones and status, decisions needed, verification items |
 | 15 | [[skills-and-onboarding\|Skills and onboarding]] | The three skills, the guided setup flow, and `brain doctor --json` |
 
-Normative documents (02, and the schemas in 04, 05, 07) use MUST, SHOULD,
+Normative documents (02, and the schemas in 05 and 07) use MUST, SHOULD,
 and MAY as in RFC 2119. The others explain and justify.

@@ -29,8 +29,9 @@ min_turns = 5                   # prompted: only ask after this many turns
 untrusted_tools = []            # extra tool-name patterns that taint a session
 trusted_mcp_servers = ["brain-wiki"]
 
-[recall]
+[recall]                        # only used by a UserPromptSubmit hook wired by hand (§5)
 on_prompt = false               # inject top matches on every prompt (costs tokens)
+min_score = 0.3
 
 [harvest]
 enabled = false
@@ -39,11 +40,8 @@ since   = "30d"                 # how far back the first run looks
 min_idle_minutes = 60           # skip sessions still in progress
 min_user_turns   = 3
 distill = "claude-code"         # preset for CLI harvest; "raw" for no model (the in-agent recipe needs neither)
-nudge   = true                  # show unharvested-session counts in orientation
 [harvest.routes]                # optional: working-directory globs → brain
 "~/work/**" = "work"
-[harvest.paths]                 # optional: override where a host keeps sessions
-# claude-code = "~/.claude/projects"
 ```
 
 ## Subsections

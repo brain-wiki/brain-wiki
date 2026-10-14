@@ -14,12 +14,13 @@ bw-part_of:
 |---|---|---|
 | `query` | `""` | Free text. **Empty means browse**: no text matching, results ordered by `sort` (default `recent`) within the filters. |
 | `limit` | 8 | Primary results, before expansion and guards. Max 50. |
-| `topic` | all allowed | Restrict to one or more topics, each with its sub-topics. |
+| `topic` | all | Restrict to one or more topics, each with its sub-topics. |
 | `type` | any | Restrict to note types (`decision`, `release`, `person`…), as in frontmatter. |
 | `tag` | any | Restrict to notes carrying all of these tags. |
 | `where` | none | Frontmatter property equality, e.g. `{"stage": "open"}`; values compare as strings, lists match any item. |
-| `kinds` | `note, hub, episode` (browse: `note, hub`) | Pending episodes are searchable; a browse lists curated notes unless episodes are asked for; archived episodes only on request. |
-| `status` | `active, superseded` | `archived` notes only on request. |
+| `include_episodes` | on for a query, off when browsing | Pending episodes are searchable; a browse lists curated notes unless episodes are asked for. |
+| `include_archived` | false | Also return notes with `status: archived`. |
+| `include_archived_episodes` | false | Also return consolidated episodes (CLI `--include archived_episodes` only). |
 | `intent` | `context` | Graph expansion, §6.4. |
 | `since`, `until` | none | Only nodes updated on or after / on or before a date. Relative forms `7d`, `4w`, `3m` are accepted. |
 | `sort` | `relevance` (`recent` when the query is empty) | `relevance`, `recent` (newest `updated` first), or `title` (CLI only, for listings). |

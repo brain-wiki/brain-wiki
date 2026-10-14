@@ -12,6 +12,7 @@ changes, in the same change as the code, and the proposal is deleted.
 | [Privacy](privacy.md) | Draft; open questions PQ1–PQ6 | Levels defined by where content may go (model, tools, outputs, exports), declared in a topic's `index.md`; replaces the removed privacy levels |
 | [Remote sync and object storage](remote-sync.md) | Designed, not scheduled | `brain sync` to a private git remote, then GCS and S3; a store interface for a server with no local copy |
 | [Remote MCP for chat apps](remote-mcp.md) | Designed, not scheduled; waits on privacy | HTTP transport and OAuth for ChatGPT, claude.ai, and the Gemini app |
+| [Consolidation bench, full design](consolidation-bench.md) | Designed, partly built (doc 11 has the built part) | About 20 scenarios in files, harvest-distillation slice, more graders, an optional LLM judge, multi-model agreement metrics, `brain bench capture`, the `agent` suite |
 | [Public memory benchmarks](public-benchmarks.md) | Designed, not scheduled | Bench adapters for LongMemEval and similar; probe coverage as a consolidation metric |
 | [Scheduled maintenance](scheduled-maintenance.md) | Built, then removed before 0.1; needs rethinking | Routine templates for hosts' schedulers and OS schedulers; a headless consolidation backend; one consolidation device |
 
@@ -22,9 +23,10 @@ Ideas without a design yet.
 | Area | Idea | Related design |
 |---|---|---|
 | Retrieval | Optional embeddings (`sqlite-vec`, a local model) with rank fusion, guards applied the same way; a file watcher in long-running processes for very large brains; cross-brain search with results labeled by brain; guards inherited through `part_of` (one or two hops, within the cap) once real brains need it | [04](../design/04-index-and-retrieval.md) |
-| Consolidation | Direct-API backend behind the same packet → ops interface; clustering as a selection heuristic | [05 §4.4](../design/05-write-path-and-consolidation.md#44-backends) |
+| Consolidation | Direct-API backend behind the same packet → ops interface; clustering as a selection heuristic; MCP review tools (list, show, accept with user confirmation, reject) so an agent can walk the user through proposals | [05 §4.4](../design/05-write-path-and-consolidation.md#44-backends) |
 | Checked edits | One tool that edits and checks in a single call | [05 §2.3](../design/05-write-path-and-consolidation.md#23-checked-agent-edits) |
 | Provenance | `brain forget --session <id>`: retract every claim whose only sources come from one session, with a dry run; per-claim source kinds (stated by user, observed in code, read in a document, inferred) | — |
-| Hosts | Native OpenClaw memory provider (memory slot); Claude API memory-tool handler; Cursor plugin with its own hooks; session readers for OpenClaw and Cursor; MCP resources | [08](../design/08-agent-integrations.md) |
+| Hosts | OpenClaw hook pack (`HOOK.md` plus a small `handler.js` running `brain hook openclaw <event>`) for `agent:bootstrap` orientation and `session:compact:before` capture; a `brain connect` option that installs the per-prompt recall hook (`UserPromptSubmit`); native OpenClaw memory provider (memory slot); Claude API memory-tool handler; Cursor plugin with its own hooks; session readers for OpenClaw and Cursor; MCP resources | [08](../design/08-agent-integrations.md) |
+| Harvest | Orientation shows how many of the calling host's sessions are not yet harvested, from a cached count refreshed at most hourly, as a nudge to run the recipe | [05 §2.2](../design/05-write-path-and-consolidation.md#22-harvesting-sessions) |
 | Importers | Chat exports, email, documents; authority ordering (specs over notes over chat) when sources disagree | [09](../design/09-import.md) |
 | Domain plugins | Signed influence propagation over weighted `depends_on`; domain layouts in the visualizer (dependency DAG, rule/exception tree, claim/evidence matrix); external state providers keyed by qualifiers | — |

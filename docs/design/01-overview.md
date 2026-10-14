@@ -121,7 +121,7 @@ keys.
   expansion. Vector search is an optional later addition.
 - **Remote storage backends.** v0.1 supports a local directory, optionally a
   git repo. Private git remotes and object storage (GCS, S3 via fsspec) are
-  designed in [03](03-config-and-storage.md) but not built.
+  designed in a [proposal](../proposals/remote-sync.md) but not built.
 - **Automatic web ingestion, email or chat importers.** Importers in v0.1
   cover existing Markdown folders (including Obsidian vaults) only.
 - **Encryption.** Documented recipes only ([10](10-security-and-privacy.md)).
@@ -190,7 +190,7 @@ agent-readable without restructuring it.
 | **harvest** | Reading finished sessions from a host's own transcript store and turning them into episodes. |
 | **rule** | A standing directive in `rules.md`, always loaded into orientation. Only added with the user's verbatim words. |
 | **consolidation run** | One pass that turns pending episodes into validated operations on notes. Has an id, a record, and an undo point. |
-| **op** | One structured edit proposed by an LLM: `add_claim`, `merge_claim`, `supersede_claim`, `add_relation`, `create_note`, `create_topic`, `skip_episode`. |
+| **op** | One structured edit proposed by an LLM: `add_claim`, `merge_claim`, `supersede_claim`, `retract_claim`, `add_relation`, `create_note`, `create_topic`, `skip_episode`. |
 | **origin** | Who produced content: `owner` (the human), `agent`, `import`, or `system`. |
 | **taint** | Whether untrusted external content (web, email, unknown tools) influenced an episode: `true`, `false`, or `unknown`. |
 | **agent profile** | Per-brain settings for one host (e.g. `claude-code`): what it may write. Every host that may use a brain reads all of it; privacy inside a brain is being redesigned ([proposal](../proposals/privacy.md)). |

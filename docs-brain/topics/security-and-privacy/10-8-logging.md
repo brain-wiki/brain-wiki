@@ -11,6 +11,4 @@ bw-part_of:
 # Logging
 
 - Logs go to `<state>/logs/brain-wiki.log`, rotated, local only.
-- Default level records operations and errors without note content.
-  `-v` adds content snippets for debugging; the log file says so at the top
-  of each verbose session.
+- Logs record operations and errors, never note content.

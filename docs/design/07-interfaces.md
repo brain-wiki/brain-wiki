@@ -51,7 +51,7 @@ could read and write the files anyway ([10](10-security-and-privacy.md)).
 ### 2.1 Command tree
 
 ```
-brain init [PATH] [--name NAME] [--git]
+brain init [PATH] [--name NAME] [--git] [--no-register]
 brain brains [list | add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME]
 brain doctor [--json]
 brain setup                                              # interactive onboarding wizard (15 §3)
@@ -60,7 +60,7 @@ brain list                                               # brains this host may 
 brain orient
 brain search [QUERY] [--limit N] [--topic T]... [--type T]... [--tag T]... [--where KEY=VALUE]...
              [--since D] [--until D] [--sort relevance|recent|title] [--cursor C] [--intent I]
-             [--include archived,episodes] [--count] [--facets] [--paths]
+             [--include archived,episodes,archived_episodes] [--no-episodes] [--count] [--facets] [--paths]
 brain read TARGET [--mode outline|full|section|raw] [--section HEADING]
 brain neighbors TARGET [--rel R]... [--direction out|in|both] [--depth N] [--limit N]
 
@@ -74,14 +74,14 @@ brain orphans | unresolved                               # notes nothing links t
 brain check [PATH]... [--adopt] [--allow-shrink]         # validate and record direct edits (05 §2.3)
 brain restore PATH                                       # put back the last recorded version
 
-brain log [TEXT | -] [--topic T]... [--agent HOST] [--taint true|false|unknown]
+brain log [TEXT | -] [--topic T]... [--claim C]... [--agent HOST] [--taint true|false|unknown]
 brain rule add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--out PACKET.json]
 brain consolidate --apply OPS.json --run RUN [--dry-run]
 brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--dry-run | --apply]
-brain harvest --status                                   # per host: unharvested sessions, last run
-brain origin EPISODE [--turns A-B] [--include-tool-output]
+brain harvest --status                                   # per host: enabled, sessions left to harvest
+brain origin EPISODE [--turns A-B]
 brain review list | show RUN | accept RUN | reject RUN
 brain runs list | show RUN
 brain undo [RUN] [--force]
@@ -92,9 +92,10 @@ brain report
 brain index [--rebuild | --status]
 brain mv SRC DST [--dry-run]                             # a note, or a topic folder with its notes
 
-brain import PATH --overlay [--dry-run | --apply]
-brain import PATH --into BRAIN [--dry-run | --apply]
-brain import PATH --to-episodes [--agent HOST]
+brain import PATH --overlay [--phase N] [--dry-run | --apply]
+brain import PATH --into BRAIN [--topic SLUG] [--dry-run | --apply]
+brain import PATH --to-episodes [--untrusted] [--agent HOST] [--dry-run | --apply]
+brain import [PATH] --from HOST [--dry-run | --apply]     # a host's memory files; PATH overrides where they are
 
 brain connect HOST [--brain NAME] [--scope user|project] [--briefing-hook] [--capture] [--print] [--force] [--dry-run] [--uninstall]
 brain hook HOST EVENT                                     # called by hosts; JSON on stdin
@@ -102,17 +103,21 @@ brain mcp [--host HOST]                                   # stdio MCP server
 
 brain viz [--topic T]... [--port P] [--no-open] [--export FILE.html]
 brain bench [SUITE]... [--backends PRESET,...] [--sizes 1k,10k] [--out DIR]
+brain bench --compare A.json B.json
 brain version
 ```
 
-Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `-q`, `-v`.
+Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `-q` (quieter `brain bench`).
 
 ### 2.2 Conventions
 
 - Human-readable output by default; `--json` gives a stable, documented
   shape (the same shapes as the MCP structured results).
-- Every command that changes files supports `--dry-run`, which prints the
-  diff it would apply.
+- Commands that change many files or files outside the brain support
+  `--dry-run`, which prints what they would change: `lint --fix`, `mv`,
+  `consolidate --apply`, `harvest`, `import`, and `connect`. Single-step
+  writes (`log`, `rule`, `check`, `restore`, `review accept`, `undo`) have
+  none; every curated one is a run that `brain undo` reverses.
 - Paths printed are brain-relative; `--json` also includes absolute paths.
 - Targets follow the Obsidian CLI convention: a title, alias, or file name
   resolves like a wikilink, and an exact path or id resolves exactly. Results
@@ -280,6 +285,8 @@ in 04 and 05):
       "user_quote": {"type": "string", "minLength": 1, "maxLength": 500,
                      "description": "The user's exact words asking for this rule."},
       "replaces":   {"type": "string", "pattern": "^r-[0-9A-HJKMNP-TV-Z]{26}$"},
+      "session":    {"type": "string", "maxLength": 200,
+                     "description": "Host session id, if known; a session the host's hooks saw read untrusted content may not propose rules."},
       "brain":      {"type": "string"}}},
 
   "brain_consolidate_prepare": {"type": "object", "additionalProperties": false,
@@ -297,10 +304,9 @@ in 04 and 05):
 
   "brain_read_origin": {"type": "object", "additionalProperties": false, "required": ["episode"],
     "properties": {
-      "episode":             {"type": "string", "description": "Episode id or packet handle (E1)."},
+      "episode":             {"type": "string", "description": "Episode id or path."},
       "turns":               {"type": "string", "pattern": "^[0-9]+-[0-9]+$",
                               "description": "Turn range; default: the episode's range plus context."},
-      "include_tool_output": {"type": "boolean", "default": false},
       "brain":               {"type": "string"}}},
 
   "brain_harvest_prepare": {"type": "object", "additionalProperties": false,
@@ -369,7 +375,7 @@ itself. The message starts with a stable code:
 | `forbidden` | Not allowed by the profile or host limits |
 | `invalid_ops` | Validation failed; a list of `{op_index, check, message}` follows |
 | `stale` | Notes changed since the packet was prepared; prepare again |
-| `budget_exceeded` | A hub or `rules.md` would exceed its budget |
+| `budget_exceeded` | `rules.md` would exceed its budget |
 | `expired` | The run handle is older than its expiry |
 | `busy` | The brain's write lock could not be taken in time |
 | `not_available` | An episode's origin conversation is not on this device or was deleted by the host |
@@ -400,7 +406,7 @@ as `internal` with a log reference, never with internal details.
 
 | Surface | Promise in 0.x |
 |---|---|
-| Brain format | Versioned (`format`); changes ship with `brain migrate`. |
+| Brain format | Versioned (`format`); a format change ships with a `brain lint --fix` conversion ([02 §13](02-brain-format.md#13-format-versioning)). |
 | CLI command names and `--json` shapes | Additive changes only within a minor version; breaking changes noted in the changelog. |
 | MCP tool names and input schemas | Additive changes only; a renamed tool keeps its old name as an alias for one minor version. |
 | Python API (`import brainwiki`) | Not public in 0.x. |

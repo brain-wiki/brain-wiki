@@ -63,7 +63,7 @@ plus terminal output) shows:
 | Phase | Changes | Touches existing notes? |
 |---|---|---|
 | 0 · Adopt | Adds `brain.toml`, `AGENTS.md` (or a managed block in an existing one), `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain. | **No** |
-| 1 · Relations | Converts relation-like frontmatter into `bw-<verb>` relations (§4.2), keeps the original properties unless `--drop-converted` is given. | Yes, frontmatter lines only |
+| 1 · Relations | Converts relation-like frontmatter into `bw-<verb>` relations (§4.2) and keeps the original properties. | Yes, frontmatter lines only |
 | 2 · Identity and status | Mints `id:` for notes without one; maps non-standard `status` values into `status` + `bw-stage` (§4.1). | Yes, frontmatter lines only |
 | 3 · Structure | Creates missing hubs, adds missing notes to hub `## Notes` lists. | Hubs only |
 
@@ -112,10 +112,11 @@ lost and users can map it back.
 | `source`, `sources` (when the value is a wikilink) | `bw-depends_on` with qualifier `(source)` |
 
 Accepted value shapes: a YAML list of wikilinks, a quoted single wikilink,
-a comma-joined string of several wikilinks (`"[[A]], [[B]]"`, a common
-artifact of tools that write lists as strings), and bare names (resolved
-like link targets). Values that are not links (`source: "a book"`) are
-left alone.
+and a string holding several wikilinks (`"[[A]], [[B]]"`, a common
+artifact of tools that write lists as strings). Only `[[wikilinks]]` are
+converted: bare names (`parent: Projects`) and other values
+(`source: "a book"`) are left alone, because a plain string cannot be told
+apart from a name.
 
 ### 4.3 Other fixes offered
 
@@ -142,7 +143,7 @@ clippings.
 
 - Documents are split on headings into chunks of at most 8 KiB; each chunk
   becomes one episode with `bw-captured: import`, `bw-origin: import`, and a
-  `source:` property naming the original file and heading.
+  `bw-source` property naming the original file and heading.
 - `taint` is `false` for the user's own files, or `true` with `--untrusted`
   (clippings, documents written by others).
 - The original files are not modified or moved.
@@ -151,7 +152,7 @@ clippings.
 files as episodes attributed to the host (`bw-origin: agent`, `bw-taint:
 unknown`):
 
-| Host | Files (defaults; overridable with `--path`) |
+| Host | Files (defaults; a `PATH` argument overrides them) |
 |---|---|
 | Claude Code | Project memory directories under `~/.claude/projects/*/memory/` and user-level `CLAUDE.md` |
 | Codex | `~/.codex/memories/` and `~/.codex/AGENTS.md` |

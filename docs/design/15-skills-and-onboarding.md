@@ -6,7 +6,7 @@ Status: draft for review
 
 | # | Goal | How we will know |
 |---|---|---|
-| O1 | A new user goes from "plugin installed" to a working brain connected to their agents in one guided conversation, without reading docs. | The onboarding scenario in the agent suite ([11 §3.5](11-eval-bench.md#35-agent-optional-real-hosts)) completes on a fresh machine. |
+| O1 | A new user goes from "plugin installed" to a working brain connected to their agents in one guided conversation, without reading docs. | The onboarding scenario (§5) completes on a fresh machine. |
 | O2 | Everyday use needs no manual: the agent knows when to recall, when to record, and what never to do. | Skill trigger tests (§5) pass for every supported host. |
 | O3 | Every step can be inspected and undone. | Each setup action prints a dry run first and records how to reverse it. |
 
@@ -206,10 +206,13 @@ configuration directory exists. Nothing in `doctor` contacts the network.
 
 | Test | How |
 |---|---|
-| Skill conformance | `skills-ref validate` (or an equivalent check in CI) on every skill folder |
-| Triggering | For each skill, a set of prompts that should trigger it and near-misses that should not, run headless against at least two hosts; results tracked in the bench `agent` suite |
-| Onboarding end to end | A fresh `HOME` with the plugin installed; the agent is asked to "set up brain-wiki" with scripted answers; success means a brain exists, the host is connected, a test search works, and every write was preceded by a dry run |
-| Doctor contract | `brain doctor --json` validated against its JSON Schema in every state the onboarding test passes through |
+| Skill conformance | `tests/test_plugin.py` checks every skill folder against the Agent Skills rules (name, description length, body length, links into `references/`) |
+| Triggering | By hand before releases: for each skill, prompts that should trigger it and near-misses that should not, in at least two hosts |
+| Onboarding end to end | By hand before releases: a fresh `HOME` with the plugin installed; the agent is asked to "set up brain-wiki"; success means a brain exists, the host is connected, a test search works, and every write was preceded by a dry run |
+| Doctor contract | Unit tests on `brain doctor --json` output (problems, recovered runs); no JSON Schema yet |
+
+Automating triggering and onboarding is part of the planned bench `agent`
+suite ([proposal](../proposals/consolidation-bench.md#9-the-agent-suite)).
 
 ## 6. Alternatives considered
 

@@ -4,12 +4,17 @@
 
 Every agent that may use a brain reads all of it: every topic and note.
 Privacy levels inside a brain are being redesigned and are not available
-yet. Until then, keep notes away from an agent by putting them in a brain
-that agent may not use.
+yet. Until then, keep separate parts of your life in separate brains, and
+limit which brains each agent may use (below).
+
+Those limits apply to brain-wiki's own tools. An agent that can read files
+on your machine can still open a brain's Markdown directly, so notes an agent
+must never see belong outside its reach, not only outside its brain list.
 
 ## Agent profiles
 
-A profile says what an agent may change:
+A profile says what an agent may change. Agents without their own profile
+may log episodes and correct notes they check with `brain check`:
 
 ```toml
 [agents.default]          # any agent without its own profile
@@ -19,6 +24,15 @@ write = ["episodes", "edit"]
 write = ["episodes", "edit", "propose_rules", "consolidate", "harvest", "review"]
 read_origin = false       # may it read the conversations episodes came from?
 ```
+
+| Capability | Lets the agent |
+|---|---|
+| `episodes` | Log what it learned to the inbox |
+| `edit` | Correct notes directly, then record the change with `brain check` |
+| `propose_rules` | Propose a standing rule; you always confirm it |
+| `consolidate` | Fold inbox episodes into notes |
+| `harvest` | Turn its own past sessions into episodes |
+| `review` | Accept or reject runs that wait for review |
 
 ## Several brains
 
@@ -50,5 +64,5 @@ when an agent you use reads it:
 | Action | Sent to |
 |---|---|
 | Search and read from an agent | That agent's model provider |
-| Consolidation | The model of the backend you chose |
+| Consolidation | The model provider of the agent that consolidates |
 | Harvest with distillation | The distill preset's provider, or your in-session agent; `--raw` sends nothing |

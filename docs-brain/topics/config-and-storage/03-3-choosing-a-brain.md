@@ -31,8 +31,7 @@ how a user keeps, say, a work brain away from a personal assistant.
 
 **Project files** name a brain, not a path, so a repository can carry one
 without exposing anyone's directory layout. If the named brain does not
-exist for this user, resolution continues with the next source and logs a
-notice.
+exist for this user, resolution silently continues with the next source.
 
 **Why a brain is the unit of separation.** Unrelated spheres (an
 employer's knowledge and a personal life) differ in who owns them, where

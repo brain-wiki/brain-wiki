@@ -29,9 +29,9 @@ brain-wiki/
 │
 ├── src/brainwiki/               the Python package (§2)
 ├── tests/                       unit, property, integration tests; synthetic fixtures
-├── bench/                       bench scenario definitions (generated data is not committed)
 ├── docs/                        design/ (these documents) and user/ (user guide)
-├── scripts/                     maintainer scripts (version sync, visualizer bundle check)
+├── scripts/                     maintainer scripts (check, version sync, docs brain, visualizer bundle check)
+├── .github/workflows/           CI (scripts/check.py) and the release workflow
 ├── pyproject.toml
 ├── README.md, LICENSE, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md
 ├── AGENTS.md                    guide for coding agents working on this repo (see note)

@@ -12,17 +12,17 @@ when higher ones are missing.
 | 0 · Files | The brain's own `AGENTS.md` ([02 §11](02-brain-format.md#11-agentsmd)) | Any file-reading agent opened in the brain folder can read and log episodes. |
 | 1 · Skills | `skills/brain`, `skills/brain-setup`, `skills/brain-maintain` in the plugin | Knows when and how to use, set up, and maintain the brain, through the CLI or MCP ([15](15-skills-and-onboarding.md)). |
 | 2 · MCP | `brain mcp --host <id>` (stdio) | Orient, search with guards, read, log, propose rules, consolidate. |
-| 3 · Hooks | `brain hook <host> <event>` | Orientation injected at session start; optional capture at stop or compaction; optional recall per prompt. |
+| 3 · Hooks | `brain hook <host> <event>` | Orientation injected at session start; optional capture at stop or compaction; recall per prompt where the user wires it by hand (§5.2). |
 | 4 · Native memory | Host-specific memory APIs | Not built ([backlog](../proposals/README.md#backlog)). |
 
 v0.1 coverage:
 
 | Host | Install | Skill | MCP | Hooks | Harvest |
 |---|---|---|---|---|---|
-| Claude Code | Plugin marketplace (this repo) or `brain connect claude-code` | yes | yes | session start, prompt (opt-in), stop, pre-compact, session end | yes |
+| Claude Code | Plugin marketplace (this repo) or `brain connect claude-code` | yes | yes | session start, stop, pre-compact, session end; prompt recall by hand only | yes |
 | Codex CLI and Codex in the ChatGPT desktop app | Plugin marketplace or `brain connect codex` | yes | yes | same event names as Claude Code (desktop: manual installs only) | yes |
 | Antigravity (desktop, IDE, CLI) | `agy plugin install <repo URL>`, global plugin folder, or `brain connect antigravity` | yes | yes | first model call (as session start), post-tool (taint), stop | yes |
-| OpenClaw | `openclaw plugins install brain-wiki --marketplace <repo>` (bundle mode) | yes | yes | none in bundle mode (Claude-format hooks are not executed there); optional hook pack (§4.4) | after v0.1 |
+| OpenClaw | `openclaw plugins install brain-wiki --marketplace <repo>` (bundle mode) | yes | yes | none (bundle mode does not execute Claude-format hooks; a hook pack is in the [backlog](../proposals/README.md#backlog)) | after v0.1 |
 | Cursor | Loads the repo's Agent Plugins bundle (`plugin.json` + `mcp.json`), or `brain connect cursor` | yes | yes | not in v0.1 (Cursor has its own hook events; planned) | after v0.1 |
 | Other MCP clients | `brain connect generic --print` gives a config snippet | — | yes | — | — |
 
@@ -189,8 +189,8 @@ skill offers to run `brain connect` with the user's approval.
 ### 4.1 Claude Code
 
 - Install from this repository as a marketplace, or with
-  `brain connect claude-code`. The plugin contributes the skill, the MCP
-  server, and hooks.
+  `brain connect claude-code`. The plugin contributes the skills and the
+  MCP server; hooks come only from `brain connect` (§3).
 - MCP tool names appear as `mcp__plugin_brain-wiki_brain-wiki__brain_search`
   (well within limits). Tool descriptions and server instructions are
   truncated past 2,048 characters, so the important sentence comes first.
@@ -269,11 +269,10 @@ skill offers to run `brain connect` with the user's approval.
 
 - Bundle mode: OpenClaw maps the plugin's skills and MCP servers. It
   detects but does not execute Claude-format `hooks/hooks.json`.
-- Optional hook pack (`hooks/brain-wiki-capture/HOOK.md` plus a tiny
-  `handler.js` that runs `brain hook openclaw <event>`) for
-  `agent:bootstrap` (add the brain's orientation as a bootstrap file) and
-  `session:compact:before` (capture). OpenClaw loads hook packs from Claude
-  and Codex bundle formats; other hosts ignore the subdirectory.
+- No hooks. `brain hook` already accepts OpenClaw's `agent:bootstrap`,
+  `session:compact:before`, and `command:reset` events, but nothing
+  installs a hook pack that sends them; one is in the
+  [backlog](../proposals/README.md#backlog).
 - MCP tools are registered as `brain-wiki__brain_search` (server prefix and
   64-character cap respected).
 - A native memory-provider plugin (taking OpenClaw's memory slot) is future
@@ -295,16 +294,19 @@ skill offers to run `brain connect` with the user's approval.
 
 One entry point: `brain hook <host|auto> <event>`, reading the host's JSON
 payload on stdin and writing the host's expected JSON on stdout. Every hook
-is opt-in: `session_start` with `brain connect --briefing-hook`, the others
-with `--capture`. Without hooks, agents rely on the static instruction block
-(§3.2).
+is opt-in: `session_start` with `brain connect --briefing-hook`, and
+`tool_used`, `stop`, `pre_compact`, and `session_end` with `--capture`.
+`brain connect` never installs `prompt`; a user who wants per-prompt recall
+adds a `UserPromptSubmit` hook running `brain hook <host> UserPromptSubmit`
+to the host's hook settings by hand and sets `[recall] on_prompt = true`.
+Without hooks, agents rely on the static instruction block (§3.2).
 
 ### 5.1 Normalized events
 
-| Normalized | Claude Code | Codex | Antigravity | OpenClaw (hook pack) |
+| Normalized | Claude Code | Codex | Antigravity | OpenClaw (accepted; nothing installs it) |
 |---|---|---|---|---|
 | `session_start` | `SessionStart` | `SessionStart` | `PreInvocation` with `invocationNum == 0` | `agent:bootstrap` |
-| `prompt` (opt-in recall) | `UserPromptSubmit` | `UserPromptSubmit` | — (no prompt text exposed) | — |
+| `prompt` (recall; wired by hand) | `UserPromptSubmit` | `UserPromptSubmit` | — (no prompt text exposed) | — |
 | `tool_used` (taint) | `PostToolUse` | `PostToolUse` | `PostToolUse` | — |
 | `stop` | `Stop` | `Stop` | `Stop` | — |
 | `pre_compact` | `PreCompact` | `PreCompact` | — | `session:compact:before` |
@@ -319,7 +321,7 @@ in M7.
 | Event | Claude Code / Codex | Antigravity |
 |---|---|---|
 | `session_start` | `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "<orientation>"}}` | `{"injectSteps": [{"ephemeralMessage": "<orientation>"}]}` |
-| `prompt` | `additionalContext` with up to 3 recalled notes and their guards (≤ 600 tokens), only above a score threshold | — |
+| `prompt` | With `[recall] on_prompt = true` and a prompt of at least three words: `additionalContext` listing up to 3 notes scoring at least `[recall] min_score` (default 0.3), each with up to 3 guards, cut to 2,400 characters; otherwise nothing | — |
 | `tool_used` | nothing (records session taint in state) | `{}` |
 | `stop` | prompted capture: `{"decision": "block", "reason": "<capture instruction>"}` at most once per session; otherwise nothing | `{"decision": "continue", "reason": "…"}` likewise |
 | `pre_compact`, `session_end` | nothing; raw capture runs as an async hook so it never eats the host's short session-end budget | — |
@@ -363,8 +365,9 @@ min_turns = 5                   # prompted: only ask after this many turns
 untrusted_tools = []            # extra tool-name patterns that taint a session
 trusted_mcp_servers = ["brain-wiki"]
 
-[recall]
+[recall]                        # only used by a UserPromptSubmit hook wired by hand (§5)
 on_prompt = false               # inject top matches on every prompt (costs tokens)
+min_score = 0.3
 
 [harvest]
 enabled = false
@@ -373,11 +376,8 @@ since   = "30d"                 # how far back the first run looks
 min_idle_minutes = 60           # skip sessions still in progress
 min_user_turns   = 3
 distill = "claude-code"         # preset for CLI harvest; "raw" for no model (the in-agent recipe needs neither)
-nudge   = true                  # show unharvested-session counts in orientation
 [harvest.routes]                # optional: working-directory globs → brain
 "~/work/**" = "work"
-[harvest.paths]                 # optional: override where a host keeps sessions
-# claude-code = "~/.claude/projects"
 ```
 
 ### 6.1 What gets skipped
@@ -501,9 +501,9 @@ because CLIs change faster than this document.
 |---|---|---|---|---|
 | Plugin validates and loads | `claude plugin validate`, install | marketplace add, install | `agy plugin install ./` | `plugins install --link`, `inspect` |
 | MCP tools listed and callable | ✓ | ✓ | ✓ | ✓ |
-| Orientation injected at start | ✓ | ✓ | ✓ (first call only) | hook pack |
+| Orientation injected at start | ✓ | ✓ | ✓ (first call only) | — (no hooks) |
 | Prompted capture asks once | ✓ | ✓ | ✓ | — |
-| Raw capture produces one episode per compaction | ✓ | ✓ | stop only | hook pack |
+| Raw capture produces one episode per compaction | ✓ | ✓ | stop only | — |
 | Self-exclusion during headless harvest | ✓ | ✓ | ✓ | — |
 | Session reader parses recorded fixtures; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
 | Origin lookup returns the right window, and `not_available` when deleted | ✓ | ✓ | ✓ | — |

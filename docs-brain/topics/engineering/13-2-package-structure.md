@@ -15,7 +15,7 @@ src/brainwiki/
 ├── cli/            argparse entry point; one module per command; lazy imports
 ├── config/         user config, brain.toml, brain resolution, platform dirs
 ├── format/         parsers and writers: frontmatter, claims, relations, links, episodes, rules
-├── store/          BrainStore protocol, LocalStore (atomic writes, O_EXCL creates)
+├── store/          LocalStore (atomic writes, O_EXCL creates, expected-hash writes)
 ├── index/          SQLite schema, scanner, queries (search, guards, read, orient)
 ├── lint/           rules, profiles, fixes, reports
 ├── write/          episode writer, secret scrubber, rule writer
@@ -25,7 +25,7 @@ src/brainwiki/
 ├── mcp/            MCP server (imports the SDK; never imported by hooks)
 ├── hosts/          per-host knowledge: hook payload parsing, transcript readers, connect writers, headless presets
 ├── viz/            graph export, level-of-detail API, local server; app/ is the built front end (committed)
-├── bench/          suites, generators, graders, report
+├── bench/          generator, suites with their graders and scenarios, report
 └── assets/         templates (brain.toml, AGENTS.md, hub), prompts, plugin files (copied at build time)
 ```
 

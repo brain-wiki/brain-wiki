@@ -13,7 +13,7 @@ bw-part_of:
 | Phase | Changes | Touches existing notes? |
 |---|---|---|
 | 0 · Adopt | Adds `brain.toml`, `AGENTS.md` (or a managed block in an existing one), `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain. | **No** |
-| 1 · Relations | Converts relation-like frontmatter into `bw-<verb>` relations (§4.2), keeps the original properties unless `--drop-converted` is given. | Yes, frontmatter lines only |
+| 1 · Relations | Converts relation-like frontmatter into `bw-<verb>` relations (§4.2) and keeps the original properties. | Yes, frontmatter lines only |
 | 2 · Identity and status | Mints `id:` for notes without one; maps non-standard `status` values into `status` + `bw-stage` (§4.1). | Yes, frontmatter lines only |
 | 3 · Structure | Creates missing hubs, adds missing notes to hub `## Notes` lists. | Hubs only |
 

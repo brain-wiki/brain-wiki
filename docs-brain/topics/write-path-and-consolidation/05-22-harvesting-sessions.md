@@ -57,9 +57,10 @@ brain-wiki. They are usable knowledge but can never feed rules.
 `brain harvest --apply` in a terminal. Scheduled harvest was removed before
 0.1 ([[proposal-scheduled-maintenance|proposal]]).
 
-Harvest is off by default and enabled per host (`[harvest] hosts` in the
-user config, plus `harvest` in the host's profile `write` list for the
-agent backend). Every CLI run starts as a dry run that lists the sessions
+The in-agent recipe is off by default and enabled per host (`[harvest]
+enabled` and `hosts` in the user config, plus `harvest` in the host's
+profile `write` list). `brain harvest` in a terminal is the owner's
+command and needs neither; every CLI run starts as a dry run that lists the sessions
 it would read, the brain each routes to, and an estimate of tokens for
 distillation; `--apply` executes. A backend only receives sessions routed
 to a brain; unrouted sessions are skipped.

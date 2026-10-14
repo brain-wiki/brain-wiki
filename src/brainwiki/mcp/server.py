@@ -49,23 +49,41 @@ class RuleConfirmation(BaseModel):
 
 
 class HarvestClaim(BaseModel):
-    text: Annotated[str, Field(max_length=500)]
-    turns: Annotated[str, Field(pattern=r"^[0-9]+-[0-9]+$")]
+    text: Annotated[str, Field(max_length=500, description="One durable fact or decision.")]
+    turns: Annotated[
+        str,
+        Field(
+            pattern=r"^[0-9]+-[0-9]+$",
+            description="Turn range it comes from, e.g. 12-15 (12-12 for one turn).",
+        ),
+    ]
 
 
 class HarvestEntry(BaseModel):
     session: Annotated[str, Field(pattern=r"^S[0-9]+$", description="Handle from the packet.")]
-    skip: bool = False
-    reason: Annotated[str | None, Field(max_length=200)] = None
-    summary: Annotated[str | None, Field(max_length=20000)] = None
-    claims: Annotated[list[HarvestClaim], Field(max_length=50)] = []  # noqa: RUF012
+    skip: Annotated[bool, Field(description="True to write no episode for this session.")] = False
+    reason: Annotated[
+        str | None, Field(max_length=200, description="Why the session is skipped.")
+    ] = None
+    summary: Annotated[
+        str | None,
+        Field(max_length=20000, description="What the session was about and what came of it."),
+    ] = None
+    claims: Annotated[
+        list[HarvestClaim],
+        Field(max_length=50, description="Durable facts and decisions, each with its turns."),
+    ] = []  # noqa: RUF012
     negative_findings: Annotated[
-        list[Annotated[str, Field(max_length=500)]], Field(max_length=20)
+        list[Annotated[str, Field(max_length=500)]],
+        Field(max_length=20, description="Approaches that were tried and failed, with why."),
     ] = []  # noqa: RUF012
     open_questions: Annotated[
-        list[Annotated[str, Field(max_length=500)]], Field(max_length=20)
+        list[Annotated[str, Field(max_length=500)]],
+        Field(max_length=20, description="Questions the session raised and did not settle."),
     ] = []  # noqa: RUF012
-    topics: Annotated[list[str], Field(max_length=5)] = []  # noqa: RUF012
+    topics: Annotated[
+        list[str], Field(max_length=5, description="Short lowercase topic hints.")
+    ] = []  # noqa: RUF012
 
 
 class State:
@@ -250,12 +268,18 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         query: Annotated[
             str, Field(max_length=500, description="Keywords; empty to browse within the filters.")
         ] = "",
-        limit: Annotated[int, Field(ge=1, le=50)] = 8,
-        topic: list[str] | None = None,
+        limit: Annotated[int, Field(ge=1, le=50, description="Results per page.")] = 8,
+        topic: Annotated[
+            list[str] | None,
+            Field(description="Topic slugs; a note in any of them or their sub-topics matches."),
+        ] = None,
         type: Annotated[
             list[str] | None, Field(description="Note types, e.g. decision, release, person.")
         ] = None,
-        tag: list[str] | None = None,
+        tag: Annotated[
+            list[str] | None,
+            Field(description="Tags; a note must have all of them (sub-tags count)."),
+        ] = None,
         where: Annotated[
             dict[str, str] | None,
             Field(
@@ -271,17 +295,27 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             Field(description="Default: relevance for a query, recent when browsing."),
         ] = None,
         cursor: Annotated[str | None, Field(description="next_cursor from the last page.")] = None,
-        count_only: bool = False,
-        facets: bool = False,
+        count_only: Annotated[
+            bool, Field(description="Return only the number of matches, without results.")
+        ] = False,
+        facets: Annotated[
+            bool, Field(description="Also count the matches by type, topic, and tag.")
+        ] = False,
         format: Annotated[
             Literal["text", "paths"], Field(description="paths: one path per line.")
         ] = "text",
-        intent: Literal["none", "context", "why", "impact", "history", "related"] = "context",
+        intent: Annotated[
+            Literal["none", "context", "why", "impact", "history", "related"],
+            Field(
+                description="For a query, also return each hit's parents (context), dependencies "
+                "(why), dependents (impact), supersessions (history), or links (related)."
+            ),
+        ] = "context",
         include_episodes: Annotated[
             bool | None,
             Field(description="Pending episodes; default on for a query, off when browsing."),
         ] = None,
-        include_archived: bool = False,
+        include_archived: Annotated[bool, Field(description="Include archived notes.")] = False,
         brain: Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -312,13 +346,21 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         title="Read a note",
         annotations=READ,
         description="Read a note, hub, or episode by id, path, file name, alias, or title. "
-        "Modes: outline (default for long notes), full, section, raw.",
+        "Modes: outline (the default for hubs), full (the default otherwise), section, raw.",
     )
     @guard
     def brain_read(
         target: Annotated[str, Field(description="id, path, file name, alias, or title")],
-        mode: Literal["outline", "full", "section", "raw"] | None = None,
-        section: str | None = None,
+        mode: Annotated[
+            Literal["outline", "full", "section", "raw"] | None,
+            Field(
+                description="outline: headings, claims, relations; full: the body; section: one "
+                "section; raw: the file. Default: full, or outline for hubs."
+            ),
+        ] = None,
+        section: Annotated[
+            str | None, Field(description="Heading of the section to read with mode=section.")
+        ] = None,
         brain: Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -339,15 +381,26 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     @guard
     def brain_neighbors(
         target: Annotated[str, Field(description="id, path, file name, alias, or title")],
-        relations: list[
-            Literal[
-                "part_of", "depends_on", "conflicts_with", "supersedes", "related_to", "links_to"
+        relations: Annotated[
+            list[
+                Literal[
+                    "part_of",
+                    "depends_on",
+                    "conflicts_with",
+                    "supersedes",
+                    "related_to",
+                    "links_to",
+                ]
             ]
-        ]
-        | None = None,
-        direction: Literal["out", "in", "both"] = "both",
-        depth: Annotated[int, Field(ge=1, le=3)] = 1,
-        limit: Annotated[int, Field(ge=1, le=100)] = 30,
+            | None,
+            Field(description="Relations to follow; default: all except links_to."),
+        ] = None,
+        direction: Annotated[
+            Literal["out", "in", "both"],
+            Field(description="out: what the note points to; in: what points to it."),
+        ] = "both",
+        depth: Annotated[int, Field(ge=1, le=3, description="Hops to follow.")] = 1,
+        limit: Annotated[int, Field(ge=1, le=100, description="Most neighbors to return.")] = 30,
         brain: Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -387,7 +440,9 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
                 description="Brain-relative paths you edited; empty lists pending edits without recording.",
             ),
         ] = [],  # noqa: B006
-        allow_shrink: bool = False,
+        allow_shrink: Annotated[
+            bool, Field(description="Allow an edit that removes most of a note.")
+        ] = False,
         brain: Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -422,12 +477,24 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
                 description="What happened and what was learned, in Markdown.",
             ),
         ],
-        claims: Annotated[list[Annotated[str, Field(max_length=500)]], Field(max_length=50)] = [],  # noqa: B006
-        open_questions: Annotated[
-            list[Annotated[str, Field(max_length=500)]], Field(max_length=20)
+        claims: Annotated[
+            list[Annotated[str, Field(max_length=500)]],
+            Field(max_length=50, description="Durable facts or decisions, one per item."),
         ] = [],  # noqa: B006
-        topics: Annotated[list[str], Field(max_length=5)] = [],  # noqa: B006
-        dedupe_key: Annotated[str | None, Field(max_length=200)] = None,
+        open_questions: Annotated[
+            list[Annotated[str, Field(max_length=500)]],
+            Field(max_length=20, description="Questions the session left open."),
+        ] = [],  # noqa: B006
+        topics: Annotated[
+            list[str], Field(max_length=5, description="Topic hints for consolidation.")
+        ] = [],  # noqa: B006
+        dedupe_key: Annotated[
+            str | None,
+            Field(
+                max_length=200,
+                description="Stable key; a repeat call with the same key writes nothing new.",
+            ),
+        ] = None,
         session: Annotated[
             str | None,
             Field(
@@ -435,7 +502,13 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
                 description="Host session id this episode summarizes, if known (recorded as a hint).",
             ),
         ] = None,
-        origin_turns: Annotated[str | None, Field(pattern=r"^[0-9]+-[0-9]+$")] = None,
+        origin_turns: Annotated[
+            str | None,
+            Field(
+                pattern=r"^[0-9]+-[0-9]+$",
+                description="Turn range of that session it covers, e.g. 12-40 (recorded as a hint).",
+            ),
+        ] = None,
         brain: Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -480,7 +553,9 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     )
     @guard
     def brain_propose_rule(
-        text: Annotated[str, Field(min_length=1, max_length=300)],
+        text: Annotated[
+            str, Field(min_length=1, max_length=300, description="The rule, as one short sentence.")
+        ],
         user_quote: Annotated[
             str,
             Field(
@@ -490,7 +565,13 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             ),
         ],
         confirmation: Annotated[ElicitationResult[RuleConfirmation], Resolve(confirm_rule)],
-        replaces: Annotated[str | None, Field(pattern=r"^r-[0-9A-HJKMNP-TV-Z]{26}$")] = None,
+        replaces: Annotated[
+            str | None,
+            Field(
+                pattern=r"^r-[0-9A-HJKMNP-TV-Z]{26}$",
+                description="Id of the existing rule this one replaces.",
+            ),
+        ] = None,
         session: Annotated[
             str | None,
             Field(
@@ -550,8 +631,13 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     )
     @guard
     def brain_consolidate_prepare(
-        topic: str | None = None,
-        max_episodes: Annotated[int | None, Field(ge=1, le=100)] = None,
+        topic: Annotated[
+            str | None, Field(description="Only pending episodes tagged with this topic.")
+        ] = None,
+        max_episodes: Annotated[
+            int | None,
+            Field(ge=1, le=100, description="Most episodes in the packet; default: brain.toml."),
+        ] = None,
         brain: Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -579,13 +665,24 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     )
     @guard
     def brain_consolidate_apply(
-        run: Annotated[str, Field(pattern=r"^run-[0-9A-HJKMNP-TV-Z]{26}$")],
+        run: Annotated[
+            str,
+            Field(
+                pattern=r"^run-[0-9A-HJKMNP-TV-Z]{26}$",
+                description="Run id from brain_consolidate_prepare.",
+            ),
+        ],
         ops: Annotated[
             list[dict[str, Any]],
             Field(description="Operations, see the instructions from prepare."),
         ],
-        dry_run: bool = False,
-        brain: Brain = None,
+        dry_run: Annotated[
+            bool, Field(description="Validate and return the diff without writing.")
+        ] = False,
+        brain: Annotated[
+            str | None,
+            Field(description="Brain name; omit to use the brain that holds the run."),
+        ] = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
         from brainwiki.consolidate import pipeline
@@ -621,15 +718,12 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
                 description="Turn range; default: the episode's range plus context.",
             ),
         ] = None,
-        include_tool_output: bool = False,
         brain: Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
         from brainwiki.origin import format_origin, origin_window
 
-        result = origin_window(
-            state.engine(brain), episode, turns=turns, include_tool_output=include_tool_output
-        )
+        result = origin_window(state.engine(brain), episode, turns=turns)
         return _result(format_origin(result), result)
 
     def harvest_allowed(engine: Engine) -> None:
@@ -656,8 +750,17 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     )
     @guard
     def brain_harvest_prepare(
-        since: Annotated[str, Field(pattern=r"^[0-9]+[hdw]$")] = "7d",
-        max_sessions: Annotated[int, Field(ge=1, le=50)] = 10,
+        since: Annotated[
+            str,
+            Field(
+                pattern=r"^[0-9]+[hdw]$",
+                description="How far back to look, in hours, days, or weeks, e.g. 12h, 7d, 2w.",
+            ),
+        ] = "7d",
+        max_sessions: Annotated[
+            int,
+            Field(ge=1, le=50, description="Most sessions in this packet; call again for more."),
+        ] = 10,
         project: Annotated[
             str | None,
             Field(description="Only sessions whose working directory is under this path."),
@@ -714,8 +817,20 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     )
     @guard
     def brain_harvest_apply(
-        run: Annotated[str, Field(pattern=r"^run-[0-9A-HJKMNP-TV-Z]{26}$")],
-        sessions: Annotated[list[HarvestEntry], Field(max_length=50)],
+        run: Annotated[
+            str,
+            Field(
+                pattern=r"^run-[0-9A-HJKMNP-TV-Z]{26}$",
+                description="Run id from brain_harvest_prepare.",
+            ),
+        ],
+        sessions: Annotated[
+            list[HarvestEntry],
+            Field(
+                max_length=50,
+                description="One entry per session in the packet: its episode, or a skip.",
+            ),
+        ],
         ctx: Context | None = None,
     ) -> CallToolResult:
         from brainwiki import harvest as hv
@@ -794,8 +909,10 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         prog="brain-wiki-mcp", description="brain-wiki stdio MCP server"
     )
-    parser.add_argument("--host", default="auto")
-    parser.add_argument("--brain")
+    parser.add_argument(
+        "--host", default="auto", help="host id for profiles (default: auto-detect)"
+    )
+    parser.add_argument("--brain", help="default brain name or path")
     args = parser.parse_args(argv)
     serve(args.host, args.brain)
 

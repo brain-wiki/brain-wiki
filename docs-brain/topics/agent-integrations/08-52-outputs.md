@@ -13,7 +13,7 @@ bw-part_of:
 | Event | Claude Code / Codex | Antigravity |
 |---|---|---|
 | `session_start` | `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "<orientation>"}}` | `{"injectSteps": [{"ephemeralMessage": "<orientation>"}]}` |
-| `prompt` | `additionalContext` with up to 3 recalled notes and their guards (≤ 600 tokens), only above a score threshold | — |
+| `prompt` | With `[recall] on_prompt = true` and a prompt of at least three words: `additionalContext` listing up to 3 notes scoring at least `[recall] min_score` (default 0.3), each with up to 3 guards, cut to 2,400 characters; otherwise nothing | — |
 | `tool_used` | nothing (records session taint in state) | `{}` |
 | `stop` | prompted capture: `{"decision": "block", "reason": "<capture instruction>"}` at most once per session; otherwise nothing | `{"decision": "continue", "reason": "…"}` likewise |
 | `pre_compact`, `session_end` | nothing; raw capture runs as an async hook so it never eats the host's short session-end budget | — |

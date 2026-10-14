@@ -40,5 +40,5 @@ scan(brain):
   alias edited), edges whose `raw_target` matches the old or new key are
   re-resolved, so dangling links heal without a full rebuild.
 - **Cost.** A stat-only walk of 10k files takes tens of milliseconds on a
-  local SSD. Network file systems and very large brains can opt into a file
-  watcher later (§13).
+  local SSD. A file watcher for network file systems and very large brains
+  is in the [[proposal-readme-backlog|backlog]].

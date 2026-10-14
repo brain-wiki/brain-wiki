@@ -14,7 +14,10 @@ Of particular interest:
 - anything that lets content from a web page, a document, or another
   person become a standing rule or an instruction to the user's agents
   without the user's confirmation;
-- privacy filters that let an agent read notes above its profile's level;
+- profile or host limits that let an agent write what its profile does not
+  allow, or use a brain it is not allowed to;
+- an episode or edit that passes as the user's own, or as untainted, when it
+  is not;
 - secrets that reach a brain despite redaction;
 - path traversal from any input that becomes a file path;
 - the local visualizer server being reachable or writable from elsewhere;

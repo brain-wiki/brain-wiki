@@ -12,7 +12,6 @@ bw-part_of:
 
 | Trigger | Suites |
 |---|---|
-| Every change (CI) | `retrieval`, `lint`, `perf` at 1k |
-| Nightly (CI) | `perf` at 10k |
+| Every change (`scripts/check.py`, and CI through it) | `retrieval` and `lint` on a 300-note brain |
+| Performance work, and before a release | `perf` at 10k (`brain bench perf --sizes 10k`) |
 | Changing consolidation instructions (`instructions_version`) or the ops schema | `consolidation` with at least two backends; the worst-model score must not drop |
-| Before a release | all, including `agent` where hosts are available |

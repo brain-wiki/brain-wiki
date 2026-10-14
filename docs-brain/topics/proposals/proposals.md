@@ -13,6 +13,16 @@ Generated from `docs/proposals/`.
 ## Notes
 - [[proposal-readme]]: Design proposals
   - [[proposal-readme-backlog]]: Backlog
+- [[proposal-consolidation-bench]]: Consolidation bench, full design
+  - [[proposal-consolidation-bench-1-scenario-set]]: Scenario set
+  - [[proposal-consolidation-bench-2-scenario-format]]: Scenario format
+  - [[proposal-consolidation-bench-3-more-deterministic-graders]]: More deterministic graders
+  - [[proposal-consolidation-bench-4-optional-judge]]: Optional judge
+  - [[proposal-consolidation-bench-5-multi-model-metrics]]: Multi-model metrics
+  - [[proposal-consolidation-bench-6-growing-the-set-from-real-failures]]: Growing the set from real failures
+  - [[proposal-consolidation-bench-7-generator-domains]]: Generator domains
+  - [[proposal-consolidation-bench-8-retrieval-queries]]: Retrieval queries
+  - [[proposal-consolidation-bench-9-the-agent-suite]]: The `agent` suite
 - [[proposal-privacy]]: Privacy
   - [[proposal-privacy-1-why-the-old-model-was-removed]]: Why the old model was removed
   - [[proposal-privacy-2-where-content-goes]]: Where content goes

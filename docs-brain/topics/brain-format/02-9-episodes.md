@@ -29,6 +29,7 @@ bw-origin: agent                 # owner | agent | import | system
 bw-taint: unknown                # true | false | unknown
 bw-captured: mcp                 # hook | mcp | harvest | cli | import | file
 bw-topics: [search]              # hints only
+bw-dedupe: claude-code:5f2c9a1e-…:12-48   # idempotency key, if the writer gave one
 ---
 Switched the search path to FTS5 after ripgrep was too slow on 10k notes.
 
@@ -59,6 +60,10 @@ Rules:
   never hold file paths. An episode must be understandable on its own:
   hosts delete old transcripts, and transcripts stay on the device that
   produced them.
+- `bw-dedupe` holds the writer's idempotency key
+  ([[05-21-ways-an-episode-is-written|05 §2.1]]).
+  Episodes imported from documents carry `bw-source`, the original file
+  and heading ([[09-6-to-episodes-and-from-agents|09 §6]]).
 - The body is free Markdown. `## Claims`, `## Negative findings` (what was
   tried and did not work, so later agents do not repeat it), and
   `## Open questions` are suggested sections that consolidation prompts

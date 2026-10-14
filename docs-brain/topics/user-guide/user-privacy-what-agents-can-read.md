@@ -11,5 +11,9 @@ bw-part_of:
 
 Every agent that may use a brain reads all of it: every topic and note.
 Privacy levels inside a brain are being redesigned and are not available
-yet. Until then, keep notes away from an agent by putting them in a brain
-that agent may not use.
+yet. Until then, keep separate parts of your life in separate brains, and
+limit which brains each agent may use (below).
+
+Those limits apply to brain-wiki's own tools. An agent that can read files
+on your machine can still open a brain's Markdown directly, so notes an agent
+must never see belong outside its reach, not only outside its brain list.

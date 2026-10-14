@@ -20,7 +20,7 @@ itself. The message starts with a stable code:
 | `forbidden` | Not allowed by the profile or host limits |
 | `invalid_ops` | Validation failed; a list of `{op_index, check, message}` follows |
 | `stale` | Notes changed since the packet was prepared; prepare again |
-| `budget_exceeded` | A hub or `rules.md` would exceed its budget |
+| `budget_exceeded` | `rules.md` would exceed its budget |
 | `expired` | The run handle is older than its expiry |
 | `busy` | The brain's write lock could not be taken in time |
 | `not_available` | An episode's origin conversation is not on this device or was deleted by the host |

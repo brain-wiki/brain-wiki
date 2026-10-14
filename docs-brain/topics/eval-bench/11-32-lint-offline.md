@@ -16,5 +16,6 @@ expected diagnostics (code, path, line).
 | Metric | Target |
 |---|---|
 | Per-rule precision and recall | 100% on the corpus |
+| Fix resolves: `--fix` clears the finding it targets | always |
 | Fix idempotency: `--fix` twice changes nothing the second time | always |
 | Fix locality: fixes change only the lines they must | always |

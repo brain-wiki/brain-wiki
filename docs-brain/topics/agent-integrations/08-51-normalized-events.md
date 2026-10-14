@@ -10,10 +10,10 @@ bw-part_of:
 ---
 # Normalized events
 
-| Normalized | Claude Code | Codex | Antigravity | OpenClaw (hook pack) |
+| Normalized | Claude Code | Codex | Antigravity | OpenClaw (accepted; nothing installs it) |
 |---|---|---|---|---|
 | `session_start` | `SessionStart` | `SessionStart` | `PreInvocation` with `invocationNum == 0` | `agent:bootstrap` |
-| `prompt` (opt-in recall) | `UserPromptSubmit` | `UserPromptSubmit` | — (no prompt text exposed) | — |
+| `prompt` (recall; wired by hand) | `UserPromptSubmit` | `UserPromptSubmit` | — (no prompt text exposed) | — |
 | `tool_used` (taint) | `PostToolUse` | `PostToolUse` | `PostToolUse` | — |
 | `stop` | `Stop` | `Stop` | `Stop` | — |
 | `pre_compact` | `PreCompact` | `PreCompact` | — | `session:compact:before` |

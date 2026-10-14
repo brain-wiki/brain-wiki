@@ -13,11 +13,10 @@ bw-part_of:
 - **Synthetic, seeded data.** Every dataset is generated from a seed or
   hand-written about fictional subjects. No personal data, no licensing
   questions, fully reproducible.
-- **Deterministic grading first.** Graders check anchors, handles, spans,
-  and structure. An LLM judge is optional, labeled, and reported
-  separately.
+- **Deterministic grading.** Graders check anchors, handles, spans, and
+  structure. No LLM judges a result.
 - **Negative assertions.** Cases state what must *not* happen (noise
-  promoted, a forbidden claim, a leaked note), not only what should.
+  promoted, a forbidden claim, a rule written), not only what should.
 - **Worst model, not average.** For model comparisons the headline is the
   lowest score across backends, because a brain is shared by every model
   that writes to it.

@@ -10,25 +10,14 @@ bw-part_of:
 ---
 # Data (Eval bench)
 
-- **Generator** (`brainwiki.bench.gen`): seeded; fictional domains
-  (a software project, a research lab, a recipe collection, a community
-  garden); produces notes, claims with anchors, relations, chains,
-  conflicts, and episodes with controlled noise and
-  injection.
-- **Example brain:** a small hand-written brain about a fictional
-  software project, also used by tests and docs.
-- **Scenario format:**
-
-```text
-bench/scenarios/<slice>/<id>/
-├── scenario.toml        id, slice, description, notes for maintainers
-├── brain/               starting brain (a normal brain directory)
-├── episodes/            episodes to place in the inbox before the run
-└── expect.toml          expected claims (anchors, terms, target), forbidden anchors,
-                         expected ops and relations
-```
-
-- **Growing the set from real failures:** `brain bench capture <run>`
-  copies a real run's packet, ops, and validation result into a draft
-  scenario under the user's state directory. It never leaves the machine
-  automatically; the user scrubs it and decides whether to contribute it.
+- **Generator** (`brainwiki.bench.generate`): seeded; notes about invented
+  software projects, in common English words plus generated pseudo-words
+  drawn with a Zipf distribution so FTS ranks them like real prose. It
+  plants topics, notes, claims with anchors, relations, supersession
+  chains, conflicts, and episodes, and records the ground truth. The same
+  seed writes byte-identical files.
+- **Queries** come from the generated notes: a planted token (`exact`), a
+  title (`title`), and a token shared by a small group with graded
+  relevance (`group`).
+- **Base brain:** a small hand-written brain about a fictional software
+  project, the starting point for the lint and consolidation cases.

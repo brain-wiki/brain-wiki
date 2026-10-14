@@ -10,8 +10,9 @@ bw-part_of:
 ---
 # `perf` (offline)
 
-Generated brains of 1k and 10k notes; measures the budgets in
-[[13-5-performance-budgets|13 §5]]: freshness check, full
-rebuild, search and read latency percentiles, orientation, lint, and
-`brain hook` end to end (process start to output). Each budget is a pass
-or fail line in the report.
+Generated brains of the sizes given by `--sizes` (default `1k`; budgets
+apply at 10k and are relaxed 2× below it); measures the budgets in
+[[13-5-performance-budgets|13 §5]]: freshness check,
+one-file update, full rebuild, search and read latency percentiles,
+orientation, warm lint, and the `SessionStart` hook end to end (process
+start to output). Each budget is a pass or fail line in the report.

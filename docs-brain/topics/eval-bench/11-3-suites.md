@@ -14,6 +14,6 @@ bw-part_of:
 ## Subsections
 - [[11-31-retrieval-offline]]: `retrieval` (offline)
 - [[11-32-lint-offline]]: `lint` (offline)
-- [[11-33-consolidation-model-backends]]: `consolidation` (model backends)
+- [[11-33-consolidation]]: `consolidation`
 - [[11-34-perf-offline]]: `perf` (offline)
-- [[11-35-agent-optional-real-hosts]]: `agent` (optional, real hosts)
+- [[11-35-agent]]: `agent`

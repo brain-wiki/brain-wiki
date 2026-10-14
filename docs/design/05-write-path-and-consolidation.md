@@ -70,7 +70,7 @@ All writers go through one function, `write_episode()`, which:
    blocks; [10](10-security-and-privacy.md)), replacing them with
    `[REDACTED:<kind>]`.
 4. Enforces a size cap (default 64 KiB; the excess is cut and noted).
-5. Applies an idempotency key if given (`dedupe:` in frontmatter; hook
+5. Applies an idempotency key if given (`bw-dedupe` in frontmatter; hook
    capture uses `<host>:<session>:<turn range>`), so retries do not
    duplicate. A marker created with `O_EXCL` in the state dir makes the
    check atomic across processes on one device; the index catches keys
@@ -137,9 +137,10 @@ brain-wiki. They are usable knowledge but can never feed rules.
 `brain harvest --apply` in a terminal. Scheduled harvest was removed before
 0.1 ([proposal](../proposals/scheduled-maintenance.md)).
 
-Harvest is off by default and enabled per host (`[harvest] hosts` in the
-user config, plus `harvest` in the host's profile `write` list for the
-agent backend). Every CLI run starts as a dry run that lists the sessions
+The in-agent recipe is off by default and enabled per host (`[harvest]
+enabled` and `hosts` in the user config, plus `harvest` in the host's
+profile `write` list). `brain harvest` in a terminal is the owner's
+command and needs neither; every CLI run starts as a dry run that lists the sessions
 it would read, the brain each routes to, and an estimate of tokens for
 distillation; `--apply` executes. A backend only receives sessions routed
 to a brain; unrouted sessions are skipped.
@@ -158,7 +159,7 @@ and then run `brain check` (MCP `brain_check`) on what they changed.
 |---|---|
 | Profile capability `edit` ([07 §1](07-interfaces.md#1-agent-profiles)) | On for the owner profile; off unless listed in `write` for other profiles |
 | Topic policy `[topics.<slug>] agent_edits = "allow" \| "review" \| "deny"` ([02 §3](02-brain-format.md#3-braintoml)) | `allow`. `review` turns a checked edit into a proposal for the user (§7.2) and restores the file; `deny` refuses it |
-| Protected files | Never editable this way: `rules.md` (§6), inbox and archived episodes, `log.md`, `reports/`, the managed block of `AGENTS.md`, `brain.toml` |
+| Protected files | Never editable this way: `rules.md` (§6), inbox and archived episodes, `log.md`, `reports/`, `AGENTS.md`, `brain.toml` |
 
 **What `brain check` validates,** for each changed note against its last
 recorded version:
@@ -543,9 +544,10 @@ summary, the rendered diff, warnings, and the ops as a fenced JSON block.
 Nothing else changes; the episodes stay pending (and are excluded from new
 packets while a proposal references them).
 
-- `brain review list | show <run> | accept <run> | reject <run>` (and MCP
-  equivalents for agents, gated like rules: accept requires user
-  confirmation).
+- `brain review list | show <run> | accept <run> | reject <run>`. Review is
+  CLI-only: there are no MCP review tools, so an agent can point the user
+  at a proposal but cannot accept it (MCP review tools are in the
+  [backlog](../proposals/README.md#backlog)).
 - Accept re-validates the stored ops against the current brain (notes may
   have changed) and applies them as a normal run.
 - Proposals are files in the brain, so they sync to the user's other
@@ -591,7 +593,7 @@ Every run (consolidation, rule change, review accept, import apply,
 }
 ```
 
-Pre-images are stored next to it (`preimages/<sha256>`, zstd or gzip).
+Pre-images are stored next to it (`preimages/<sha256>`, gzip).
 
 `brain undo [<run>]` (default: the latest applied run on this device):
 
@@ -614,7 +616,7 @@ Retention: the last 200 runs or 90 days, whichever keeps more.
 | Consolidation while agents log | New episodes are simply not in the packet. |
 | Two consolidations on one device | The second waits for the write lock (bounded), then usually finds its notes stale and re-prepares. |
 | Human edits a note mid-run | The hash check in §7.3 makes the run stale; nothing is overwritten. |
-| Two devices consolidate the same episodes before syncing | Both runs succeed locally; after sync the notes have duplicate claims citing the same span. Lint reports `BW-duplicate-source` and `reports/duplicates.md` lists them. Mitigation: set `[consolidate] device = "<hostname>"` so scheduled runs happen on one machine; other devices warn. |
+| Two devices consolidate the same episodes before syncing | Both runs succeed locally; after sync the notes have duplicate claims citing the same span. Lint reports BW206 and `reports/duplicates.md` lists them. Mitigation: consolidate on one device. |
 | Episode already archived by another device | Skipped at selection (it is no longer pending). |
 
 ## 10. Failure modes

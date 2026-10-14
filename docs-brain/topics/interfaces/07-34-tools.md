@@ -102,6 +102,8 @@ in 04 and 05):
       "user_quote": {"type": "string", "minLength": 1, "maxLength": 500,
                      "description": "The user's exact words asking for this rule."},
       "replaces":   {"type": "string", "pattern": "^r-[0-9A-HJKMNP-TV-Z]{26}$"},
+      "session":    {"type": "string", "maxLength": 200,
+                     "description": "Host session id, if known; a session the host's hooks saw read untrusted content may not propose rules."},
       "brain":      {"type": "string"}}},
 
   "brain_consolidate_prepare": {"type": "object", "additionalProperties": false,
@@ -119,10 +121,9 @@ in 04 and 05):
 
   "brain_read_origin": {"type": "object", "additionalProperties": false, "required": ["episode"],
     "properties": {
-      "episode":             {"type": "string", "description": "Episode id or packet handle (E1)."},
+      "episode":             {"type": "string", "description": "Episode id or path."},
       "turns":               {"type": "string", "pattern": "^[0-9]+-[0-9]+$",
                               "description": "Turn range; default: the episode's range plus context."},
-      "include_tool_output": {"type": "boolean", "default": false},
       "brain":               {"type": "string"}}},
 
   "brain_harvest_prepare": {"type": "object", "additionalProperties": false,

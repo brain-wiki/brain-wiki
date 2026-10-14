@@ -12,9 +12,12 @@ bw-part_of:
 
 One entry point: `brain hook <host|auto> <event>`, reading the host's JSON
 payload on stdin and writing the host's expected JSON on stdout. Every hook
-is opt-in: `session_start` with `brain connect --briefing-hook`, the others
-with `--capture`. Without hooks, agents rely on the static instruction block
-(§3.2).
+is opt-in: `session_start` with `brain connect --briefing-hook`, and
+`tool_used`, `stop`, `pre_compact`, and `session_end` with `--capture`.
+`brain connect` never installs `prompt`; a user who wants per-prompt recall
+adds a `UserPromptSubmit` hook running `brain hook <host> UserPromptSubmit`
+to the host's hook settings by hand and sets `[recall] on_prompt = true`.
+Without hooks, agents rely on the static instruction block (§3.2).
 
 ## Subsections
 - [[08-51-normalized-events]]: Normalized events

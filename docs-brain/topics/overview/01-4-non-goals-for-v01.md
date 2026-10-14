@@ -24,7 +24,7 @@ bw-part_of:
   expansion. Vector search is an optional later addition.
 - **Remote storage backends.** v0.1 supports a local directory, optionally a
   git repo. Private git remotes and object storage (GCS, S3 via fsspec) are
-  designed in [[config-and-storage|03]] but not built.
+  designed in a [[proposal-remote-sync|proposal]] but not built.
 - **Automatic web ingestion, email or chat importers.** Importers in v0.1
   cover existing Markdown folders (including Obsidian vaults) only.
 - **Encryption.** Documented recipes only ([[security-and-privacy|10]]).

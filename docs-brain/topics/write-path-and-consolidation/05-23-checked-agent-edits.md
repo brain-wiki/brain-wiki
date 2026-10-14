@@ -22,7 +22,7 @@ and then run `brain check` (MCP `brain_check`) on what they changed.
 |---|---|
 | Profile capability `edit` ([[07-1-agent-profiles\|07 §1]]) | On for the owner profile; off unless listed in `write` for other profiles |
 | Topic policy `[topics.<slug>] agent_edits = "allow" \| "review" \| "deny"` ([[02-3-braintoml\|02 §3]]) | `allow`. `review` turns a checked edit into a proposal for the user (§7.2) and restores the file; `deny` refuses it |
-| Protected files | Never editable this way: `rules.md` (§6), inbox and archived episodes, `log.md`, `reports/`, the managed block of `AGENTS.md`, `brain.toml` |
+| Protected files | Never editable this way: `rules.md` (§6), inbox and archived episodes, `log.md`, `reports/`, `AGENTS.md`, `brain.toml` |
 
 **What `brain check` validates,** for each changed note against its last
 recorded version:

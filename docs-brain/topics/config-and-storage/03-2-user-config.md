@@ -44,6 +44,7 @@ hosts   = ["claude-code"]
 
 [harvest]                            # opt-in reading of host session stores (08 §6)
 enabled = false
+hosts   = ["claude-code"]
 ```
 
 - The config holds **locations and per-user choices only**. Everything that

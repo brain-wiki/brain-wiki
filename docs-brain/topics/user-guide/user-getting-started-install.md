@@ -14,6 +14,6 @@ uv tool install brain-wiki     # or: pipx install brain-wiki
 brain doctor
 ```
 
-`brain doctor` reports the Python and SQLite it uses, your brains, and which
-agents it found on this machine. It changes nothing (except rolling back a
+`brain doctor` reports its version and SQLite, your brains, and which agents
+it found on this machine. It changes nothing (except rolling back a
 run that a crash left half-applied).

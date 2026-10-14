@@ -16,5 +16,5 @@ bw-part_of:
 | A file fails to parse (bad YAML, bad encoding) | The file is indexed as plain text with `parse_errors=1` and a diagnostic; search still finds it; lint reports it. |
 | Two files share an id | Both indexed; the newer file gets `path:` as its node id until fixed; lint error. |
 | Link target ambiguous | Edge stored with `dst = NULL`; lint error lists candidates. |
-| SQLite busy beyond timeout | The read proceeds on the last committed state and the response says the index may be stale. |
+| SQLite busy beyond timeout | After `busy_timeout` (5 s) the call fails with SQLite's lock error; retrying works once the other writer finishes. |
 | SQLite lacks trigram | `meta.fts_trigram = 0`; CJK queries use the `LIKE` fallback; `brain doctor` reports it. |

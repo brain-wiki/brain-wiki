@@ -22,7 +22,8 @@ bw-part_of:
 | `source`, `sources` (when the value is a wikilink) | `bw-depends_on` with qualifier `(source)` |
 
 Accepted value shapes: a YAML list of wikilinks, a quoted single wikilink,
-a comma-joined string of several wikilinks (`"[[A]], [[B]]"`, a common
-artifact of tools that write lists as strings), and bare names (resolved
-like link targets). Values that are not links (`source: "a book"`) are
-left alone.
+and a string holding several wikilinks (`"[[A]], [[B]]"`, a common
+artifact of tools that write lists as strings). Only `[[wikilinks]]` are
+converted: bare names (`parent: Projects`) and other values
+(`source: "a book"`) are left alone, because a plain string cannot be told
+apart from a name.

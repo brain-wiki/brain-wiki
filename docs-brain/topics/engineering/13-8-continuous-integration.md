@@ -10,20 +10,23 @@ bw-part_of:
 ---
 # Continuous integration
 
-When the repository is published, GitHub Actions jobs:
+`uv run scripts/check.py` is the one entry point, locally and in CI. It
+runs, and reports each step:
 
-1. Lint and type check.
-2. Tests on the platform and Python matrix.
-3. Plugin manifest validation: JSON schemas for Agent Plugins and
-   Antigravity manifests; `claude plugin validate .` when the CLI is
-   available.
-4. Visualizer bundle check: check out brain-wiki-viz at the commit in
-   `src/brainwiki/viz/app/BUILD_INFO.json`, `npm ci`, then
-   `scripts/check_viz.py --source <checkout>` rebuilds it and fails if the
-   result differs from the committed bundle. brain-wiki-viz's own CI runs its
-   type check, unit tests, and the public-registry lockfile check
-   (`npm run check`).
-5. Version consistency (§4).
-6. Bench offline suites and the 1k perf suite.
+1. `ruff check` and `ruff format --check` on `src`, `tests`, and `scripts`.
+2. The test suite (`pytest`).
+3. Version consistency (`scripts/sync_versions.py --check`, §4).
+4. The docs brain is current (`scripts/build_docs_brain.py --check`).
+5. Visualizer bundle check (`scripts/check_viz.py`): the committed bundle
+   is complete and `BUILD_INFO.json` names a clean brain-wiki-viz commit.
+   With `--source <checkout>` (a brain-wiki-viz checkout at that commit,
+   after `npm ci`) it also rebuilds the bundle and fails if the result
+   differs. brain-wiki-viz's own CI runs its type check, unit tests, and
+   the public-registry lockfile check (`npm run check`).
+6. Package contents: builds the wheel and sdist and checks that the
+   plugin files, prompts, skills, and visualizer are in the wheel and that
+   the sdist holds only allowed top-level entries.
+7. The offline bench: `retrieval` and `lint` on a 300-note brain.
 
-Until then, the same steps run locally through `uv run scripts/check.py`.
+GitHub Actions runs `scripts/check.py` on Ubuntu and macOS with Python 3.11
+and 3.13 on every push and pull request.

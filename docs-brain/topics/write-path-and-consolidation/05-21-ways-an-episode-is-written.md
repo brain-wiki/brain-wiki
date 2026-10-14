@@ -37,7 +37,7 @@ All writers go through one function, `write_episode()`, which:
    blocks; [[security-and-privacy|10]]), replacing them with
    `[REDACTED:<kind>]`.
 4. Enforces a size cap (default 64 KiB; the excess is cut and noted).
-5. Applies an idempotency key if given (`dedupe:` in frontmatter; hook
+5. Applies an idempotency key if given (`bw-dedupe` in frontmatter; hook
    capture uses `<host>:<session>:<turn range>`), so retries do not
    duplicate. A marker created with `O_EXCL` in the state dir makes the
    check atomic across processes on one device; the index catches keys

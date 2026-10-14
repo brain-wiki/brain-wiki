@@ -33,9 +33,9 @@ included in full:
    lists the sub-topics).
 5. Recent changes: the last 5 `log.md` entries, one line each, and the number
    of notes updated in the last 7 days.
-6. Inbox status: pending episode count, oldest pending age, and a hint to
-   consolidate when it exceeds a threshold (plus unharvested sessions when
-   harvest is enabled for the caller, from a cached count).
+6. Inbox status: pending episode count, oldest pending age, rule proposals
+   awaiting `brain rule accept`, and a hint to consolidate when 20 or more
+   episodes are pending or the oldest is more than 7 days old.
 7. How to query: three example calls built from this brain's own topics and
    types (a keyword search, a typed "latest" lookup, and a `why` search).
 

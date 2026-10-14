@@ -10,11 +10,11 @@ bw-part_of:
 # Create a brain
 
 ```sh
-brain init ~/brains/personal --name personal
+brain init ~/brains/personal --name personal --git
 ```
 
-Keep brains outside code repositories. A brain is an ordinary folder: put it
-under git (recommended), or in a synced folder.
+Keep brains outside code repositories. A brain is an ordinary folder: under
+git (`--git`, recommended), or in a synced folder.
 
 ```text
 ~/brains/personal/

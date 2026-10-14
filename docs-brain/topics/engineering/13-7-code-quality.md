@@ -10,8 +10,7 @@ bw-part_of:
 ---
 # Code quality
 
-- `ruff` for linting and formatting; `pyright` in strict mode for
-  `format`, `store`, `index`, `consolidate`, and `runs`.
-- Coverage target: 90% lines for the core packages listed above.
-- No `shell=True`, no `eval`, no network access in core code; enforced by a
-  ruff rule set and a test that greps the core packages.
+- `ruff` for linting and formatting, with the `S` (bandit) rules on, which
+  flag `shell=True`, `eval`, and similar calls.
+- No type checker runs and there is no coverage target.
+- No network access in core code: a convention, not a check.

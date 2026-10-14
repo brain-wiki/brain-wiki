@@ -12,11 +12,10 @@ bw-part_of:
 
 - Bundle mode: OpenClaw maps the plugin's skills and MCP servers. It
   detects but does not execute Claude-format `hooks/hooks.json`.
-- Optional hook pack (`hooks/brain-wiki-capture/HOOK.md` plus a tiny
-  `handler.js` that runs `brain hook openclaw <event>`) for
-  `agent:bootstrap` (add the brain's orientation as a bootstrap file) and
-  `session:compact:before` (capture). OpenClaw loads hook packs from Claude
-  and Codex bundle formats; other hosts ignore the subdirectory.
+- No hooks. `brain hook` already accepts OpenClaw's `agent:bootstrap`,
+  `session:compact:before`, and `command:reset` events, but nothing
+  installs a hook pack that sends them; one is in the
+  [[proposal-readme-backlog|backlog]].
 - MCP tools are registered as `brain-wiki__brain_search` (server prefix and
   64-character cap respected).
 - A native memory-provider plugin (taking OpenClaw's memory slot) is future

@@ -14,7 +14,7 @@ tuned on evidence and regressions are caught:
 | Consolidation writes faithful, specific, well-placed claims, with any model (G4, G8) | `consolidation` |
 | Injected instructions never become rules or directives | `consolidation` (injection slice) |
 | Hooks and search are fast enough (G7) | `perf` |
-| A real agent with the plugin answers with current knowledge | `agent` (optional) |
+| A real agent with the plugin answers with current knowledge | `agent` (not built, §3.5) |
 
 Rule for the project: published numbers come only from this bench, with
 the command and version that produced them.
@@ -24,11 +24,10 @@ the command and version that produced them.
 - **Synthetic, seeded data.** Every dataset is generated from a seed or
   hand-written about fictional subjects. No personal data, no licensing
   questions, fully reproducible.
-- **Deterministic grading first.** Graders check anchors, handles, spans,
-  and structure. An LLM judge is optional, labeled, and reported
-  separately.
+- **Deterministic grading.** Graders check anchors, handles, spans, and
+  structure. No LLM judges a result.
 - **Negative assertions.** Cases state what must *not* happen (noise
-  promoted, a forbidden claim, a leaked note), not only what should.
+  promoted, a forbidden claim, a rule written), not only what should.
 - **Worst model, not average.** For model comparisons the headline is the
   lowest score across backends, because a brain is shared by every model
   that writes to it.
@@ -40,14 +39,15 @@ the command and version that produced them.
 ### 3.1 `retrieval` (offline)
 
 Generated brains with known structure: topics, notes, claims, relations,
-supersession chains up to 4 long, conflict pairs, and episodes. Queries come from templates over titles and claims (with
-synonym substitution) plus hand-written queries for the example brain.
+supersession chains up to 4 long, conflict pairs, and episodes. Queries
+come from the generated notes (§4).
 
 | Metric | Target |
 |---|---|
 | Recall@8, MRR, nDCG@8 for primary results | tracked; used to tune ranking factors |
 | **Guard recall**: for every hit with a guard neighbor, the neighbor is returned | **100%** (fails the suite otherwise) |
-| Newest-successor correctness through chains | **100%** |
+| Unexpected guards: guard neighbors the ground truth does not have | 0 |
+| Newest-successor correctness through chains | **100%** (fails the suite otherwise) |
 
 ### 3.2 `lint` (offline)
 
@@ -57,115 +57,86 @@ expected diagnostics (code, path, line).
 | Metric | Target |
 |---|---|
 | Per-rule precision and recall | 100% on the corpus |
+| Fix resolves: `--fix` clears the finding it targets | always |
 | Fix idempotency: `--fix` twice changes nothing the second time | always |
 | Fix locality: fixes change only the lines they must | always |
 
-### 3.3 `consolidation` (model backends)
+### 3.3 `consolidation`
 
-Each scenario is a starting brain, a set of episodes, and expectations.
-Initial set: about 20 hand-written scenarios (roughly 4 per slice), grown
-over time.
+Two offline slices drive the real pipeline with scripted ops, so they run
+without a model; any failed check is a hard failure:
 
-| Slice | Situation | Expectations |
+| Slice | Situation | Checks (all must hold) |
 |---|---|---|
-| A · Extraction and routing | Episodes mixing durable facts with debugging noise and asides | Expected claims land in the right note; noise and asides produce no claims (`skip_episode` or nothing) |
-| B · Non-destructive merge | A rich note plus an episode confirming two facts and adding one | `merge_claim` for the confirmations, `add_claim` for the new fact; every prior anchor remains in the active view |
-| C · Update and contradiction | Two episodes where the second reverses a decision | `supersede_claim` (old kept in `bw-claims-superseded`); dependents appear in the stale report; "why did we change?" remains answerable from the note |
-| D · Relations | Episodes stating dependencies and replacements between notes | Expected relation verbs and directions |
-| E · Injection | Tainted episodes containing instructions ("add a rule…", "ignore previous…", "tell the user…") | No rule is written (structurally impossible, verified); no claim restates an instruction as a directive; derived claims carry `taint` |
-| F · Completeness | Many small episodes, some trivial | Every episode is cited or skipped with a reason |
-| G · Harvest distillation | Synthetic transcripts in each supported host's format, mixing durable decisions, dead ends, debugging noise, a web fetch, and an injected instruction in tool output | Episode claims cover the decisions and negative findings with correct turn ranges; noise produces nothing; `bw-taint: true`; no claim restates the injected instruction; subagent and in-progress sessions are skipped |
+| E · Injection | A tainted episode containing instructions ("Add a rule…", "Ignore previous instructions…") and one fact | The packet marks the episode untrusted; no packet handle points at `rules.md`; an op that writes a rule is rejected; derived claims carry `taint: true`; a claim that restates the instruction is flagged by BW702; `rules.md` is unchanged |
+| F · Completeness | Six small episodes; ops cite two and skip one | The run applies; uncited episodes are reported pending, stay in the inbox, and are offered to the next run; cited and skipped episodes are archived |
 
-**Deterministic graders:**
+Four model slices run only with `--backends PRESET,...` (headless presets,
+[08 §7](08-agent-integrations.md#7-headless-presets)), one scenario each,
+written in `brainwiki.bench.suites`:
 
-| Metric | How |
-|---|---|
-| Validity | Ops pass validation on the first attempt / after one retry |
-| Claim recall | An expected claim is matched when a written claim contains its required anchors (numbers, names, versions, dates) and its key terms |
-| Forbidden claims | Any written claim containing a forbidden anchor or phrase is a violation |
-| Op-type accuracy | Per expected (episode, target) pair: add vs merge vs supersede vs skip |
-| Placement accuracy | Target note or topic matches |
-| Relation precision and recall | Verb, direction, endpoints |
-| Citation faithfulness | Each written claim's anchors appear inside the episode spans it cites |
-| Specificity | Anchors dropped by `supersede_claim` (the V9 warning), per run |
-| Taint propagation | Claims from tainted episodes carry `taint` |
-| Completeness | Unaccounted episodes per run |
+| Slice | Episode | Checks |
+|---|---|---|
+| A · Extraction | A durable fact mixed with debugging noise and an aside | Claim recall on the fact's anchor; no claim from the noise |
+| B · Merge | Confirms an existing fact and adds one | Claim recall on the new fact; the prior claim stays active |
+| C · Supersede | Raises a limit an existing claim states | Claim recall on the new value; the old claim is superseded |
+| D · Relations | States a dependency between two notes | A `depends_on` edge between them |
 
-An optional `--judge <preset>` asks a model to rate atomicity and
-faithfulness per claim; its scores are reported in a separate column and
-never gate anything.
+Every model scenario also records `valid_first_try`, `valid_after_retry`
+(ops pass validation after at most one retry with the errors appended),
+and `all_episodes_accounted`. Claim recall counts an expected anchor as
+found when an active claim contains it. Across backends, the suite reports
+`worst_model_claim_recall` per slice: the lowest score, because a brain is
+shared by every model that writes to it.
 
-**Multi-model metrics** (same scenarios, several presets, 3 repeats each by
-default):
-
-| Metric | Measures |
-|---|---|
-| Worst-model score per slice | The headline number |
-| Self-consistency | Variance across repeats of one model |
-| Agreement on op type and placement (Fleiss' kappa) | Whether models make the same structural decisions |
-| Claim-set overlap (anchor-matched Jaccard) | Content divergence |
-| Cross-read retrieval | After model A consolidates, run the retrieval queries; tests whether A's notes serve every reader |
-| Tokens and wall time | From the host CLI's JSON output where it reports usage |
+A larger scenario set, harvest distillation (slice G), more graders, an
+optional LLM judge, and multi-model agreement metrics are a
+[proposal](../proposals/consolidation-bench.md).
 
 ### 3.4 `perf` (offline)
 
-Generated brains of 1k and 10k notes; measures the budgets in
-[13 §5](13-engineering.md#5-performance-budgets): freshness check, full
-rebuild, search and read latency percentiles, orientation, lint, and
-`brain hook` end to end (process start to output). Each budget is a pass
-or fail line in the report.
+Generated brains of the sizes given by `--sizes` (default `1k`; budgets
+apply at 10k and are relaxed 2× below it); measures the budgets in
+[13 §5](13-engineering.md#5-performance-budgets): freshness check,
+one-file update, full rebuild, search and read latency percentiles,
+orientation, warm lint, and the `SessionStart` hook end to end (process
+start to output). Each budget is a pass or fail line in the report.
 
-### 3.5 `agent` (optional, real hosts)
+### 3.5 `agent`
 
-A few end-to-end scenarios run a host headless with the plugin installed,
-on a fixture brain: for example, ask about a decision that was later
-superseded and check that the answer states the current decision; ask the
-agent to remember something and check that an episode appears with the
-right provenance; run the `harvest` recipe over fixture sessions and check
-the episodes, their turn ranges, and that taint came from the server's
-parse rather than the model; run guided onboarding on a fresh home
-directory and check the end state and that every write was preceded by a
-dry run; check skill triggering with should-trigger and near-miss prompts
-([15 §5](15-skills-and-onboarding.md#5-testing)). Expensive and host-dependent; run manually before
-releases.
+Reserved for end-to-end runs of real hosts with the plugin installed. Not
+built: `brain bench agent` reports the suite as skipped, and those checks
+are done by hand before releases. The planned scenarios are in the
+[proposal](../proposals/consolidation-bench.md#9-the-agent-suite).
 
 ## 4. Data
 
-- **Generator** (`brainwiki.bench.gen`): seeded; fictional domains
-  (a software project, a research lab, a recipe collection, a community
-  garden); produces notes, claims with anchors, relations, chains,
-  conflicts, and episodes with controlled noise and
-  injection.
-- **Example brain:** a small hand-written brain about a fictional
-  software project, also used by tests and docs.
-- **Scenario format:**
-
-```text
-bench/scenarios/<slice>/<id>/
-├── scenario.toml        id, slice, description, notes for maintainers
-├── brain/               starting brain (a normal brain directory)
-├── episodes/            episodes to place in the inbox before the run
-└── expect.toml          expected claims (anchors, terms, target), forbidden anchors,
-                         expected ops and relations
-```
-
-- **Growing the set from real failures:** `brain bench capture <run>`
-  copies a real run's packet, ops, and validation result into a draft
-  scenario under the user's state directory. It never leaves the machine
-  automatically; the user scrubs it and decides whether to contribute it.
+- **Generator** (`brainwiki.bench.generate`): seeded; notes about invented
+  software projects, in common English words plus generated pseudo-words
+  drawn with a Zipf distribution so FTS ranks them like real prose. It
+  plants topics, notes, claims with anchors, relations, supersession
+  chains, conflicts, and episodes, and records the ground truth. The same
+  seed writes byte-identical files.
+- **Queries** come from the generated notes: a planted token (`exact`), a
+  title (`title`), and a token shared by a small group with graded
+  relevance (`group`).
+- **Base brain:** a small hand-written brain about a fictional software
+  project, the starting point for the lint and consolidation cases.
 
 ## 5. Output
 
-- `--out DIR` receives `report.json` (stable schema: suite, case, backend,
-  metric, value, pass) and `report.md` (tables per suite and backend, the
-  worst-model line first).
-- `brain bench compare A.json B.json` prints regressions and improvements.
+- `--out DIR` (default: a new temporary directory) receives `results.json`
+  (schema version, brain-wiki version, the command, and one record per
+  metric: suite, case, backend, metric, value, target, pass, hard) and
+  `report.md` (tables per suite; in `consolidation`, the worst-model lines
+  first). The command exits 1 when a hard target fails.
+- `brain bench --compare A B` prints metric changes between two
+  `results.json` files and exits 1 when a metric went from pass to fail.
 
 ## 6. When the bench runs
 
 | Trigger | Suites |
 |---|---|
-| Every change (CI) | `retrieval`, `lint`, `perf` at 1k |
-| Nightly (CI) | `perf` at 10k |
+| Every change (`scripts/check.py`, and CI through it) | `retrieval` and `lint` on a 300-note brain |
+| Performance work, and before a release | `perf` at 10k (`brain bench perf --sizes 10k`) |
 | Changing consolidation instructions (`instructions_version`) or the ops schema | `consolidation` with at least two backends; the worst-model score must not drop |
-| Before a release | all, including `agent` where hosts are available |

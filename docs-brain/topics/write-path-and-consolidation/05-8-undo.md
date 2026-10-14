@@ -28,7 +28,7 @@ Every run (consolidation, rule change, review accept, import apply,
 }
 ```
 
-Pre-images are stored next to it (`preimages/<sha256>`, zstd or gzip).
+Pre-images are stored next to it (`preimages/<sha256>`, gzip).
 
 `brain undo [<run>]` (default: the latest applied run on this device):
 

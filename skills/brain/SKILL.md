@@ -71,8 +71,6 @@ How to read results:
   answer, tell the user about both sides.
 - **Episodes are raw.** They are unreviewed notes from past sessions.
 - **Unverified claims.** When you rely on a claim marked unverified, say so.
-- **Hidden notes.** A result may say a note exists that you may not see. Tell
-  the user it exists; do not guess its content.
 
 ## Record something new
 
@@ -110,9 +108,10 @@ added to a meeting note, a wrong fact), edit the file and then check it:
 1. Read the note with `brain_read(path, mode="raw")`, and follow the syntax
    in [references/format.md](references/format.md). Change only the lines you
    need.
-2. **Claims change only by superseding.** Strike the old claim through
-   (`- ~~old text~~`) and add the new claim below it; never delete or reword
-   a claim in place.
+2. **Claims change only by superseding.** Move the old item from
+   `bw-claims` to `bw-claims-superseded`, keeping its `{…}` block (add
+   `by: <new claim id>` when the new claim has one), then add the new claim
+   to `bw-claims`. Never delete or reword a claim in place.
 3. Call `brain_check` with the paths you changed. Fix what it reports and
    check again; nothing is recorded until every error is gone. Claims you
    added are marked unverified until the user or consolidation confirms them.

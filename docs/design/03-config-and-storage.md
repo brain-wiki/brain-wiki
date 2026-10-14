@@ -49,6 +49,7 @@ hosts   = ["claude-code"]
 
 [harvest]                            # opt-in reading of host session stores (08 §6)
 enabled = false
+hosts   = ["claude-code"]
 ```
 
 - The config holds **locations and per-user choices only**. Everything that
@@ -82,8 +83,7 @@ how a user keeps, say, a work brain away from a personal assistant.
 
 **Project files** name a brain, not a path, so a repository can carry one
 without exposing anyone's directory layout. If the named brain does not
-exist for this user, resolution continues with the next source and logs a
-notice.
+exist for this user, resolution silently continues with the next source.
 
 **Why a brain is the unit of separation.** Unrelated spheres (an
 employer's knowledge and a personal life) differ in who owns them, where
@@ -107,8 +107,9 @@ these).
 Everything is keyed by the brain's `id` from `brain.toml`, not by its
 path, so moving a brain folder keeps its index and undo history. When two
 folders claim the same id (a copied brain), the second one is keyed by
-`<id>-<hash of path>` and lint reports BW105-style duplication at the
-brain level ([04 §2](04-index-and-retrieval.md#2-location-and-lifecycle)).
+`<id>-<hash of path>`, so the copies never share an index or undo history
+([04 §2](04-index-and-retrieval.md#2-location-and-lifecycle)). Nothing
+reports the duplicate id.
 
 ## 5. Brain lifecycle
 
@@ -213,8 +214,8 @@ ordinary files and do not carry the lock across machines.
 |---|---|
 | Config file missing | Commands that need a brain explain how to create or register one. |
 | Registered path does not exist (unmounted drive, moved folder) | Clear error with the path; `brain brains add` re-points it. |
-| Path exists but `brain.toml` has a different id than recorded | Warn: this may be a different brain; state is keyed by the new id. |
-| `brain.toml` has a newer `format` | Read-only mode with a message to upgrade brain-wiki. |
+| Path exists but `brain.toml` has a different id than before | No warning; index and state are keyed by the new id, so the brain starts with a fresh index and no undo history. |
+| `brain.toml` has a newer `format` | Refused with a message to upgrade brain-wiki ([02 §13](02-brain-format.md#13-format-versioning)). |
 | State directory lost | Undo history gone; everything else works. |
 | Git commit fails (hook rejects, detached HEAD, merge in progress) | The write itself already succeeded; the run is recorded with `git_commit: null` and the error; `brain doctor` lists uncommitted runs. |
 

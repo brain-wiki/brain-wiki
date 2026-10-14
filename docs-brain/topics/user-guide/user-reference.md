@@ -11,5 +11,6 @@ bw-part_of:
 
 ## Sections
 - [[user-reference-commands]]: Commands
+- [[user-reference-mcp-tools]]: MCP tools
 - [[user-reference-files]]: Files
 - [[user-reference-troubleshooting]]: Troubleshooting

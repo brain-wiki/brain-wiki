@@ -12,7 +12,10 @@ bw-part_of:
 
 | Test | How |
 |---|---|
-| Skill conformance | `skills-ref validate` (or an equivalent check in CI) on every skill folder |
-| Triggering | For each skill, a set of prompts that should trigger it and near-misses that should not, run headless against at least two hosts; results tracked in the bench `agent` suite |
-| Onboarding end to end | A fresh `HOME` with the plugin installed; the agent is asked to "set up brain-wiki" with scripted answers; success means a brain exists, the host is connected, a test search works, and every write was preceded by a dry run |
-| Doctor contract | `brain doctor --json` validated against its JSON Schema in every state the onboarding test passes through |
+| Skill conformance | `tests/test_plugin.py` checks every skill folder against the Agent Skills rules (name, description length, body length, links into `references/`) |
+| Triggering | By hand before releases: for each skill, prompts that should trigger it and near-misses that should not, in at least two hosts |
+| Onboarding end to end | By hand before releases: a fresh `HOME` with the plugin installed; the agent is asked to "set up brain-wiki"; success means a brain exists, the host is connected, a test search works, and every write was preceded by a dry run |
+| Doctor contract | Unit tests on `brain doctor --json` output (problems, recovered runs); no JSON Schema yet |
+
+Automating triggering and onboarding is part of the planned bench `agent`
+suite ([[proposal-consolidation-bench-9-the-agent-suite|proposal]]).

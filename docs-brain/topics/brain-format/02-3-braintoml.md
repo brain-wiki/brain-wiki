@@ -43,7 +43,7 @@ stale_inbox_days = 14
 freshness_ms       = 1000
 max_guards_per_hit = 10
 status_factor      = { active = 1.0, superseded = 0.35, archived = 0.2 }
-kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7 }
+kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7, archived_episode = 0.5 }
 recency_half_life_days = 180
 
 [consolidate]

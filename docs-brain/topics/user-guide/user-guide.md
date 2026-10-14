@@ -46,5 +46,6 @@ Generated from `docs/user/`.
   - [[user-privacy-what-is-sent-where]]: What is sent where
 - [[user-reference]]: Reference
   - [[user-reference-commands]]: Commands
+  - [[user-reference-mcp-tools]]: MCP tools
   - [[user-reference-files]]: Files
   - [[user-reference-troubleshooting]]: Troubleshooting

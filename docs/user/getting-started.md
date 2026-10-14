@@ -7,18 +7,18 @@ uv tool install brain-wiki     # or: pipx install brain-wiki
 brain doctor
 ```
 
-`brain doctor` reports the Python and SQLite it uses, your brains, and which
-agents it found on this machine. It changes nothing (except rolling back a
+`brain doctor` reports its version and SQLite, your brains, and which agents
+it found on this machine. It changes nothing (except rolling back a
 run that a crash left half-applied).
 
 ## Create a brain
 
 ```sh
-brain init ~/brains/personal --name personal
+brain init ~/brains/personal --name personal --git
 ```
 
-Keep brains outside code repositories. A brain is an ordinary folder: put it
-under git (recommended), or in a synced folder.
+Keep brains outside code repositories. A brain is an ordinary folder: under
+git (`--git`, recommended), or in a synced folder.
 
 ```text
 ~/brains/personal/

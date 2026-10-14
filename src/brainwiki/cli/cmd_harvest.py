@@ -120,8 +120,6 @@ def origin(args: Any) -> int:
     from brainwiki.origin import format_origin, origin_window
 
     with open_engine(args.brain, host=getattr(args, "as_host", None)) as engine:
-        result = origin_window(
-            engine, args.episode, turns=args.turns, include_tool_output=args.include_tool_output
-        )
+        result = origin_window(engine, args.episode, turns=args.turns)
     emit(args, result, format_origin(result))
     return 0

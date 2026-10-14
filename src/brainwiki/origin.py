@@ -38,9 +38,7 @@ def available(engine: Engine, row: Any) -> bool:
     )
 
 
-def origin_window(
-    engine: Engine, target: str, *, turns: str | None = None, include_tool_output: bool = False
-) -> dict[str, Any]:
+def origin_window(engine: Engine, target: str, *, turns: str | None = None) -> dict[str, Any]:
     if not engine.profile.read_origin:
         raise Forbidden(
             f"profile {engine.profile.name!r} may not read origin conversations; set read_origin = true "
@@ -82,7 +80,6 @@ def origin_window(
         "session": row["session"],
         "turns": f"{start}-{end}",
         "window": window,
-        "note": "tool output is not included" if include_tool_output else None,
         "untrusted": transcript.taint != "false",
     }
 
@@ -97,6 +94,4 @@ def format_origin(result: dict[str, Any]) -> str:
         who = "User" if turn["role"] == "user" else "Assistant"
         tools = f"  [tools: {'; '.join(turn.get('tools') or [])}]" if turn.get("tools") else ""
         lines.append(f"[{turn['turn']}] {who}: {turn['text']}{tools}")
-    if result.get("note"):
-        lines.append(f"\n({result['note']})")
     return "\n".join(lines)

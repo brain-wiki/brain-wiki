@@ -136,7 +136,7 @@ stale_inbox_days = 14
 freshness_ms       = 1000
 max_guards_per_hit = 10
 status_factor      = { active = 1.0, superseded = 0.35, archived = 0.2 }
-kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7 }
+kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7, archived_episode = 0.5 }
 recency_half_life_days = 180
 
 [consolidate]
@@ -499,6 +499,7 @@ bw-origin: agent                 # owner | agent | import | system
 bw-taint: unknown                # true | false | unknown
 bw-captured: mcp                 # hook | mcp | harvest | cli | import | file
 bw-topics: [search]              # hints only
+bw-dedupe: claude-code:5f2c9a1e-…:12-48   # idempotency key, if the writer gave one
 ---
 Switched the search path to FTS5 after ripgrep was too slow on 10k notes.
 
@@ -529,6 +530,10 @@ Rules:
   never hold file paths. An episode must be understandable on its own:
   hosts delete old transcripts, and transcripts stay on the device that
   produced them.
+- `bw-dedupe` holds the writer's idempotency key
+  ([05 §2.1](05-write-path-and-consolidation.md#21-ways-an-episode-is-written)).
+  Episodes imported from documents carry `bw-source`, the original file
+  and heading ([09 §6](09-import.md#6-to-episodes-and-from-agents)).
 - The body is free Markdown. `## Claims`, `## Negative findings` (what was
   tried and did not work, so later agents do not repeat it), and
   `## Open questions` are suggested sections that consolidation prompts

@@ -20,5 +20,5 @@ their source's score. At most 3 per result and 10 in total.
 | `context` (default) | the hub the hit is `part_of` | "what is this about?" |
 | `why` | `depends_on` targets (prerequisites) | "why is it this way?" |
 | `impact` | notes that `depends_on` the hit | "what breaks if this changes?" |
-| `history` | the full `supersedes` chain in both directions | "how did this evolve?" |
+| `history` | `supersedes` neighbors in both directions (one hop; guards already follow the chain to the newest note, §5) | "how did this evolve?" |
 | `related` | `related_to` and `links_to` neighbors | exploration |

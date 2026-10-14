@@ -22,5 +22,6 @@ these).
 Everything is keyed by the brain's `id` from `brain.toml`, not by its
 path, so moving a brain folder keeps its index and undo history. When two
 folders claim the same id (a copied brain), the second one is keyed by
-`<id>-<hash of path>` and lint reports BW105-style duplication at the
-brain level ([[04-2-location-and-lifecycle|04 §2]]).
+`<id>-<hash of path>`, so the copies never share an index or undo history
+([[04-2-location-and-lifecycle|04 §2]]). Nothing
+reports the duplicate id.

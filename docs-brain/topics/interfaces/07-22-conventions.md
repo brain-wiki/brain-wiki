@@ -12,8 +12,11 @@ bw-part_of:
 
 - Human-readable output by default; `--json` gives a stable, documented
   shape (the same shapes as the MCP structured results).
-- Every command that changes files supports `--dry-run`, which prints the
-  diff it would apply.
+- Commands that change many files or files outside the brain support
+  `--dry-run`, which prints what they would change: `lint --fix`, `mv`,
+  `consolidate --apply`, `harvest`, `import`, and `connect`. Single-step
+  writes (`log`, `rule`, `check`, `restore`, `review accept`, `undo`) have
+  none; every curated one is a run that `brain undo` reverses.
 - Paths printed are brain-relative; `--json` also includes absolute paths.
 - Targets follow the Obsidian CLI convention: a title, alias, or file name
   resolves like a wikilink, and an exact path or id resolves exactly. Results

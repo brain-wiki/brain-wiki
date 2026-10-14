@@ -16,7 +16,7 @@ clippings.
 
 - Documents are split on headings into chunks of at most 8 KiB; each chunk
   becomes one episode with `bw-captured: import`, `bw-origin: import`, and a
-  `source:` property naming the original file and heading.
+  `bw-source` property naming the original file and heading.
 - `taint` is `false` for the user's own files, or `true` with `--untrusted`
   (clippings, documents written by others).
 - The original files are not modified or moved.
@@ -25,7 +25,7 @@ clippings.
 files as episodes attributed to the host (`bw-origin: agent`, `bw-taint:
 unknown`):
 
-| Host | Files (defaults; overridable with `--path`) |
+| Host | Files (defaults; a `PATH` argument overrides them) |
 |---|---|
 | Claude Code | Project memory directories under `~/.claude/projects/*/memory/` and user-level `CLAUDE.md` |
 | Codex | `~/.codex/memories/` and `~/.codex/AGENTS.md` |
