@@ -26,7 +26,7 @@ brain-wiki/
 ├── bench/                       bench scenario definitions (generated data is not committed)
 ├── docs/                        design/ (these documents) and user/ (user guide)
 ├── scripts/                     maintainer scripts (version sync, visualizer bundle check)
-├── pyproject.toml, uv.lock
+├── pyproject.toml
 ├── README.md, LICENSE, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md
 ├── AGENTS.md                    guide for coding agents working on this repo (see note)
 └── .pre-commit-hooks.yaml       exposes `brain lint` to the pre-commit framework

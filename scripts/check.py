@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import tarfile
 import tempfile
 import zipfile
 from pathlib import Path
@@ -25,11 +26,33 @@ def run(name: str, *argv: str) -> bool:
     return ok
 
 
-def wheel_contents() -> bool:
-    print("== wheel contents", flush=True)
+# What the sdist may hold at its top level: pyproject's sdist allowlist plus what hatch adds.
+SDIST_TOP = {
+    "src",
+    "tests",
+    "docs",
+    "scripts",
+    "skills",
+    "rules",
+    ".claude-plugin",
+    *PLUGIN_FILES,
+    ".pre-commit-hooks.yaml",
+    "README.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "LICENSE",
+    "pyproject.toml",
+    "PKG-INFO",
+    ".gitignore",
+}
+
+
+def package_contents() -> bool:
+    print("== package contents", flush=True)
     with tempfile.TemporaryDirectory() as tmp:
         built = subprocess.run(
-            ["uv", "build", "--wheel", "-o", tmp],
+            ["uv", "build", "-o", tmp],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -40,15 +63,18 @@ def wheel_contents() -> bool:
             return False
         wheel = next(Path(tmp).glob("*.whl"))
         names = set(zipfile.ZipFile(wheel).namelist())
+        with tarfile.open(next(Path(tmp).glob("*.tar.gz"))) as sdist:
+            top = {m.name.split("/")[1] for m in sdist.getmembers() if "/" in m.name}
     required = [f"brainwiki/assets/plugin/{p}" for p in PLUGIN_FILES] + [
         "brainwiki/assets/prompts/consolidate.md",
         "brainwiki/assets/routines/brain-maintenance.md",
         "brainwiki/viz/app/index.html",
         "brainwiki/assets/plugin/skills/brain/SKILL.md",
     ]
-    missing = [r for r in required if r not in names]
-    print("   ok" if not missing else f"   FAILED, missing: {missing}", flush=True)
-    return not missing
+    problems = [f"wheel misses {r}" for r in required if r not in names]
+    problems += [f"sdist holds {t}" for t in sorted(top - SDIST_TOP)]
+    print("   ok" if not problems else f"   FAILED: {problems}", flush=True)
+    return not problems
 
 
 def main() -> int:
@@ -60,7 +86,7 @@ def main() -> int:
         run("plugin versions", python, "scripts/sync_versions.py", "--check"),
         run("docs brain", python, "scripts/build_docs_brain.py", "--check"),
         run("visualizer bundle", python, "scripts/check_viz.py"),
-        wheel_contents(),
+        package_contents(),
     ]
     bench = ROOT / "src" / "brainwiki" / "bench"
     if bench.is_dir():

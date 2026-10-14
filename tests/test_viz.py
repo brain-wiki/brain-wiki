@@ -371,12 +371,12 @@ def _topic_graph(notes: dict[str, int], edges: list[tuple[str, str]]) -> dict:
 
 
 def test_constellation_title_leads_with_its_hub_topic():
-    tickers = ["calendar", "kanban", "tasks", "web-clipper"]
+    plugins = ["calendar", "kanban", "tasks", "web-clipper"]
     star = _topic_graph(
-        {"investing": 1, **dict.fromkeys(tickers, 3)}, [("investing", t) for t in tickers]
+        {"plugins": 1, **dict.fromkeys(plugins, 3)}, [("plugins", p) for p in plugins]
     )
     [only] = Atlas(star).world()["constellations"]
-    assert only["title"] == "Investing · Calendar · Kanban · …"
+    assert only["title"] == "Plugins · Calendar · Kanban · …"
     chain = ["a", "b", "c", "d", "e", "f"]  # no topic reaches half of the others
     line = _topic_graph(
         dict(zip(chain, range(1, 7), strict=True)), list(zip(chain, chain[1:], strict=False))

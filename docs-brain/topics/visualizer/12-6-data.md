@@ -35,7 +35,7 @@ bw-part_of:
   topics (body links excluded), `a` < `b`.
 - A constellation from the topic tree is titled by its top topic. A grouped
   one leads with its hub topic, one typed-linked to at least half of the
-  other topics in it (a portfolio and its tickers); otherwise it names the
+  other topics in it (a plugins topic and each plugin); otherwise it names the
   largest topics. The map labels a constellation by its first topic.
   Topics carry their `parent` slug.
 

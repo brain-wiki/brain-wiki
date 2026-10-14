@@ -76,7 +76,7 @@ belong to no topic and lint can warn about it.
   `part_of` its parent's hub without anyone writing it (an implicit
   relation, §6.4); an explicit `bw-part_of` adds further parents.
 - Every topic has a **slug**, unique in the brain: its folder name,
-  slugified (`03 People` → `people`). When two folders would get the same
+  slugified (`01 People` → `people`). When two folders would get the same
   slug, the deeper one takes its parent's slug as a prefix (`rin-sato-notes`).
   Declaring a topic in `brain.toml` (§3) can name it. The slug, not the
   path, is the topic's identity.

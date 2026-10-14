@@ -31,7 +31,7 @@ brain-wiki = "brainwiki.cli.main:main"
 brain-wiki-mcp = "brainwiki.mcp.server:main"
 
 [dependency-groups]
-dev = ["pytest>=8", "hypothesis>=6.100", "ruff>=0.6"]
+dev = ["pytest>=8", "hypothesis>=6.100", "ruff==0.16.10"]  # ruff exact: formatting changes between releases
 
 [build-system]
 requires = ["hatchling>=1.25"]
@@ -51,6 +51,29 @@ packages = ["src/brainwiki"]
 ".claude-plugin" = "brainwiki/assets/plugin/.claude-plugin"
 "rules" = "brainwiki/assets/plugin/rules"
 "skills" = "brainwiki/assets/plugin/skills"
+
+# An allowlist, so local drafts and caches never reach the sdist.
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+  "/docs",
+  "/scripts",
+  "/skills",
+  "/rules",
+  "/.claude-plugin",
+  "/plugin.json",
+  "/mcp.json",
+  "/.mcp.json",
+  "/mcp_config.json",
+  "/server.json",
+  "/.pre-commit-hooks.yaml",
+  "/README.md",
+  "/CHANGELOG.md",
+  "/CONTRIBUTING.md",
+  "/SECURITY.md",
+  "/LICENSE",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

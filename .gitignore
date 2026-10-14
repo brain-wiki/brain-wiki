@@ -17,3 +17,8 @@ htmlcov/
 .idea/
 .vscode/
 .DS_Store
+
+# Local only: drafts, test caches, and the lockfile (dependencies resolve from pyproject.toml)
+.scratch/
+.hypothesis/
+uv.lock

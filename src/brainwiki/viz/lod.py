@@ -292,8 +292,8 @@ class Atlas:
         return tops[0] if len(tops) == 1 and len(group) > 1 else None
 
     def _hub_topic(self, group: list[str]) -> str | None:
-        """The topic typed-linked to at least half of the others in its group (investing and
-        its tickers, people and each person), or None when no topic holds the group together."""
+        """The topic typed-linked to at least half of the others in its group (a plugins topic
+        and each plugin, people and each person), or None when no topic holds the group together."""
         if len(group) < 3:
             return None
         inside = set(group)

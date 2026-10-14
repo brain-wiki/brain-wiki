@@ -161,9 +161,9 @@ def test_relation_inverses_store_one_direction():
     assert (e.rel, e.flip, e.qualifier, e.attrs, e.note) == (
         "depends_on",
         True,
-        "supplies_to",
+        "feeds",
         {"weight": "0.6", "lag": "1Q"},
-        "margin",
+        "latency",
     )
     md = parse_relation_line("- related_to [Other note](../x/Other%20note.md)", 3)
     assert not isinstance(md, RelationError) and md.target == "../x/Other note.md"

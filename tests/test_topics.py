@@ -143,7 +143,9 @@ def test_mv_moves_a_topic_folder_and_keeps_its_identity(people: Path):
         fts = (people / "topics/search/fts.md").read_text()
         assert "[[priority]]" in fts and "](../rin-sato/priority.md)" in fts
         e.scan()
-        assert e.topics.paths["rin-sato"] == "topics/rin-sato" and e.topics.parent("rin-sato") is None
+        assert (
+            e.topics.paths["rin-sato"] == "topics/rin-sato" and e.topics.parent("rin-sato") is None
+        )
         row = e.db.execute("SELECT topic FROM nodes WHERE path='topics/rin-sato/priority.md'")
         assert row.fetchone()[0] == "rin-sato"
         undo(e, record.run)

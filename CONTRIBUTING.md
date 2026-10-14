@@ -10,7 +10,7 @@ uv run brain --help
 ## Checks
 
 ```sh
-uv run scripts/check.py      # everything CI runs: lint, format, tests, plugin sync, visualizer bundle, wheel contents
+uv run scripts/check.py      # everything CI runs: lint, format, tests, plugin sync, visualizer bundle, package contents
 uv run pytest -q             # tests only
 uv run ruff check src tests scripts && uv run ruff format src tests scripts
 ```
