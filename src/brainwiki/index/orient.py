@@ -369,6 +369,7 @@ def agents_block(engine: Engine, extra: list[dict[str, Any]] | None = None) -> s
     known = {r["slug"] for r in rows}
     rows = [r for r in extra or [] if r["slug"] not in known and not r.get("parent")] + rows
     name = engine.brain.display_name
+    can_edit = engine.manifest.profile("default").can("edit")
 
     def render(selected: list[dict[str, Any]], hidden: int) -> str:
         table = [
@@ -382,7 +383,7 @@ def agents_block(engine: Engine, extra: list[dict[str, Any]] | None = None) -> s
         ]
         if hidden:
             table.append((f"… {hidden} more", "see the hubs under topics/", ""))
-        return default_agents_block(name, table)
+        return default_agents_block(name, table, edit=can_edit)
 
     try:
         current = engine.store.read_text("AGENTS.md")

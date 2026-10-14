@@ -53,6 +53,20 @@ def test_example_brain_is_clean_after_fix(example: Path):
         assert lint(e).problems == []
 
 
+def test_agents_md_follows_the_default_profile(brain_dir: Path):
+    agents = brain_dir / "AGENTS.md"
+    assert "run `brain check <path>`" in agents.read_text()
+    with eng(brain_dir) as e:
+        assert "BW408" not in {p.code for p in lint(e).problems}
+    manifest = brain_dir / "brain.toml"
+    manifest.write_text(manifest.read_text().replace('["episodes", "edit"]', '["episodes"]', 1))
+    with eng(brain_dir) as e:
+        assert "BW408" in {p.code for p in lint(e).problems}
+        fix(e, select=["BW408"])
+    text = agents.read_text()
+    assert "Never edit `topics/`" in text and "brain check" not in text
+
+
 def test_file_rules(brain_dir: Path):
     write(brain_dir, "topics/a/no-id.md", "---\nstatus: draft\n---\n# No id\n")
     write(

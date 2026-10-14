@@ -38,21 +38,36 @@ write       = ["episodes", "edit"]
 LOG_HEADER = "# Log\n\nChanges made by brain-wiki, newest at the bottom.\n"
 
 
-def default_agents_block(name: str, topics: list[tuple[str, str, str]] | None = None) -> str:
+def default_agents_block(
+    name: str, topics: list[tuple[str, str, str]] | None = None, *, edit: bool = True
+) -> str:
+    """`edit`: whether `[agents.default]`, the profile of agents that only read files, has it."""
     rows = topics or []
     table = ["| Topic | Hub | About |", "|---|---|---|"]
     table += [f"| {slug} | {hub} | {about} |" for slug, hub, about in rows] or [
         "| (none yet) | | |"
     ]
+    write = (
+        [
+            "- To record something new, add a file under `inbox/episodes/YYYY/MM/<ULID>.md`",
+            "  (or call the brain-wiki MCP tool `brain_log_episode`). To correct a note, edit it,",
+            "  then run `brain check <path>` (MCP: `brain_check`) and fix what it reports.",
+            "  Never edit `rules.md`, episodes, or `log.md`.",
+        ]
+        if edit
+        else [
+            "- To record something, add a new file under `inbox/episodes/YYYY/MM/<ULID>.md`",
+            "  (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or `rules.md`",
+            "  directly; consolidation folds episodes into notes.",
+        ]
+    )
     return "\n".join(
         [
             f"# This folder is a brain-wiki brain: {name}",
             "",
             "- Read `rules.md` first: standing directives from the user.",
             "- Knowledge lives in `topics/<topic>/`; each topic has a hub (`index.md`).",
-            "- To record something, add a new file under `inbox/episodes/YYYY/MM/<ULID>.md`",
-            "  (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or `rules.md`",
-            "  directly; consolidation folds episodes into notes.",
+            *write,
             "- A note's relations are its `bw-<verb>` frontmatter fields: part_of, has_part,",
             "  depends_on, enables, conflicts_with, supersedes, superseded_by, related_to. If a",
             "  note is superseded or conflicts with another, read both before acting.",
@@ -88,7 +103,7 @@ def init_brain(path: Path, name: str | None = None) -> Path:
     path.mkdir(parents=True, exist_ok=True)
     name = name or path.name
     text = _BRAIN_TOML_TEMPLATE.format(format=FORMAT_VERSION, id=new_ulid(), name=name)
-    parse_manifest(text)  # the template must always be valid
+    manifest = parse_manifest(text)  # the template must always be valid
     (path / MANIFEST).write_text(text, encoding="utf-8")
     for sub in ("topics", "inbox/episodes", "inbox/agents", "archive/episodes", "reports"):
         (path / sub).mkdir(parents=True, exist_ok=True)
@@ -96,7 +111,7 @@ def init_brain(path: Path, name: str | None = None) -> Path:
     agents.write_text(
         replace_block(
             agents.read_text(encoding="utf-8") if agents.exists() else "",
-            default_agents_block(name),
+            default_agents_block(name, edit=manifest.profile("default").can("edit")),
         ),
         encoding="utf-8",
     )

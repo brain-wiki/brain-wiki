@@ -115,11 +115,15 @@ def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict
     found = survey(root)
     name = name or root.name
     created = []
-    (root / MANIFEST).write_text(_manifest_text(found, name), encoding="utf-8")
+    manifest_text = _manifest_text(found, name)
+    (root / MANIFEST).write_text(manifest_text, encoding="utf-8")
     created.append(MANIFEST)
     agents = root / "AGENTS.md"
     current = agents.read_text(encoding="utf-8") if agents.exists() else ""
-    agents.write_text(replace_block(current, default_agents_block(name)), encoding="utf-8")
+    edit = parse_manifest(manifest_text).profile("default").can("edit")
+    agents.write_text(
+        replace_block(current, default_agents_block(name, edit=edit)), encoding="utf-8"
+    )
     created.append("AGENTS.md")
     for filename, content in (("rules.md", RULES_HEADER), ("log.md", LOG_HEADER)):
         if not (root / filename).exists():
