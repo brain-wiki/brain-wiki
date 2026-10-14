@@ -49,14 +49,14 @@ with Python 3.11 and 3.13, runs brain-wiki-viz's checks at the bundle's
 commit, and checks that the bundle rebuilds from it. A version tag runs
 `.github/workflows/release.yml`: it checks the tag against the version and
 the changelog, runs the checks, builds, publishes to PyPI with trusted
-publishing, publishes `server.json` to the MCP Registry, and creates the
-GitHub release from the changelog entry.
+publishing, publishes `server.json` to the MCP Registry (final versions
+only), and creates the GitHub release from the changelog entry.
 
 1. Set `version` in `pyproject.toml` to `X.Y.Z`, or a development release
    such as `X.Y.Z.devN`, and date its changelog entry: `## X.Y.Z (YYYY-MM-DD)`.
-   A development release is published like any other; pip and uv install it
-   while no final release exists, and the GitHub release is marked a
-   pre-release.
+   A development release goes to PyPI like any other, and pip and uv install
+   it while no final release exists; the GitHub release is marked a
+   pre-release, and the MCP Registry, a public catalog, is skipped.
 2. `uv run scripts/sync_versions.py`, then commit.
 3. `git tag vX.Y.Z && git push origin main vX.Y.Z`.
 4. Move `main` to the next development version (`X.Y.(Z+1).dev0` after
