@@ -42,4 +42,6 @@ jobs:
           node-version: 22
       - run: npm ci
         working-directory: brain-wiki-viz
+      - run: npm run check  # brain-wiki-viz has no CI of its own
+        working-directory: brain-wiki-viz
       - run: python3 scripts/check_viz.py --source brain-wiki-viz

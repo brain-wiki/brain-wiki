@@ -173,6 +173,7 @@ def test_prompts_end_with_payload_heading(name, trailer):
     assert text.rstrip().splitlines()[-1] == trailer
 
 
+@pytest.mark.skipif(not (ROOT / "docs-brain").is_dir(), reason="not in the sdist")
 def test_docs_brain_is_a_clean_brain(capsys):
     """docs-brain/ is generated from docs/ (scripts/build_docs_brain.py) and passes strict lint."""
     from brainwiki.cli._main import main

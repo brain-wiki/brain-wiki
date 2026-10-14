@@ -31,7 +31,7 @@ First release.
   lint and a pre-commit hook, and browsable reports.
 - **Agents**: a stdio MCP server with thirteen tools and three prompts;
   `brain connect` for Claude Code, Codex, Antigravity, OpenClaw, and
-  Cursor, with an instruction block per host; session readers and
+  Cursor, with instructions placed where each host reads them; session readers and
   harvest for Claude Code, Codex, and Antigravity, with headless presets
   for large backfills; origin lookup; a plugin bundle with three skills;
   `brain setup` and `brain doctor`.
@@ -47,8 +47,8 @@ Known limitations:
 
 - No privacy levels inside a brain: every agent that may use a brain
   reads all of it. Keep separate lives in separate brains
-  ([proposal](docs/proposals/privacy.md)).
+  ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposals/privacy.md)).
 - Maintenance runs when you ask your agent; there is no scheduler
-  ([proposal](docs/proposals/scheduled-maintenance.md)).
+  ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposals/scheduled-maintenance.md)).
 - Chat apps that need a remote MCP server (ChatGPT, claude.ai, the Gemini
-  app) are not supported ([proposal](docs/proposals/remote-mcp.md)).
+  app) are not supported ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposals/remote-mcp.md)).

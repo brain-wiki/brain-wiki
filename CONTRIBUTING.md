@@ -45,8 +45,8 @@ the dev server with the token from `brain viz` (`?t=…`).
 ## Releasing
 
 CI (`.github/workflows/ci.yml`) runs `scripts/check.py` on Linux and macOS
-with Python 3.11 and 3.13, and checks that the visualizer bundle rebuilds
-from its brain-wiki-viz commit. A version tag runs
+with Python 3.11 and 3.13, runs brain-wiki-viz's checks at the bundle's
+commit, and checks that the bundle rebuilds from it. A version tag runs
 `.github/workflows/release.yml`: it checks the tag against the version and
 the changelog, runs the checks, builds, publishes to PyPI with trusted
 publishing, publishes `server.json` to the MCP Registry, and creates the
@@ -55,9 +55,9 @@ GitHub release from the changelog entry.
 1. Set `version` in `pyproject.toml` to `X.Y.Z` and date its changelog entry:
    `## X.Y.Z (YYYY-MM-DD)`.
 2. `uv run scripts/sync_versions.py`, then commit.
-3. `git tag vX.Y.Z && git push origin vX.Y.Z`.
+3. `git tag vX.Y.Z && git push origin main vX.Y.Z`.
 4. Move `main` to the next development version (`X.Y.(Z+1).dev0`) with a new
-   `## X.Y.(Z+1) (unreleased)` entry, run `sync_versions.py`, and commit. The
+   `## X.Y.(Z+1) (unreleased)` entry, run `sync_versions.py`, commit, and push. The
    plugin files keep pointing at `X.Y.Z`, the newest dated release, because
    marketplaces install the plugin from `main`.
 
