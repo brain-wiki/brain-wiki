@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import subprocess
@@ -11,6 +12,12 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS = ROOT / "skills"
+
+_spec = importlib.util.spec_from_file_location("sync_versions", ROOT / "scripts/sync_versions.py")
+assert _spec and _spec.loader
+_sync_versions = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_sync_versions)
+plugin_version = _sync_versions.plugin_version
 
 JSON_FILES = [
     "plugin.json",
@@ -95,6 +102,19 @@ def test_versions_and_pins_match_pyproject():
         text=True,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_plugin_files_point_at_the_last_release_while_main_is_a_dev_version(tmp_path):
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "brain-wiki"\nversion = "0.2.0.dev0"\n'
+    )
+    assert plugin_version(tmp_path) == "0.2.0.dev0"  # nothing released yet
+    (tmp_path / "CHANGELOG.md").write_text(
+        "# Changelog\n\n## 0.2.0 (unreleased)\n\n## 0.1.1 (2026-11-02)\n\n## 0.1.0 (2026-10-20)\n"
+    )
+    assert plugin_version(tmp_path) == "0.1.1"
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "brain-wiki"\nversion = "0.2.0"\n')
+    assert plugin_version(tmp_path) == "0.2.0"
 
 
 def test_sync_check_reports_drift(tmp_path):

@@ -1,7 +1,10 @@
-"""Write the pyproject version into the plugin files and regenerate the generated plugin files.
+"""Write the released version into the plugin files and regenerate the generated plugin files.
 
-The version in pyproject.toml is the only one maintained by hand. This script copies it into
-every plugin manifest and every `brain-wiki==<version>` pin, regenerates the skill references
+The version in pyproject.toml is the only one maintained by hand. Marketplaces serve the plugin
+from the default branch, which carries a .dev version between releases, so the plugin files point
+at a release that exists on PyPI: the pyproject version when it is a release, else the newest
+dated release in CHANGELOG.md. This script copies that version into every plugin manifest and
+every `brain-wiki==<version>` pin, regenerates the skill references
 that mirror src/brainwiki/assets/, and writes Antigravity's always-on rule from the static
 instruction block in src/brainwiki/hosts/instructions.py (design docs 08 §3.2, 13 §4, 15 §2).
 
@@ -41,6 +44,20 @@ JSON_FILES = list(VERSION_FIELDS) + PIN_FILES
 def read_version(root: Path) -> str:
     with (root / "pyproject.toml").open("rb") as f:
         return tomllib.load(f)["project"]["version"]
+
+
+_PRERELEASE = re.compile(r"(\.dev\d*|a\d+|b\d+|rc\d+)$")
+_RELEASED = re.compile(r"^## (\d+\.\d+\.\d+) \(\d{4}-\d{2}-\d{2}\)", re.MULTILINE)
+
+
+def plugin_version(root: Path) -> str:
+    """The release the plugin files point at (see the module docstring)."""
+    version = read_version(root)
+    if not _PRERELEASE.search(version):
+        return version
+    changelog = root / "CHANGELOG.md"
+    found = _RELEASED.search(changelog.read_text(encoding="utf-8")) if changelog.is_file() else None
+    return found.group(1) if found else version
 
 
 def _set_path(data: Any, path: tuple[str | int, ...], value: str) -> None:
@@ -123,7 +140,7 @@ def _rule(root: Path) -> str | None:
 
 
 def run(root: Path, check: bool) -> int:
-    version = read_version(root)
+    version = plugin_version(root)
     managed, problems = expected(root, version)
     for problem in problems:
         print(problem, file=sys.stderr)

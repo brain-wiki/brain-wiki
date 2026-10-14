@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check (${{ matrix.os }}, Python ${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: uv sync
+      - run: uv run scripts/check.py
+
+  visualizer:
+    name: visualizer bundle matches its source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - id: build
+        run: echo "commit=$(jq -r .commit src/brainwiki/viz/app/BUILD_INFO.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v5
+        with:
+          repository: brain-wiki/brain-wiki-viz
+          ref: ${{ steps.build.outputs.commit }}
+          path: brain-wiki-viz
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci
+        working-directory: brain-wiki-viz
+      - run: python3 scripts/check_viz.py --source brain-wiki-viz

@@ -10,8 +10,17 @@ authors = [{ name = "brain-wiki contributors" }]
 keywords = ["memory", "agents", "mcp", "markdown", "obsidian", "knowledge-base"]
 classifiers = [
   "Development Status :: 3 - Alpha",
+  "Environment :: Console",
   "Intended Audience :: Developers",
+  "Intended Audience :: End Users/Desktop",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Text Processing :: Markup :: Markdown",
 ]
 dependencies = [
@@ -22,8 +31,12 @@ dependencies = [
   "jsonschema>=4.20",
 ]
 
-[project.optional-dependencies]
-watch = ["watchfiles>=1.0"]
+[project.urls]
+Homepage = "https://github.com/brain-wiki/brain-wiki"
+Documentation = "https://github.com/brain-wiki/brain-wiki/tree/main/docs/user"
+Repository = "https://github.com/brain-wiki/brain-wiki"
+Issues = "https://github.com/brain-wiki/brain-wiki/issues"
+Changelog = "https://github.com/brain-wiki/brain-wiki/blob/main/CHANGELOG.md"
 
 [project.scripts]
 brain = "brainwiki.cli.main:main"
@@ -77,6 +90,7 @@ include = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]  # tests import shared helpers as `tests.conftest`
 addopts = "-q"
 
 [tool.ruff]

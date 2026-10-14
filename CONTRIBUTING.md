@@ -10,10 +10,15 @@ uv run brain --help
 ## Checks
 
 ```sh
-uv run scripts/check.py      # everything CI runs: lint, format, tests, plugin sync, visualizer bundle, package contents
+uv run scripts/check.py      # everything CI runs: lint, format, tests, plugin sync, docs brain, visualizer bundle, package contents
 uv run pytest -q             # tests only
-uv run ruff check src tests scripts && uv run ruff format src tests scripts
+uv run ruff format src tests scripts && uv run ruff check src tests scripts   # format, then lint
 ```
+
+After editing `docs/`, regenerate the docs brain (`docs-brain/`, the docs as a
+brain) with `uv run scripts/build_docs_brain.py`; CI fails when it is stale.
+After changing the version or anything under `src/brainwiki/assets/`, run
+`uv run scripts/sync_versions.py`.
 
 ### The visualizer front end
 
@@ -37,6 +42,30 @@ also rebuilds that checkout and fails if the result differs. For live reload,
 run `brain viz --no-open --port 8765` here and `npm run dev` there, then open
 the dev server with the token from `brain viz` (`?t=…`).
 
+## Releasing
+
+CI (`.github/workflows/ci.yml`) runs `scripts/check.py` on Linux and macOS
+with Python 3.11 and 3.13, and checks that the visualizer bundle rebuilds
+from its brain-wiki-viz commit. A version tag runs
+`.github/workflows/release.yml`: it checks the tag against the version and
+the changelog, runs the checks, builds, publishes to PyPI with trusted
+publishing, publishes `server.json` to the MCP Registry, and creates the
+GitHub release from the changelog entry.
+
+1. Set `version` in `pyproject.toml` to `X.Y.Z` and date its changelog entry:
+   `## X.Y.Z (YYYY-MM-DD)`.
+2. `uv run scripts/sync_versions.py`, then commit.
+3. `git tag vX.Y.Z && git push origin vX.Y.Z`.
+4. Move `main` to the next development version (`X.Y.(Z+1).dev0`) with a new
+   `## X.Y.(Z+1) (unreleased)` entry, run `sync_versions.py`, and commit. The
+   plugin files keep pointing at `X.Y.Z`, the newest dated release, because
+   marketplaces install the plugin from `main`.
+
+One-time setup: a trusted publisher on PyPI for this repository, workflow
+`release.yml`, environment `pypi` (and that environment in the GitHub
+repository settings); private vulnerability reporting turned on (see
+`SECURITY.md`).
+
 ## Where things are
 
 | Path | What |
@@ -45,7 +74,7 @@ the dev server with the token from `brain viz` (`?t=…`).
 | `docs/proposals/` | Designs not yet built, and the backlog. Building one moves its content into `docs/design/`. |
 | `src/brainwiki/` | The package (layout in `docs/design/13-engineering.md` §2) |
 | `src/brainwiki/assets/` | Prompts the engine uses; the skills' copies are generated from them |
-| `plugin.json`, `mcp.json`, `.mcp.json`, `mcp_config.json`, `hooks/`, `hooks.json`, `rules/`, `skills/`, `.claude-plugin/`, `server.json` | The plugin, served from the repository root. These names are reserved by hosts. |
+| `plugin.json`, `mcp.json`, `.mcp.json`, `mcp_config.json`, `rules/`, `skills/`, `.claude-plugin/`, `server.json` | The plugin, served from the repository root. These names, and `hooks/` and `hooks.json`, are reserved by hosts; the bundle ships no hooks. |
 | `src/brainwiki/viz/app/` | The visualizer's built bundle (source: brain-wiki-viz); do not edit by hand |
 | `scripts/sync_versions.py` | Writes the version into every manifest and regenerates skill references (`--check` in CI) |
 | `tests/fixtures/` | Synthetic fixtures only |
