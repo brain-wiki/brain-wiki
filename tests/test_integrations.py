@@ -11,6 +11,7 @@ from brainwiki.config.resolve import open_brain
 from brainwiki.config.user import load_user_config
 from brainwiki.engine import Engine
 from brainwiki.hosts import connect as cn
+from brainwiki.hosts.instructions import Access, server_instructions
 from brainwiki.importer import overlay
 from brainwiki.importer.episodes import _split_document, memory_files
 from brainwiki.importer.survey import survey
@@ -73,7 +74,7 @@ def test_connect_writes_the_instruction_block_and_uninstall_removes_it(
     assert not rules.exists()
 
 
-def test_codex_block_joins_the_users_file_and_leaves_it_on_uninstall(
+def test_codex_gets_server_instructions_and_no_file(
     brain_dir: Path, no_host_clis: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
     home = tmp_path / "codex-home"
@@ -84,15 +85,13 @@ def test_codex_block_joins_the_users_file_and_leaves_it_on_uninstall(
     real.write_text("# My rules\n\nUse tabs.\n")
     (home / "AGENTS.md").symlink_to(real)
     assert main(["connect", "codex"]) == 0
-    text = real.read_text()
-    assert text.startswith("# My rules\n\nUse tabs.\n\n<!-- brain-wiki:begin v1 -->")
-    assert (home / "AGENTS.md").is_symlink()
-    (home / "AGENTS.override.md").write_text("# Override\n")
-    assert main(["connect", "codex"]) == 0
-    assert "brain-wiki:begin" in (home / "AGENTS.override.md").read_text()
+    assert real.read_text() == "# My rules\n\nUse tabs.\n"
+    assert cn._load_record("codex")["instructions"] == []
     main(["connect", "codex", "--uninstall"])
-    assert (home / "AGENTS.override.md").read_text() == "# Override\n"
-    assert main(["connect", "codex", "--scope", "project", "--dry-run"]) == 0
+    assert real.read_text() == "# My rules\n\nUse tabs.\n"
+    for access in (Access(edit=True), Access(edit=False)):
+        text = server_instructions(access)
+        assert text.index("compacted.") < 512 and "`brain_orient`" in text[:512]
 
 
 def test_openclaw_cursor_project_and_print(

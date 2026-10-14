@@ -18,7 +18,7 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 | App | Tools | Instructions | Harvest |
 |---|---|---|---|
 | Claude Code | yes | `~/.claude/rules/brain-wiki.md` | yes |
-| Codex / ChatGPT desktop | yes | block in `~/.codex/AGENTS.md` (or a non-empty `AGENTS.override.md`) | yes |
+| Codex / ChatGPT desktop | yes | from the MCP server; no file is written | yes |
 | Antigravity | yes | always-on plugin rule | yes |
 | OpenClaw | yes | block in the workspace `AGENTS.md` | not yet |
 | Cursor | yes | printed for Settings → Rules; `.cursor/rules/` with `--scope project` | not yet |

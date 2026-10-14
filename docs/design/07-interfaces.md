@@ -188,7 +188,9 @@ Sent once per connection:
 The static instruction block ([08 §3.2](08-agent-integrations.md#32-the-static-instruction-block))
 without its skill pointer, so clients without an instruction file follow
 the same policy. Its file-access and edit sentences follow the host's
-profile, as in the block.
+profile, as in the block. Codex gets the policy only this way, and weighs
+the first 512 characters most, so the first bullet ends within them
+([Codex](agents/codex.md#1-instructions-come-from-the-mcp-server)).
 
 ### 3.4 Tools
 

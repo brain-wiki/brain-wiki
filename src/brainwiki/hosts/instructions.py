@@ -20,7 +20,6 @@ _END = "<!-- brain-wiki:end -->"
 _BLOCK_RE = re.compile(
     r"<!-- brain-wiki:begin v\d+ -->\n?(?P<body>.*?)<!-- brain-wiki:end -->\n?", re.S
 )
-_CODEX_CAP = 32 * 1024  # bytes Codex reads across its instruction files
 _OPENCLAW_CAP = 20_000  # characters OpenClaw injects per bootstrap file
 
 _HEAD = """## brain-wiki: the user's long-term memory
@@ -29,10 +28,10 @@ The user keeps long-term memory in brain-wiki "brains" that all their agents sha
 """
 _ORIENT = """\
 - Before work that may depend on the user's past decisions, preferences, projects,
-  or anything they expect you to remember, learn what the brains hold: call
-  `brain_list` (or run `brain list`), then `brain_orient` for the brain that fits
-  (the one marked default for this project, unless the task points elsewhere).
-  Do this once per session, and again after the conversation is compacted.
+  or anything they expect you to remember, call `brain_list` (or run
+  `brain list`), then `brain_orient` for the brain that fits (by default, the
+  one marked for this project). Do this once per session, and again after the
+  conversation is compacted.
 - Explore step by step: find entry points with `brain_search` (2–6 keywords;
   `type`, `since`, and `sort` for "latest" or "recent"; an empty query with a
   topic lists that topic), open a note with `brain_read` (outline first: it
@@ -82,7 +81,10 @@ def _marked_block(access: Access) -> str:
 
 
 def server_instructions(access: Access) -> str:
-    """The MCP server instructions: the block without its skill pointer (07 §3.3)."""
+    """The MCP server instructions: the block without its skill pointer (07 §3.3).
+
+    Codex weighs the first 512 characters most (08 §3.2), so the first bullet must end there.
+    """
     return block_text(access, skill=False).strip()
 
 
@@ -168,18 +170,6 @@ class Target:
     cap: int | None = None  # warn when the file nears what the host loads
 
 
-def _codex_home() -> Path:
-    return Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
-
-
-def _codex_instructions() -> Path:
-    """The one global file Codex reads: a non-empty override wins over AGENTS.md."""
-    override = _codex_home() / "AGENTS.override.md"
-    if override.is_file() and override.read_text(encoding="utf-8").strip():
-        return override
-    return _codex_home() / "AGENTS.md"
-
-
 def _openclaw_workspace() -> Path:
     """OpenClaw's workspace, resolved the way OpenClaw documents it."""
     if os.environ.get("OPENCLAW_WORKSPACE_DIR"):
@@ -208,13 +198,13 @@ def targets(
         base = cwd / ".claude" if scope == "project" else Path.home() / ".claude"
         return [Target(base / "rules" / "brain-wiki.md", _marked_block(access), True)], notes
     if host == "codex":
-        if scope == "project":
-            notes.append(
-                "Codex instructions: not written for --scope project, because a repository's "
-                "AGENTS.md is shared with its team; the user-level block covers every project."
-            )
-            return [], notes
-        return [Target(_codex_instructions(), _marked_block(access), False, _CODEX_CAP)], notes
+        # Codex reads the MCP server's instructions at start-up (08 §3.2), so its single global
+        # AGENTS.md, often managed elsewhere (dotfiles, generators), stays untouched.
+        notes.append(
+            "Codex gets brain-wiki's instructions from the MCP server when it starts; no "
+            "instruction file is written."
+        )
+        return [], notes
     if host == "openclaw":
         target = _openclaw_workspace() / "AGENTS.md"
         return [Target(target, _marked_block(access), False, _OPENCLAW_CAP)], notes

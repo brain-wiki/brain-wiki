@@ -16,7 +16,7 @@ Generated from `docs/design/02-brain-format.md`.
 - [[02-3-braintoml]]: `brain.toml`
 - [[02-4-common-file-conventions]]: Common file conventions
 - [[02-5-identifiers]]: Identifiers
-- [[02-6-notes]]: Notes
+- [[02-6-notes]]: Notes (Brain format)
   - [[02-61-frontmatter]]: Frontmatter
   - [[02-62-body]]: Body
   - [[02-63-claims]]: Claims

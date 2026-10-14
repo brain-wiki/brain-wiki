@@ -12,7 +12,8 @@
 
 | Topic | Hub | About |
 |---|---|---|
-| agent-integrations | topics/agent-integrations/agent-integrations.md | Plugin bundle, per-host details, brain connect, harvest |
+| agent-integrations | topics/agent-integrations/agent-integrations.md | Plugin bundle, instruction block, brain connect, harvest; one page per host in agents/ |
+| agents | topics/agents/agents.md | How brain-wiki integrates with each agent host: install, instructions, harvest, verification |
 | brain-format | topics/brain-format/brain-format.md | The on-disk contract: layout, manifest, notes, claims, relations, episodes, rules (normative) |
 | config-and-storage | topics/config-and-storage/config-and-storage.md | User config, multiple brains, brain selection, machine state, git, desktop sync tools |
 | decisions | topics/decisions/decisions.md | How the design documents fit together, and the decision log with what each decision rejected and where it is argued |

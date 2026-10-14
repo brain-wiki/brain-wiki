@@ -37,7 +37,7 @@ description = "CLI commands, MCP tools and schemas, agent profiles, error model"
 
 [topics.agent-integrations]
 title = "Agent integrations"
-description = "Plugin bundle, per-host details, brain connect, harvest"
+description = "Plugin bundle, instruction block, brain connect, harvest; one page per host in agents/"
 
 [topics.import]
 title = "Import"
@@ -70,6 +70,10 @@ description = "The three skills, the guided setup flow, and brain doctor --json"
 [topics.decisions]
 title = "Design overview and decisions"
 description = "How the design documents fit together, and the decision log with what each decision rejected and where it is argued"
+
+[topics.agents]
+title = "Agent integrations by host"
+description = "How brain-wiki integrates with each agent host: install, instructions, harvest, verification"
 
 [topics.user-guide]
 title = "User guide"

@@ -18,7 +18,7 @@ bw-part_of:
 | 05 | [[write-path-and-consolidation\|Write path and consolidation]] | Episodes, provenance and taint, ops, consolidation backends, validation, review, undo |
 | 06 | [[lint-and-reports\|Lint and reports]] | Rules, profiles, fixes, generated reports, pre-commit use |
 | 07 | [[interfaces\|Interfaces]] | CLI commands, MCP tools and schemas, agent profiles, error model |
-| 08 | [[agent-integrations\|Agent integrations]] | Plugin bundle, per-host details, `brain connect`, harvest |
+| 08 | [[agent-integrations\|Agent integrations]] | Plugin bundle, instruction block, `brain connect`, harvest; one page per host in `agents/` |
 | 09 | [[import\|Import]] | Adopting existing Markdown folders and Obsidian vaults |
 | 10 | [[security-and-privacy\|Security and privacy]] | Threat model and mitigations |
 | 11 | [[eval-bench\|Eval bench]] | Retrieval, lint, consolidation, and performance suites |

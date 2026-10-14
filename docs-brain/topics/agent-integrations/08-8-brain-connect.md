@@ -28,8 +28,8 @@ bw-part_of:
 | Cursor | Add the server to Cursor's MCP config file |
 | generic | Print the snippet only |
 
-3. Write the static instruction block (§3.2) into the host's instruction
-   file.
+3. Write the static instruction block (§3.2) where the host reads it, if
+   it has such a file (§4).
 4. Options: `--scope user|project`, `--brain`, `--print` (print the block
    and MCP entry instead of writing), `--force` (replace an edited block),
    `--dry-run` (print every file change as a diff), `--uninstall`.

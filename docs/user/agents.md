@@ -18,7 +18,7 @@ task may depend on what you know, and how to explore and write:
 | Host | Instructions |
 |---|---|
 | Claude Code | `~/.claude/rules/brain-wiki.md` (`.claude/rules/` with `--scope project`) |
-| Codex / ChatGPT desktop | A block in `~/.codex/AGENTS.md`, or in `AGENTS.override.md` if you use one |
+| Codex / ChatGPT desktop | None written: Codex reads them from brain-wiki's MCP server (`brain connect codex --print` shows them if you want a copy in your own `AGENTS.md`) |
 | Antigravity | An always-on rule inside the plugin |
 | OpenClaw | A block in the workspace `AGENTS.md` |
 | Cursor | Printed for Settings → Rules; `.cursor/rules/brain-wiki.mdc` with `--scope project` |

@@ -6,7 +6,7 @@ source: "docs/design/08-agent-integrations.md"
 ---
 # Agent integrations
 
-Plugin bundle, per-host details, `brain connect`, harvest
+Plugin bundle, instruction block, `brain connect`, harvest; one page per host in `agents/`
 
 Generated from `docs/design/08-agent-integrations.md`.
 
@@ -16,12 +16,7 @@ Generated from `docs/design/08-agent-integrations.md`.
 - [[08-3-the-plugin-bundle]]: The plugin bundle
   - [[08-31-the-skills]]: The skills (Agent integrations)
   - [[08-32-the-static-instruction-block]]: The static instruction block
-- [[08-4-per-host-notes]]: Per-host notes
-  - [[08-41-claude-code]]: Claude Code
-  - [[08-42-codex-cli-and-chatgpt-desktop]]: Codex (CLI and ChatGPT desktop)
-  - [[08-43-antigravity-desktop-ide-cli]]: Antigravity (desktop, IDE, CLI)
-  - [[08-44-openclaw]]: OpenClaw
-  - [[08-45-cursor-and-generic-mcp-clients]]: Cursor and generic MCP clients
+- [[08-4-hosts]]: Hosts
 - [[08-5-hooks]]: Hooks
 - [[08-6-harvest]]: Harvest
   - [[08-61-what-gets-skipped]]: What gets skipped

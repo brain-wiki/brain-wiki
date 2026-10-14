@@ -44,6 +44,12 @@ MENTION = re.compile(r"\b(D\d{1,2}|M\d{1,2}|Q\d{1,2})\b")
 # Folders whose documents become one note each (sections below it), in a topic of their own:
 # slug -> (folder, topic title, topic description, note type)
 GROUPS = {
+    "agents": (
+        "docs/design/agents",
+        "Agent integrations by host",
+        "How brain-wiki integrates with each agent host: install, instructions, harvest, verification",
+        "design",
+    ),
     "user-guide": (
         "docs/user",
         "User guide",

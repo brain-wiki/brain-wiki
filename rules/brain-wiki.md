@@ -7,10 +7,10 @@ description: How to consult, explore, and add to the user's long-term memory in 
 The user keeps long-term memory in brain-wiki "brains" that all their agents share.
 
 - Before work that may depend on the user's past decisions, preferences, projects,
-  or anything they expect you to remember, learn what the brains hold: call
-  `brain_list` (or run `brain list`), then `brain_orient` for the brain that fits
-  (the one marked default for this project, unless the task points elsewhere).
-  Do this once per session, and again after the conversation is compacted.
+  or anything they expect you to remember, call `brain_list` (or run
+  `brain list`), then `brain_orient` for the brain that fits (by default, the
+  one marked for this project). Do this once per session, and again after the
+  conversation is compacted.
 - Explore step by step: find entry points with `brain_search` (2–6 keywords;
   `type`, `since`, and `sort` for "latest" or "recent"; an empty query with a
   topic lists that topic), open a note with `brain_read` (outline first: it

@@ -1,14 +1,14 @@
 ---
 id: 01M3250V002JQGD5KCMWX3ZXC1
 type: design
-title: "Notes"
+title: "Notes (Brain format)"
 aliases: ["02 §6"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#6-notes"
 bw-part_of:
   - "[[brain-format]]"
 ---
-# Notes
+# Notes (Brain format)
 
 
 ## Subsections

@@ -90,6 +90,7 @@ result.
 | T-10 | Does `uvx --from brain-wiki==<version> brain hook …` (used by marketplace installs) fit the 300 ms hook budget once cached? | **No (Linux, 2026-10-11):** online `uvx` revalidates the index on every call, 23 s behind a slow package index even when cached, so Antigravity killed the hook before every model call. `uvx --offline` takes 0.13–0.21 s and an installed `brain-wiki` 0.08–0.11 s. Hooks were later removed altogether ([proposal](../proposals/hooks.md)); the MCP server's start has the same cost (08 §3). macOS not timed. |
 | T-11 | How much does the Claude Code transcript format vary across recent versions? (Its docs call the format internal.) | Fixtures from several releases; reader tests run against all of them. |
 | T-14 | Does Obsidian treat links in list properties (`bw-depends_on: ["[[Note]] — why"]`, with text after the link) as links: in backlinks and the graph, and rewritten on rename? | Open a format 2 brain in a scratch vault; rename a target note and check the property, the backlinks pane, and the graph. |
+| T-15 | Does Codex put the MCP server's `instructions` into the model's context, and does the agent act on them (call `brain_list` and `brain_orient` before work on past decisions)? brain-wiki relies on it instead of writing `AGENTS.md` ([Codex](agents/codex.md#1-instructions-come-from-the-mcp-server)). | In a scratch Codex session with the plugin, ask about a past decision and check that the agent orients first. |
 
 ## 4. Future work
 
