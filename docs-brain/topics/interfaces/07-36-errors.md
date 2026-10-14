@@ -11,7 +11,8 @@ bw-part_of:
 # Errors
 
 Execution errors are tool errors (`isError: true`) so the model can correct
-itself. The message starts with a stable code:
+itself. After the SDK's `Error executing tool <name>: ` prefix, the message
+starts with a stable code:
 
 | Code | When |
 |---|---|

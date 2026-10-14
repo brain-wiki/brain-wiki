@@ -40,7 +40,8 @@ host is detected in this order:
 1. the MCP client's self-reported name, once the client connects;
 2. the `BRAIN_WIKI_HOST` environment variable;
 3. `PLUGIN_ROOT` together with `CLAUDE_PLUGIN_ROOT` is Codex, which sets
-   both for compatibility; `CLAUDE_PLUGIN_ROOT` alone is Claude Code.
+   both for compatibility; `CLAUDE_PLUGIN_ROOT` alone, or `CLAUDECODE=1`, is
+   Claude Code.
 
 An undetectable host is `generic`.
 
@@ -227,7 +228,7 @@ distill = "claude-code"         # preset for CLI harvest; "raw" for no model (th
 |---|---|---|
 | In the agent | The user asks their agent to harvest; the `brain-maintain` skill drives `brain_harvest_prepare` and `brain_harvest_apply` over MCP, and the agent distills | The session's context window |
 | Headless | `brain harvest --apply` runs a model preset (§7) once per chunk | One CLI model call per chunk |
-| `raw` | `brain harvest --apply --raw` keeps user and assistant text (no tool output bodies), strips injected markers, scrubs secrets, and writes one episode per chunk | No model call; consolidation distills |
+| `raw` | `brain harvest --apply --raw` keeps user and assistant text (no tool output bodies), strips text the host injected, scrubs secrets, and writes one episode per chunk | No model call; consolidation distills |
 
 A per-session watermark in brain-wiki's state records the last harvested
 turn, and episode `dedupe` keys make retries harmless.
@@ -265,7 +266,9 @@ half-read. Readers never write to a host's files.
 
 Headless harvest (`brain harvest --apply`, [05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions))
 and the bench's model runs ([11](11-eval-bench.md)) run a host CLI once per packet, prompt on stdin, in an empty temporary
-directory.
+directory under the state directory (`<state>/headless/run-*`). Harvest skips
+any session whose working directory is under the state directory, so it never
+distills its own runs, even when a host does not mark them headless.
 
 | Preset | Command (sketch) | Final text | Isolation |
 |---|---|---|---|
@@ -326,7 +329,7 @@ because CLIs change faster than this document.
 |---|---|---|---|---|
 | Plugin validates and loads | `claude plugin validate`, install | marketplace add, install | `agy plugin install ./` | `plugins install --link`, `inspect` |
 | MCP tools listed and callable | ✓ | ✓ | ✓ | ✓ |
-| Instruction block reaches the model | ✓ | ✓ | ✓ (T-4) | ✓ |
+| Instructions reach the model | ✓ | ✓ (T-15) | ✓ (T-4) | ✓ |
 | Harvest skips brain-wiki's own headless runs | ✓ | ✓ | ✓ | — |
 | Session reader parses real sessions; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
 | Origin lookup returns the right window, and `not_available` when deleted | ✓ | ✓ | ✓ | — |

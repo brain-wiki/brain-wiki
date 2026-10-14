@@ -19,18 +19,19 @@ The contract the setup skill reads. Stable within a minor version.
   "config": {"path": "~/.config/brain-wiki/config.toml", "exists": true},
   "cli": {"on_path": true, "path": "~/.local/bin/brain"},
   "brains": [
-    {"name": "personal", "path": "~/brains/personal", "default": true, "ok": true,
-     "format": 2, "git": true, "notes": 412, "pending_episodes": 7, "open_proposals": 1}
+    {"name": "personal", "path": "~/brains/personal", "ok": true, "format": 2,
+     "git": true, "id": "01J…", "pending_episodes": 7, "notes": 412, "open_proposals": 1,
+     "recovered_runs": [], "uncommitted_runs": [], "default": true}
   ],
   "hosts": [
     {"id": "claude-code", "installed": true, "connected": true, "plugin": "0.1.0",
-     "mcp_ok": true, "harvest": true},
-    {"id": "codex", "installed": true, "connected": false}
+     "instructions": true, "harvest": true},
+    {"id": "codex", "installed": true, "connected": false, "harvest": false}
   ],
   "sqlite": {"version": "3.53.4", "fts5": true, "trigram": true},
   "problems": [
-    {"code": "host_not_connected", "host": "codex",
-     "message": "Codex is installed but not connected.", "fix": "brain connect codex"}
+    {"code": "host_not_connected", "severity": "info", "host": "codex",
+     "message": "codex is installed but not connected.", "fix": "brain connect codex"}
   ],
   "next_steps": ["connect codex"]
 }

@@ -22,6 +22,7 @@ host is detected in this order:
 1. the MCP client's self-reported name, once the client connects;
 2. the `BRAIN_WIKI_HOST` environment variable;
 3. `PLUGIN_ROOT` together with `CLAUDE_PLUGIN_ROOT` is Codex, which sets
-   both for compatibility; `CLAUDE_PLUGIN_ROOT` alone is Claude Code.
+   both for compatibility; `CLAUDE_PLUGIN_ROOT` alone, or `CLAUDECODE=1`, is
+   Claude Code.
 
 An undetectable host is `generic`.

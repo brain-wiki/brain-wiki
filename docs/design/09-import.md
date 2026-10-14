@@ -8,7 +8,7 @@ Status: draft for review
 |---|---|
 | I1 | An existing Markdown folder or Obsidian vault becomes a working brain in minutes, without moving or rewriting files. |
 | I2 | Nothing changes before the user has seen a report of what will change. |
-| I3 | Every change is a run: undoable, logged, committed if git is on. |
+| I3 | Every change to existing files is a run: undoable, logged, committed if git is on. Adopting a folder (phase 0) only adds files. |
 | I4 | Normalization is opt-in and incremental. The brain works before any of it. |
 | I5 | The user's own files can also be fed to consolidation as episodes, and agents' existing memory files can be brought in the same way. |
 
@@ -62,7 +62,7 @@ plus terminal output) shows:
 
 | Phase | Changes | Touches existing notes? |
 |---|---|---|
-| 0 · Adopt | Adds `brain.toml`, `AGENTS.md` (or a managed block in an existing one), `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain. | **No** |
+| 0 · Adopt | Adds `brain.toml`, `AGENTS.md` (or a managed block in an existing one, with the topic table filled in from the folders found), `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain; in a git repository, commits the added files. Not a run: it is undone by removing the brain and the added files, or by reverting its commit. | **No** |
 | 1 · Relations | Converts relation-like frontmatter into `bw-<verb>` relations (§4.2) and keeps the original properties. | Yes, frontmatter lines only |
 | 2 · Identity and status | Mints `id:` for notes without one; maps non-standard `status` values into `status` + `bw-stage` (§4.1). | Yes, frontmatter lines only |
 | 3 · Structure | Creates missing hubs, adds missing notes to hub `## Notes` lists. | Hubs only |
@@ -77,9 +77,10 @@ review each diff on its own.
 
 - If the folder is a git repository with uncommitted changes, apply stops
   and asks the user to commit or stash first, so import diffs stay clean.
-- If the folder is not a git repository, apply writes a compressed backup
-  of every file it will modify to the run's state directory before
-  changing anything (in addition to the normal pre-images).
+- If the folder is not a git repository, `brain undo` restores what
+  phases 1–3 changed from the run's pre-images; there is no separate backup.
+- Phase 0 refuses a name or folder that is already registered as another
+  brain.
 - Files that fail to parse are never modified.
 - A conflict copy (BW112) is reported and left alone.
 
@@ -132,8 +133,12 @@ apart from a name.
 2. Copy files to `topics/<slug>/…`, preserving relative structure.
 3. Rewrite links between copied files and links to attachments; links to
    notes outside the source become unresolved and are reported.
-4. Apply the same normalization phases to the copies (the source stays
-   untouched), as one run.
+4. Apply phases 1 and 2 (§3.2) to the copies (the source stays untouched),
+   all in one run.
+5. Then add hubs for the new topics and refresh the topic table in
+   `AGENTS.md`, as separate lint-fix runs (the table can only be computed
+   once the hubs exist). The output names every run, so undoing them all
+   reverts the import.
 
 ## 6. To episodes, and from agents
 

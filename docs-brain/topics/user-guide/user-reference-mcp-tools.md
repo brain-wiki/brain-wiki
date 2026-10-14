@@ -29,4 +29,4 @@ the agent's profile, and `brain_read_origin` needs `read_origin = true`
 
 Exit codes: 0 success; 1 problems found (lint errors, invalid ops) or a path
 that cannot be read or written; 2 usage; 3 not found; 4 conflict (stale,
-lock); 5 forbidden by a profile.
+lock); 5 forbidden by a profile; 10 internal error.

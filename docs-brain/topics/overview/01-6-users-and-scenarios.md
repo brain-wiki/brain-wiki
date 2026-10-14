@@ -19,7 +19,7 @@ agent-readable without restructuring it.
 | # | Scenario | Flow (details in) |
 |---|---|---|
 | S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, which brains each may use, and harvest, with a dry run before every write. [[skills-and-onboarding\|15]] |
-| S1 | **Session start.** An agent starts in a project. | The static block `brain connect` wrote tells it to call `brain_list` and `brain_orient` when the task may depend on the user's knowledge; the briefing (what the brain holds, rules, topics, recent changes) fits a fixed budget. [[index-and-retrieval\|04]], [[08-32-the-static-instruction-block\|08 §3.2]] |
+| S1 | **Session start.** An agent starts in a project. | The static instructions `brain connect` set up tell it to call `brain_list` and `brain_orient` when the task may depend on the user's knowledge; the briefing (what the brain holds, rules, topics, recent changes) fits a fixed budget. [[index-and-retrieval\|04]], [[08-32-the-static-instruction-block\|08 §3.2]] |
 | S2 | **Recall during a task.** The agent asks about a past decision. | `search` returns the matching notes plus every note that supersedes or conflicts with them; the agent opens one with `read` and follows its relations with `neighbors`, or reads files directly when allowed. [[index-and-retrieval\|04]] |
 | S2b | **An agent updates a note.** The user says "Maya moved to the platform team." | The agent edits the person's note and runs `brain check`, which validates and records the edit. [[05-23-checked-agent-edits\|05 §2.3]] |
 | S3 | **Record.** The agent learned something worth keeping. | It logs an episode (MCP or CLI). [[write-path-and-consolidation\|05]] |
@@ -30,5 +30,5 @@ agent-readable without restructuring it.
 | S7 | **Work and personal.** | Two named brains; a project file or host setting picks the right one; agents can be limited to a subset. [[config-and-storage\|03]] |
 | S8 | **A bad consolidation.** | `brain undo <run>` restores the prior state exactly. [[write-path-and-consolidation\|05]] |
 | S9 | **Inspect the brain.** | `brain viz` opens a 3D map of topics, notes, and relations. [[visualizer\|12]] |
-| S10 | **Compare models.** | `brain bench` runs the same consolidation scenarios through several headless CLIs and reports validity and agreement. [[eval-bench\|11]] |
+| S10 | **Compare models.** | `brain bench` runs the same consolidation scenarios through several headless CLIs and reports validity and claim recall, including the worst model's. [[eval-bench\|11]] |
 | S11 | **An agent builds its own knowledge.** A long-running assistant learns how the user's tools, services, and projects behave. | It logs episodes as it works, and corrects notes directly with `brain check`; when the user asks, consolidation turns its episodes into agent-origin claims, marked unverified when web or tool output influenced them; later sessions on any host recall them with their sources. [[write-path-and-consolidation\|05]], [[skills-and-onboarding\|15]] |

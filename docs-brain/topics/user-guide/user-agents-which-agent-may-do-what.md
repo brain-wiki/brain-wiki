@@ -19,4 +19,7 @@ write = ["episodes", "edit", "propose_rules", "consolidate", "harvest"]
 read_origin = true
 ```
 
-See [[user-privacy|Privacy and safety]].
+When an agent asks for something its profile does not allow, brain-wiki
+refuses and names the `[agents.<host>]` line to add. The capabilities, and
+how to limit which brains an agent may use, are in
+[[user-privacy|Privacy and safety]].

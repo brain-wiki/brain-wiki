@@ -17,5 +17,5 @@ same flow:
 |---|---|
 | Plugin installed from a marketplace, no brain yet | MCP tools return `not_configured` with a hint to ask the agent to set brain-wiki up. |
 | User asks the agent | `brain-setup` triggers. |
-| Terminal, no agent | `brain setup` runs the same flow as an interactive wizard. |
+| Terminal, no agent | `brain setup` runs the same flow as an interactive wizard, minus the install and permissions steps. |
 | Re-running later | Setup is idempotent: it reads the current state and offers only what is missing or worth changing. |

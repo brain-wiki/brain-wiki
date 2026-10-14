@@ -28,4 +28,4 @@ bw-part_of:
 | **agent profile** | Per-brain settings for one host (e.g. `claude-code`): what it may write. Every host that may use a brain reads all of it; privacy inside a brain is being redesigned ([[proposal-privacy\|proposal]]). |
 | **host** | An agent application that loads brain-wiki: Claude Code, Codex, Antigravity, OpenClaw, Cursor, or a generic MCP client. |
 | **index** | The SQLite database derived from a brain; stored in the user cache directory, never inside the brain. |
-| **orientation** | The short, budgeted context an agent receives at session start. |
+| **orientation** | The short, budgeted briefing an agent fetches with `brain_orient` when a task may depend on the brain. |

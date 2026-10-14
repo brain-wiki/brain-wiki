@@ -12,7 +12,7 @@ bw-part_of:
 
 1. Set the version, date its `CHANGELOG.md` entry, run
    `scripts/sync_versions.py`, and commit.
-2. Push the tag `vX.Y.Z`. `.github/workflows/release.yml` checks the tag
+2. Push `main` and the tag `vX.Y.Z` together. `.github/workflows/release.yml` checks the tag
    against the version and the changelog, runs `scripts/check.py`, builds the
    sdist and wheel, publishes them to PyPI with trusted publishing, publishes
    `server.json` to the MCP Registry (GitHub OIDC), and creates the GitHub

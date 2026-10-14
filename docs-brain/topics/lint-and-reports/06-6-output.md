@@ -21,4 +21,5 @@ topics/search/fts5.md
 ```
 
 `--json` emits a list of `{code, severity, path, line, message, fixable}`.
-Exit codes: `0` no errors, `1` errors found, `2` usage or internal error.
+Exit codes: `0` no errors, `1` errors found, `2` usage error; the rest as in
+[[07-23-exit-codes|07 §2.3]].

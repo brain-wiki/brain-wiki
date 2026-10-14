@@ -114,7 +114,9 @@ added to a meeting note, a wrong fact), edit the file and then check it:
    to `bw-claims`. Never delete or reword a claim in place.
 3. Call `brain_check` with the paths you changed. Fix what it reports and
    check again; nothing is recorded until every error is gone. Claims you
-   added are marked unverified until the user or consolidation confirms them.
+   added are marked unverified whatever you write; only the user can confirm
+   them. Never change an existing claim's provenance (`origin`, `inputs`,
+   `src`); the check refuses it.
 4. If you cannot fix it, put the file back with `brain restore PATH` and log
    an episode instead.
 
@@ -126,8 +128,8 @@ to the user for review; `brain_check` says so.
 Only when the user explicitly asks for a lasting rule ("from now on…",
 "always…", "never…, remember that"):
 
-1. Call `brain_propose_rule` with a short `text`, `user_quote` set to the
-   user's exact words, and `session` set to your session id if you know it.
+1. Call `brain_propose_rule` with a short `text` and `user_quote` set to the
+   user's exact words.
 2. The agent app asks the user to confirm. If they decline, drop it.
 
 A preference you noticed but the user did not state as a rule is an episode
@@ -138,6 +140,6 @@ claim, not a rule.
 | Error | What to do |
 |---|---|
 | `not_configured` | brain-wiki is installed but not set up. Offer to set it up, then use the `brain-setup` skill. |
-| `forbidden` | This agent is not allowed to do that in this brain. Tell the user; do not retry. |
+| `forbidden` | This agent is not allowed to do that in this brain. Tell the user, with the line the error gives for granting it to this agent alone; they decide. Do not retry, and do not edit `brain.toml` unless they ask. |
 | `not_found` / `ambiguous` | Try another query, or pick from the listed matches. |
 | `busy` | Another write is in progress. Retry once after a moment. |

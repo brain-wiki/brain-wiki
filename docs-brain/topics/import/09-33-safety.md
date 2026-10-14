@@ -12,8 +12,9 @@ bw-part_of:
 
 - If the folder is a git repository with uncommitted changes, apply stops
   and asks the user to commit or stash first, so import diffs stay clean.
-- If the folder is not a git repository, apply writes a compressed backup
-  of every file it will modify to the run's state directory before
-  changing anything (in addition to the normal pre-images).
+- If the folder is not a git repository, `brain undo` restores what
+  phases 1–3 changed from the run's pre-images; there is no separate backup.
+- Phase 0 refuses a name or folder that is already registered as another
+  brain.
 - Files that fail to parse are never modified.
 - A conflict copy (BW112) is reported and left alone.

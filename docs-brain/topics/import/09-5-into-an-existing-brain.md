@@ -15,5 +15,9 @@ bw-part_of:
 2. Copy files to `topics/<slug>/…`, preserving relative structure.
 3. Rewrite links between copied files and links to attachments; links to
    notes outside the source become unresolved and are reported.
-4. Apply the same normalization phases to the copies (the source stays
-   untouched), as one run.
+4. Apply phases 1 and 2 (§3.2) to the copies (the source stays untouched),
+   all in one run.
+5. Then add hubs for the new topics and refresh the topic table in
+   `AGENTS.md`, as separate lint-fix runs (the table can only be computed
+   once the hubs exist). The output names every run, so undoing them all
+   reverts the import.

@@ -62,6 +62,7 @@ Handle the result:
 | review | The run was held for the user (large or risky change). Tell the user and offer to review it (step 3). |
 | `expired` | The run is too old. Prepare again. |
 | `busy` | Another write is running. Try again once in a minute. |
+| `forbidden` (on prepare) | This agent may not consolidate in this brain. Show the user the line the error gives (it grants this agent alone) and offer to add it to `brain.toml` after showing the diff, or to run `brain-setup` step 5. |
 
 ## 3. Review proposals
 

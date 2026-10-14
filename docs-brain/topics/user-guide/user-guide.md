@@ -20,8 +20,8 @@ Generated from `docs/user/`.
   - [[user-agents-which-agent-may-do-what]]: Which agent may do what
   - [[user-agents-harvest-off-by-default]]: Harvest (off by default)
 - [[user-getting-started]]: Getting started
-  - [[user-getting-started-install]]: Install
-  - [[user-getting-started-create-a-brain]]: Create a brain
+  - [[user-getting-started-set-up-from-your-agent-recommended]]: Set up from your agent (recommended)
+  - [[user-getting-started-or-from-a-terminal]]: Or from a terminal
   - [[user-getting-started-first-steps]]: First steps
   - [[user-getting-started-what-a-note-looks-like]]: What a note looks like
   - [[user-getting-started-next]]: Next

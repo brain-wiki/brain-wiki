@@ -162,7 +162,7 @@ agent-readable without restructuring it.
 | # | Scenario | Flow (details in) |
 |---|---|---|
 | S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, which brains each may use, and harvest, with a dry run before every write. [15](15-skills-and-onboarding.md) |
-| S1 | **Session start.** An agent starts in a project. | The static block `brain connect` wrote tells it to call `brain_list` and `brain_orient` when the task may depend on the user's knowledge; the briefing (what the brain holds, rules, topics, recent changes) fits a fixed budget. [04](04-index-and-retrieval.md), [08 §3.2](08-agent-integrations.md#32-the-static-instruction-block) |
+| S1 | **Session start.** An agent starts in a project. | The static instructions `brain connect` set up tell it to call `brain_list` and `brain_orient` when the task may depend on the user's knowledge; the briefing (what the brain holds, rules, topics, recent changes) fits a fixed budget. [04](04-index-and-retrieval.md), [08 §3.2](08-agent-integrations.md#32-the-static-instruction-block) |
 | S2 | **Recall during a task.** The agent asks about a past decision. | `search` returns the matching notes plus every note that supersedes or conflicts with them; the agent opens one with `read` and follows its relations with `neighbors`, or reads files directly when allowed. [04](04-index-and-retrieval.md) |
 | S2b | **An agent updates a note.** The user says "Maya moved to the platform team." | The agent edits the person's note and runs `brain check`, which validates and records the edit. [05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits) |
 | S3 | **Record.** The agent learned something worth keeping. | It logs an episode (MCP or CLI). [05](05-write-path-and-consolidation.md) |
@@ -173,7 +173,7 @@ agent-readable without restructuring it.
 | S7 | **Work and personal.** | Two named brains; a project file or host setting picks the right one; agents can be limited to a subset. [03](03-config-and-storage.md) |
 | S8 | **A bad consolidation.** | `brain undo <run>` restores the prior state exactly. [05](05-write-path-and-consolidation.md) |
 | S9 | **Inspect the brain.** | `brain viz` opens a 3D map of topics, notes, and relations. [12](12-visualizer.md) |
-| S10 | **Compare models.** | `brain bench` runs the same consolidation scenarios through several headless CLIs and reports validity and agreement. [11](11-eval-bench.md) |
+| S10 | **Compare models.** | `brain bench` runs the same consolidation scenarios through several headless CLIs and reports validity and claim recall, including the worst model's. [11](11-eval-bench.md) |
 | S11 | **An agent builds its own knowledge.** A long-running assistant learns how the user's tools, services, and projects behave. | It logs episodes as it works, and corrects notes directly with `brain check`; when the user asks, consolidation turns its episodes into agent-origin claims, marked unverified when web or tool output influenced them; later sessions on any host recall them with their sources. [05](05-write-path-and-consolidation.md), [15](15-skills-and-onboarding.md) |
 
 ## 7. Glossary
@@ -196,7 +196,7 @@ agent-readable without restructuring it.
 | **agent profile** | Per-brain settings for one host (e.g. `claude-code`): what it may write. Every host that may use a brain reads all of it; privacy inside a brain is being redesigned ([proposal](../proposals/privacy.md)). |
 | **host** | An agent application that loads brain-wiki: Claude Code, Codex, Antigravity, OpenClaw, Cursor, or a generic MCP client. |
 | **index** | The SQLite database derived from a brain; stored in the user cache directory, never inside the brain. |
-| **orientation** | The short, budgeted context an agent receives at session start. |
+| **orientation** | The short, budgeted briefing an agent fetches with `brain_orient` when a task may depend on the brain. |
 
 ## 8. Prior art and what we take from it
 

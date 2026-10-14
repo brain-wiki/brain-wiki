@@ -2,8 +2,9 @@
 
 `brain connect HOST` writes a copy of the plugin for that app, pointing at
 the installed `brain` command, registers it the way the app expects, and
-writes a short instruction block into the file the app loads in every
-session, so agents know to call `brain_list` and `brain_orient`. Always run
+puts short instructions where the app reads them in every session (Codex
+reads them from brain-wiki's MCP server), so agents know to call
+`brain_list` and `brain_orient`. Always run
 it with `--dry-run` first. Every change is recorded with backups, so
 `brain connect HOST --uninstall` undoes it, removing only brain-wiki's block
 from shared instruction files.

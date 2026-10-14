@@ -24,8 +24,8 @@ Rules for origin reads:
 
 - The window is normalized the same way harvest extracts turns: tool output
   bodies are omitted unless explicitly requested, and then wrapped as
-  `<untrusted-tool-output>`; injected brain-wiki context is stripped;
-  secrets are scrubbed.
+  `<untrusted-tool-output>`; text the host injected is stripped; secrets
+  are scrubbed.
 - Reading origins requires `read_origin = true` in the caller's agent
   profile ([[07-1-agent-profiles|07 §1]]), off by default for
   every host, because transcripts hold far more than the episode chose to

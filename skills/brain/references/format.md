@@ -66,7 +66,7 @@ bw-claims-superseded:
 - To change a claim, supersede it: move the old item to
   `bw-claims-superseded` with `by:`, and add the new claim to `bw-claims`.
   Never reword or delete a claim in place; `brain_check` rejects that.
-- Quote a value that contains `;` inside the block: `quote: "a; b"`.
+- Quote a value that contains `;` inside the block: `reason: "a; b"`.
 
 ## Relations
 

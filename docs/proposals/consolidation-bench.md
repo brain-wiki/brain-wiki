@@ -1,6 +1,6 @@
 # Consolidation bench, full design
 
-Status: designed, not built · Extends [11](../design/11-eval-bench.md)
+Status: designed, partly built (doc 11 has the built part) · Extends [11](../design/11-eval-bench.md)
 
 Doc 11 describes the bench as built: four model scenarios (slices A–D),
 two offline slices (E, F), and a handful of graders. This proposal holds

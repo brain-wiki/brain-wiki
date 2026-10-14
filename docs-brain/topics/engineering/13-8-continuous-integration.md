@@ -24,8 +24,9 @@ runs, and reports each step:
    is complete and `BUILD_INFO.json` names a clean brain-wiki-viz commit.
    With `--source <checkout>` (a brain-wiki-viz checkout at that commit,
    after `npm ci`) it also rebuilds the bundle and fails if the result
-   differs. brain-wiki-viz's own CI runs its type check, unit tests, and
-   the public-registry lockfile check (`npm run check`).
+   differs. brain-wiki-viz has no CI of its own, so brain-wiki's CI also
+   runs its type check, unit tests, and public-registry lockfile check
+   (`npm run check`) in that checkout.
 7. Package contents: builds the wheel and sdist and checks that the
    plugin files, prompts, skills, and visualizer are in the wheel and that
    the sdist holds only allowed top-level entries.

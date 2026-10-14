@@ -20,7 +20,7 @@ demand, no host-specific frontmatter keys).
 | Skill | Purpose | Loaded when |
 |---|---|---|
 | `brain` | Everyday use: recall, read warnings, record, propose rules only on request | Questions about past work, preferences, decisions; "remember…"; end of meaningful work |
-| `brain-setup` | Onboarding and reconfiguration: install, create or adopt a brain, connect agents, privacy, harvest | "Set up / install / connect / import brain-wiki"; or brain-wiki reports it is not configured |
+| `brain-setup` | Onboarding and reconfiguration: install, create or adopt a brain, connect agents, permissions, harvest | "Set up / install / connect / import brain-wiki"; or brain-wiki reports it is not configured |
 | `brain-maintain` | Upkeep: harvest, consolidate, review proposals, health check, undo | "Consolidate / harvest / clean up / review / check my brain" |
 
 **Why three skills, not one.** Hosts load every skill's name and
@@ -47,7 +47,8 @@ and when):
 > **brain-setup**: Set up, connect, or reconfigure brain-wiki: install the
 > CLI, create a brain or adopt an existing Obsidian or Markdown vault,
 > connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor),
-> choose which agents see which brain, and turn on harvest. Use when the user asks to install, set up, onboard, connect, or
+> choose which agents see which brain and what each may do, and turn on
+> harvest. Use when the user asks to install, set up, onboard, connect, or
 > import brain-wiki, or when brain-wiki says it is not configured.
 
 > **brain-maintain**: Maintain a brain-wiki brain: harvest recent agent
@@ -90,30 +91,30 @@ same flow:
 |---|---|
 | Plugin installed from a marketplace, no brain yet | MCP tools return `not_configured` with a hint to ask the agent to set brain-wiki up. |
 | User asks the agent | `brain-setup` triggers. |
-| Terminal, no agent | `brain setup` runs the same flow as an interactive wizard. |
+| Terminal, no agent | `brain setup` runs the same flow as an interactive wizard, minus the install and permissions steps. |
 | Re-running later | Setup is idempotent: it reads the current state and offers only what is missing or worth changing. |
 
 ### 3.2 The flow
 
 ```
-detect ─► install ─► brain ─► connect ─► privacy ─► harvest ─► verify ─► summary
-  │          │          │         │          │           │          │
-doctor   CLI on PATH  create or  other     defaults or  opt-in per test episode,
---json   (uv tool     adopt      agents    separate     host, with search,
-         install)     (import)   found     brains, host a dry run  orientation
-                                 on disk   limits
+detect ─► install ─► brain ─► connect ─► permissions ─► harvest ─► verify ─► summary
+  │          │          │         │            │             │          │
+doctor   CLI on PATH  create or  other     which brains,   opt-in per test episode,
+--json   (uv tool     adopt      agents    what each       host, with search,
+         install)     (import)   found     agent may do    routes, a  orientation
+                                 on disk                   dry run
 ```
 
 | Step | The agent | Asks the user | Writes |
 |---|---|---|---|
 | Detect | Runs `brain doctor --json` (§3.4); if the CLI is missing, notes it | — | nothing |
 | Install | Proposes `uv tool install brain-wiki` (or `pipx`); explains that marketplace installs can also run through `uvx` without installing | "Install the brain-wiki command?" | the tool install |
-| Brain | If none exists: proposes a location outside any code repository (default `~/brains/personal`), a name, and git (recommended). If the user has a vault: runs `brain import <path> --overlay --dry-run`, summarizes the report, applies phase 0, and mentions later phases | Location, name, git; which existing vault, if any | `brain init` or import phase 0; user config |
+| Brain | If none exists: explains what a brain is and suggests a location outside any code repository (default `~/brains/personal`), a name, and git (recommended: every change is a commit, the brain can be pushed to a private remote); the user decides. If the user has a vault: runs `brain import <path> --overlay --dry-run`, summarizes the report, applies phase 0, and mentions later phases | Location, name, git; which existing vault, if any | `brain init` (with `--git`, a first commit) or import phase 0; user config |
 | Connect | Lists agents `doctor` found installed and not yet connected; runs `brain connect <host> --dry-run` for each and shows the change | Which agents to connect | each host's config, with backups |
-| Privacy | Explains in three sentences: one brain is fine to start; every connected agent reads all of it; separate brains for separate lives (work and personal). Offers a second brain and host limits | Keep defaults, or set up a second brain / limits | `brain.toml`, user config |
-| Harvest | Explains in plain terms what is read and what may be sent to a model; runs a dry run and shows how many past sessions exist and an estimated cost of backfill | Per host: harvest on/off, backfill now/later/never | user config; episodes if backfill runs |
+| Permissions | Which brains: one brain is fine to start; every connected agent reads all of it; separate brains for separate lives (work and personal). What each agent may do: logging and checked edits are on by default; `consolidate` and `propose_rules` are granted per app | Keep defaults, or set up a second brain / host limits; which apps may consolidate or propose rules | `brain.toml` (`[agents.<host>]`), user config |
+| Harvest | Explains in plain terms what is read and what may be sent to a model; runs a dry run and shows how many past sessions exist and an estimated cost of backfill; explains routing and, with one brain, offers a route for every folder under the home folder | Per host: harvest on/off, backfill now/later/never; the route | user config; episodes if backfill runs |
 | Verify | Logs a test episode, searches for it, and shows orientation; the test episode stays in the inbox, and consolidation skips it as holding nothing durable | — | one episode |
-| Summary | Lists everything configured, where it lives, and how to undo each part (`brain connect --uninstall`, `brain brains remove`) | — | nothing |
+| Summary | Lists everything configured, where it lives, and how to undo each part (`brain connect --uninstall`, `brain brains remove`, removing an `[agents.<host>]` table) | — | nothing |
 
 ### 3.3 Rules for the setup skill
 
@@ -141,18 +142,19 @@ The contract the setup skill reads. Stable within a minor version.
   "config": {"path": "~/.config/brain-wiki/config.toml", "exists": true},
   "cli": {"on_path": true, "path": "~/.local/bin/brain"},
   "brains": [
-    {"name": "personal", "path": "~/brains/personal", "default": true, "ok": true,
-     "format": 2, "git": true, "notes": 412, "pending_episodes": 7, "open_proposals": 1}
+    {"name": "personal", "path": "~/brains/personal", "ok": true, "format": 2,
+     "git": true, "id": "01J…", "pending_episodes": 7, "notes": 412, "open_proposals": 1,
+     "recovered_runs": [], "uncommitted_runs": [], "default": true}
   ],
   "hosts": [
     {"id": "claude-code", "installed": true, "connected": true, "plugin": "0.1.0",
-     "mcp_ok": true, "harvest": true},
-    {"id": "codex", "installed": true, "connected": false}
+     "instructions": true, "harvest": true},
+    {"id": "codex", "installed": true, "connected": false, "harvest": false}
   ],
   "sqlite": {"version": "3.53.4", "fts5": true, "trigram": true},
   "problems": [
-    {"code": "host_not_connected", "host": "codex",
-     "message": "Codex is installed but not connected.", "fix": "brain connect codex"}
+    {"code": "host_not_connected", "severity": "info", "host": "codex",
+     "message": "codex is installed but not connected.", "fix": "brain connect codex"}
   ],
   "next_steps": ["connect codex"]
 }

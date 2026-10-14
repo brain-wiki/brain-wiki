@@ -18,9 +18,10 @@ brain connect <host> --uninstall  # undo it
 
 `brain connect` writes a copy of the plugin for that host under brain-wiki's
 data folder, pointing at your installed `brain` command, and registers it.
-It also writes a short instruction block into the file the host loads in
-every session, telling agents to call `brain_list` and `brain_orient` when a
-task may depend on what you know, and how to explore and write:
+It also gives the host short instructions, telling agents to call
+`brain_list` and `brain_orient` when a task may depend on what you know, and
+how to explore and write. They go where that host reads instructions in
+every session:
 
 | Host | Instructions |
 |---|---|

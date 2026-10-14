@@ -57,15 +57,16 @@ src/brainwiki/
 ├── store/          LocalStore (atomic writes, O_EXCL creates, expected-hash writes)
 ├── index/          SQLite schema, scanner, queries (search, guards, read, orient)
 ├── lint/           rules, profiles, fixes, reports
-├── write/          episode writer, secret scrubber, rule writer
-├── consolidate/    selection, packets, ops schema and validator, applier, backends, prompts
+├── write/          episode writer, secret scrubber, rule writer, checked edits, mv
+├── consolidate/    selection, packets, ops schema and validator, applier, review, headless presets
 ├── runs/           run records, pre-images, undo, locks, git integration
 ├── importer/       overlay, into, to-episodes, from-host presets
 ├── mcp/            MCP server (the only package that imports the SDK)
 ├── hosts/          per-host knowledge: transcript readers, host detection, connect writers, instruction blocks
 ├── viz/            graph export, level-of-detail API, local server; app/ is the built front end (committed)
 ├── bench/          generator, suites with their graders and scenarios, report
-└── assets/         templates (brain.toml, AGENTS.md, hub), prompts, plugin files (copied at build time)
+├── assets/         prompts (consolidate, distill, harvest); plugin files are copied in at build time
+└── *.py            top-level modules: engine, lifecycle, harvest, origin, doctor, setup_wizard, ids, errors, logs
 ```
 
 Dependency direction (an arrow means "may import"):
@@ -204,8 +205,9 @@ runs, and reports each step:
    is complete and `BUILD_INFO.json` names a clean brain-wiki-viz commit.
    With `--source <checkout>` (a brain-wiki-viz checkout at that commit,
    after `npm ci`) it also rebuilds the bundle and fails if the result
-   differs. brain-wiki-viz's own CI runs its type check, unit tests, and
-   the public-registry lockfile check (`npm run check`).
+   differs. brain-wiki-viz has no CI of its own, so brain-wiki's CI also
+   runs its type check, unit tests, and public-registry lockfile check
+   (`npm run check`) in that checkout.
 7. Package contents: builds the wheel and sdist and checks that the
    plugin files, prompts, skills, and visualizer are in the wheel and that
    the sdist holds only allowed top-level entries.
@@ -218,7 +220,7 @@ and 3.13 on every push and pull request.
 
 1. Set the version, date its `CHANGELOG.md` entry, run
    `scripts/sync_versions.py`, and commit.
-2. Push the tag `vX.Y.Z`. `.github/workflows/release.yml` checks the tag
+2. Push `main` and the tag `vX.Y.Z` together. `.github/workflows/release.yml` checks the tag
    against the version and the changelog, runs `scripts/check.py`, builds the
    sdist and wheel, publishes them to PyPI with trusted publishing, publishes
    `server.json` to the MCP Registry (GitHub OIDC), and creates the GitHub

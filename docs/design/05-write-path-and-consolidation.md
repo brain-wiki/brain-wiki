@@ -51,7 +51,8 @@ Human edits are always allowed: it is the user's brain.
 | `brain harvest` from host session stores (opt-in) | `agent` | computed from the session's tool calls (§3.2) | `harvest` | §2.2 |
 | File created directly under `inbox/episodes/` | as written if valid, else `agent`; `owner` becomes `agent` | `unknown` (forced) | `file` | Self-declared provenance is not trusted. |
 | File in `inbox/agents/<agent>/` | `agent` | `unknown` | `file` | No frontmatter needed. |
-| `brain import --to-episodes` | `import` | `false` | `import` | Importing the user's own files. |
+| `brain import --to-episodes` | `import` | `local` (`external` with `--untrusted`) | `import` | Importing the user's own files. |
+| `brain import --from <host>` | `agent` | `unknown` | `import` | An agent's own memory files. |
 
 Episodes that come from an agent session also record where they came
 from: `agent` (host id), `session` (host session id), `origin_turns` (the
@@ -106,19 +107,18 @@ discover ─► filter ─► route ─► extract ─► distill (or raw) ─�
 |---|---|
 | Discover | A per-host session reader lists sessions with id, working directory, start and last-modified time, size, and whether it is a subagent ([08 §6.4](08-agent-integrations.md#64-session-readers)). |
 | Filter | Skip subagent sessions, brain-wiki's own headless runs, sessions idle for less than `min_idle_minutes` (still in progress), and sessions with fewer than `min_user_turns` user messages. |
-| Route | Each session belongs to the brain its working directory resolves to, using the same project files and host defaults as brain selection ([03 §3](03-config-and-storage.md#3-choosing-a-brain)) plus optional path rules in `[harvest.routes]`. Sessions that resolve to no brain are skipped, never sent to the default brain. |
-| Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Injected brain-wiki context is stripped. Secrets are scrubbed. Inputs are computed from the tool calls. |
+| Route | Each session belongs to the brain of its working directory, checked in order: the first matching pattern in `[harvest.routes]`, a project file (`.brain-wiki.toml`), the brain folder it is inside, then the host's `brain` ([03 §3](03-config-and-storage.md#3-choosing-a-brain)). Sessions that resolve to no brain are skipped, never sent to the default brain. |
+| Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Text the host injected into turns (reminders, command echoes) is stripped. Secrets are scrubbed. Inputs are computed from the tool calls. |
 | Distill | One call to the configured headless preset ([08 §7](08-agent-integrations.md#7-headless-presets)) with the distill instructions (`prompts/distill.md`): the model returns `{skip, summary, claims[{text, turns}], negative_findings, open_questions, topics}`. Long sessions are split into chunks of at most 30k tokens, one episode per chunk. With `--raw`, no model is called and the episode holds a condensed transcript excerpt instead; consolidation distills it later. |
 | Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-inputs`. The dedupe key `<host>:<session>:<turn range>` makes a repeated harvest write nothing new. |
 | Watermark | `<state>/harvest/<host>/<session>.json` records the last harvested turn, so a long-running session is harvested in increments. |
 
-**Who distills.** The distill step reaches an LLM the same three ways as
-consolidation:
+**Who distills.** The distill step reaches an LLM in one of three ways:
 
 | Backend | How | Best for |
 |---|---|---|
 | `agent` (in-session recipe) | The user runs `/brain:harvest` (the `harvest` MCP prompt, or the skill's harvest section) inside a host. The agent calls `brain_harvest_prepare`; brain-wiki discovers, filters, routes, extracts, and scrubs that host's new sessions and returns a packet of condensed turns (at most 15k tokens; call again for more). The agent distills and calls `brain_harvest_apply` with one entry per session (episode content, or `skip` with a reason). The server validates turn ranges and lengths, sets every provenance field itself (including inputs computed from the parsed tool calls), writes the episodes, and advances watermarks. | Regular use: the agent the user already runs does the thinking, no extra process or credentials |
-| `command` (headless) | `brain harvest --apply` calls the configured preset per chunk. | Large backfills, which would exhaust a chat session's context |
+| `preset` (headless) | `brain harvest --apply` calls the configured preset (`[harvest] distill`, or `--distill`) per chunk. | Large backfills, which would exhaust a chat session's context |
 | `raw` | No model: the episode is a condensed transcript excerpt; consolidation distills later. | No model available |
 
 **Fallback for hosts without a reader.** For hosts brain-wiki cannot read
@@ -154,7 +154,7 @@ and then run `brain check` (MCP `brain_check`) on what they changed.
 
 | Control | Default |
 |---|---|
-| Profile capability `edit` ([07 §1](07-interfaces.md#1-agent-profiles)) | On for the owner profile; off unless listed in `write` for other profiles |
+| Profile capability `edit` ([07 §1](07-interfaces.md#1-agent-profiles)) | On: the default profile's `write` is `episodes` and `edit`; a host profile that lists `write` without `edit` turns it off |
 | Topic policy `[topics.<slug>] agent_edits = "allow" \| "review" \| "deny"` ([02 §3](02-brain-format.md#3-braintoml)) | `allow`. `review` turns a checked edit into a proposal for the user (§7.2) and restores the file; `deny` refuses it |
 | Protected files | Never editable this way: `rules.md` (§6), inbox and archived episodes, `log.md`, `reports/`, `AGENTS.md`, `brain.toml` |
 
@@ -404,8 +404,8 @@ Rules for origin reads:
 
 - The window is normalized the same way harvest extracts turns: tool output
   bodies are omitted unless explicitly requested, and then wrapped as
-  `<untrusted-tool-output>`; injected brain-wiki context is stripped;
-  secrets are scrubbed.
+  `<untrusted-tool-output>`; text the host injected is stripped; secrets
+  are scrubbed.
 - Reading origins requires `read_origin = true` in the caller's agent
   profile ([07 §1](07-interfaces.md#1-agent-profiles)), off by default for
   every host, because transcripts hold far more than the episode chose to

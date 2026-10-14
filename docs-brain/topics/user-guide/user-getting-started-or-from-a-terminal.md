@@ -1,26 +1,29 @@
 ---
-id: 01M3250V00CAAXHAZS4PT3K42E
+id: 01M3250V00E0E7V7BCR15PDFD7
 type: guide
-title: "Create a brain"
+title: "Or from a terminal"
 tags: [user-guide]
-source: "docs/user/getting-started.md#create-a-brain"
+source: "docs/user/getting-started.md#or-from-a-terminal"
 bw-part_of:
   - "[[user-getting-started]]"
 ---
-# Create a brain
+# Or from a terminal
 
 ```sh
+uv tool install brain-wiki     # or: pipx install brain-wiki
+brain doctor
 brain init ~/brains/personal --name personal --git
 ```
 
-Keep brains outside code repositories. A brain is an ordinary folder: under
-git (`--git`, recommended), or in a synced folder.
+`brain doctor` reports its version and SQLite, your brains, and which agents
+it found on this machine. It changes nothing (except rolling back a run that
+a crash left half-applied). `brain init --git` also makes a first commit.
 
 ```text
 ~/brains/personal/
 ├── brain.toml          settings that travel with the brain
 ├── AGENTS.md           how agents that only read files should use it
-├── rules.md            your standing rules, loaded into every session
+├── rules.md            your standing rules, part of every briefing
 ├── log.md              a readable history of changes brain-wiki made
 ├── topics/<topic>/     curated notes; each topic has a hub (index.md)
 ├── inbox/episodes/     raw observations from agents and from you

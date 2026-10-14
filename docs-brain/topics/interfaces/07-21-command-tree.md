@@ -39,7 +39,7 @@ brain rule add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--out PACKET.json]
 brain consolidate --apply OPS.json --run RUN [--dry-run]
-brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--dry-run | --apply]
+brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--apply [--dry-run]]
 brain harvest --status                                   # per host: enabled, sessions left to harvest
 brain origin EPISODE [--turns A-B]
 brain review list | show RUN | accept RUN | reject RUN
@@ -60,8 +60,8 @@ brain import [PATH] --from HOST [--dry-run | --apply]     # a host's memory file
 brain connect HOST [--brain NAME] [--scope user|project] [--print] [--force] [--dry-run] [--uninstall]
 brain mcp [--host HOST]                                   # stdio MCP server
 
-brain viz [--topic T]... [--port P] [--no-open] [--export FILE.html]
-brain bench [SUITE]... [--backends PRESET,...] [--sizes 1k,10k] [--out DIR]
+brain viz [--topic T]... [--port P] [--no-open] [--export FILE.html|.json|.graphml]
+brain bench [SUITE]... [--backends PRESET,...] [--sizes 1k,10k] [--out DIR] [-q]
 brain bench --compare A.json B.json
 brain version
 ```

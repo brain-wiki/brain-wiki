@@ -41,32 +41,35 @@ the brain opens in Obsidian.
 - **Your agent does the thinking.** Consolidation and harvesting run inside
   the agent you already use. brain-wiki makes no network calls of its own.
 
-## Install
+## Get started
 
 brain-wiki needs Python 3.11 or newer with SQLite FTS5, which the python.org,
-uv, Homebrew, and most Linux builds include.
+uv, Homebrew, and most Linux builds include, and [uv](https://docs.astral.sh/uv/).
 
-```sh
-uv tool install brain-wiki      # or: pipx install brain-wiki
-brain doctor                    # checks SQLite, your brains, and the agents on this machine
-```
+**1. Add brain-wiki to your agent.**
 
-## Quick start
+| Agent | Install the plugin |
+|---|---|
+| Claude Code | `/plugin marketplace add brain-wiki/brain-wiki`, then `/plugin install brain-wiki@brain-wiki` |
+| Codex / ChatGPT desktop | `codex plugin marketplace add brain-wiki/brain-wiki`, then enable brain-wiki in the plugin browser |
+| Antigravity | `agy plugin install https://github.com/brain-wiki/brain-wiki` |
+| OpenClaw, Cursor, other MCP clients | Install the command, then `brain connect openclaw`, `brain connect cursor`, or `brain connect generic --print` (see below) |
 
-**1. Create a brain.** Keep it outside your code repositories.
+**2. Ask your agent to set it up.**
 
-```sh
-brain init ~/brains/personal --name personal --git
-```
+> Set up brain-wiki.
 
-**2. Connect your agents.** Each command shows its changes with `--dry-run`
-first and can be reversed with `--uninstall`.
+The `brain-setup` skill explains each choice, lets you decide, and shows
+every change before making it:
 
-```sh
-brain connect claude-code       # or: codex, antigravity, openclaw, cursor
-```
+- where your brain lives (a new folder, or an Obsidian vault adopted in
+  place) and whether to track it with git;
+- which other agents on this machine to connect;
+- what each agent may do: log what it learns and correct notes (on by
+  default), consolidate the inbox, and propose rules that you confirm;
+- whether to turn past sessions into episodes (harvest).
 
-**3. Use it from your agent.**
+**3. Use it.**
 
 > Remember that Lumen keeps attachments next to their notes, because
 > Obsidian expects relative paths.
@@ -75,26 +78,29 @@ brain connect claude-code       # or: codex, antigravity, openclaw, cursor
 
 > Consolidate my brain.
 
-Or from the terminal:
+### From a terminal
 
 ```sh
+uv tool install brain-wiki      # or: pipx install brain-wiki
+brain doctor                    # checks SQLite, your brains, and the agents on this machine
+brain init ~/brains/personal --name personal --git
+brain connect claude-code       # or codex, antigravity, openclaw, cursor; try --dry-run first
 brain log "Lumen keeps attachments next to their notes; Obsidian expects relative paths."
 brain search "attachments"
 brain viz                       # a local 3D map of the brain
 ```
 
-**Prefer a guided setup?** Install the plugin from your agent's marketplace
-and ask it to "set up brain-wiki". The `brain-setup` skill walks through the
-same steps and shows a dry run before every change.
+Keep brains outside your code repositories. Agents may log and correct
+notes by default; to let one consolidate or propose rules, give it a profile
+in the brain's `brain.toml`:
 
-| Agent | Install the plugin |
-|---|---|
-| Claude Code | `/plugin marketplace add brain-wiki/brain-wiki`, then `/plugin install brain-wiki@brain-wiki` |
-| Codex / ChatGPT desktop | `codex plugin marketplace add brain-wiki/brain-wiki`, then enable brain-wiki in the plugin browser |
-| Antigravity | `agy plugin install https://github.com/brain-wiki/brain-wiki` |
+```toml
+[agents.claude-code]
+write = ["episodes", "edit", "consolidate", "propose_rules"]
+```
 
 Marketplace installs start the server with `uvx`. With the command
-installed, `brain connect` starts it at once.
+installed, `brain connect` starts it at once, and `--uninstall` reverses it.
 
 ## How it works
 

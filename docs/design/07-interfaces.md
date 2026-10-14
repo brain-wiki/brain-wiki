@@ -79,7 +79,7 @@ brain rule add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--out PACKET.json]
 brain consolidate --apply OPS.json --run RUN [--dry-run]
-brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--dry-run | --apply]
+brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--apply [--dry-run]]
 brain harvest --status                                   # per host: enabled, sessions left to harvest
 brain origin EPISODE [--turns A-B]
 brain review list | show RUN | accept RUN | reject RUN
@@ -100,8 +100,8 @@ brain import [PATH] --from HOST [--dry-run | --apply]     # a host's memory file
 brain connect HOST [--brain NAME] [--scope user|project] [--print] [--force] [--dry-run] [--uninstall]
 brain mcp [--host HOST]                                   # stdio MCP server
 
-brain viz [--topic T]... [--port P] [--no-open] [--export FILE.html]
-brain bench [SUITE]... [--backends PRESET,...] [--sizes 1k,10k] [--out DIR]
+brain viz [--topic T]... [--port P] [--no-open] [--export FILE.html|.json|.graphml]
+brain bench [SUITE]... [--backends PRESET,...] [--sizes 1k,10k] [--out DIR] [-q]
 brain bench --compare A.json B.json
 brain version
 ```
@@ -121,9 +121,13 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `--version`.
 - Targets follow the Obsidian CLI convention: a title, alias, or file name
   resolves like a wikilink, and an exact path or id resolves exactly. Results
   always print the exact path, the handle for the next command.
-- Listing commands share `--count` (print only the total), `--facets` (counts
-  by type, topic, and tag), `--paths` (one path per line, for piping into
-  file tools), `--limit`, and `--cursor`.
+- Listing commands share `--count` (print only the total), `--paths` (one
+  path per line, for piping into file tools), `--limit`, and `--cursor`;
+  `search` and `notes` also take `--facets` (counts by type, topic, and tag).
+- `brain init --git` runs `git init` and commits the new files. `init` and
+  `brains add` refuse a name or folder already registered to another brain,
+  so a typo never re-points a brain; a moved brain may take its name along
+  ([03 §5](03-config-and-storage.md#5-brain-lifecycle)).
 - `--topic T` (and the MCP `topic` filter) includes T's sub-topics (02 §2).
 - `brain log -` reads the episode body from stdin, so other tools can pipe
   into the inbox.
@@ -194,8 +198,9 @@ the first 512 characters most, so the first bullet ends within them
 
 ### 3.4 Tools
 
-All tools accept an optional `brain` argument (a brain name allowed for this
-host). All return structured content plus a text rendering.
+All tools except `brain_list` and `brain_harvest_apply` (which takes the run
+from `brain_harvest_prepare`) accept an optional `brain` argument (a brain
+name allowed for this host). Unknown arguments are rejected. All return structured content plus a text rendering.
 
 | Tool | Annotations | Purpose |
 |---|---|---|
@@ -365,7 +370,8 @@ naming):
 ### 3.6 Errors
 
 Execution errors are tool errors (`isError: true`) so the model can correct
-itself. The message starts with a stable code:
+itself. After the SDK's `Error executing tool <name>: ` prefix, the message
+starts with a stable code:
 
 | Code | When |
 |---|---|

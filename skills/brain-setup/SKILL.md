@@ -1,6 +1,6 @@
 ---
 name: brain-setup
-description: Set up, connect, or reconfigure brain-wiki. Install the CLI, create a brain or adopt an existing Obsidian or Markdown vault, connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor), choose which agents see which brain, and turn on harvest. Use when the user asks to install, set up, onboard, connect, or import brain-wiki, or when brain-wiki says it is not configured.
+description: Set up, connect, or reconfigure brain-wiki. Install the CLI, create a brain or adopt an existing Obsidian or Markdown vault, connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor), choose which agents see which brain and what each may do, and turn on harvest. Use when the user asks to install, set up, onboard, connect, or import brain-wiki, or when brain-wiki says it is not configured.
 ---
 # Set up brain-wiki
 
@@ -25,7 +25,7 @@ current state and offers only what is missing.
 ## Steps
 
 ```
-1 Check ─► 2 Install ─► 3 Brain ─► 4 Connect ─► 5 Privacy ─► 6 Harvest ─► 7 Verify ─► 8 Summary
+1 Check ─► 2 Install ─► 3 Brain ─► 4 Connect ─► 5 Permissions ─► 6 Harvest ─► 7 Verify ─► 8 Summary
 ```
 
 ### 1. Check
@@ -54,13 +54,21 @@ runs.
 
 ### 3. Brain
 
-**No brain yet.** Propose, in one question:
+**No brain yet.** Explain the choices in a few lines, suggest defaults, and
+let the user decide:
 
-- location: `~/brains/personal`, outside any code repository;
-- name: `personal`;
-- git: yes (recommended; every change becomes a commit that can be reverted).
+- **Where it lives.** A brain is an ordinary folder of Markdown the user
+  owns. Suggest `~/brains/personal`. Keep it outside code repositories, so
+  project history and team members never see it. A synced folder (iCloud,
+  Dropbox, Syncthing) works too.
+- **Name.** Short, used to pick the brain: `personal`.
+- **Git.** Recommended: every change brain-wiki makes becomes a commit, so
+  history is visible and any change can be reverted with plain git as well
+  as `brain undo`, and the brain can be pushed to a private remote to use on
+  another machine. Without git, `brain undo` still works on this machine.
 
-Then run `brain init ~/brains/personal --name personal --git`.
+Then run `brain init PATH --name NAME`, adding `--git` if they chose it. It
+makes a first commit, so a clone is a working brain.
 
 **The user already has a vault** (Obsidian or a folder of Markdown):
 
@@ -80,24 +88,43 @@ Then run `brain init ~/brains/personal --name personal --git`.
 2. Ask which ones to connect.
 3. For each: run `brain connect HOST --dry-run`, show the change, and after
    a yes run `brain connect HOST`.
-4. Report what `connect` found when it checked the agent app, and where it
-   wrote the instruction block. Tell the user to start a new session in that
-   app to pick it up.
+4. Report what `connect` found when it checked the agent app, and where the
+   instructions went (Codex reads them from brain-wiki's server, so no file
+   changes; for Cursor, show the block to paste into Settings → Rules). Tell
+   the user to start a new session in that app to pick it up.
 
 Per-app notes (permissions, what to expect): [references/hosts.md](references/hosts.md).
 
-### 5. Privacy
+### 5. Permissions
 
-Explain in three sentences:
+Two settings decide what each agent app can reach and change. Explain them
+briefly, then ask.
+
+**Which brains.**
 
 > One brain is fine to start with. Every agent you connect can read all of
 > it. For separate parts of life, like work and personal, use separate
 > brains, and choose which agents may use each.
 
-Offer: keep the defaults (recommended for most people), set up a second
-brain, or limit which brains an agent may use. Details and the exact settings:
-[references/privacy.md](references/privacy.md). Show any config change as a
-diff before writing it.
+**What each agent may do.** By default every agent may log what it learns
+and correct notes directly (each correction is checked and can be undone).
+Two more abilities are off until the user turns them on, per agent app:
+
+| Ability | What it allows |
+|---|---|
+| `consolidate` | When the user asks ("consolidate my brain"), fold the inbox into notes through checked, undoable steps |
+| `propose_rules` | Suggest a standing rule when the user asks for one; the user confirms every rule |
+
+Ask which apps should have them. For each yes, add a profile for that app to
+the brain's `brain.toml`, showing the diff first:
+
+```toml
+[agents.claude-code]
+write = ["episodes", "edit", "consolidate", "propose_rules"]
+```
+
+Details and the exact settings: [references/privacy.md](references/privacy.md).
+Show every config change as a diff before writing it.
 
 ### 6. Harvest
 
@@ -108,14 +135,27 @@ you are talking to or one you configure for the command line, so the
 condensed text goes to that model's provider. Harvest works for Claude
 Code, Codex, and Antigravity.
 
-For harvest, first run `brain harvest --from HOST --since 30d --dry-run`
-and show how many past sessions it found and the estimated tokens.
+For harvest, first run `brain harvest --from HOST --since 30d` (it writes
+nothing without `--apply`) and show how many past sessions it found and the
+estimated tokens.
+
+Each session goes to the brain of the folder it ran in: a project with a
+`.brain-wiki.toml` (`brain = "NAME"`), or a folder mapped in
+`[harvest.routes]` in the user config. Sessions that match neither are
+skipped, never sent to a default brain. With a single brain, offer a route
+that sends every session under the home folder to it:
+
+```toml
+[harvest.routes]
+"~/**" = "personal"
+```
 
 Then ask, per agent app: harvest on or off, and backfill past sessions now,
 later, or never.
 
-- Harvest on: add the app under `[harvest] hosts` in the user config and
-  `harvest` to that app's `write` list in `brain.toml` (diff first).
+- Harvest on: add the app under `[harvest] hosts` (with `enabled = true`) in
+  the user config, `~/.config/brain-wiki/config.toml`, and `harvest` to that
+  app's `write` list in `brain.toml` (diff first).
 - Backfill now: run the harvest recipe in the `brain-maintain` skill in this
   session, or `brain harvest --from HOST --apply` for large backfills.
 
@@ -137,6 +177,8 @@ List what was set up, where it lives, and how to undo each part:
 
 | Part | Undo |
 |---|---|
-| Brain created or imported | `brain brains remove NAME` (keeps the files); an import is undone with `brain undo RUN` |
+| Brain created | `brain brains remove NAME` (keeps the files) |
+| Vault adopted (overlay import) | `brain brains remove NAME`, then delete the files it added (`brain.toml`, `AGENTS.md`, `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`); with git, revert its commit. Later phases are runs: `brain undo RUN` |
+| Agent permissions | remove the `[agents.APP]` table from `brain.toml` |
 | Agent app connected | `brain connect HOST --uninstall` (restores the previous config) |
 | Harvest | remove the app from `[harvest] hosts` in the user config |

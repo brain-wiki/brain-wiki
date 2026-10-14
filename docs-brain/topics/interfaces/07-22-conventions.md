@@ -21,9 +21,13 @@ bw-part_of:
 - Targets follow the Obsidian CLI convention: a title, alias, or file name
   resolves like a wikilink, and an exact path or id resolves exactly. Results
   always print the exact path, the handle for the next command.
-- Listing commands share `--count` (print only the total), `--facets` (counts
-  by type, topic, and tag), `--paths` (one path per line, for piping into
-  file tools), `--limit`, and `--cursor`.
+- Listing commands share `--count` (print only the total), `--paths` (one
+  path per line, for piping into file tools), `--limit`, and `--cursor`;
+  `search` and `notes` also take `--facets` (counts by type, topic, and tag).
+- `brain init --git` runs `git init` and commits the new files. `init` and
+  `brains add` refuse a name or folder already registered to another brain,
+  so a typo never re-points a brain; a moved brain may take its name along
+  ([[03-5-brain-lifecycle|03 §5]]).
 - `--topic T` (and the MCP `topic` filter) includes T's sub-topics (02 §2).
 - `brain log -` reads the episode body from stdin, so other tools can pipe
   into the inbox.

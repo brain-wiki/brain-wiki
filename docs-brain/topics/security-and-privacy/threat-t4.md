@@ -14,6 +14,6 @@ bw-related_to:
 
 **Leakage to model providers.** Sensitive notes sent to a cloud model during consolidation.
 
-**Mitigations:** Packets contain only candidate notes' claims and relations, not whole files. `brain consolidate --dry-run` shows the packet. A brain that must not reach a cloud model is consolidated with a local one.
+**Mitigations:** Packets contain only candidate notes' claims and relations, not whole files. `brain consolidate --prepare` writes the packet for inspection. A brain that must not reach a cloud model is consolidated with a local one.
 
 **Residual risk:** Any episode in the brain can reach the backend's provider ([[proposal-privacy|privacy proposal]]).

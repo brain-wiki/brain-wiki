@@ -18,7 +18,8 @@ bw-part_of:
 | `brain harvest` from host session stores (opt-in) | `agent` | computed from the session's tool calls (§3.2) | `harvest` | §2.2 |
 | File created directly under `inbox/episodes/` | as written if valid, else `agent`; `owner` becomes `agent` | `unknown` (forced) | `file` | Self-declared provenance is not trusted. |
 | File in `inbox/agents/<agent>/` | `agent` | `unknown` | `file` | No frontmatter needed. |
-| `brain import --to-episodes` | `import` | `false` | `import` | Importing the user's own files. |
+| `brain import --to-episodes` | `import` | `local` (`external` with `--untrusted`) | `import` | Importing the user's own files. |
+| `brain import --from <host>` | `agent` | `unknown` | `import` | An agent's own memory files. |
 
 Episodes that come from an agent session also record where they came
 from: `agent` (host id), `session` (host session id), `origin_turns` (the

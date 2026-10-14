@@ -18,15 +18,16 @@ src/brainwiki/
 ├── store/          LocalStore (atomic writes, O_EXCL creates, expected-hash writes)
 ├── index/          SQLite schema, scanner, queries (search, guards, read, orient)
 ├── lint/           rules, profiles, fixes, reports
-├── write/          episode writer, secret scrubber, rule writer
-├── consolidate/    selection, packets, ops schema and validator, applier, backends, prompts
+├── write/          episode writer, secret scrubber, rule writer, checked edits, mv
+├── consolidate/    selection, packets, ops schema and validator, applier, review, headless presets
 ├── runs/           run records, pre-images, undo, locks, git integration
 ├── importer/       overlay, into, to-episodes, from-host presets
 ├── mcp/            MCP server (the only package that imports the SDK)
 ├── hosts/          per-host knowledge: transcript readers, host detection, connect writers, instruction blocks
 ├── viz/            graph export, level-of-detail API, local server; app/ is the built front end (committed)
 ├── bench/          generator, suites with their graders and scenarios, report
-└── assets/         templates (brain.toml, AGENTS.md, hub), prompts, plugin files (copied at build time)
+├── assets/         prompts (consolidate, distill, harvest); plugin files are copied in at build time
+└── *.py            top-level modules: engine, lifecycle, harvest, origin, doctor, setup_wizard, ids, errors, logs
 ```
 
 Dependency direction (an arrow means "may import"):

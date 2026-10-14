@@ -1,30 +1,42 @@
 # Getting started
 
-## Install
+## Set up from your agent (recommended)
+
+Install the plugin in your agent (the README lists the command for each),
+then ask it:
+
+> Set up brain-wiki.
+
+The `brain-setup` skill installs the `brain` command if needed, then walks
+you through the choices below, explaining each and showing every change
+before it makes it. You can rerun it at any time; it offers only what is
+missing.
+
+| Choice | What to know |
+|---|---|
+| Where the brain lives | An ordinary folder of Markdown you own, such as `~/brains/personal`. Keep it outside code repositories; a synced folder works. Or adopt an existing Obsidian vault in place ([Import](import.md)). |
+| Git | Recommended. Every change becomes a commit you can see and revert, and you can push the brain to a private remote to use it on another machine. Without git, `brain undo` still works on this machine. |
+| Other agents | Which agent apps on this machine to connect ([Agents](agents.md)). |
+| What agents may do | Log what they learn and correct notes: on by default. Consolidate the inbox and propose rules: off until you turn them on for an app. |
+| Harvest | Whether to turn past sessions into episodes, and which brain each project's sessions go to. |
+
+## Or from a terminal
 
 ```sh
 uv tool install brain-wiki     # or: pipx install brain-wiki
 brain doctor
-```
-
-`brain doctor` reports its version and SQLite, your brains, and which agents
-it found on this machine. It changes nothing (except rolling back a
-run that a crash left half-applied).
-
-## Create a brain
-
-```sh
 brain init ~/brains/personal --name personal --git
 ```
 
-Keep brains outside code repositories. A brain is an ordinary folder: under
-git (`--git`, recommended), or in a synced folder.
+`brain doctor` reports its version and SQLite, your brains, and which agents
+it found on this machine. It changes nothing (except rolling back a run that
+a crash left half-applied). `brain init --git` also makes a first commit.
 
 ```text
 ~/brains/personal/
 ├── brain.toml          settings that travel with the brain
 ├── AGENTS.md           how agents that only read files should use it
-├── rules.md            your standing rules, loaded into every session
+├── rules.md            your standing rules, part of every briefing
 ├── log.md              a readable history of changes brain-wiki made
 ├── topics/<topic>/     curated notes; each topic has a hub (index.md)
 ├── inbox/episodes/     raw observations from agents and from you

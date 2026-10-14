@@ -10,8 +10,9 @@ bw-part_of:
 ---
 # Tools
 
-All tools accept an optional `brain` argument (a brain name allowed for this
-host). All return structured content plus a text rendering.
+All tools except `brain_list` and `brain_harvest_apply` (which takes the run
+from `brain_harvest_prepare`) accept an optional `brain` argument (a brain
+name allowed for this host). Unknown arguments are rejected. All return structured content plus a text rendering.
 
 | Tool | Annotations | Purpose |
 |---|---|---|

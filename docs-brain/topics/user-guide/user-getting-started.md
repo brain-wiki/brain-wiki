@@ -10,8 +10,8 @@ bw-part_of:
 # Getting started
 
 ## Sections
-- [[user-getting-started-install]]: Install
-- [[user-getting-started-create-a-brain]]: Create a brain
+- [[user-getting-started-set-up-from-your-agent-recommended]]: Set up from your agent (recommended)
+- [[user-getting-started-or-from-a-terminal]]: Or from a terminal
 - [[user-getting-started-first-steps]]: First steps
 - [[user-getting-started-what-a-note-looks-like]]: What a note looks like
 - [[user-getting-started-next]]: Next

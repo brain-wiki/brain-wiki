@@ -12,7 +12,9 @@ bw-part_of:
 
 Headless harvest (`brain harvest --apply`, [[05-22-harvesting-sessions|05 §2.2]])
 and the bench's model runs ([[eval-bench|11]]) run a host CLI once per packet, prompt on stdin, in an empty temporary
-directory.
+directory under the state directory (`<state>/headless/run-*`). Harvest skips
+any session whose working directory is under the state directory, so it never
+distills its own runs, even when a host does not mark them headless.
 
 | Preset | Command (sketch) | Final text | Isolation |
 |---|---|---|---|
