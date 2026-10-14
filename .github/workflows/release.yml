@@ -48,10 +48,11 @@ jobs:
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
 
-  # The Registry is a public catalog; development releases stay out of it.
+  # Listing in the MCP Registry, a public catalog, is off until the project decides to be listed
+  # (13 §9). To turn it on, delete `false && `; development releases stay out either way.
   mcp-registry:
     needs: [build, pypi]
-    if: needs.build.outputs.prerelease == 'false'
+    if: false && needs.build.outputs.prerelease == 'false'
     runs-on: ubuntu-latest
     permissions:
       id-token: write  # MCP Registry login with GitHub OIDC

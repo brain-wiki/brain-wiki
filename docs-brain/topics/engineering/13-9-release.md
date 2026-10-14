@@ -15,12 +15,14 @@ bw-part_of:
    entry, run `scripts/sync_versions.py`, and commit.
 2. Push `main` and the tag `vX.Y.Z` together. `.github/workflows/release.yml` checks the tag
    against the version and the changelog, runs `scripts/check.py`, builds the
-   sdist and wheel, publishes them to PyPI with trusted publishing, publishes
-   `server.json` to the MCP Registry (GitHub OIDC) for final versions only,
-   and creates the GitHub release from the changelog entry, marked a
-   pre-release for a development version. Development releases stay out of
-   the Registry because it is a public catalog that clients browse; listing
-   waits for a final release.
+   sdist and wheel, publishes them to PyPI with trusted publishing, and
+   creates the GitHub release from the changelog entry, marked a pre-release
+   for a development version. Its job that publishes `server.json` to the MCP
+   Registry (GitHub OIDC) is turned off: a Registry install gets only the MCP
+   server, without the skills or setup flow, so listing waits until the
+   repository is public and a server-only first run works (today the
+   `not_configured` hint names a `brain` command and a skill such a user does
+   not have). When turned on, it lists final versions only.
 3. Move `main` to the next `.devN` version. The plugin files keep pointing at
    the newest dated release, final or development (`scripts/sync_versions.py`),
    because the Claude Code and Codex marketplaces read the repository
