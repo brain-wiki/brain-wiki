@@ -6,21 +6,21 @@ from pathlib import Path
 import pytest
 from tests.conftest import write
 
-from brainwiki.cli.main import main
-from brainwiki.config.resolve import open_brain
+from brainwiki.cli._main import main
+from brainwiki.config._resolve import open_brain
 from brainwiki.engine import Engine
 from brainwiki.errors import BudgetExceeded, UsageError
-from brainwiki.format.document import parse_document
-from brainwiki.format.episode import EpisodeContent
-from brainwiki.index.orient import orient
-from brainwiki.index.search import search
+from brainwiki.format._document import parse_document
+from brainwiki.format._episode import EpisodeContent
+from brainwiki.index._orient import orient
+from brainwiki.index._search import search
 from brainwiki.lint import lint
 from brainwiki.runs import Run
-from brainwiki.runs.record import save_record
-from brainwiki.runs.undo import undo
-from brainwiki.write import rules
-from brainwiki.write.episode import _MAX_EPISODE_BYTES, write_episode
-from brainwiki.write.move import move_note
+from brainwiki.runs._record import save_record
+from brainwiki.runs._undo import undo
+from brainwiki.write import _rules as rules
+from brainwiki.write._episode import _MAX_EPISODE_BYTES, write_episode
+from brainwiki.write._move import move_note
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 FAKE_KEY = "ghp_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6q7R8"

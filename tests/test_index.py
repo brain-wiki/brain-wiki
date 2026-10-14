@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from brainwiki.config.resolve import open_brain
+from brainwiki.config._resolve import open_brain
 from brainwiki.engine import Engine
-from brainwiki.index.orient import orient
-from brainwiki.index.read import read
-from brainwiki.index.search import search
+from brainwiki.index._orient import orient
+from brainwiki.index._read import read
+from brainwiki.index._search import search
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 

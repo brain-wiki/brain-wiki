@@ -20,7 +20,7 @@ without a model; any failed check is a hard failure:
 
 Four model slices run only with `--backends PRESET,...` (headless presets,
 [[08-7-headless-presets|08 §7]]), one scenario each,
-written in `brainwiki.bench.suites`:
+written in `brainwiki/bench/_suites.py`:
 
 | Slice | Episode | Checks |
 |---|---|---|

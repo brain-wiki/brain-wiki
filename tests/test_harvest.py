@@ -9,13 +9,13 @@ import pytest
 from mcp import Client
 
 from brainwiki import harvest as hv
-from brainwiki.cli.main import main
-from brainwiki.config.resolve import open_brain
-from brainwiki.config.user import load_user_config, set_value
+from brainwiki.cli._main import main
+from brainwiki.config._resolve import open_brain
+from brainwiki.config._user import load_user_config, set_value
 from brainwiki.engine import Engine
 from brainwiki.errors import Forbidden
-from brainwiki.format.frontmatter import split
-from brainwiki.mcp.server import build_server
+from brainwiki.format._frontmatter import split
+from brainwiki.mcp._server import build_server
 from brainwiki.origin import origin_window
 
 OLD = time.time() - 3 * 3600
@@ -96,16 +96,14 @@ def test_cli_raw_harvest_writes_once(setup: Path, brain_dir: Path, capsys):
 def test_distilled_harvest_and_validation(
     setup: Path, brain_dir: Path, monkeypatch: pytest.MonkeyPatch
 ):
-    from brainwiki.cli import cmd_harvest
+    from brainwiki.cli import _cmd_harvest as cmd_harvest
 
     reply = {
         "summary": "Search moved to FTS5.",
         "claims": [{"text": "FTS5 p95 is 4 ms on 10k notes.", "turns": "3-4"}],
         "negative_findings": ["Pure-Python BM25 was too slow above 2k notes."],
     }
-    monkeypatch.setattr(
-        "brainwiki.consolidate.presets.run_command", lambda *a, **k: json.dumps(reply)
-    )
+    monkeypatch.setattr("brainwiki.consolidate.run_command", lambda *a, **k: json.dumps(reply))
     (candidate,) = [c for c in hv.discover(load_user_config(), ["claude-code"]) if not c.skip]
     out = cmd_harvest._harvest_one(hv, candidate, "claude-code", dry_run=False)
     text = (brain_dir / out["episodes"][0]).read_text()

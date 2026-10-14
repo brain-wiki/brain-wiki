@@ -7,18 +7,18 @@ from pathlib import Path
 import pytest
 from tests.conftest import write
 
-from brainwiki.cli.main import main
-from brainwiki.config.manifest import parse_manifest
-from brainwiki.config.resolve import open_brain
+from brainwiki.cli._main import main
+from brainwiki.config._manifest import parse_manifest
+from brainwiki.config._resolve import open_brain
 from brainwiki.engine import Engine
-from brainwiki.index.neighbors import neighbors
-from brainwiki.index.orient import orient
-from brainwiki.index.search import search
-from brainwiki.index.topics import _build_tree
+from brainwiki.index._neighbors import neighbors
+from brainwiki.index._orient import orient
+from brainwiki.index._search import search
+from brainwiki.index._topics import _build_tree
 from brainwiki.lint import lint
-from brainwiki.runs.undo import undo
-from brainwiki.viz.lod import tree_groups
-from brainwiki.write.move import move_note
+from brainwiki.runs._undo import undo
+from brainwiki.viz._lod import tree_groups
+from brainwiki.write._move import move_note
 
 MANIFEST = """format = 2
 id = "01M4KT3JPRY4W6766VT18CQS8Z"

@@ -285,7 +285,7 @@ so its preset relies on the prompt and the validator instead. Its default
 (high) effort spent 48k thinking tokens and five minutes on a one-episode
 packet; medium took 47 seconds and low 4, all with valid ops.
 
-Exact flags live in code (`brainwiki.consolidate.presets`, shared by
+Exact flags live in code (`brainwiki/consolidate/_presets.py`, shared by
 consolidation and harvest distillation) with tests against recorded outputs,
 because CLIs change faster than this document.
 

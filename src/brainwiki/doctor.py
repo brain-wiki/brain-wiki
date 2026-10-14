@@ -12,8 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from brainwiki import __version__
-from brainwiki.config.dirs import config_file, state_dir
-from brainwiki.config.user import load_user_config
+from brainwiki.config import config_file, load_user_config, state_dir
 
 _HOST_PROBES: dict[str, dict[str, list[str]]] = {
     "claude-code": {"bins": ["claude"], "dirs": ["~/.claude"]},
@@ -61,7 +60,7 @@ def _host_connection(host: str) -> dict[str, Any] | None:
 
 def _missing_instructions(connection: dict[str, Any]) -> list[str]:
     """Instruction files `brain connect` wrote that no longer carry the block (08 §3.2)."""
-    from brainwiki.hosts.instructions import find_block
+    from brainwiki.hosts import find_block
 
     missing = []
     for item in connection.get("instructions", []):
@@ -76,7 +75,7 @@ def _missing_instructions(connection: dict[str, Any]) -> list[str]:
 
 
 def _brain_summary(name: str, path: Path) -> dict[str, Any]:
-    from brainwiki.config.resolve import open_brain
+    from brainwiki.config import open_brain
 
     info: dict[str, Any] = {"name": name, "path": str(path), "ok": False}
     try:
@@ -104,8 +103,7 @@ def _brain_summary(name: str, path: Path) -> dict[str, Any]:
 
 def _runs_summary(brain: Any) -> dict[str, Any]:
     from brainwiki.engine import Engine
-    from brainwiki.runs.record import list_records
-    from brainwiki.runs.undo import recover
+    from brainwiki.runs import list_records, recover
 
     with Engine(brain) as engine:
         recovered = recover(engine)

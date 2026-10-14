@@ -3,9 +3,9 @@ from __future__ import annotations
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from brainwiki.format.document import parse_document
-from brainwiki.format.edit import append_to_section
-from brainwiki.format.fields import (
+from brainwiki.format._document import parse_document
+from brainwiki.format._edit import append_to_section
+from brainwiki.format._fields import (
     claim_value,
     list_values,
     move_item,
@@ -15,10 +15,10 @@ from brainwiki.format.fields import (
     replace_item,
     to_format2,
 )
-from brainwiki.format.frontmatter import _yaml, set_fields, split
-from brainwiki.format.links import extract_links
-from brainwiki.format.meta import format_meta, parse_meta
-from brainwiki.format.relations import RelationError, parse_relation_line
+from brainwiki.format._frontmatter import _yaml, set_fields, split
+from brainwiki.format._links import extract_links
+from brainwiki.format._meta import format_meta, parse_meta
+from brainwiki.format._relations import RelationError, parse_relation_line
 
 NOTE = """---
 id: 01J9Z7Q2V8K3M4N5P6R7S8T9U0

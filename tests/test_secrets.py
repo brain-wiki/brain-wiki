@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from brainwiki.write.secrets import find_secrets
+from brainwiki.write._secrets import find_secrets
 
 # Assembled at runtime so secret scanners do not flag this file.
 OPENAI = "sk-" + "proj-" + "Ab3dE5gH7jK9mN1pQ3sT5vW7yZ9bC2eF4"

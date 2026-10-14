@@ -15,7 +15,7 @@ bw-part_of:
 | `mcp` (2.x) | MCP server | Pulls in pydantic, starlette, uvicorn, httpx2, jsonschema, and others. Imported only by `brainwiki.mcp`. |
 | `PyYAML` | Frontmatter parsing | `CSafeLoader` when available. Writers edit frontmatter line by line instead of dumping YAML, so formatting is preserved. |
 | `tomlkit` | Editing `config.toml` and `brain.toml` without losing comments | Reading uses stdlib `tomllib`. |
-| `filelock` | Cross-platform advisory locks | |
+| `filelock` | Cross-platform advisory locks | Imported when a lock is taken: it loads `asyncio` (~40 ms), which read-only commands never need. |
 | `jsonschema` | Validating ops and plugin manifests | Already required by `mcp`. |
 
 Standard library for everything else: `sqlite3`, `tomllib`, `argparse`,

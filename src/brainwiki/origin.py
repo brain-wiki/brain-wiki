@@ -6,8 +6,8 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from brainwiki.errors import Forbidden, NotAvailable, NotFound, UsageError
-from brainwiki.hosts.sessions import reader_for
-from brainwiki.write.secrets import scrub
+from brainwiki.hosts import reader_for
+from brainwiki.write import scrub
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine

@@ -10,7 +10,7 @@ bw-part_of:
 ---
 # Schema
 
-`src/brainwiki/index/schema.py` is authoritative; this copy matches
+`src/brainwiki/index/_schema.py` is authoritative; this copy matches
 `SCHEMA_VERSION` 10. Any schema change bumps the version, and an index with
 another version is rebuilt (§2). Values in comments are what the code
 writes; the schema itself has no CHECK constraints.

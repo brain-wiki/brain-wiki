@@ -7,10 +7,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from brainwiki import FORMAT_VERSION
-from brainwiki.config.manifest import MANIFEST, parse_manifest
+from brainwiki.config import MANIFEST, parse_manifest
 from brainwiki.errors import Conflict, UsageError
-from brainwiki.format.agents_md import replace_block
-from brainwiki.format.rules import RULES_HEADER
+from brainwiki.format import RULES_HEADER, replace_block
 from brainwiki.ids import new_ulid
 
 if TYPE_CHECKING:

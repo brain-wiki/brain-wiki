@@ -6,7 +6,7 @@ at a release that exists on PyPI: the pyproject version when it is a release, el
 dated release in CHANGELOG.md. This script copies that version into every plugin manifest and
 every `brain-wiki==<version>` pin, regenerates the skill references
 that mirror src/brainwiki/assets/, and writes Antigravity's always-on rule from the static
-instruction block in src/brainwiki/hosts/instructions.py (design docs 08 §3.2, 13 §4, 15 §2).
+instruction block in src/brainwiki/hosts/_instructions.py (design docs 08 §3.2, 13 §4, 15 §2).
 
     python scripts/sync_versions.py           # write changes
     python scripts/sync_versions.py --check   # change nothing; exit 1 on drift (for CI)
@@ -117,7 +117,7 @@ def expected(root: Path, version: str) -> tuple[dict[Path, str], list[str]]:
         out[target] = _header(source) + (root / source).read_text(encoding="utf-8")
     rule = _rule(root)
     if rule is None:
-        problems.append("missing: src/brainwiki/hosts/instructions.py")
+        problems.append("missing: src/brainwiki/hosts/_instructions.py")
     else:
         out[RULE] = rule
     return out, problems
@@ -128,7 +128,7 @@ def _rule(root: Path) -> str | None:
     nothing is known about the user's own profile yet."""
     import importlib.util
 
-    source = root / "src/brainwiki/hosts/instructions.py"
+    source = root / "src/brainwiki/hosts/_instructions.py"
     if not source.is_file():
         return None
     spec = importlib.util.spec_from_file_location("_brainwiki_instructions", source)

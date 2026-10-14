@@ -9,16 +9,16 @@ from pathlib import Path
 import pytest
 from tests.conftest import write
 
-from brainwiki.cli.main import main
-from brainwiki.config.resolve import open_brain
-from brainwiki.consolidate import pipeline
+from brainwiki.cli._main import main
+from brainwiki.config._resolve import open_brain
+from brainwiki.consolidate import _pipeline as pipeline
 from brainwiki.engine import Engine
 from brainwiki.errors import Forbidden
-from brainwiki.format.document import parse_document
-from brainwiki.format.episode import EpisodeContent
+from brainwiki.format._document import parse_document
+from brainwiki.format._episode import EpisodeContent
 from brainwiki.lint import lint
-from brainwiki.runs.undo import undo
-from brainwiki.write.episode import write_episode
+from brainwiki.runs._undo import undo
+from brainwiki.write._episode import write_episode
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 PROFILES = """
@@ -240,7 +240,7 @@ print(json.dumps({{"event": "result", "result": {{"status": "SUCCESS",
 
 
 def test_antigravity_preset_sends_prompt_on_stdin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    from brainwiki.consolidate.presets import run_command
+    from brainwiki.consolidate._presets import run_command
 
     log = tmp_path / "agy.json"
     agy = tmp_path / "bin" / "agy"
@@ -262,7 +262,7 @@ def test_antigravity_preset_sends_prompt_on_stdin(tmp_path: Path, monkeypatch: p
 
 
 def test_cli_prepare_and_apply(example: Path, tmp_path: Path, capsys):
-    from brainwiki.config.user import register_brain
+    from brainwiki.config._user import register_brain
 
     register_brain("ex", example, make_default=True)
     with eng(example) as e:

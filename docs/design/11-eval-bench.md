@@ -73,7 +73,7 @@ without a model; any failed check is a hard failure:
 
 Four model slices run only with `--backends PRESET,...` (headless presets,
 [08 §7](08-agent-integrations.md#7-headless-presets)), one scenario each,
-written in `brainwiki.bench.suites`:
+written in `brainwiki/bench/_suites.py`:
 
 | Slice | Episode | Checks |
 |---|---|---|
@@ -111,7 +111,7 @@ are done by hand before releases. The planned scenarios are in the
 
 ## 4. Data
 
-- **Generator** (`brainwiki.bench.generate`): seeded; notes about invented
+- **Generator** (`brainwiki/bench/_generate.py`): seeded; notes about invented
   software projects, in common English words plus generated pseudo-words
   drawn with a Zipf distribution so FTS ranks them like real prose. It
   plants topics, notes, claims with anchors, relations, supersession

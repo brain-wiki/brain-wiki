@@ -6,7 +6,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from brainwiki.config.dirs import state_dir
+from brainwiki.config import state_dir
 
 _configured = False
 

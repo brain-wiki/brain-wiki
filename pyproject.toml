@@ -39,9 +39,9 @@ Issues = "https://github.com/brain-wiki/brain-wiki/issues"
 Changelog = "https://github.com/brain-wiki/brain-wiki/blob/main/CHANGELOG.md"
 
 [project.scripts]
-brain = "brainwiki.cli.main:main"
-brain-wiki = "brainwiki.cli.main:main"
-brain-wiki-mcp = "brainwiki.mcp.server:main"
+brain = "brainwiki.cli:main"
+brain-wiki = "brainwiki.cli:main"
+brain-wiki-mcp = "brainwiki.mcp:main"
 
 [dependency-groups]
 dev = ["pytest>=8", "hypothesis>=6.100", "ruff==0.16.10"]  # ruff exact: formatting changes between releases

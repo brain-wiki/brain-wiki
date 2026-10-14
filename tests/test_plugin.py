@@ -123,7 +123,7 @@ def test_sync_check_reports_drift(tmp_path):
         *JSON_FILES,
         "src/brainwiki/assets/prompts/consolidate.md",
         "src/brainwiki/assets/prompts/harvest.md",
-        "src/brainwiki/hosts/instructions.py",
+        "src/brainwiki/hosts/_instructions.py",
         "rules/brain-wiki.md",
     ]:
         (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
@@ -175,7 +175,7 @@ def test_prompts_end_with_payload_heading(name, trailer):
 
 def test_docs_brain_is_a_clean_brain(capsys):
     """docs-brain/ is generated from docs/ (scripts/build_docs_brain.py) and passes strict lint."""
-    from brainwiki.cli.main import main
+    from brainwiki.cli._main import main
 
     assert main(["lint", "--brain", str(ROOT / "docs-brain")]) == 0
     assert "No problems" in capsys.readouterr().out

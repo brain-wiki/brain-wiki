@@ -7,8 +7,8 @@ import pytest
 from mcp import Client
 from mcp_types import ElicitResult, Implementation
 
-from brainwiki.config.user import register_brain
-from brainwiki.mcp.server import _INSTRUCTIONS, build_server
+from brainwiki.config._user import register_brain
+from brainwiki.mcp._server import _INSTRUCTIONS, build_server
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 TOOLS = [

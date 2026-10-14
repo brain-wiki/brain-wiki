@@ -14,6 +14,8 @@ user's brain, use the brain-wiki MCP tools or the `brain` skill.
   only the lines they must.
 - Only `brain mcp` may import the MCP SDK; the CLI imports subcommand
   modules lazily so every command starts fast.
+- Modules inside a package are private (`_name.py`); import another
+  package only through its `__init__.py` (`from brainwiki.index import ...`).
 - Fixtures are synthetic (the fictional notes app "Lumen"). Never add real
   personal data or credential-shaped strings.
 - After editing `src/brainwiki/assets/` or the version, run

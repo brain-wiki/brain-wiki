@@ -7,16 +7,16 @@ from pathlib import Path
 import pytest
 from tests.conftest import write
 
-from brainwiki.cli.main import main
-from brainwiki.config.resolve import open_brain
+from brainwiki.cli._main import main
+from brainwiki.config._resolve import open_brain
 from brainwiki.engine import Engine
 from brainwiki.errors import InvalidOps
 from brainwiki.lint import lint
-from brainwiki.lint.files import run_gate
-from brainwiki.lint.fixes import fix
-from brainwiki.lint.reports import generate
+from brainwiki.lint._files import run_gate
+from brainwiki.lint._fixes import fix
+from brainwiki.lint._reports import generate
 from brainwiki.runs import Run
-from brainwiki.runs.undo import undo
+from brainwiki.runs._undo import undo
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 NOTE = "---\nid: {id}\ntitle: {title}\n---\n# {title}\n\n{body}\n"

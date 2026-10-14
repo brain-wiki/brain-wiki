@@ -1,5 +1,5 @@
 import sys
 
-from brainwiki.cli.main import main
+from brainwiki.cli import main
 
 sys.exit(main())

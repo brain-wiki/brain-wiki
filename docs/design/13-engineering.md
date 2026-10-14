@@ -77,6 +77,20 @@ cli ─► mcp, hosts, viz, bench, importer ─► consolidate, lint ─► inde
 `format`, `store`, and `config` import nothing from the rest. The MCP SDK,
 the visualizer, and the bench are leaves: nothing in the core imports them.
 
+**Package boundaries.** Every module inside a package is private
+(`index/_search.py`). A package's API is what its `__init__.py` re-exports,
+listed in `__all__`, and code outside the package imports only that:
+`from brainwiki.index import search`, never `brainwiki.index._search`.
+Where a group of operations reads better qualified, the package exports the
+module as a namespace (`from brainwiki.hosts import connect`, then
+`connect.plan(...)`). Inside a package, modules import each other's private
+modules directly, never their own package's `__init__`, which loads every
+module of the package. The modules directly under `brainwiki/` (`engine`,
+`errors`, `ids`, and the like) stay public: re-exporting them from the root
+would load the whole package on any import. Tests may import private
+modules. `scripts/check_visibility.py` enforces all of this, and that every
+re-export is used outside its package.
+
 ## 3. Dependencies
 
 | Package | Why | Notes |
@@ -84,7 +98,7 @@ the visualizer, and the bench are leaves: nothing in the core imports them.
 | `mcp` (2.x) | MCP server | Pulls in pydantic, starlette, uvicorn, httpx2, jsonschema, and others. Imported only by `brainwiki.mcp`. |
 | `PyYAML` | Frontmatter parsing | `CSafeLoader` when available. Writers edit frontmatter line by line instead of dumping YAML, so formatting is preserved. |
 | `tomlkit` | Editing `config.toml` and `brain.toml` without losing comments | Reading uses stdlib `tomllib`. |
-| `filelock` | Cross-platform advisory locks | |
+| `filelock` | Cross-platform advisory locks | Imported when a lock is taken: it loads `asyncio` (~40 ms), which read-only commands never need. |
 | `jsonschema` | Validating ops and plugin manifests | Already required by `mcp`. |
 
 Standard library for everything else: `sqlite3`, `tomllib`, `argparse`,

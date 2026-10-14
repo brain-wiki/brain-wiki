@@ -21,10 +21,10 @@ def _yes(ask: _Ask, question: str, default: bool = False) -> bool:
 
 
 def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print) -> int:
-    from brainwiki.config.user import load_user_config, register_brain, set_value
+    from brainwiki.config import load_user_config, register_brain, set_value
     from brainwiki.doctor import run_doctor
     from brainwiki.hosts import connect as cn
-    from brainwiki.hosts.sessions import reader_for
+    from brainwiki.hosts import reader_for
 
     if ask is input and not sys.stdin.isatty():
         out(
@@ -42,8 +42,7 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
             "Path to an existing Markdown or Obsidian folder to adopt (empty to create a new brain): "
         ).strip()
         if existing:
-            from brainwiki.importer import overlay
-            from brainwiki.importer.survey import survey
+            from brainwiki.importer import overlay, survey
 
             found = survey(Path(existing))
             out(overlay.report(found, Path(existing).expanduser().resolve().name))
@@ -104,9 +103,9 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
     user = load_user_config()
     if user.brains:
         from brainwiki.engine import open_engine
-        from brainwiki.format.episode import EpisodeContent
-        from brainwiki.index.search import search
-        from brainwiki.write.episode import write_episode
+        from brainwiki.format import EpisodeContent
+        from brainwiki.index import search
+        from brainwiki.write import write_episode
 
         with open_engine(None) as engine:
             episode = write_episode(

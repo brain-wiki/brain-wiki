@@ -23,7 +23,7 @@ def isolated_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 @pytest.fixture
 def brain_dir(tmp_path: Path) -> Path:
-    from brainwiki.config.user import register_brain
+    from brainwiki.config._user import register_brain
     from brainwiki.lifecycle import init_brain
 
     root = init_brain(tmp_path / "brains" / "test", "test")

@@ -15,18 +15,13 @@ from pathlib import Path
 import pytest
 from tests.conftest import write
 
-from brainwiki.config.resolve import open_brain
+from brainwiki.config._resolve import open_brain
 from brainwiki.engine import Engine
-from brainwiki.viz import export
-from brainwiki.viz import server as viz_server
-from brainwiki.viz.export import (
-    _script_json,
-    build_graph,
-    to_graphml,
-    to_standalone_html,
-)
-from brainwiki.viz.lod import _GROUP_MAX, Atlas, _group_topics, topic_weights
-from brainwiki.viz.server import _CSP, _make_server, _VizServer
+from brainwiki.viz import _export as export
+from brainwiki.viz import _server as viz_server
+from brainwiki.viz._export import _script_json, build_graph, to_graphml, to_standalone_html
+from brainwiki.viz._lod import _GROUP_MAX, Atlas, _group_topics, topic_weights
+from brainwiki.viz._server import _CSP, _make_server, _VizServer
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 FTS5 = "01M4KT3JPRY4W6766VT18CQS91"
@@ -147,7 +142,7 @@ def test_health_flags(example: Path):
 
 def test_runs_from_records(example: Path):
     from brainwiki.ids import run_id
-    from brainwiki.runs.record import FileChange, RunRecord, save_record
+    from brainwiki.runs._record import FileChange, RunRecord, save_record
 
     with engine_for(example) as eng:
         made = []
@@ -385,7 +380,7 @@ def test_constellation_title_leads_with_its_hub_topic():
 
 
 def test_constellations_on_generated_brain(tmp_path: Path):
-    from brainwiki.bench.generate import generate
+    from brainwiki.bench._generate import generate
 
     root = tmp_path / "gen"
     generate(root, notes=800, seed=1)
@@ -786,7 +781,7 @@ def test_build_info_rejects_dirty_or_unknown_builds(tmp_path: Path):
 def test_cli_export(
     example: Path, tmp_path: Path, app_dir: Path, capsys: pytest.CaptureFixture[str]
 ):
-    from brainwiki.cli.main import main
+    from brainwiki.cli._main import main
 
     out = tmp_path / "graph.json"
     assert main(["viz", "--brain", str(example), "--as", "someone", "--export", str(out)]) == 0

@@ -6,17 +6,17 @@ from pathlib import Path
 import pytest
 from tests.conftest import write
 
-from brainwiki.cli.main import main
-from brainwiki.config.resolve import open_brain
-from brainwiki.config.user import load_user_config
+from brainwiki.cli._main import main
+from brainwiki.config._resolve import open_brain
+from brainwiki.config._user import load_user_config
 from brainwiki.engine import Engine
-from brainwiki.hosts import connect as cn
-from brainwiki.hosts.instructions import Access, server_instructions
-from brainwiki.importer import overlay
-from brainwiki.importer.episodes import _split_document, memory_files
-from brainwiki.importer.survey import survey
+from brainwiki.hosts import _connect as cn
+from brainwiki.hosts._instructions import Access, server_instructions
+from brainwiki.importer import _overlay as overlay
+from brainwiki.importer._episodes import _split_document, memory_files
+from brainwiki.importer._survey import survey
 from brainwiki.lint import lint
-from brainwiki.runs.undo import undo
+from brainwiki.runs._undo import undo
 from brainwiki.setup_wizard import run_wizard
 
 
@@ -55,7 +55,7 @@ def test_connect_writes_the_instruction_block_and_uninstall_removes_it(
     brain_dir: Path, no_host_clis: None
 ):
     from brainwiki.errors import Conflict
-    from brainwiki.hosts.instructions import _BEGIN
+    from brainwiki.hosts._instructions import _BEGIN
 
     rules = Path.home() / ".claude" / "rules" / "brain-wiki.md"
     assert main(["connect", "claude-code"]) == 0

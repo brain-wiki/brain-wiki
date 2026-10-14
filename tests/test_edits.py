@@ -7,13 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from brainwiki.cli.main import main
-from brainwiki.config.resolve import open_brain
-from brainwiki.config.user import register_brain
+from brainwiki.cli._main import main
+from brainwiki.config._resolve import open_brain
+from brainwiki.config._user import register_brain
 from brainwiki.engine import Engine
 from brainwiki.errors import Forbidden
 from brainwiki.runs import load_record
-from brainwiki.write.edits import _pending_edits, check_edits, restore
+from brainwiki.write._edits import _pending_edits, check_edits, restore
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 FTS5 = "topics/search/fts5.md"
@@ -170,13 +170,13 @@ def test_runs_and_hand_renames_move_the_recorded_version(example: Path):
 
 def test_rollback_keeps_the_agent_version(example: Path):
     from brainwiki.runs import Run
-    from brainwiki.runs.transaction import rollback
+    from brainwiki.runs._transaction import rollback
 
     _edit(example, FTS5, "were too slow", "were far too slow")
     edited = (example / FTS5).read_bytes()
     with _agent(example) as eng:
         run = Run(eng, "edit")
-        from brainwiki.write.edits import _baseline
+        from brainwiki.write._edits import _baseline
 
         _, base = _baseline(eng, FTS5)
         run.adopt(FTS5, base, edited + b"\nstamped\n")

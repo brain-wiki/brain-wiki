@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from brainwiki.bench import suites
-from brainwiki.bench.generate import generate
-from brainwiki.bench.report import hard_failures
-from brainwiki.cli.cmd_bench import _parse_sizes
-from brainwiki.cli.main import main
+from brainwiki.bench import _suites as suites
+from brainwiki.bench._generate import generate
+from brainwiki.bench._report import hard_failures
+from brainwiki.cli._cmd_bench import _parse_sizes
+from brainwiki.cli._main import main
 
 
 def _files(root: Path) -> dict[str, bytes]:
@@ -73,7 +73,7 @@ def test_lint_suite_finds_every_planted_defect_and_fixes_safely(tmp_path: Path):
 
 
 def test_wikilink_after_token_is_not_a_secret():
-    from brainwiki.write.secrets import find_secrets
+    from brainwiki.write._secrets import find_secrets
 
     assert find_secrets("The rotation token is [[broker-policy]] for now.") == []
 

@@ -6,13 +6,11 @@ import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from brainwiki.config.manifest import Profile
-from brainwiki.config.resolve import Brain, resolve_brain
-from brainwiki.config.user import UserConfig, load_user_config
+from brainwiki.config import Brain, Profile, UserConfig, load_user_config, resolve_brain
 from brainwiki.store import LocalStore
 
 if TYPE_CHECKING:
-    from brainwiki.index.topics import TopicTree
+    from brainwiki.index import TopicTree
 
 
 class Engine:
@@ -29,7 +27,7 @@ class Engine:
     @property
     def db(self) -> sqlite3.Connection:
         if self._db is None:
-            from brainwiki.index.db import open_index
+            from brainwiki.index import open_index
 
             self._db = open_index(self.brain.key, self.brain.root, self.manifest)
         return self._db
@@ -37,12 +35,12 @@ class Engine:
     def scan(
         self, *, force: bool = False, paths: list[str] | None = None, sanctioned: bool = False
     ):
-        from brainwiki.index.scanner import scan
+        from brainwiki.index import scan
 
         return scan(self, force=force, paths=paths, sanctioned=sanctioned)
 
     def rebuild(self):
-        from brainwiki.index.db import open_index
+        from brainwiki.index import open_index
 
         if self._db is not None:
             self._db.close()
@@ -63,7 +61,7 @@ class Engine:
     @property
     def topics(self) -> TopicTree:
         """The topic tree (02 §2)."""
-        from brainwiki.index.topics import topic_tree
+        from brainwiki.index import topic_tree
 
         return topic_tree(self)
 

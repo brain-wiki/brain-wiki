@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from brainwiki.config.manifest import parse_manifest
-from brainwiki.config.resolve import resolve_brain
+from brainwiki.config._manifest import parse_manifest
+from brainwiki.config._resolve import resolve_brain
 from brainwiki.errors import Conflict, FormatError, NotConfigured, UsageError
 from brainwiki.ids import is_ulid, new_ulid, ulid_datetime
 from brainwiki.store import LocalStore
@@ -93,8 +93,8 @@ def test_manifest_rejects_values_of_the_wrong_type(extra: str, where: str):
 def test_a_broken_brain_does_not_break_the_others(
     brain_dir: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ):
-    from brainwiki.cli.main import main
-    from brainwiki.config.user import register_brain
+    from brainwiki.cli._main import main
+    from brainwiki.config._user import register_brain
     from brainwiki.lifecycle import init_brain
 
     bad = init_brain(tmp_path / "brains" / "bad", "bad")
@@ -120,7 +120,7 @@ def test_init_and_resolve(brain_dir: Path, tmp_path: Path):
 
 
 def test_resolve_project_file_and_host_limit(brain_dir: Path, tmp_path: Path):
-    from brainwiki.config.user import register_brain, set_value
+    from brainwiki.config._user import register_brain, set_value
     from brainwiki.errors import Forbidden
     from brainwiki.lifecycle import init_brain
 

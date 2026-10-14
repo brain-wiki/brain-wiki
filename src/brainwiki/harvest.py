@@ -18,14 +18,12 @@ from importlib import resources
 from pathlib import Path
 from typing import Any
 
-from brainwiki.config.dirs import state_dir
-from brainwiki.config.resolve import Brain, route_brain
-from brainwiki.config.user import UserConfig
+from brainwiki.config import Brain, UserConfig, route_brain, state_dir
 from brainwiki.errors import Expired, NotFound, UsageError
-from brainwiki.format.episode import EpisodeContent
-from brainwiki.hosts.sessions import SessionInfo, Transcript, Turn, reader_for
+from brainwiki.format import EpisodeContent
+from brainwiki.hosts import SessionInfo, Transcript, Turn, reader_for
 from brainwiki.ids import run_id
-from brainwiki.write.secrets import scrub
+from brainwiki.write import scrub
 
 _PACKET_CHARS = 60_000  # ~15k tokens for the in-agent recipe
 CHUNK_CHARS = 120_000  # ~30k tokens per headless distill call
@@ -274,7 +272,7 @@ def write_episode_for(
 ) -> str | None:
     """Write one harvested episode into the session's brain. Returns its path."""
     from brainwiki.engine import Engine
-    from brainwiki.write.episode import write_episode
+    from brainwiki.write import write_episode
 
     assert candidate.brain is not None and candidate.transcript is not None
     host, session = candidate.info.host, candidate.info.id

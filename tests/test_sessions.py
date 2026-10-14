@@ -4,11 +4,11 @@ import json
 import sqlite3
 from pathlib import Path
 
-from brainwiki.hosts.antigravity import AntigravityReader
-from brainwiki.hosts.claude_code import ClaudeCodeReader
-from brainwiki.hosts.codex import CodexReader
-from brainwiki.hosts.detect import detect_host
-from brainwiki.hosts.sessions import is_untrusted, normalize_call, summarize_args
+from brainwiki.hosts._antigravity import AntigravityReader
+from brainwiki.hosts._claude_code import ClaudeCodeReader
+from brainwiki.hosts._codex import CodexReader
+from brainwiki.hosts._detect import detect_host
+from brainwiki.hosts._sessions import is_untrusted, normalize_call, summarize_args
 
 
 def jsonl(path: Path, entries: list[dict]) -> Path:

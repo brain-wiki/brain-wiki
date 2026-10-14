@@ -6,12 +6,12 @@ from pathlib import Path
 import pytest
 from tests.conftest import write
 
-from brainwiki.config.resolve import open_brain
+from brainwiki.config._resolve import open_brain
 from brainwiki.engine import Engine
 from brainwiki.errors import Conflict, InvalidOps
 from brainwiki.runs import Run, list_records, load_record
-from brainwiki.runs.record import save_record
-from brainwiki.runs.undo import recover, undo
+from brainwiki.runs._record import save_record
+from brainwiki.runs._undo import recover, undo
 
 
 @pytest.fixture
@@ -83,7 +83,7 @@ def test_check_gate_blocks_and_writes_nothing(brain_dir: Path):
 
 
 def test_list_skips_prepared_runs_without_records(brain_dir: Path):
-    from brainwiki.runs.record import run_dir
+    from brainwiki.runs._record import run_dir
 
     write(brain_dir, "topics/a/one.md", "# One\n")
     with Engine(open_brain(brain_dir)) as eng:
@@ -107,7 +107,7 @@ def test_undo_refuses_after_later_edit_unless_forced(brain_dir: Path):
             undo(eng, record.run)
         undo(eng, record.run, force=True)
         assert (brain_dir / "topics/a/one.md").read_text() == "# One\n"
-        from brainwiki.runs.record import run_dir
+        from brainwiki.runs._record import run_dir
 
         saved = run_dir(eng.brain.key, record.run) / "conflicts" / "topics/a/one.md"
         assert saved.read_text() == "# One v3 by hand\n"

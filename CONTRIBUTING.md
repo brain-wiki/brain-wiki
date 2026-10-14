@@ -85,9 +85,13 @@ repository settings); private vulnerability reporting turned on (see
   fictional notes app "Lumen" and generic paths.
 - **Test fixtures never contain credentials**, even fake ones in their real
   shape; build such strings at runtime in the test.
-- **Minimal visibility.** A module-level name is public only when another
-  module, a test, or a script uses it; otherwise it is `_private`.
-  `scripts/check_visibility.py` (part of `scripts/check.py`) enforces this.
+- **Minimal visibility.** Modules inside a package are private
+  (`_name.py`); a package's API is what its `__init__.py` re-exports, and
+  code outside the package imports only that (tests may reach private
+  modules). Inside a module, a name is public only when another module, a
+  test, or a script uses it. `scripts/check_visibility.py` (part of
+  `scripts/check.py`) enforces both; `docs/design/13-engineering.md` §2 has
+  the details.
 - **Writers never reflow text.** Anything that edits a note changes only the
   lines it must; add a test that untouched lines survive byte for byte.
 - **Every curated change goes through `runs.Run`** so it is recorded,

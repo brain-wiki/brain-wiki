@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from brainwiki.cli.main import main
-from brainwiki.config.user import register_brain, set_value
-from brainwiki.index.brains import format_brain_list, list_brains
+from brainwiki.cli._main import main
+from brainwiki.config._user import register_brain, set_value
+from brainwiki.index._brains import format_brain_list, list_brains
 from brainwiki.lifecycle import init_brain
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
@@ -70,7 +70,7 @@ def test_cli_list_and_brains_list_agree(example: Path, capsys: pytest.CaptureFix
 
 
 def _engine(root: Path, host: str | None = None):
-    from brainwiki.config.resolve import open_brain
+    from brainwiki.config._resolve import open_brain
     from brainwiki.engine import Engine
 
     return Engine(open_brain(root), host=host)
@@ -95,10 +95,10 @@ def _releases(brain_dir: Path, count: int = 12) -> None:
 
 
 def test_browse_lists_recent_notes_without_episodes(brain_dir: Path):
-    from brainwiki.index.search import search
+    from brainwiki.index._search import search
 
     _releases(brain_dir)
-    from brainwiki.write.episode import EpisodeContent, write_episode
+    from brainwiki.write._episode import EpisodeContent, write_episode
 
     with _engine(brain_dir) as eng:
         write_episode(
@@ -120,7 +120,7 @@ def test_browse_lists_recent_notes_without_episodes(brain_dir: Path):
 
 
 def test_filters_narrow_before_ranking(brain_dir: Path):
-    from brainwiki.index.search import search
+    from brainwiki.index._search import search
 
     _releases(brain_dir)
     with _engine(brain_dir) as eng:
@@ -142,7 +142,7 @@ def test_relative_dates_and_bad_input():
     from datetime import date
 
     from brainwiki.errors import UsageError
-    from brainwiki.index.search import _date_bound, parse_cursor
+    from brainwiki.index._search import _date_bound, parse_cursor
 
     today = date(2026, 10, 12)
     assert _date_bound("7d", today=today) == "2026-10-05"
@@ -155,7 +155,7 @@ def test_relative_dates_and_bad_input():
 
 
 def test_question_ranks_by_its_content_words(example: Path):
-    from brainwiki.index.search import _content_tokens, search
+    from brainwiki.index._search import _content_tokens, search
 
     assert _content_tokens("why did we pick FTS5?") == ["pick", "fts5"]
     assert _content_tokens("what is it") == ["what", "is", "it"]  # nothing but filler: keep it
@@ -167,7 +167,7 @@ def test_question_ranks_by_its_content_words(example: Path):
 
 
 def test_facets_and_counts(example: Path):
-    from brainwiki.index.search import search
+    from brainwiki.index._search import search
 
     with _engine(example, "some-host") as host:
         found = search(host, "", facets=True)
@@ -176,7 +176,7 @@ def test_facets_and_counts(example: Path):
 
 
 def test_text_and_paths_formats(example: Path):
-    from brainwiki.index.search import format_search_text, search
+    from brainwiki.index._search import format_search_text, search
 
     with _engine(example) as eng:
         result = search(eng, "search", limit=2, intent="none")
@@ -202,7 +202,7 @@ def test_cli_search_flags(brain_dir: Path, capsys: pytest.CaptureFixture[str]):
 
 
 def test_read_gives_a_handle_for_every_relation_and_backlink(example: Path):
-    from brainwiki.index.read import format_read_text, read
+    from brainwiki.index._read import format_read_text, read
 
     with _engine(example) as eng:
         outline = read(eng, "fts5", mode="outline")
@@ -217,7 +217,7 @@ def test_read_gives_a_handle_for_every_relation_and_backlink(example: Path):
 
 
 def test_banners_show_three_then_point_to_neighbors():
-    from brainwiki.index.guards import banners
+    from brainwiki.index._guards import banners
 
     guards = [
         {"label": "conflicts_with", "title": f"Bug {i}", "path": f"t/bug{i}.md"} for i in range(7)
@@ -228,7 +228,7 @@ def test_banners_show_three_then_point_to_neighbors():
 
 
 def test_neighbors_follow_typed_edges_by_direction_and_depth(example: Path):
-    from brainwiki.index.neighbors import format_neighbors_text, neighbors
+    from brainwiki.index._neighbors import format_neighbors_text, neighbors
 
     with _engine(example) as eng:
         out = neighbors(eng, "fts5", relations=["depends_on"], direction="out")
@@ -249,7 +249,7 @@ def test_neighbors_follow_typed_edges_by_direction_and_depth(example: Path):
 
 def test_neighbors_reject_bad_input(example: Path):
     from brainwiki.errors import NotFound, UsageError
-    from brainwiki.index.neighbors import neighbors
+    from brainwiki.index._neighbors import neighbors
 
     with _engine(example, "some-host") as eng:
         with pytest.raises(NotFound):
@@ -267,7 +267,7 @@ def test_cli_neighbors(example: Path, capsys: pytest.CaptureFixture[str]):
 
 
 def test_briefing_describes_the_brain(example: Path):
-    from brainwiki.index.orient import orient
+    from brainwiki.index._orient import orient
 
     with _engine(example, "some-host") as host:
         mine = orient(host)
@@ -279,7 +279,7 @@ def test_briefing_describes_the_brain(example: Path):
 
 
 def test_briefing_truncates_topics_with_a_browse_pointer(example: Path):
-    from brainwiki.index.orient import orient
+    from brainwiki.index._orient import orient
 
     with _engine(example) as eng:
         eng.manifest.budgets.orient_max_tokens = 250
@@ -289,7 +289,12 @@ def test_briefing_truncates_topics_with_a_browse_pointer(example: Path):
 
 
 def test_instructions_follow_the_host_profile(example: Path):
-    from brainwiki.hosts.instructions import Access, _marked_block, host_access, server_instructions
+    from brainwiki.hosts._instructions import (
+        Access,
+        _marked_block,
+        host_access,
+        server_instructions,
+    )
 
     (example / "brain.toml").write_text(
         (example / "brain.toml").read_text()
@@ -342,7 +347,7 @@ def test_global_options_work_before_the_command(example: Path, capsys: pytest.Ca
 def test_a_declared_topic_owns_its_folder(brain_dir: Path):
     from tests.conftest import write
 
-    from brainwiki.index.scanner import discovered_topics
+    from brainwiki.index._scanner import discovered_topics
 
     write(brain_dir, "topics/00 Inbox/idea.md", "# Idea\n")
     toml = brain_dir / "brain.toml"

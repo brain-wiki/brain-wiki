@@ -10,7 +10,7 @@ bw-part_of:
 ---
 # Data (Eval bench)
 
-- **Generator** (`brainwiki.bench.generate`): seeded; notes about invented
+- **Generator** (`brainwiki/bench/_generate.py`): seeded; notes about invented
   software projects, in common English words plus generated pseudo-words
   drawn with a Zipf distribution so FTS ranks them like real prose. It
   plants topics, notes, claims with anchors, relations, supersession
