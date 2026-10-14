@@ -6,6 +6,7 @@ import hmac
 import json
 import re
 import secrets
+import socketserver
 import threading
 import time
 import webbrowser
@@ -72,6 +73,12 @@ class _VizServer(ThreadingHTTPServer):
         self.lock = threading.Lock()
         self.last_request = time.monotonic()
         self._atlas: Atlas | None = None
+
+    def server_bind(self) -> None:
+        # HTTPServer.server_bind names the server with socket.getfqdn, a reverse DNS lookup
+        # that can stall for seconds on macOS; a loopback server never uses the name.
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = _HOST, self.server_address[1]
 
     @property
     def url(self) -> str:

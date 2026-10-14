@@ -539,6 +539,23 @@ def server(example: Path, app_dir: Path) -> Iterator[_VizServer]:
         eng.close()
 
 
+def test_server_starts_without_name_lookups(example: Path, monkeypatch: pytest.MonkeyPatch):
+    import socket
+
+    def lookup(*args: object) -> None:
+        raise AssertionError("name lookup while starting the server")
+
+    for name in ("getfqdn", "gethostbyaddr", "gethostname"):
+        monkeypatch.setattr(socket, name, lookup)
+    eng = engine_for(example)
+    try:
+        srv = _make_server(eng, 0)
+        srv.server_close()
+    finally:
+        eng.close()
+    assert srv.url.startswith("http://127.0.0.1:")
+
+
 def _get(
     srv: _VizServer, path: str, cookie: str | None = None
 ) -> tuple[int, dict[str, str], bytes]:
