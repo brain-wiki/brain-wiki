@@ -2,107 +2,173 @@
 
 <!-- mcp-name: io.github.brain-wiki/brain-wiki -->
 
-A local-first brain for you and your AI agents, kept as plain Markdown that
-you own. A brain serves two uses, alone or together:
+**One long-term memory for all your AI agents, kept as plain Markdown that you own.**
 
-- **Your second brain, as context for agents.** Notes you write or already
-  keep (an Obsidian vault, project notes) become context every agent can
-  search and cite. Your words stay authoritative.
-- **Your agents' own memory of the world.** What agents learn while working
-  (how a codebase behaves, what a decision was, which API changed) is
-  captured, checked, and consolidated into notes they recall later, with
-  every claim traced to where it came from.
+[![CI](https://github.com/brain-wiki/brain-wiki/actions/workflows/ci.yml/badge.svg)](https://github.com/brain-wiki/brain-wiki/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/brain-wiki)](https://pypi.org/project/brain-wiki/)
+[![Python](https://img.shields.io/pypi/pyversions/brain-wiki)](https://pypi.org/project/brain-wiki/)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/brain-wiki/brain-wiki/blob/main/LICENSE)
 
-brain-wiki gives every agent you use (Claude Code, Codex and the ChatGPT
-desktop app, Antigravity, OpenClaw, Cursor, and any MCP client) one shared,
-durable brain:
+brain-wiki gives Claude Code, Codex and the ChatGPT desktop app, Antigravity,
+OpenClaw, Cursor, and any MCP client one shared brain: a folder of Markdown
+notes they search before answering, cite when they rely on it, and keep up to
+date as they work. It runs on your machine, needs no server or API keys, and
+the brain opens in Obsidian.
 
-- **Plain files.** A brain is a folder of Markdown notes you can read, edit,
-  diff, and sync like any other folder. It opens in Obsidian.
-- **Typed connections.** Notes relate through a small set of verbs
+[Getting started](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/getting-started.md) ·
+[Connecting agents](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/agents.md) ·
+[User guide](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/README.md) ·
+[Design](https://github.com/brain-wiki/brain-wiki/blob/main/docs/design/README.md) ·
+[Changelog](https://github.com/brain-wiki/brain-wiki/blob/main/CHANGELOG.md)
+
+## Why brain-wiki
+
+- **Plain files you own.** A brain is a folder of Markdown notes you can
+  read, edit, diff, back up, and sync like any other folder. Bring an
+  existing Obsidian vault as it is.
+- **Every agent, one brain.** What you teach one agent, the others know. A
+  short instruction block tells each agent the brain is there, and a
+  briefing gives it your standing rules and what the brain holds.
+- **Answers that know what changed.** Notes connect through typed relations
   (`part_of`, `depends_on`, `conflicts_with`, `supersedes`, `related_to`).
-  When a note is superseded or contradicted, search returns the note that
-  qualifies it together with it.
-- **Safe writes.** Agents append raw observations to an inbox. Consolidation
-  folds them into curated notes through small, validated operations, and
-  direct corrections pass `brain check` first. Every change is recorded and
-  can be undone.
-- **Your agents do the thinking.** Consolidation and harvesting run inside
-  the agent you already use, or headless through its CLI. No API keys.
-
-```
- agents ──log──► inbox/episodes ──consolidate (validated ops)──► topics/<topic>/*.md
-   ▲                                                                    │
-   └── list · orient · search · read · neighbors (with supersede/conflict warnings) ─┘
-```
-
-## Status
-
-Pre-release (0.1.0.dev). The design is in [`docs/design/`](docs/design/),
-proposals for what is not built yet are in [`docs/proposals/`](docs/proposals/),
-and the user guide is in [`docs/user/`](docs/user/).
+  When a note has been replaced or contradicted, search returns the note
+  that qualifies it together with it.
+- **Safe changes.** Agents log what they learn to an inbox and fold it into
+  notes through small validated operations. When they correct a note
+  directly, `brain check` refuses lost or reworded facts before recording
+  it. Every change is recorded, committed to git if the brain is a
+  repository, and can be undone.
+- **Your agent does the thinking.** Consolidation and harvesting run inside
+  the agent you already use. brain-wiki makes no network calls of its own.
 
 ## Install
 
-brain-wiki needs Python 3.11+ with SQLite FTS5 (python.org, uv, and most
-distribution builds include it).
+brain-wiki needs Python 3.11 or newer with SQLite FTS5, which the python.org,
+uv, Homebrew, and most Linux builds include.
 
 ```sh
-uv tool install brain-wiki        # or: pipx install brain-wiki
-brain doctor                      # checks Python, SQLite, brains, and agents
+uv tool install brain-wiki      # or: pipx install brain-wiki
+brain doctor                    # checks SQLite, your brains, and the agents on this machine
 ```
-
-Until the first release is on PyPI, install from a checkout:
-`uv tool install --from . brain-wiki`.
 
 ## Quick start
 
+**1. Create a brain.** Keep it outside your code repositories.
+
 ```sh
-brain init ~/brains/personal --name personal      # create a brain (registered as the default)
-brain connect claude-code --dry-run               # see what connecting would change
-brain connect claude-code                         # or codex, antigravity, openclaw, cursor
-brain log "Decided to keep attachments next to notes; Obsidian expects relative paths."
-brain search "attachments"
+brain init ~/brains/personal --name personal --git
 ```
 
-Or ask your agent: "set up brain-wiki". The `brain-setup` skill walks
-through the same steps, showing a dry run before every change.
+**2. Connect your agents.** Each command shows its changes with `--dry-run`
+first and can be reversed with `--uninstall`.
 
-Then, from any connected agent:
+```sh
+brain connect claude-code       # or: codex, antigravity, openclaw, cursor
+```
 
-- the agent knows the brain is there from a short instruction block that
-  `brain connect` writes, and fetches a briefing (your rules, what the brain
-  holds, recent changes) when a task may depend on it;
-- it searches and browses the brain before answering about past decisions;
-- it records what it learns with `brain_log_episode`;
-- "consolidate my brain" folds the inbox into notes.
+**3. Use it from your agent.**
 
-## Commands at a glance
+> Remember that Lumen keeps attachments next to their notes, because
+> Obsidian expects relative paths.
 
-| Task | Command |
+> What did we decide about attachments?
+
+> Consolidate my brain.
+
+Or from the terminal:
+
+```sh
+brain log "Lumen keeps attachments next to their notes; Obsidian expects relative paths."
+brain search "attachments"
+brain viz                       # a local 3D map of the brain
+```
+
+**Prefer a guided setup?** Install the plugin from your agent's marketplace
+and ask it to "set up brain-wiki". The `brain-setup` skill walks through the
+same steps and shows a dry run before every change.
+
+| Agent | Install the plugin |
 |---|---|
-| Create, adopt, list brains | `brain init`, `brain import PATH --overlay`, `brain list`, `brain brains` |
-| Read | `brain orient`, `brain search`, `brain read`, `brain neighbors`, `brain notes` |
-| Write | `brain log`, `brain check`, `brain rule add` |
-| Curate | `brain consolidate`, `brain review`, `brain mv`, `brain undo` |
-| Check | `brain lint [--fix]`, `brain report`, `brain doctor` |
-| Agents | `brain connect`, `brain harvest`, `brain mcp` |
-| See it | `brain viz` (a local 3D map of the brain) |
+| Claude Code | `/plugin marketplace add brain-wiki/brain-wiki`, then `/plugin install brain-wiki@brain-wiki` |
+| Codex / ChatGPT desktop | `codex plugin marketplace add brain-wiki/brain-wiki`, then enable brain-wiki in the plugin browser |
+| Antigravity | `agy plugin install https://github.com/brain-wiki/brain-wiki` |
 
-Every command takes `--json`, and every command that changes files has a
-dry run.
+Marketplace installs start the server with `uvx`. With the command
+installed, `brain connect` starts it at once.
+
+## How it works
+
+```text
+ agents ──log──► inbox/episodes ──consolidate (validated ops)──► topics/<topic>/*.md
+   ▲  │                                                             ▲           │
+   │  └── edit + brain check (recorded, undoable) ──────────────────┘           │
+   └── list · orient · search · read · neighbors ───────────────────────────────┘
+```
+
+- **The brain** is a folder: `topics/` holds curated notes, one folder per
+  topic and nested to any depth, each with an index note; `inbox/` holds raw
+  observations; `rules.md` holds your standing rules; `AGENTS.md` tells
+  file-only agents how to use it.
+- **The index** is a SQLite FTS5 database outside the brain, rebuilt
+  whenever it is missing. The brain stays the only source of truth.
+- **Agents** reach the brain through an MCP server with thirteen tools, a
+  plugin with three skills, and optional hooks for a session briefing and
+  capture.
+
+| Agent | Tools | Instructions | Briefing hook | Capture | Harvest |
+|---|---|---|---|---|---|
+| Claude Code | yes | yes | yes | yes | yes |
+| Codex / ChatGPT desktop | yes | yes | yes | yes | yes |
+| Antigravity | yes | yes | yes | yes | yes |
+| OpenClaw | yes | yes | no | no | no |
+| Cursor | yes | yes | no | no | no |
+| Any MCP client | yes | printed | no | no | no |
 
 ## Documentation
 
-- [User guide](docs/user/README.md): getting started, agents, maintenance,
-  import, privacy.
-- [Design](docs/design/README.md): format, index, write path, lint, MCP and
-  CLI, host integrations, security, bench.
-- [Proposals](docs/proposals/README.md): privacy, remote sync, remote MCP for
-  chat apps, public benchmarks, and the backlog.
-- [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) ·
-  [Changelog](CHANGELOG.md)
+| Goal | Start here |
+|---|---|
+| Install and create a brain | [Getting started](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/getting-started.md) |
+| Connect agents, capture, and harvest | [Agents](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/agents.md) |
+| Consolidate, review, lint, and undo | [Maintenance](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/maintenance.md) |
+| Bring an existing vault | [Import](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/import.md) |
+| What agents may read and change | [Privacy and safety](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/privacy.md) |
+| Commands, MCP tools, and files | [Reference](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/reference.md) |
+| How it is built | [Design](https://github.com/brain-wiki/brain-wiki/blob/main/docs/design/README.md) · [Proposals](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposals/README.md) |
+
+## Status
+
+brain-wiki is alpha software at its first release. Its known limitations:
+
+- There are no privacy levels inside a brain: every agent that may use a
+  brain reads all of it. Keep separate parts of your life in separate brains.
+- Maintenance runs when you ask your agent; there is no scheduler.
+- Chat apps that need a remote MCP server (ChatGPT, claude.ai, the Gemini
+  app) are not supported yet.
+
+Plans for each are in [docs/proposals](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposals/README.md).
+
+## Contributing
+
+```sh
+git clone https://github.com/brain-wiki/brain-wiki.git
+cd brain-wiki
+uv sync
+uv run scripts/check.py         # everything CI runs
+```
+
+See
+[CONTRIBUTING.md](https://github.com/brain-wiki/brain-wiki/blob/main/CONTRIBUTING.md).
+The visualizer's source is in
+[brain-wiki-viz](https://github.com/brain-wiki/brain-wiki-viz).
+
+## Security
+
+Report vulnerabilities privately, as described in
+[SECURITY.md](https://github.com/brain-wiki/brain-wiki/blob/main/SECURITY.md).
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+[Apache License 2.0](https://github.com/brain-wiki/brain-wiki/blob/main/LICENSE).
+The bundled visualizer's third-party licenses are in
+[THIRD_PARTY_NOTICES.txt](https://github.com/brain-wiki/brain-wiki/blob/main/src/brainwiki/viz/app/THIRD_PARTY_NOTICES.txt).
