@@ -437,8 +437,8 @@ def check_edits(
         raise Forbidden("only the user can adopt edits (`brain check --adopt` from a terminal)")
     if not owner and not engine.profile.can("edit"):
         raise Forbidden(
-            f"the {engine.profile.name!r} profile may not edit notes; log an episode instead, "
-            f'or the user can add "edit" to [agents.{engine.host}] write in brain.toml'
+            engine.profile.refusal(engine.host, "edit", "edit notes")
+            + "; meanwhile, log an episode instead"
         )
     engine.scan(force=True)
     topics = discovered_topics(engine)
@@ -490,6 +490,7 @@ def check_edits(
     errors = [p for p in problems if p.severity == "error"]
     result: dict[str, Any] = {
         "brain": engine.brain.display_name,
+        "owner": owner,
         "unchanged": unchanged,
         "problems": [p.to_json() for p in problems],
     }
@@ -708,7 +709,14 @@ def format_check_text(result: dict[str, Any]) -> str:
     elif status == "unchanged":
         lines.append("Nothing to record: the files match their last recorded version.")
     else:
-        lines.append("Not recorded. Fix these problems and check again, or `brain restore PATH`:")
+        lines.append(
+            "Not recorded. Fix these problems and check again, or `brain restore PATH`"
+            + (
+                "; to keep your edit as it is, `brain check --adopt PATH`:"
+                if result.get("owner")
+                else ":"
+            )
+        )
     if result.get("proposal") and status == "recorded":
         lines.append(f"Some edits went to review: {result['proposal']}; those files were restored.")
     for item in result.get("files") or []:

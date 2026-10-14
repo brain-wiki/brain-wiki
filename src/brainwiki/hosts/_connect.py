@@ -63,6 +63,7 @@ class Plan:
     instructions: list[Instruction] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     verify: list[str] | None = None
+    stale: list[dict[str, Any]] = field(default_factory=list)  # instructions no longer written
 
     def describe(self) -> str:
         lines = [f"Plugin copy: {self.plugin_dir} ({len(self.files)} files)"]
@@ -212,6 +213,17 @@ def plan(
     result = Plan(host, plugin_dir, _materialize(host, brain_name=brain_name, access=access))
     result.instructions, notes = _plan_instructions(host, scope, access, force=force)
     result.notes += notes
+    wanted = {str(i.path) for i in result.instructions}
+    result.stale = [
+        item
+        for item in (_load_record(host) or {}).get("instructions", [])
+        if not item.get("plugin") and item["path"] not in wanted
+    ]
+    result.notes += [
+        f"Remove the brain-wiki block from {item.get('written') or item['path']} "
+        "(an earlier connect wrote it; this host no longer reads it)"
+        for item in result.stale
+    ]
     if host == "claude-code":
         if shutil.which("claude"):
             result.commands += [
@@ -267,7 +279,7 @@ def print_text(host: str, brain_name: str | None, access: ins.Access | None = No
         "Add this to your MCP client's configuration:\n"
         + json.dumps(entry, indent=2)
         + "\n\nAnd add these instructions where your agent reads them in every session:\n\n"
-        + ins.block_text(access)
+        + ins.block_text(access, skill=False)
     )
 
 
@@ -300,6 +312,8 @@ def apply(result: Plan, *, brain_name: str | None, scope: str) -> dict[str, Any]
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(after, encoding="utf-8")
         record["files"].append({"path": str(path), "backup": str(backup) if backup else None})
+    for item in result.stale:
+        _remove_block(item, dry_run=False)
     record["instructions"] = []
     for item in result.instructions:
         backup = None
@@ -353,6 +367,26 @@ def apply(result: Plan, *, brain_name: str | None, scope: str) -> dict[str, Any]
     return record
 
 
+def _remove_block(item: dict[str, Any], *, dry_run: bool) -> list[str]:
+    """Undo one recorded instruction file: drop brain-wiki's block, or the file it created."""
+    if item.get("plugin"):
+        return []
+    path = Path(item.get("written") or item["path"])
+    if not path.is_file():
+        return []
+    text = path.read_text(encoding="utf-8")
+    if ins.find_block(text) is None:
+        return [f"Leave {path} (no brain-wiki block in it)"]
+    remaining = "" if item.get("whole") else ins.drop_block(text)
+    if not remaining.strip() and (item.get("whole") or item.get("created")):
+        if not dry_run:
+            path.unlink()
+        return [f"Delete {path}"]
+    if not dry_run:
+        path.write_text(remaining, encoding="utf-8")
+    return [f"Remove the brain-wiki block from {path}"]
+
+
 def uninstall(host: str, *, dry_run: bool = False) -> list[str]:
     record = _load_record(host)
     if record is None:
@@ -380,38 +414,27 @@ def uninstall(host: str, *, dry_run: bool = False) -> list[str]:
         if not dry_run:
             subprocess.run(command, capture_output=True, text=True, check=False, timeout=120)
     for item in record.get("instructions", []):
-        if item.get("plugin"):
-            continue
-        path = Path(item.get("written") or item["path"])
-        if not path.is_file():
-            continue
-        text = path.read_text(encoding="utf-8")
-        if ins.find_block(text) is None:
-            steps.append(f"Leave {path} (no brain-wiki block in it)")
-            continue
-        remaining = "" if item.get("whole") else ins.drop_block(text)
-        if not remaining.strip() and (item.get("whole") or item.get("created")):
-            steps.append(f"Delete {path}")
-            if not dry_run:
-                path.unlink()
-        else:
-            steps.append(f"Remove the brain-wiki block from {path}")
-            if not dry_run:
-                path.write_text(remaining, encoding="utf-8")
+        steps += _remove_block(item, dry_run=dry_run)
     for link in record.get("links", []):
         steps.append(f"Remove link {link}")
         if not dry_run and Path(link).is_symlink():
             Path(link).unlink()
     for item in record.get("files", []):
-        path, backup = Path(item["path"]), item.get("backup")
-        steps.append(f"Restore {path}" if backup else f"Remove brain-wiki from {path}")
-        if dry_run:
+        # Take out only brain-wiki's entry: restoring the backup would drop the user's later
+        # edits, and after a second connect the backup already holds brain-wiki.
+        path = Path(item["path"])
+        if not path.is_file():
             continue
-        if backup and Path(backup).is_file():
-            path.write_text(Path(backup).read_text(encoding="utf-8"), encoding="utf-8")
-        elif path.is_file():
-            data = json.loads(path.read_text(encoding="utf-8") or "{}")
-            data.get("mcpServers", {}).pop("brain-wiki", None)
+        data = json.loads(path.read_text(encoding="utf-8") or "{}")
+        data.get("mcpServers", {}).pop("brain-wiki", None)
+        created = item.get("backup") is None
+        if created and data in ({}, {"mcpServers": {}}):
+            steps.append(f"Delete {path}")
+            if not dry_run:
+                path.unlink()
+            continue
+        steps.append(f"Remove brain-wiki from {path}")
+        if not dry_run:
             path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     steps.append(f"Remove {record['plugin_dir']}")
     if not dry_run:

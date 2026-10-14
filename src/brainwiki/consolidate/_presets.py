@@ -189,7 +189,10 @@ def run_command(
             )
             stdin = preset.stdin(prompt)
         if shutil.which(binary) is None:
-            raise NotAvailable(f"preset {name!r} needs `{binary}` on PATH")
+            raise NotAvailable(
+                f"preset {name!r} needs `{binary}` on PATH; pick another with --distill "
+                f"({', '.join(PRESETS)}), or --raw for no model"
+            )
         try:
             done = subprocess.run(
                 argv,

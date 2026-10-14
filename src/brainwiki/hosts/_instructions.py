@@ -76,8 +76,8 @@ def block_text(access: Access, *, skill: bool = True) -> str:
     return _HEAD + "\n" + body + (_SKILL if skill else "")
 
 
-def _marked_block(access: Access) -> str:
-    return f"{_BEGIN}\n{block_text(access)}{_END}\n"
+def _marked_block(access: Access, *, skill: bool = True) -> str:
+    return f"{_BEGIN}\n{block_text(access, skill=skill)}{_END}\n"
 
 
 def server_instructions(access: Access) -> str:
@@ -119,7 +119,7 @@ def antigravity_rule(access: Access) -> str:
 def _cursor_rule(access: Access) -> str:
     return (
         "---\ndescription: The user's long-term memory (brain-wiki)\nalwaysApply: true\n---\n"
-        + _marked_block(access)
+        + _marked_block(access, skill=False)  # connect registers no skills for Cursor
     )
 
 
@@ -213,7 +213,8 @@ def targets(
             return [Target(path, _cursor_rule(access), True)], notes
         notes.append(
             "Cursor keeps user rules in its settings: paste this into Settings → Rules, or run "
-            "`brain connect cursor --scope project` in a project.\n\n" + block_text(access)
+            "`brain connect cursor --scope project` in a project.\n\n"
+            + block_text(access, skill=False)
         )
         return [], notes
     return [], notes  # antigravity carries the rule in its plugin; generic prints the block

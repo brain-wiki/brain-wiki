@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +14,7 @@ from brainwiki.config import (
     set_value,
     unregister_brain,
 )
-from brainwiki.errors import NotFound, UsageError
+from brainwiki.errors import Conflict, NotFound, UsageError
 
 
 def version(args: Any) -> int:
@@ -30,25 +29,38 @@ def version(args: Any) -> int:
 
 
 def init(args: Any) -> int:
-    from brainwiki.lifecycle import init_brain
+    from brainwiki.config import registration_conflict
+    from brainwiki.lifecycle import init_brain, init_git
 
-    root = init_brain(Path(args.path), args.name)
+    target = Path(args.path).expanduser()
+    if not args.no_register:
+        problem = registration_conflict(args.name or target.resolve().name, target)
+        if problem:
+            raise Conflict(problem)
+    root = init_brain(target, args.name)
     brain = open_brain(root)
     name = args.name or brain.manifest.name or root.name
     if not args.no_register:
         register_brain(name, root)
-    if args.git and shutil.which("git") and not (root / ".git").exists():
-        subprocess.run(["git", "init", "-q", str(root)], check=False)
+    git_problem = init_git(root, name) if args.git else None
+    if not args.git:
+        git_line = "\n  tip: `brain init --git` or `git init` to track changes"
+    elif git_problem:
+        git_line = f"\n  git: {git_problem}; commit the brain's files yourself"
+    else:
+        git_line = "\n  git: initialized, with a first commit"
     emit(
         args,
-        {"path": str(root), "name": name, "id": brain.id, "registered": not args.no_register},
+        {
+            "path": str(root),
+            "name": name,
+            "id": brain.id,
+            "registered": not args.no_register,
+            "git": bool(args.git) and git_problem is None,
+        },
         f"Created brain {name!r} at {root}\n  id: {brain.id}"
         + ("" if args.no_register else "\n  registered in the user config")
-        + (
-            "\n  tip: `brain init --git` or `git init` to track changes"
-            if not (root / ".git").exists()
-            else ""
-        ),
+        + git_line,
     )
     return 0
 

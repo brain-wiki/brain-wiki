@@ -24,6 +24,7 @@ from brainwiki.config._user import (
     UserConfig,
     load_user_config,
     register_brain,
+    registration_conflict,
     set_value,
     unregister_brain,
 )
@@ -46,6 +47,7 @@ __all__ = [
     "open_brain",
     "parse_manifest",
     "register_brain",
+    "registration_conflict",
     "resolve_brain",
     "route_brain",
     "set_value",

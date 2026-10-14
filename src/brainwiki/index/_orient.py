@@ -1,4 +1,4 @@
-"""Orientation: the short, budgeted context an agent receives at session start (design doc 04 §8)."""
+"""Orientation: the short, budgeted briefing an agent fetches with `brain_orient` (design doc 04 §8)."""
 
 from __future__ import annotations
 

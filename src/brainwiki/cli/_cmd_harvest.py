@@ -34,6 +34,11 @@ def harvest(args: Any) -> int:
             f"{r['host']}: {'on' if r['enabled'] else 'off'}, {r['unharvested']} of {r['sessions']} sessions to harvest"
             for r in rows
         )
+        if not all(r["enabled"] for r in rows):
+            text += (
+                f"\nTo turn harvest on, add to {user.path}:\n"
+                '[harvest]\nenabled = true\nhosts = ["claude-code", "codex", "antigravity"]'
+            )
         emit(args, rows, text)
         return 0
     if not args.apply:
@@ -48,8 +53,15 @@ def harvest(args: Any) -> int:
             for c in candidates
         ]
         total = sum(c.to_json()["estimated_tokens"] for c in eligible)
+        if any(c.skip == "routes to no brain" for c in candidates):
+            lines.append(
+                "Sessions route to the brain of their working directory: put a .brain-wiki.toml "
+                'with `brain = "NAME"` in the project, or map folders in [harvest.routes] in '
+                f"{user.path}."
+            )
         lines.append(
-            f"{len(eligible)} sessions to harvest, ~{total} tokens to distill. Run with --apply."
+            f"{len(eligible)} sessions to harvest, ~{total} tokens to distill."
+            + (" Run with --apply." if eligible else "")
         )
         emit(args, data, "\n".join(lines))
         return 0

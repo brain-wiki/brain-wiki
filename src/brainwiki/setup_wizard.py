@@ -53,7 +53,7 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
                 f"Adopted {result['root']} as brain {result['brain']!r} (undo: brain brains remove {result['brain']})"
             )
         else:
-            from brainwiki.lifecycle import init_brain
+            from brainwiki.lifecycle import init_brain, init_git
 
             path = (
                 ask("Where should the brain live? [~/brains/personal] ").strip()
@@ -62,11 +62,12 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
             name = ask("Name? [personal] ").strip() or "personal"
             root = init_brain(Path(path), name)
             register_brain(name, root)
-            if _yes(ask, "Track it with git (recommended)?", True):
-                import subprocess
-
-                subprocess.run(["git", "init", "-q", str(root)], check=False)
             summary.append(f"Created brain {name!r} at {root}")
+            if _yes(ask, "Track it with git (recommended)?", True):
+                problem = init_git(root, name)
+                summary.append(
+                    f"git: {problem}" if problem else "git: initialized, with a first commit"
+                )
     else:
         default = next((b for b in report["brains"] if b.get("default")), report["brains"][0])
         out(f"Brain: {default['name']} at {default['path']}")

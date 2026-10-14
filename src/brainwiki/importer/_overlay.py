@@ -101,8 +101,10 @@ def _check_clean_git(root: Path) -> None:
 
 def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict[str, Any]:
     """Phase 0: add brain-wiki's own files; no existing note is touched."""
-    from brainwiki.config import register_brain
-    from brainwiki.lifecycle import LOG_HEADER, default_agents_block
+    from brainwiki.config import open_brain, register_brain, registration_conflict
+    from brainwiki.engine import Engine
+    from brainwiki.index import agents_block
+    from brainwiki.lifecycle import LOG_HEADER, commit_files, default_agents_block
 
     root = root.expanduser().resolve()
     if (root / MANIFEST).exists():
@@ -112,6 +114,8 @@ def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict
     _check_clean_git(root)
     found = survey(root)
     name = name or root.name
+    if register and (problem := registration_conflict(name, root)):
+        raise Conflict(problem)
     created = []
     manifest_text = _manifest_text(found, name)
     (root / MANIFEST).write_text(manifest_text, encoding="utf-8")
@@ -130,9 +134,25 @@ def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict
     for sub in (f"{_INBOX}/episodes", f"{_INBOX}/agents", "archive/episodes", "reports"):
         (root / sub).mkdir(parents=True, exist_ok=True)
     (root / "reports" / "import-plan.md").write_text(report(found, name), encoding="utf-8")
+    with Engine(open_brain(root, name)) as engine:  # the topic table the folder already has
+        engine.scan(force=True)
+        agents.write_text(
+            replace_block(agents.read_text(encoding="utf-8"), agents_block(engine)),
+            encoding="utf-8",
+        )
+    git = None
+    if is_work_tree(root):
+        problem = commit_files(root, created, f"Adopt {root.name} as brain-wiki brain {name}")
+        git = problem or "committed"
     if register:
         register_brain(name, root)
-    return {"brain": name, "root": str(root), "created": created, "survey": found.to_json()}
+    return {
+        "brain": name,
+        "root": str(root),
+        "created": created,
+        "git": git,
+        "survey": found.to_json(),
+    }
 
 
 def apply_phase(

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import os
 import sys
+from typing import Any
 
 _HANDLERS: dict[str, str] = {
     "version": "brainwiki.cli._cmd_core:version",
@@ -59,10 +61,20 @@ def _common(*, suppress: bool) -> argparse.ArgumentParser:
         "--as", dest="as_host", metavar="HOST", help="act with HOST's profile", **extra
     )
     common.add_argument("--json", action="store_true", help="machine-readable output", **extra)
-    common.add_argument(
-        "-q", "--quiet", action="store_true", help="print less (brain bench)", **extra
-    )
     return common
+
+
+class _Version(argparse.Action):
+    """`--version`, resolved only when asked: reading package metadata costs ~50 ms."""
+
+    def __init__(self, option_strings: list[str], dest: str, **_: Any) -> None:
+        super().__init__(option_strings, dest, nargs=0, help="show the version and exit")
+
+    def __call__(self, parser: argparse.ArgumentParser, *_: Any) -> None:
+        import brainwiki
+
+        print(f"brain-wiki {brainwiki.__version__}")
+        parser.exit()
 
 
 def _positive(text: str) -> int:
@@ -79,6 +91,7 @@ def _build_parser() -> argparse.ArgumentParser:
         description="A local-first second brain for AI agents.",
         parents=[_common(suppress=False)],
     )
+    parser.add_argument("--version", action=_Version)
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
 
     def cmd(name: str, help_text: str) -> argparse.ArgumentParser:
@@ -445,6 +458,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--export", help="write the map to FILE (.html, .json, .graphml) and exit")
 
     p = cmd("bench", "run the evaluation bench")
+    p.add_argument("-q", "--quiet", action="store_true", help="print less")
     p.add_argument(
         "suites",
         nargs="*",
@@ -475,15 +489,21 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         handler = getattr(importlib.import_module(module_name), func_name)
-        return int(handler(args) or 0)
+        code = int(handler(args) or 0)
+        sys.stdout.flush()  # inside the try, so a closed pipe is handled below
+        return code
     except BrainError as exc:
         print(f"{exc.code}: {exc.message}", file=sys.stderr)
         return exc.exit_code
+    except BrokenPipeError:  # `brain topics | head`: the reader left; say nothing
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        return 141
     except OSError as exc:  # a path the user gave that cannot be read or written
         where = f": {exc.filename}" if exc.filename else ""
         print(f"os_error: {exc.strerror or exc}{where}", file=sys.stderr)
         return 1
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError):  # Ctrl-C, or Ctrl-D at a prompt
+        print(file=sys.stderr)
         return 130
 
 

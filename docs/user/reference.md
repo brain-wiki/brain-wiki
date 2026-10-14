@@ -3,7 +3,7 @@
 ## Commands
 
 Global options: `--brain NAME|PATH`, `--as HOST` (act with that host's
-profile), `--json`, `-q` (quieter `brain bench`). `brain <command> --help`
+profile), `--json`, `--version`. `brain <command> --help`
 lists each command's options.
 
 | Command | Does |

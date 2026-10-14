@@ -115,6 +115,14 @@ class Profile:
     def can(self, capability: str) -> bool:
         return capability in self.write
 
+    def refusal(self, host: str | None, capability: str, doing: str) -> str:
+        """Why this profile may not do something, and the exact grant for this agent alone."""
+        wanted = ", ".join(f'"{w}"' for w in dict.fromkeys([*self.write, capability]))
+        return (
+            f"the {self.name!r} profile may not {doing}; the user can allow it for this agent "
+            f"in brain.toml: [agents.{host or 'default'}] write = [{wanted}]"
+        )
+
 
 _SECTIONS: dict[str, type] = {
     "layout": Layout,

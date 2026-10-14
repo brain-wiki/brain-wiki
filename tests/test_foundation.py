@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import shutil
 from pathlib import Path
 
 import pytest
@@ -111,6 +112,24 @@ def test_a_broken_brain_does_not_break_the_others(
     assert "os_error:" in capsys.readouterr().err
 
 
+@pytest.mark.skipif(shutil.which("git") is None, reason="needs git")
+def test_init_git_commits_the_scaffold(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    import subprocess
+
+    from brainwiki.cli import main
+
+    for var in ("GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"):
+        monkeypatch.setenv(var, "Test")
+    for var in ("GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"):
+        monkeypatch.setenv(var, "test@example.com")
+    root = tmp_path / "brains" / "g"
+    assert main(["init", str(root), "--name", "g", "--git", "--no-register"]) == 0
+    tracked = subprocess.run(
+        ["git", "-C", str(root), "ls-files"], capture_output=True, text=True, check=True
+    ).stdout.split()
+    assert {"brain.toml", "AGENTS.md", "rules.md", "log.md", ".gitattributes"} <= set(tracked)
+
+
 def test_init_and_resolve(brain_dir: Path, tmp_path: Path):
     brain = resolve_brain(cwd=tmp_path)
     assert brain.root == brain_dir
@@ -138,3 +157,14 @@ def test_resolve_project_file_and_host_limit(brain_dir: Path, tmp_path: Path):
 def test_resolve_without_config(tmp_path: Path):
     with pytest.raises(NotConfigured):
         resolve_brain(cwd=tmp_path)
+
+
+def test_a_registered_name_is_never_silently_repointed(brain_dir: Path, tmp_path: Path):
+    from brainwiki.cli import main
+    from brainwiki.config._user import load_user_config
+
+    before = load_user_config().brains["test"]
+    other = tmp_path / "brains" / "other"
+    assert main(["init", str(other), "--name", "test"]) == 4
+    assert not other.exists() and load_user_config().brains["test"] == before
+    assert main(["brains", "add", "again", str(brain_dir)]) == 4

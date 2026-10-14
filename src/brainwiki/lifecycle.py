@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -91,6 +92,39 @@ def declare_format(engine: Engine) -> bool:
     engine.store.write_text(MANIFEST, new)
     engine.manifest.format = FORMAT_VERSION
     return True
+
+
+_SCAFFOLD = ("brain.toml", "AGENTS.md", "rules.md", "log.md", ".gitattributes")
+
+
+def init_git(root: Path, name: str) -> str | None:
+    """`git init` the brain and commit what `init_brain` wrote, so a clone is a brain too.
+
+    Runs commit only the files they touch, so without this first commit `brain.toml` would
+    never be tracked. Returns why it could not, or None.
+    """
+    from brainwiki.runs import run_git
+
+    if shutil.which("git") is None:
+        return "git is not installed"
+    if not (root / ".git").exists():
+        done = run_git(root, "init", "-q")
+        if done.returncode != 0:
+            return done.stderr.strip() or "git init failed"
+    return commit_files(root, list(_SCAFFOLD), f"Create brain-wiki brain {name}")
+
+
+def commit_files(root: Path, files: list[str], message: str) -> str | None:
+    """Commit the brain-wiki files a step wrote outside a run. Returns why it failed, or None."""
+    from brainwiki.runs import run_git
+
+    files = [f for f in files if (root / f).exists()]
+    run_git(root, "add", "--", *files)
+    done = run_git(root, "commit", "-q", "-m", message, "--", *files)
+    if done.returncode != 0:
+        detail = (done.stderr or done.stdout).strip()
+        return detail.splitlines()[0] if detail else "git commit failed"
+    return None
 
 
 def init_brain(path: Path, name: str | None = None) -> Path:

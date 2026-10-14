@@ -1,4 +1,4 @@
-"""Local log file for long-running and hook processes, whose stdout belongs to a protocol (07 §2.2)."""
+"""Local log file for long-running processes whose stdout belongs to a protocol (07 §2.2)."""
 
 from __future__ import annotations
 

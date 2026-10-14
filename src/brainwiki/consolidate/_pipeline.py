@@ -76,11 +76,9 @@ class ApplyResult:
         return "\n".join(lines)
 
 
-def _require(profile: Profile) -> None:
+def _require(profile: Profile, host: str | None) -> None:
     if not profile.can("consolidate"):
-        raise Forbidden(
-            f'profile {profile.name!r} may not consolidate; add "consolidate" to its write list in brain.toml'
-        )
+        raise Forbidden(profile.refusal(host, "consolidate", "consolidate"))
 
 
 def prepare(
@@ -91,7 +89,7 @@ def prepare(
     topic: str | None = None,
     max_episodes: int | None = None,
 ) -> Packet | None:
-    _require(profile)
+    _require(profile, engine.host)
     packet = build_packet(
         engine, profile, run=run_id(), backend=backend, topic=topic, max_episodes=max_episodes
     )
@@ -122,7 +120,7 @@ def apply(
 ) -> ApplyResult:
     from brainwiki.lint import run_gate
 
-    _require(profile)
+    _require(profile, engine.host)
     result = ApplyResult(packet.run, "invalid")
     validation = validate(engine, packet, payload)
     result.errors, result.warnings = list(validation.errors), list(validation.warnings)

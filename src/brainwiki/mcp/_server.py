@@ -85,7 +85,8 @@ class HarvestEntry(BaseModel):
         Field(max_length=20, description="Questions the session raised and did not settle."),
     ] = []  # noqa: RUF012
     topics: Annotated[
-        list[str], Field(max_length=5, description="Short lowercase topic hints.")
+        list[Annotated[str, Field(max_length=100)]],
+        Field(max_length=5, description="Short lowercase topic hints."),
     ] = []  # noqa: RUF012
 
 
@@ -203,8 +204,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     def need(engine: Engine, capability: str) -> None:
         if not engine.profile.can(capability):
             raise Forbidden(
-                f"the {engine.profile.name!r} profile may not {capability.replace('_', ' ')}; "
-                f'add "{capability}" to [agents.{state.host}] write in brain.toml'
+                engine.profile.refusal(state.host, capability, capability.replace("_", " "))
             )
 
     # -- read -----------------------------------------------------------
@@ -471,7 +471,8 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             Field(max_length=20, description="Questions the session left open."),
         ] = [],  # noqa: B006
         topics: Annotated[
-            list[str], Field(max_length=5, description="Topic hints for consolidation.")
+            list[Annotated[str, Field(max_length=100)]],
+            Field(max_length=5, description="Topic hints for consolidation."),
         ] = [],  # noqa: B006
         dedupe_key: Annotated[
             str | None,
@@ -807,6 +808,8 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         from brainwiki import harvest as hv
 
         user = load_user_config()
+        if not user.harvest_enabled(state.host):  # turned off since the packet was prepared
+            raise Forbidden(f"harvest is off for {state.host}; nothing was written")
         entries = [e.model_dump() for e in sessions]
         result = hv.apply_packet(user, state.host, run, entries)
         if result["errors"] and not result["written"] and not result["skipped"]:
@@ -821,7 +824,11 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         return _result(text, result)
 
     # -- prompts --------------------------------------------------------
-    @mcp.prompt(name="consolidate", title="Consolidate the brain's inbox")
+    @mcp.prompt(
+        name="consolidate",
+        title="Consolidate the brain's inbox",
+        description="Fold the pending episodes into notes through validated, undoable operations.",
+    )
     def consolidate_prompt() -> str:
         return (
             "Consolidate my brain's inbox. Call brain_consolidate_prepare, follow its instructions to "
@@ -830,7 +837,11 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             "what changed (notes created or updated, claims superseded, anything sent to review)."
         )
 
-    @mcp.prompt(name="capture", title="Capture this session's learnings")
+    @mcp.prompt(
+        name="capture",
+        title="Capture this session's learnings",
+        description="Log what this session learned that is worth keeping, as one episode.",
+    )
     def capture_prompt() -> str:
         return (
             "Summarize the durable learnings from this session (decisions, facts, outcomes, approaches "
@@ -838,7 +849,11 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             "chit-chat and anything already in the brain. Show me what you recorded."
         )
 
-    @mcp.prompt(name="harvest", title="Harvest past sessions into the brain")
+    @mcp.prompt(
+        name="harvest",
+        title="Harvest past sessions into the brain",
+        description="Turn this host's finished sessions into episodes, distilled by you.",
+    )
     def harvest_prompt() -> str:
         return (
             "Harvest my recent sessions into my brain. Call brain_harvest_prepare, distill each session as "
@@ -858,9 +873,8 @@ def _engine_for_run(state: _State, run: str, brain: str | None) -> Engine:
 
     if brain:
         return state.engine(brain)
-    candidates = [state.engine(None)]
-    user = load_user_config()
-    for name in user.brains:
+    candidates = []
+    for name in [None, *load_user_config().brains]:  # the default first, if there is one
         try:
             candidates.append(state.engine(name))
         except BrainError:

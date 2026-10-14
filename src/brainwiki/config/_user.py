@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from brainwiki.config._dirs import config_file
-from brainwiki.errors import FormatError
+from brainwiki.errors import Conflict, FormatError
 
 if TYPE_CHECKING:
     import tomlkit
@@ -84,12 +84,35 @@ def _save_doc(path: Path, doc: tomlkit.TOMLDocument) -> None:
     path.write_text(tomlkit.dumps(doc), encoding="utf-8")
 
 
+def registration_conflict(name: str, brain_path: Path, *, path: Path | None = None) -> str | None:
+    """Why `name` cannot be registered for `brain_path`: the name or the folder is taken."""
+    user = load_user_config(path)
+    target = brain_path.expanduser().resolve()
+    current = user.brains.get(name)
+    if current is not None and current.expanduser().resolve() != target:
+        return (
+            f"a brain named {name!r} is already registered at {current}; pick another name, "
+            f"or `brain brains remove {name}` first"
+        )
+    for other, where in user.brains.items():
+        if other != name and where.expanduser().resolve() == target:
+            return (
+                f"{brain_path} is already registered as {other!r}; "
+                f"use `brain brains rename {other} {name}`"
+            )
+    return None
+
+
 def register_brain(
     name: str, brain_path: Path, *, make_default: bool | None = None, path: Path | None = None
 ) -> None:
-    """Add or update a brain entry, preserving the file's comments and formatting."""
+    """Add a brain entry, preserving the file's comments and formatting. Refuses a name or a
+    folder that is already registered, so a typo never silently re-points a brain."""
     import tomlkit
 
+    problem = registration_conflict(name, brain_path, path=path)
+    if problem:
+        raise Conflict(problem)
     path = path or config_file()
     doc = _load_doc(path)
     brains = doc.get("brains")

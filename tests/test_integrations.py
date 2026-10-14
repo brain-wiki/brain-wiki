@@ -258,3 +258,27 @@ def test_setup_wizard_creates_brain(tmp_path: Path):
     assert "mine" in load_user_config().brains
     assert any("Verify: search works." in line for line in output)
     assert not list((tmp_path / "brains" / "mine" / "inbox" / "episodes").rglob("*.md"))
+
+
+def test_reconnecting_keeps_user_config_and_cleans_old_blocks(
+    brain_dir: Path, no_host_clis: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    cursor = Path.home() / ".cursor" / "mcp.json"
+    cursor.parent.mkdir(parents=True, exist_ok=True)
+    cursor.write_text(json.dumps({"mcpServers": {"mine": {"command": "x"}}}))
+    assert main(["connect", "cursor"]) == 0
+    assert main(["connect", "cursor"]) == 0
+    assert main(["connect", "cursor", "--uninstall"]) == 0
+    assert json.loads(cursor.read_text()) == {"mcpServers": {"mine": {"command": "x"}}}
+
+    home = tmp_path / "codex-home"
+    home.mkdir()
+    monkeypatch.setenv("CODEX_HOME", str(home))
+    agents = home / "AGENTS.md"
+    agents.write_text("# Mine\n\n<!-- brain-wiki:begin v1 -->\nold\n<!-- brain-wiki:end -->\n")
+    record = cn._record_path("codex")
+    record.parent.mkdir(parents=True, exist_ok=True)
+    record.write_text(json.dumps({"instructions": [{"path": str(agents), "written": str(agents)}]}))
+    assert main(["connect", "codex"]) == 0
+    assert agents.read_text() == "# Mine\n"
+    assert cn._load_record("codex")["instructions"] == []

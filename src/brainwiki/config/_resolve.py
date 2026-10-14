@@ -1,4 +1,4 @@
-"""Choose exactly one brain for a command, MCP call, or hook (design doc 03 §3)."""
+"""Choose exactly one brain for a command or MCP call (design doc 03 §3)."""
 
 from __future__ import annotations
 

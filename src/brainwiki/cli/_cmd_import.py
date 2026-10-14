@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from brainwiki.cli._output import emit
-from brainwiki.errors import UsageError
+from brainwiki.errors import NotFound, UsageError
 
 
 def import_(args: Any) -> int:
@@ -71,7 +71,7 @@ def _overlay(args: Any, source: Path) -> int:
 
 def _into(args: Any, source: Path) -> int:
     from brainwiki.engine import open_engine
-    from brainwiki.importer import plan_into
+    from brainwiki.importer import plan_into, tidy_after_import
     from brainwiki.lint import run_gate
 
     with open_engine(args.into) as engine:
@@ -88,7 +88,11 @@ def _into(args: Any, source: Path) -> int:
         record = run.commit(
             check=run_gate(engine), log_lines=[f"- imported {summary['files']} files from {source}"]
         )
-    emit(args, record.to_json() | summary, f"Imported {summary['files']} files ({record.run}).")
+        tidy = [r.run for r in tidy_after_import(engine)]
+    text = f"Imported {summary['files']} files ({record.run})."
+    if tidy:
+        text += f" Then added hubs and refreshed AGENTS.md ({', '.join(tidy)}); undo all to revert."
+    emit(args, record.to_json() | summary | {"tidy_runs": tidy}, text)
     return 0
 
 
@@ -96,6 +100,8 @@ def _to_episodes(args: Any, source: Path) -> int:
     from brainwiki.engine import open_engine
     from brainwiki.importer import import_documents
 
+    if not source.exists():
+        raise NotFound(f"no such file or folder: {source}")
     paths = sorted(source.rglob("*.md")) if source.is_dir() else [source]
     with open_engine(args.brain, host=getattr(args, "as_host", None)) as engine:
         results = import_documents(
@@ -108,14 +114,14 @@ def _to_episodes(args: Any, source: Path) -> int:
             topic=args.topic,
             dry_run=not args.apply,
         )
+    failed = [r["file"] for r in results if r.get("error")]
+    written = len(results) - len(failed)
     verb = "Would write" if not args.apply else "Wrote"
-    emit(
-        args,
-        results,
-        f"{verb} {len(results)} episodes from {len(paths)} files."
-        + ("" if args.apply else " Run with --apply."),
-    )
-    return 0
+    text = f"{verb} {written} episodes from {len(paths) - len(failed)} files."
+    if failed:
+        text += f" Could not read {len(failed)}: " + ", ".join(failed)
+    emit(args, results, text + ("" if args.apply else " Run with --apply."))
+    return 1 if failed else 0
 
 
 def _from_host(args: Any) -> int:

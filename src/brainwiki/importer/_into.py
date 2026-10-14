@@ -11,7 +11,7 @@ from urllib.parse import quote, unquote
 from brainwiki.importer._normalize import convert_relations, identity_and_status
 from brainwiki.importer._survey import survey
 from brainwiki.index import norm_key, slugify
-from brainwiki.runs import Run
+from brainwiki.runs import Run, RunRecord
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
@@ -78,3 +78,25 @@ def plan_into(
         "topics": sorted({n.split("/")[1] for n in mapping.values()}),
     }
     return run, summary
+
+
+def tidy_after_import(engine: Engine) -> list[RunRecord]:
+    """Runs after `--into`: hubs for new topics and their listings, then the AGENTS.md topic
+    table, which can only be computed once the hubs exist; so a fresh import lints clean."""
+    from brainwiki.lint import lint
+    from brainwiki.lint import plan as plan_fixes
+
+    records = []
+    for codes in (["BW404", "BW405"], ["BW408"]):
+        engine.scan(force=True)
+        run, _ = plan_fixes(engine, lint(engine, select=codes, fixes=True), include_info=True)
+        if not run.entries:
+            continue
+        run.kind, run.summary = (
+            "import",
+            "import: hubs" if codes[0] == "BW404" else "import: AGENTS.md",
+        )
+        records.append(
+            run.commit(log_lines=[f"- {len(run.entries)} files changed after the import"])
+        )
+    return records

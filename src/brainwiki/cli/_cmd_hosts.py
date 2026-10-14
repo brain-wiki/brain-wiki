@@ -1,4 +1,4 @@
-"""connect, hook, mcp."""
+"""connect, mcp."""
 
 from __future__ import annotations
 

@@ -66,4 +66,4 @@ brain bench --compare A.json B.json
 brain version
 ```
 
-Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `-q` (quieter `brain bench`).
+Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `--version`.
