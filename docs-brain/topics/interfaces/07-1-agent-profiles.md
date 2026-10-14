@@ -17,7 +17,7 @@ with the brain ([[02-3-braintoml|02 §3]]).
 
 ```toml
 [agents.default]                 # any host without its own table
-write       = ["episodes"]
+write       = ["episodes", "edit"]
 
 [agents.claude-code]
 write       = ["episodes", "propose_rules", "consolidate"]
@@ -25,7 +25,7 @@ write       = ["episodes", "propose_rules", "consolidate"]
 
 | Field | Meaning | Built-in default |
 |---|---|---|
-| `write` | Subset of `episodes`, `edit`, `propose_rules`, `consolidate`, `harvest`, `review`. `edit` allows checked direct edits of notes ([[05-23-checked-agent-edits\|05 §2.3]]). | `["episodes"]`; the owner profile has `edit` |
+| `write` | Subset of `episodes`, `edit`, `propose_rules`, `consolidate`, `harvest`, `review`. `edit` allows checked direct edits of notes ([[05-23-checked-agent-edits\|05 §2.3]]). | `["episodes", "edit"]`; the owner profile has everything |
 | `read_origin` | May read the original agent conversations behind episodes ([[05-46-origin-context\|05 §4.6]]). Transcripts hold much more than the episodes kept, so this is off by default. | `false` |
 
 Resolution: `--host <id>` → `[agents.<id>]` → `[agents.default]` →

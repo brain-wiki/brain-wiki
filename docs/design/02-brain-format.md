@@ -160,7 +160,7 @@ review      = "always"                      # per-topic override
 agent_edits = "allow"                       # allow | review | deny for checked agent edits (05 §2.3)
 
 [agents.default]                            # profile for unknown hosts
-write       = ["episodes"]
+write       = ["episodes", "edit"]
 
 [agents.claude-code]                        # profile for one host id
 write       = ["episodes", "edit", "propose_rules", "consolidate", "review"]

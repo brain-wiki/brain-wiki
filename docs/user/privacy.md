@@ -13,10 +13,10 @@ A profile says what an agent may change:
 
 ```toml
 [agents.default]          # any agent without its own profile
-write = ["episodes"]
+write = ["episodes", "edit"]
 
 [agents.claude-code]
-write = ["episodes", "propose_rules", "consolidate", "harvest", "review"]
+write = ["episodes", "edit", "propose_rules", "consolidate", "harvest", "review"]
 read_origin = false       # may it read the conversations episodes came from?
 ```
 

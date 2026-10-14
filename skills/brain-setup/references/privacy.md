@@ -42,16 +42,16 @@ Profiles live in the brain's `brain.toml`, one table per agent app, plus a
 
 ```toml
 [agents.default]
-write       = ["episodes"]
+write       = ["episodes", "edit"]
 
 [agents.claude-code]
-write       = ["episodes", "propose_rules", "consolidate", "harvest", "review"]
+write       = ["episodes", "edit", "propose_rules", "consolidate", "harvest", "review"]
 read_origin = false
 ```
 
 | Setting | Meaning | Default |
 |---|---|---|
-| `write` | What it may do: `episodes` (record), `propose_rules` (suggest rules, always confirmed by the user), `consolidate` (fold episodes into notes), `harvest` (summarize its own past sessions), `review` (handle proposals). | `["episodes"]` |
+| `write` | What it may do: `episodes` (record), `edit` (correct notes directly, then `brain check` them), `propose_rules` (suggest rules, always confirmed by the user), `consolidate` (fold episodes into notes), `harvest` (summarize its own past sessions), `review` (handle proposals). | `["episodes", "edit"]` |
 | `read_origin` | May reread the original conversation behind an episode. Conversations hold far more than the episode kept, so this is off unless needed. | `false` |
 
 Profiles prevent accidents and limit what a confused or misled agent can

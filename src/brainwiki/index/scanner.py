@@ -20,6 +20,7 @@ from brainwiki.index.topics import (
     set_hub_files,
     topic_tree,
 )
+from brainwiki.index.written import is_marked
 from brainwiki.store import sha256_bytes
 
 if TYPE_CHECKING:
@@ -471,6 +472,11 @@ def _index_file(
                 captured="file",
                 agent=rel.split("/")[2] if rel.count("/") >= 3 else None,
             )
+        elif not (fm_id and is_marked(engine.brain.key, fm_id, sha)):
+            # Not written by this device's write_episode(): its provenance is only a claim.
+            episode_cols.update(taint="unknown", captured="file")
+            if episode_cols["origin"] == "owner":
+                episode_cols["origin"] = "agent"
         if episode_cols["taint"] not in ("true", "false", "unknown"):
             episode_cols["taint"] = "unknown"
         if episode_cols["origin"] not in ("owner", "agent", "import", "system"):

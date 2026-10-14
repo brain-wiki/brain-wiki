@@ -107,8 +107,8 @@ def expected(root: Path, version: str) -> tuple[dict[Path, str], list[str]]:
 
 
 def _rule(root: Path) -> str | None:
-    """Antigravity's rule for a marketplace install: the block for a profile that may not
-    read files directly or edit notes, since nothing is known about the user's profile yet."""
+    """Antigravity's rule for a marketplace install: the block for the default profile, since
+    nothing is known about the user's own profile yet."""
     import importlib.util
 
     source = root / "src/brainwiki/hosts/instructions.py"

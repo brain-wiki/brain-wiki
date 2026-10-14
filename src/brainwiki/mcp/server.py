@@ -10,6 +10,7 @@ import functools
 import json
 import logging
 import threading
+import weakref
 from collections.abc import Callable
 from typing import Annotated, Any, Literal, TypeVar
 
@@ -117,6 +118,10 @@ def _client_name(ctx: Context) -> str | None:
 AUTO_DECLINE_CLIENTS = ("antigravity",)
 
 
+TAINTED_SESSION = "tainted-session"
+_STATES: weakref.WeakKeyDictionary[MCPServer, State] = weakref.WeakKeyDictionary()
+
+
 def ask_user(text: str, user_quote: str, ctx: Context) -> Any:
     caps = ctx.client_capabilities
     elicitation = caps.elicitation if caps is not None else None
@@ -129,6 +134,19 @@ def ask_user(text: str, user_quote: str, ctx: Context) -> Any:
             RuleConfirmation,
         )
     return "no-confirmation-channel"
+
+
+def confirm_rule(text: str, user_quote: str, ctx: Context, session: str | None = None) -> Any:
+    """Ask the user to confirm a rule, unless the host's hooks saw this session read untrusted
+    content: then the call is refused without a prompt (design doc 05 §6)."""
+    from brainwiki.hosts.session_state import session_taint
+
+    state = _STATES.get(ctx.mcp_server)
+    if state is not None and session:
+        state.adopt_client(ctx)
+        if session_taint(state.host, session) == "true":
+            return TAINTED_SESSION
+    return ask_user(text, user_quote, ctx)
 
 
 def _result(text: str, data: Any) -> CallToolResult:
@@ -176,6 +194,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         version=__version__,
         cache_hints={"tools/list": hint, "prompts/list": hint},
     )
+    _STATES[mcp] = state
     guard = _guard(state)
 
     def need(engine: Engine, capability: str) -> None:
@@ -470,8 +489,16 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
                 description="The user's exact words asking for this rule.",
             ),
         ],
-        confirmation: Annotated[ElicitationResult[RuleConfirmation], Resolve(ask_user)],
+        confirmation: Annotated[ElicitationResult[RuleConfirmation], Resolve(confirm_rule)],
         replaces: Annotated[str | None, Field(pattern=r"^r-[0-9A-HJKMNP-TV-Z]{26}$")] = None,
+        session: Annotated[
+            str | None,
+            Field(
+                max_length=200,
+                description="Host session id, if known. A session the host's hooks saw read "
+                "untrusted content may not propose rules.",
+            ),
+        ] = None,
         brain: Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -479,6 +506,11 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
 
         engine = state.engine(brain)
         need(engine, "propose_rules")
+        if isinstance(confirmation, AcceptedElicitation) and confirmation.data == TAINTED_SESSION:
+            raise Forbidden(
+                "this session read untrusted content, so it may not propose rules; "
+                "the user can add one with `brain rule add`"
+            )
         if isinstance(confirmation, AcceptedElicitation) and isinstance(
             confirmation.data, RuleConfirmation
         ):

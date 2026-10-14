@@ -85,7 +85,7 @@ def test_bundle_ships_no_hooks_and_an_always_on_rule():
     meta, body = frontmatter(ROOT / "rules/brain-wiki.md")
     assert meta["trigger"] == "always_on"
     assert "brain_list" in body and "brain_neighbors" in body
-    assert "brain_check" not in body  # a marketplace install knows nothing of the profile
+    assert "brain_check" in body  # a marketplace install gets the default profile, which edits
 
 
 def test_versions_and_pins_match_pyproject():

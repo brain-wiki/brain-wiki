@@ -127,8 +127,8 @@ to the user for review; `brain_check` says so.
 Only when the user explicitly asks for a lasting rule ("from now on…",
 "always…", "never…, remember that"):
 
-1. Call `brain_propose_rule` with a short `text` and `user_quote` set to the
-   user's exact words.
+1. Call `brain_propose_rule` with a short `text`, `user_quote` set to the
+   user's exact words, and `session` set to your session id if you know it.
 2. The agent app asks the user to confirm. If they decline, drop it.
 
 A preference you noticed but the user did not state as a rule is an episode

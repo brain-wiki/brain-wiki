@@ -28,7 +28,7 @@ name = "{name}"
 review = "auto"            # auto | always: whether consolidation waits for your review
 
 [agents.default]           # what agents without their own profile may write
-write       = ["episodes"]
+write       = ["episodes", "edit"]
 
 # Example of a profile for one agent:
 # [agents.claude-code]

@@ -298,7 +298,7 @@ def test_instructions_follow_the_host_profile(example: Path):
     assert host_access("codex") == Access(edit=False)
     assert host_access("claude-code") == Access(edit=True)
     assert host_access(None) == Access(edit=True)
-    restricted = server_instructions(Access())
+    restricted = server_instructions(Access(edit=False))
     assert "Markdown files directly" in restricted and "do not edit" in restricted
     assert "brain_check" not in restricted and "Details: the `brain` skill" not in restricted
     full = marked_block(Access(edit=True))

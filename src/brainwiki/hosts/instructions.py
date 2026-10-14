@@ -67,7 +67,7 @@ _SKILL = "\nDetails: the `brain` skill.\n"
 class Access:
     """What the host's profile allows, which decides the variable sentence."""
 
-    edit: bool = False  # may edit notes directly and record them with brain_check
+    edit: bool = True  # may edit notes directly and record them with brain_check (the default)
 
 
 def block_text(access: Access, *, skill: bool = True) -> str:

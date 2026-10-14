@@ -69,7 +69,9 @@ def test_connect_writes_the_instruction_block_and_uninstall_removes_it(
     rules = Path.home() / ".claude" / "rules" / "brain-wiki.md"
     assert main(["connect", "claude-code"]) == 0
     text = rules.read_text()
-    assert text.startswith(BEGIN) and "brain_list" in text and "brain_check" not in text
+    assert (
+        text.startswith(BEGIN) and "brain_list" in text and "brain_check" in text
+    )  # default: edit
     assert main(["connect", "claude-code"]) == 0  # unchanged block: rewritten quietly
     rules.write_text(text.replace("once per session", "twice per session"))
     with pytest.raises(Conflict):
@@ -143,7 +145,7 @@ def test_connect_antigravity_and_cursor_with_uninstall(
     link = Path.home() / ".gemini" / "config" / "plugins" / "brain-wiki"
     assert link.is_symlink() and (link / "plugin.json").is_file()
     rule = (link / "rules" / "brain-wiki.md").read_text()
-    assert "trigger: always_on" in rule and "brain_check" not in rule
+    assert "trigger: always_on" in rule and "brain_check" in rule
     assert not (link / "hooks.json").exists()
     assert cn.load_record("antigravity")["links"] == [str(link)]
     cursor = Path.home() / ".cursor" / "mcp.json"

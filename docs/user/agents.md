@@ -95,8 +95,8 @@ puts a note back.
 ## Which agent may do what
 
 Each agent acts with a **profile** in `brain.toml`. Every agent reads the
-whole brain; by default it may write episodes and nothing more. Grant more
-per host:
+whole brain; by default it may log episodes and correct notes it checks with
+`brain check`. Grant more per host:
 
 ```toml
 [agents.claude-code]

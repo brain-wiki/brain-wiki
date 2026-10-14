@@ -65,7 +65,7 @@ def test_manifest_defaults_and_unknown_keys():
         "topics.search.privacy",
         "agents.codex.max_privacy",
     }
-    assert m.profile("unknown-host").write == ["episodes"]
+    assert m.profile("unknown-host").write == ["episodes", "edit"]
     assert m.profile(None).can("consolidate")
 
 
