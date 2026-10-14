@@ -20,5 +20,5 @@ bw-part_of:
   only; later phases are offered, not applied.
 - **Resumable.** If the session ends halfway, the next run of setup picks up
   from `doctor`'s view of the state.
-- **Plain language.** No internal terms (taint, profiles, ops) unless the
+- **Plain language.** No internal terms (provenance, profiles, ops) unless the
   user asks; the references hold the details.

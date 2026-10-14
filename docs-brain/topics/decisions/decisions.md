@@ -21,7 +21,7 @@ Generated from `docs/design/README.md`.
   - [[d6]]: D6: Three write paths: an append-only inbox open to any agent
   - [[d7]]: D7: The LLM only proposes JSON ops
   - [[d8]]: D8: Consolidation reaches an LLM through the host agent (MCP)
-  - [[d9]]: D9: Provenance and taint are set by the code path that writes, never by…
+  - [[d9]]: D9: Provenance, including inputs, is set by the code path that writes,…
   - [[d10]]: D10: No access control inside a brain for now
   - [[d11]]: D11: v0.1 storage is a local directory with optional git integration
   - [[d12]]: D12: ULIDs identify brains, notes, episodes, claims, rules, and runs

@@ -127,7 +127,7 @@ doctor   CLI on PATH  create or  other     defaults or  opt-in per test episode,
   only; later phases are offered, not applied.
 - **Resumable.** If the session ends halfway, the next run of setup picks up
   from `doctor`'s view of the state.
-- **Plain language.** No internal terms (taint, profiles, ops) unless the
+- **Plain language.** No internal terms (provenance, profiles, ops) unless the
   user asks; the references hold the details.
 
 ### 3.4 `brain doctor --json`

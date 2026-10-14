@@ -260,9 +260,10 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--claim", action="append", default=[], help="add a claim (repeatable)")
     p.add_argument("--agent", help="record as written by this host (scripts)")
     p.add_argument(
-        "--taint",
-        choices=["true", "false", "unknown"],
-        help="whether the text is untrusted (default: false; unknown with --agent)",
+        "--inputs",
+        choices=["local", "external", "unknown"],
+        help="whether the text came from outside your control: external for web or tool "
+        "output (default: local; unknown with --agent)",
     )
 
     p = cmd("rule", "manage standing rules")

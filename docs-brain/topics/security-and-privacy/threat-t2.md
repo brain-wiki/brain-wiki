@@ -12,6 +12,6 @@ bw-part_of:
 
 **Poisoned knowledge.** False facts consolidated into notes.
 
-**Mitigations:** Claims carry provenance and taint; tainted claims read as `[unverified]`. Optional review routing for tainted sources (`review_tainted`). Supersession keeps history; undo restores. Instructions tell the model to treat episode text as data.
+**Mitigations:** Claims carry provenance, including their inputs; claims with external or unknown inputs read as `[unverified]`. Optional review routing for sources with external inputs (`review_external`). Supersession keeps history; undo restores. Instructions tell the model to treat episode text as data.
 
-**Residual risk:** A plausible false fact from a tainted source can become a claim marked unverified. That is a knowledge-quality risk, not a control risk.
+**Residual risk:** A plausible false fact from a source with external inputs can become a claim marked unverified. That is a knowledge-quality risk, not a control risk.

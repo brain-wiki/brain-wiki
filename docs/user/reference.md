@@ -23,7 +23,7 @@ lists each command's options.
 | `brain check [PATH…] [--adopt] [--allow-shrink]`, `brain pending` | Validate and record direct edits; no paths, or `pending`, lists edits not yet recorded |
 | `brain restore PATH` | Put a note back to its last recorded version |
 | `brain index [--rebuild \| --status]` | Inspect or rebuild the index |
-| `brain log [TEXT \| -] [--topic T] [--claim C] [--agent HOST] [--taint …]` | Write an episode |
+| `brain log [TEXT \| -] [--topic T] [--claim C] [--agent HOST] [--inputs …]` | Write an episode |
 | `brain rule add TEXT [--quote Q] [--replaces ID] \| list \| accept ID \| reject ID` | Rules |
 | `brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE]`, `--apply OPS.json --run RUN [--dry-run]` | Drive consolidation yourself (agents use `brain_consolidate_*`) |
 | `brain review list \| show RUN \| accept RUN \| reject RUN` | Proposals waiting for review |

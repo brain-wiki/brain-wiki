@@ -50,7 +50,7 @@ Handles replace paths and ids so models never copy long identifiers:
   ],
   "episodes": [
     {"handle": "E1", "agent": "claude-code", "created": "2026-10-10T19:22:11Z",
-     "origin": "agent", "taint": "unknown", "candidates": ["N2"],
+     "origin": "agent", "inputs": "unknown", "candidates": ["N2"],
      "origin_available": true,
      "lines": ["1| Switched the search path to FTS5 after …", "2| …"]}
   ]

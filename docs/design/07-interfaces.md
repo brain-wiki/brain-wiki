@@ -74,7 +74,7 @@ brain orphans | unresolved                               # notes nothing links t
 brain check [PATH]... [--adopt] [--allow-shrink]         # validate and record direct edits (05 §2.3)
 brain restore PATH                                       # put back the last recorded version
 
-brain log [TEXT | -] [--topic T]... [--claim C]... [--agent HOST] [--taint true|false|unknown]
+brain log [TEXT | -] [--topic T]... [--claim C]... [--agent HOST] [--inputs local|external|unknown]
 brain rule add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--out PACKET.json]
@@ -339,10 +339,10 @@ Notes:
 
 - `brain_log_episode` assembles the episode body from `summary`, `claims`,
   and `open_questions`; the provenance fields are set by the server, never
-  by arguments ([05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint)).
+  by arguments ([05 §3](05-write-path-and-consolidation.md#3-provenance-and-inputs)).
 - `session` and `origin_turns` on `brain_log_episode` are hints from the
   model (used by the fallback harvest recipe); the episode records them but
-  keeps `bw-captured: mcp` and `bw-taint: unknown`. In `brain_harvest_apply`, by
+  keeps `bw-captured: mcp` and `bw-inputs: unknown`. In `brain_harvest_apply`, by
   contrast, every provenance field comes from the server's own parse of the
   session.
 - `brain_consolidate_apply` validates `ops` against the schema in

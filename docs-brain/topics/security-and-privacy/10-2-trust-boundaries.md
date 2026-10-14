@@ -20,8 +20,8 @@ bw-part_of:
 - **Agents are capable but manipulable.** They follow instructions in what
   they read. brain-wiki treats agent writes as unverified and keeps them
   out of directive channels.
-- **External content is untrusted.** It enters through agents. Taint
-  tracks it ([[05-3-provenance-and-taint|05 §3]]).
+- **External content is untrusted.** It enters through agents. The
+  `inputs` provenance field tracks it ([[05-3-provenance-and-inputs|05 §3]]).
 - **Model providers see what is sent to them.** The consolidator LLM and the
   host's model receive brain content. Today every host that may use a brain
   reads all of it; which brains a host may use is the only limit

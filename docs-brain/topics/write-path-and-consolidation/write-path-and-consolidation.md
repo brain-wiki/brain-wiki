@@ -6,7 +6,7 @@ source: "docs/design/05-write-path-and-consolidation.md"
 ---
 # Write path and consolidation
 
-Episodes, provenance and taint, ops, consolidation backends, validation, review, undo
+Episodes, provenance and inputs, ops, consolidation backends, validation, review, undo
 
 Generated from `docs/design/05-write-path-and-consolidation.md`.
 
@@ -16,9 +16,9 @@ Generated from `docs/design/05-write-path-and-consolidation.md`.
   - [[05-21-ways-an-episode-is-written]]: Ways an episode is written
   - [[05-22-harvesting-sessions]]: Harvesting sessions
   - [[05-23-checked-agent-edits]]: Checked agent edits
-- [[05-3-provenance-and-taint]]: Provenance and taint
+- [[05-3-provenance-and-inputs]]: Provenance and inputs
   - [[05-31-fields]]: Fields
-  - [[05-32-how-taint-is-determined]]: How taint is determined
+  - [[05-32-how-inputs-are-determined]]: How inputs are determined
   - [[05-33-invariants]]: Invariants
 - [[05-4-consolidation]]: Consolidation
   - [[05-41-pipeline]]: Pipeline (Write path and consolidation)

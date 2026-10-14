@@ -113,7 +113,7 @@ async def test_log_episode_provenance_and_dedupe(example: Path):
     text = (example / first.structured_content["path"]).read_text()
     for line in (
         "origin: agent",
-        "taint: unknown",
+        "inputs: unknown",
         "captured: mcp",
         "agent: claude-code",
         "session: s1",

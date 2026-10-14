@@ -10,10 +10,10 @@ bw-part_of:
 ---
 # Ways an episode is written
 
-| Writer | `origin` | `taint` | `captured` | Notes |
+| Writer | `origin` | `inputs` | `captured` | Notes |
 |---|---|---|---|---|
-| `brain log` (CLI, interactive) | `owner` | `false` | `cli` | A person typed it. |
-| `brain log --agent <id>` (scripts) | `agent` | `unknown` unless `--taint` given | `cli` | |
+| `brain log` (CLI, interactive) | `owner` | `local` | `cli` | A person typed it. |
+| `brain log --agent <id>` (scripts) | `agent` | `unknown` unless `--inputs` given | `cli` | |
 | MCP `brain_log_episode` | `agent` | `unknown` (§3.2) | `mcp` | |
 | `brain harvest` from host session stores (opt-in) | `agent` | computed from the session's tool calls (§3.2) | `harvest` | §2.2 |
 | File created directly under `inbox/episodes/` | as written if valid, else `agent`; `owner` becomes `agent` | `unknown` (forced) | `file` | Self-declared provenance is not trusted. |
@@ -49,7 +49,7 @@ All writers go through one function, `write_episode()`, which:
 The scanner trusts an episode's declared provenance only when its marker
 matches its content. Anything else under `inbox/episodes/` (written by
 hand, by another program, edited after brain-wiki wrote it, or synced from
-another device) is indexed as a file: `bw-taint: unknown`, `captured: file`,
+another device) is indexed as a file: `bw-inputs: unknown`, `captured: file`,
 and never `origin: owner`. An episode logged on another device therefore
 counts as `unknown` here; most agent episodes are `unknown` anyway, because
 an MCP write can never prove its session clean (§3.2).

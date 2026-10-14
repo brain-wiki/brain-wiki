@@ -345,7 +345,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
             "type: episode",
             "bw-agent: bench-agent",
             "bw-origin: agent",
-            f"bw-taint: {rng.choice(('false', 'false', 'unknown'))}",
+            f"bw-inputs: {rng.choice(('local', 'local', 'unknown'))}",
             "bw-captured: mcp",
             f"created: {when:%Y-%m-%dT%H:%M:%SZ}",
         ]

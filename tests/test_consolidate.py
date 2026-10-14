@@ -39,12 +39,12 @@ def eng(root: Path, host: str | None = None) -> Engine:
     return Engine(open_brain(root), host=host)
 
 
-def log(e: Engine, text: str, *, taint: str = "false", topics: list[str] | None = None) -> str:
+def log(e: Engine, text: str, *, inputs: str = "local", topics: list[str] | None = None) -> str:
     return write_episode(
         e,
         EpisodeContent(summary=text),
         origin="agent",
-        taint=taint,
+        inputs=inputs,
         captured="mcp",
         agent="claude-code",
         topics=topics,
@@ -104,7 +104,7 @@ def test_apply_writes_archives_logs_and_undoes(example: Path):
         first = log(
             e,
             "FTS5 p95 is 3 ms at 10k notes.\nThe edges index made orientation fast.",
-            taint="unknown",
+            inputs="unknown",
         )
         second = log(e, "Chatted about lunch.")
         third = log(e, "Unrelated thought nobody cites.")
@@ -151,7 +151,7 @@ def test_apply_writes_archives_logs_and_undoes(example: Path):
         assert third in result.pending and first not in result.pending
         doc = parse_document("x", (example / "topics/search/fts5.md").read_text())
         new = next(c for c in doc.claims if c.text.startswith("SQLite FTS5 is the default backend"))
-        assert new.meta["taint"] == "unknown" and new.meta["src"].startswith(first)
+        assert new.meta["inputs"] == "unknown" and new.meta["src"].startswith(first)
         old = next(
             c
             for c in doc.claims
@@ -320,7 +320,7 @@ def test_agent_memory_files_are_consolidated_and_archived(example: Path):
     with eng(example) as e:
         packet = pipeline.prepare(e, e.profile)
         h = handle_for(packet, "inbox/agents/claude-code/memory.md")
-        assert packet.episodes[h].taint == "unknown"
+        assert packet.episodes[h].inputs == "unknown"
         ops = {
             "ops": [{"op": "skip_episode", "episode": x, "reason": "t"} for x in packet.episodes]
         }

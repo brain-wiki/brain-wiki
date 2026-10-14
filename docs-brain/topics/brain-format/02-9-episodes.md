@@ -26,7 +26,7 @@ bw-session: 5f2c9a1e-…           # host session id, if known
 bw-turns: 12-48                  # turns of that session this episode covers, if known
 bw-device: laptop                # device the session ran on (user config name)
 bw-origin: agent                 # owner | agent | import | system
-bw-taint: unknown                # true | false | unknown
+bw-inputs: unknown               # local | external | unknown
 bw-captured: mcp                 # mcp | harvest | cli | import | file
 bw-topics: [search]              # hints only
 bw-dedupe: claude-code:5f2c9a1e-…:12-48   # idempotency key, if the writer gave one
@@ -48,9 +48,9 @@ Rules:
 
 - Episodes are **immutable**. After creation no tool edits them. Lint
   records each episode's hash in the index and reports changes.
-- `bw-origin`, `bw-taint`, `bw-captured`, and `bw-agent` are set by the
+- `bw-origin`, `bw-inputs`, `bw-captured`, and `bw-agent` are set by the
   code path that writes the episode (MCP server, harvest, CLI, import), never
-  taken from model-written text. See [[05-3-provenance-and-taint|05 §3]].
+  taken from model-written text. See [[05-3-provenance-and-inputs|05 §3]].
   Episodes written before format 2 use the names without `bw-` (and
   `origin_turns` for `bw-turns`); they are never rewritten, and readers
   accept both.
@@ -74,5 +74,5 @@ Rules:
   references still resolve.
 - Files dropped into `inbox/agents/<agent>/` by host-native memory features
   are treated as episodes by consolidation without needing frontmatter.
-  Their origin is `agent` and their taint is `unknown`. Consolidation
+  Their origin is `agent` and their inputs are `unknown`. Consolidation
   archives them to `archive/agents/<agent>/` unchanged.

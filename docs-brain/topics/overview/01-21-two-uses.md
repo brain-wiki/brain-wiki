@@ -18,7 +18,7 @@ A brain serves two uses, and one brain can serve both:
 | **The agents' own memory of the world** | Agents: what they observe and learn while working, captured as episodes and consolidated into notes | Log what they learn, consolidate it, recall it later, across hosts | Every claim traceable to its source; unverified knowledge marked; world facts kept current as the world changes |
 
 Provenance keeps the two apart where they meet: every claim records its
-`origin` (`owner`, `agent`, `import`, `system`) and `taint`, and only the
+`origin` (`owner`, `agent`, `import`, `system`) and `inputs`, and only the
 user can add rules. A user who wants a hard line keeps them in separate
 named brains. Open decisions about how far to separate and trust
 agent-learned knowledge are Q9–Q12 in

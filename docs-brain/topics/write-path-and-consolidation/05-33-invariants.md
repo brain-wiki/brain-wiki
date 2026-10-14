@@ -6,14 +6,14 @@ aliases: ["05 §3.3"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#33-invariants"
 bw-part_of:
-  - "[[05-3-provenance-and-taint]]"
+  - "[[05-3-provenance-and-inputs]]"
 ---
 # Invariants
 
 1. **No promotion to directives.** Nothing derived from content with
-   `taint` ≠ `false` is ever written to `rules.md` or the managed block of
+   `inputs` ≠ `local` is ever written to `rules.md` or the managed block of
    `AGENTS.md`. Consolidation cannot write either file at all.
-2. **Taint propagates.** A claim's `taint` is the worst taint of its
+2. **Inputs propagate.** A claim's `inputs` is the worst value of its
    source episodes, recorded in the claim metadata and shown as
    `[unverified]` in reads.
 3. **Untrusted text is framed as data.** Episodes returned by search or

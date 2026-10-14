@@ -105,7 +105,7 @@ def test_browse_lists_recent_notes_without_episodes(brain_dir: Path):
             eng,
             EpisodeContent(summary="Shipped Lumen 1.13 to beta."),
             origin="owner",
-            taint="false",
+            inputs="local",
             captured="cli",
             topics=["releases"],
         )

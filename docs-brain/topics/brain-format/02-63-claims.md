@@ -17,7 +17,7 @@ retracted moves to `bw-claims-superseded`.
 claim      = text [ " " meta ]
 meta       = "{" pair *( "; " pair ) "}"
 pair       = key ": " value             ; value double-quoted when it holds ";"
-key        = "id" | "status" | "by" | "reason" | "src" | "origin" | "taint" | "at"
+key        = "id" | "status" | "by" | "reason" | "src" | "origin" | "inputs" | "at"
 ```
 
 | Key | Meaning |
@@ -28,7 +28,7 @@ key        = "id" | "status" | "by" | "reason" | "src" | "origin" | "taint" | "a
 | `reason` | Why the claim was superseded or retracted. |
 | `src` | One or more comma-separated sources: `<brain path>#L<start>-L<end>` for episode spans, `<host>:<session>#T<start>-T<end>` for turns of an agent conversation, or a URL. |
 | `origin` | `owner`, `agent`, `import`, or `system`, from the source episodes. |
-| `taint` | `true` or `unknown` when any source episode was tainted or of unknown taint. Omitted when false. |
+| `inputs` | `external` or `unknown` when any source episode had external or unknown inputs. Omitted when `local`. |
 | `at` | Date or date-time the claim was last asserted. |
 
 Choices behind the form:

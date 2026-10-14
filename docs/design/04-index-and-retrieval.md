@@ -78,7 +78,7 @@ CREATE TABLE nodes (
   origin_turns TEXT,                -- e.g. '12-48'
   device       TEXT,
   origin       TEXT,                -- owner, agent, import, system
-  taint        TEXT,                -- true, false, unknown
+  inputs       TEXT,                -- local, external, unknown
   captured     TEXT                 -- mcp, harvest, cli, import, file
 );
 CREATE INDEX nodes_topic   ON nodes(topic, kind, updated);
@@ -111,14 +111,14 @@ CREATE TABLE claims (
   status        TEXT NOT NULL,      -- active, superseded, retracted
   superseded_by TEXT,
   origin        TEXT,
-  taint         TEXT,
+  inputs        TEXT,
   asserted_at   TEXT,
   sources       TEXT NOT NULL DEFAULT '[]',  -- JSON array of 'path#Lx-Ly', origin sources, or URLs
   PRIMARY KEY (node_id, id)         -- a copied claim id is a lint finding, not an index error
 );
 CREATE INDEX claims_id ON claims(id);
 CREATE INDEX claims_unverified ON claims(node_id)
-  WHERE status = 'active' AND taint IN ('true', 'unknown');
+  WHERE status = 'active' AND inputs IN ('external', 'unknown');
 
 -- Typed relations (canonical direction) and untyped body links.
 CREATE TABLE edges (
@@ -400,7 +400,7 @@ Structured result (MCP `structuredContent`; JSON from the CLI with
       "score": 11.8,
       "snippet": "…the «trigram» tokenizer needs SQLite 3.34+…",
       "via": null,
-      "taint": null,
+      "inputs": null,
       "guards": [
         {"label": "supersedes", "id": "01J8…", "title": "Use ripgrep for search",
          "path": "topics/search/ripgrep.md", "status": "superseded"}
@@ -430,7 +430,7 @@ the handle for the next call, and puts guard warnings first:
 ```
 
 Episode hits are raw and unreviewed. Their text is wrapped in an
-`<untrusted-episode agent="…" taint="…">` envelope with a one-line
+`<untrusted-episode agent="…" inputs="…">` envelope with a one-line
 reminder that it is data, not instructions ([10](10-security-and-privacy.md)).
 
 ## 7. Read
@@ -475,7 +475,7 @@ Every mode except `raw` starts with banners computed by §5:
 ⚠ CONFLICTS WITH "Vector-only search proposal" (unless: embeddings enabled)
 ```
 
-Claims whose `taint` is `true` or `unknown` are shown with an
+Claims whose `inputs` are `external` or `unknown` are shown with an
 `[unverified]` marker, so an agent can weigh them accordingly.
 
 ## 8. Orientation (the briefing)

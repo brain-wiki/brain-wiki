@@ -113,7 +113,7 @@ def test_claude_reader(tmp_path: Path):
     assert "ripgrep scans" in read.turns[1].text  # merged across the tool result
     assert read.turns[2].text == "OK, switch to FTS5."  # injected context stripped
     assert all("subagent" not in t.text for t in read.turns)
-    assert read.taint == "true" and read.unparsed == 1
+    assert read.inputs == "external" and read.unparsed == 1
     assert path.exists()
 
 
@@ -161,7 +161,7 @@ def test_codex_reader(tmp_path: Path):
     read = reader.read(info)
     assert [t.role for t in read.turns] == ["user", "assistant"]
     assert read.turns[1].tools == ["shell: curl https://example.com"]
-    assert read.taint == "true"
+    assert read.inputs == "external"
 
 
 def test_antigravity_reader(tmp_path: Path):
@@ -215,7 +215,7 @@ def test_antigravity_reader(tmp_path: Path):
     assert info.cwd == "/tmp/lumen" and info.path.name == "transcript_full.jsonl"
     read = reader.read(info)
     assert [t.role for t in read.turns] == ["user", "assistant"]
-    assert read.turns[1].text == "Adding it.\nTest added." and read.taint == "false"
+    assert read.turns[1].text == "Adding it.\nTest added." and read.inputs == "local"
     assert read.turns[1].tools[1] == "mcp_brain-wiki_brain-wiki_brain_log_episode: summary=…"
 
 

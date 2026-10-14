@@ -48,7 +48,7 @@ recency_half_life_days = 180
 
 [consolidate]
 review  = "auto"                            # auto (review only when checks trigger) | always
-review_tainted = false                      # route runs with tainted sources to review
+review_external = false                     # route runs with external-input sources to review
 max_episodes_per_run = 50
 max_supersede_ratio  = 0.25                 # above this, a run is routed to review (see 05)
 

@@ -3,7 +3,7 @@
 discover ─► filter ─► route ─► extract ─► distill (or raw) ─► write episodes ─► advance watermark
 
 Everything except distillation is deterministic and lives here. Provenance (agent, session,
-turn range, device, taint) always comes from brain-wiki's own parse of the session.
+turn range, device, inputs) always comes from brain-wiki's own parse of the session.
 """
 
 from __future__ import annotations
@@ -297,7 +297,7 @@ def write_episode_for(
             engine,
             content,
             origin="agent",
-            taint=candidate.transcript.taint,
+            inputs=candidate.transcript.inputs,
             captured="harvest",
             agent=host,
             session=session,

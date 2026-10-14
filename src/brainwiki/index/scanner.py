@@ -455,7 +455,7 @@ def _index_file(
         )
     }
     episode_cols: dict[str, Any] = dict.fromkeys(
-        ("agent", "session", "origin_turns", "device", "origin", "taint", "captured")
+        ("agent", "session", "origin_turns", "device", "origin", "inputs", "captured")
     )
     if kind in ("episode", "archived_episode", "agent_file"):
         for col in episode_cols:
@@ -468,17 +468,17 @@ def _index_file(
         if kind == "agent_file":
             episode_cols.update(
                 origin="agent",
-                taint="unknown",
+                inputs="unknown",
                 captured="file",
                 agent=rel.split("/")[2] if rel.count("/") >= 3 else None,
             )
         elif not (fm_id and is_marked(engine.brain.key, fm_id, sha)):
             # Not written by this device's write_episode(): its provenance is only a claim.
-            episode_cols.update(taint="unknown", captured="file")
+            episode_cols.update(inputs="unknown", captured="file")
             if episode_cols["origin"] == "owner":
                 episode_cols["origin"] = "agent"
-        if episode_cols["taint"] not in ("true", "false", "unknown"):
-            episode_cols["taint"] = "unknown"
+        if episode_cols["inputs"] not in ("local", "external", "unknown"):
+            episode_cols["inputs"] = "unknown"
         if episode_cols["origin"] not in ("owner", "agent", "import", "system"):
             episode_cols["origin"] = "agent"
         node_kind = "episode" if kind == "agent_file" else kind
@@ -486,7 +486,7 @@ def _index_file(
         node_kind = kind
     conn.execute(
         """INSERT INTO nodes(id, path, kind, topic, title, type, status, stage, created, updated,
-                             aliases, tags, props, line_count, fm_id, agent, session, origin_turns, device, origin, taint, captured)
+                             aliases, tags, props, line_count, fm_id, agent, session, origin_turns, device, origin, inputs, captured)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             node_id,
@@ -518,7 +518,7 @@ def _index_file(
                     "origin_turns",
                     "device",
                     "origin",
-                    "taint",
+                    "inputs",
                     "captured",
                 )
             ],
@@ -532,7 +532,7 @@ def _index_file(
         if not claim.id:
             continue
         conn.execute(
-            """INSERT OR REPLACE INTO claims(id, node_id, line, text, status, superseded_by, origin, taint, asserted_at, sources)
+            """INSERT OR REPLACE INTO claims(id, node_id, line, text, status, superseded_by, origin, inputs, asserted_at, sources)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 claim.id,
@@ -542,7 +542,7 @@ def _index_file(
                 claim.status,
                 claim.meta.get("by"),
                 claim.meta.get("origin"),
-                claim.meta.get("taint"),
+                claim.meta.get("inputs"),
                 claim.meta.get("at"),
                 json.dumps(claim.sources),
             ),

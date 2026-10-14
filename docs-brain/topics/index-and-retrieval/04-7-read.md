@@ -50,5 +50,5 @@ Every mode except `raw` starts with banners computed by §5:
 ⚠ CONFLICTS WITH "Vector-only search proposal" (unless: embeddings enabled)
 ```
 
-Claims whose `taint` is `true` or `unknown` are shown with an
+Claims whose `inputs` are `external` or `unknown` are shown with an
 `[unverified]` marker, so an agent can weigh them accordingly.

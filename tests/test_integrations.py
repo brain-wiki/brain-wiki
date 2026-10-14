@@ -247,7 +247,7 @@ def test_to_episodes_and_from_host(
     assert memory_files("claude-code") == [claude / "projects/-x/memory/prefs.md"]
     assert main(["import", "--from", "claude-code", "--apply"]) == 0
     texts = [e.read_text() for e in (brain_dir / "inbox/episodes").rglob("*.md")]
-    assert any("agent: claude-code" in t and "taint: unknown" in t for t in texts)
+    assert any("agent: claude-code" in t and "inputs: unknown" in t for t in texts)
 
 
 def test_setup_wizard_creates_brain(tmp_path: Path):

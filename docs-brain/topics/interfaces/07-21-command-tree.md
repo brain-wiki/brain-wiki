@@ -34,7 +34,7 @@ brain orphans | unresolved                               # notes nothing links t
 brain check [PATH]... [--adopt] [--allow-shrink]         # validate and record direct edits (05 §2.3)
 brain restore PATH                                       # put back the last recorded version
 
-brain log [TEXT | -] [--topic T]... [--claim C]... [--agent HOST] [--taint true|false|unknown]
+brain log [TEXT | -] [--topic T]... [--claim C]... [--agent HOST] [--inputs local|external|unknown]
 brain rule add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--out PACKET.json]

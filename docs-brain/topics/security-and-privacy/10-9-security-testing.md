@@ -13,7 +13,7 @@ bw-part_of:
 - Parser fuzzing (property-based tests) for frontmatter, claims, relations,
   links, and ops.
 - Path traversal tests for every input that becomes a path.
-- Bench injection suite: tainted episodes carrying instructions must never
+- Bench injection suite: episodes with external inputs carrying instructions must never
   produce rules, never change the `AGENTS.md` block, and must yield claims
   marked unverified ([[eval-bench|11]]).
 - Visualizer tests that render hostile titles and bodies as text.

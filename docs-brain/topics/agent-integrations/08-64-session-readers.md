@@ -12,7 +12,7 @@ bw-part_of:
 
 One reader per host lists sessions and yields normalized turns
 (`index`, `role`, `text`, `tool_name`, `tool_args_summary`, `timestamp`).
-Harvest, origin lookup, and taint detection all use it.
+Harvest, origin lookup, and input detection all use it.
 
 | Host | Where sessions live (defaults) |
 |---|---|

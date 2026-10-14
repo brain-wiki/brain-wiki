@@ -132,7 +132,7 @@ def test_health_flags(example: Path):
         "topics/search/legacy-cli.md",
         "---\nid: 01M4KT3JPSB7BP2SNSCAVC2SFC\ntitle: Legacy CLI search\n---\n"
         "# Legacy CLI search\n\n## Claims\n"
-        "- The CLI pipes results through grep. <!-- id:c-01M4KT3JPSB7BP2SNSCAVC2SFF; taint:true -->\n\n"
+        "- The CLI pipes results through grep. <!-- id:c-01M4KT3JPSB7BP2SNSCAVC2SFF; inputs:external -->\n\n"
         "## Relations\n- depends_on [[ripgrep]]\n",
     )
     write(example, "topics/search/broken.md", "---\ntitle: [unclosed\n---\n# Broken\n")

@@ -255,7 +255,7 @@ def _row_result(
         "score": score,
         "snippet": snippet,
         "via": via,
-        "taint": row["taint"] if row["kind"] in ("episode", "archived_episode") else None,
+        "inputs": row["inputs"] if row["kind"] in ("episode", "archived_episode") else None,
         "agent": (row["agent"] or ("owner" if row["origin"] == "owner" else None))
         if row["kind"] in ("episode", "archived_episode")
         else None,
@@ -642,7 +642,7 @@ def format_search_text(result: dict[str, Any], fmt: str = "text") -> str:
             snippet = " ".join(str(r["snippet"]).split())
             if r["kind"] in ("episode", "archived_episode"):
                 lines.append(
-                    f'   <untrusted-episode agent="{r.get("agent") or "unknown"}" taint="{r.get("taint") or "unknown"}">{snippet}</untrusted-episode>'
+                    f'   <untrusted-episode agent="{r.get("agent") or "unknown"}" inputs="{r.get("inputs") or "unknown"}">{snippet}</untrusted-episode>'
                 )
             else:
                 lines.append(f"   {snippet}")

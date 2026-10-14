@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 11
 
 DDL = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -38,7 +38,7 @@ CREATE TABLE nodes (
   origin_turns TEXT,
   device       TEXT,
   origin       TEXT,
-  taint        TEXT,
+  inputs        TEXT,
   captured     TEXT
 );
 CREATE INDEX nodes_topic ON nodes(topic, kind, updated);
@@ -70,14 +70,14 @@ CREATE TABLE claims (
   status        TEXT NOT NULL,
   superseded_by TEXT,
   origin        TEXT,
-  taint         TEXT,
+  inputs         TEXT,
   asserted_at   TEXT,
   sources       TEXT NOT NULL DEFAULT '[]',
   PRIMARY KEY (node_id, id)
 );
 CREATE INDEX claims_id ON claims(id);
 -- The briefing counts unverified claims; few claims are, so scanning only them is cheap.
-CREATE INDEX claims_unverified ON claims(node_id) WHERE status = 'active' AND taint IN ('true', 'unknown');
+CREATE INDEX claims_unverified ON claims(node_id) WHERE status = 'active' AND inputs IN ('external', 'unknown');
 
 CREATE TABLE edges (
   id          INTEGER PRIMARY KEY,

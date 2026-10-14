@@ -141,7 +141,7 @@ recency_half_life_days = 180
 
 [consolidate]
 review  = "auto"                            # auto (review only when checks trigger) | always
-review_tainted = false                      # route runs with tainted sources to review
+review_external = false                     # route runs with external-input sources to review
 max_episodes_per_run = 50
 max_supersede_ratio  = 0.25                 # above this, a run is routed to review (see 05)
 
@@ -288,7 +288,7 @@ retracted moves to `bw-claims-superseded`.
 claim      = text [ " " meta ]
 meta       = "{" pair *( "; " pair ) "}"
 pair       = key ": " value             ; value double-quoted when it holds ";"
-key        = "id" | "status" | "by" | "reason" | "src" | "origin" | "taint" | "at"
+key        = "id" | "status" | "by" | "reason" | "src" | "origin" | "inputs" | "at"
 ```
 
 | Key | Meaning |
@@ -299,7 +299,7 @@ key        = "id" | "status" | "by" | "reason" | "src" | "origin" | "taint" | "a
 | `reason` | Why the claim was superseded or retracted. |
 | `src` | One or more comma-separated sources: `<brain path>#L<start>-L<end>` for episode spans, `<host>:<session>#T<start>-T<end>` for turns of an agent conversation, or a URL. |
 | `origin` | `owner`, `agent`, `import`, or `system`, from the source episodes. |
-| `taint` | `true` or `unknown` when any source episode was tainted or of unknown taint. Omitted when false. |
+| `inputs` | `external` or `unknown` when any source episode had external or unknown inputs. Omitted when `local`. |
 | `at` | Date or date-time the claim was last asserted. |
 
 Choices behind the form:
@@ -496,7 +496,7 @@ bw-session: 5f2c9a1e-…           # host session id, if known
 bw-turns: 12-48                  # turns of that session this episode covers, if known
 bw-device: laptop                # device the session ran on (user config name)
 bw-origin: agent                 # owner | agent | import | system
-bw-taint: unknown                # true | false | unknown
+bw-inputs: unknown               # local | external | unknown
 bw-captured: mcp                 # mcp | harvest | cli | import | file
 bw-topics: [search]              # hints only
 bw-dedupe: claude-code:5f2c9a1e-…:12-48   # idempotency key, if the writer gave one
@@ -518,9 +518,9 @@ Rules:
 
 - Episodes are **immutable**. After creation no tool edits them. Lint
   records each episode's hash in the index and reports changes.
-- `bw-origin`, `bw-taint`, `bw-captured`, and `bw-agent` are set by the
+- `bw-origin`, `bw-inputs`, `bw-captured`, and `bw-agent` are set by the
   code path that writes the episode (MCP server, harvest, CLI, import), never
-  taken from model-written text. See [05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint).
+  taken from model-written text. See [05 §3](05-write-path-and-consolidation.md#3-provenance-and-inputs).
   Episodes written before format 2 use the names without `bw-` (and
   `origin_turns` for `bw-turns`); they are never rewritten, and readers
   accept both.
@@ -544,7 +544,7 @@ Rules:
   references still resolve.
 - Files dropped into `inbox/agents/<agent>/` by host-native memory features
   are treated as episodes by consolidation without needing frontmatter.
-  Their origin is `agent` and their taint is `unknown`. Consolidation
+  Their origin is `agent` and their inputs are `unknown`. Consolidation
   archives them to `archive/agents/<agent>/` unchanged.
 
 ## 10. Rules

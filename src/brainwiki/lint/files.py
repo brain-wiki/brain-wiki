@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from brainwiki.config.manifest import Manifest
 from brainwiki.format.document import ParsedDoc, parse_document
 from brainwiki.format.edit import replace_line_matching
-from brainwiki.format.episode import ORIGINS, TAINTS, episode_path
+from brainwiki.format.episode import INPUTS, ORIGINS, episode_path
 from brainwiki.format.fields import (
     ALIAS_KEYS,
     FIELDS,
@@ -279,7 +279,7 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                         fix=Fix("re-mint the claim id", edit),
                     )
                 )
-        if claim.meta.get("taint") in ("true", "unknown") and _INJECTION.search(claim.text):
+        if claim.meta.get("inputs") in ("external", "unknown") and _INJECTION.search(claim.text):
             problems.append(
                 Problem(
                     "BW702",
@@ -354,11 +354,9 @@ def _check_episode(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool
     if str(fm.get("origin")) not in ORIGINS:
         missing.append("origin")
         values["origin"] = "agent"
-    taint = fm.get("taint")
-    taint_text = str(taint).lower() if isinstance(taint, bool) else str(taint)
-    if taint_text not in TAINTS:
-        missing.append("taint")
-        values["taint"] = "unknown"
+    if str(fm.get("inputs")) not in INPUTS:
+        missing.append("inputs")
+        values["inputs"] = "unknown"
     if missing:
         move_to = episode_path(base, str(values["id"])) if "id" in values else None
         legacy = doc.frontmatter.legacy_fields

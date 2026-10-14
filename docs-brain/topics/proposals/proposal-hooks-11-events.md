@@ -13,7 +13,7 @@ bw-part_of:
 |---|---|---|---|---|
 | `session_start` | `SessionStart` | `SessionStart` | `PreInvocation` with `invocationNum == 0` | `agent:bootstrap` |
 | `prompt` (recall) | `UserPromptSubmit` | `UserPromptSubmit` | — (no prompt text exposed) | — |
-| `tool_used` (taint) | `PostToolUse` | `PostToolUse` | `PostToolUse` | — |
+| `tool_used` (inputs) | `PostToolUse` | `PostToolUse` | `PostToolUse` | — |
 | `stop` | `Stop` | `Stop` | `Stop` | — |
 | `pre_compact` | `PreCompact` | `PreCompact` | — | `session:compact:before` |
 | `session_end` | `SessionEnd` | `SessionEnd` | — | `command:reset` |

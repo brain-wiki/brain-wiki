@@ -15,7 +15,7 @@ bw-part_of:
 | 02 | [[brain-format\|Brain format]] | The on-disk contract: layout, manifest, notes, claims, relations, episodes, rules (normative) |
 | 03 | [[config-and-storage\|Config and storage]] | User config, multiple brains, brain selection, machine state, git, desktop sync tools |
 | 04 | [[index-and-retrieval\|Index and retrieval]] | SQLite schema, freshness, search ranking, guard co-retrieval, read, orientation |
-| 05 | [[write-path-and-consolidation\|Write path and consolidation]] | Episodes, provenance and taint, ops, consolidation backends, validation, review, undo |
+| 05 | [[write-path-and-consolidation\|Write path and consolidation]] | Episodes, provenance and inputs, ops, consolidation backends, validation, review, undo |
 | 06 | [[lint-and-reports\|Lint and reports]] | Rules, profiles, fixes, generated reports, pre-commit use |
 | 07 | [[interfaces\|Interfaces]] | CLI commands, MCP tools and schemas, agent profiles, error model |
 | 08 | [[agent-integrations\|Agent integrations]] | Plugin bundle, instruction block, `brain connect`, harvest; one page per host in `agents/` |

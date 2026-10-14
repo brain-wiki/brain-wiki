@@ -106,7 +106,7 @@ class EpisodeRef:
     id: str | None
     first_line: int
     last_line: int
-    taint: str
+    inputs: str
     origin: str
     archive_to: str
 
@@ -238,7 +238,7 @@ def _pending_episodes(engine: Engine, *, topic: str | None = None) -> list[Any]:
     """Pending episodes, oldest first."""
     reserved = _reserved_episodes(engine)
     rows = engine.db.execute(
-        """SELECT id, path, fm_id, agent, origin, taint, props, created, session, origin_turns,
+        """SELECT id, path, fm_id, agent, origin, inputs, props, created, session, origin_turns,
                   device FROM nodes WHERE kind = 'episode' ORDER BY COALESCE(fm_id, created, path)"""
     ).fetchall()
     return [
@@ -422,7 +422,7 @@ def build_packet(
             id=row["fm_id"],
             first_line=first,
             last_line=last,
-            taint=row["taint"] or "unknown",
+            inputs=row["inputs"] or "unknown",
             origin=row["origin"] or "agent",
             archive_to=_archive_path(engine, row["path"]),
         )
@@ -431,12 +431,12 @@ def build_packet(
             "agent": row["agent"],
             "created": row["created"],
             "origin": row["origin"],
-            "taint": row["taint"],
+            "inputs": row["inputs"],
             "candidates": handles,
             "origin_available": origin_available(engine, row),
             "lines": lines,
         }
-        if (row["taint"] or "unknown") != "false":
+        if (row["inputs"] or "unknown") != "local":
             entry["untrusted"] = True
         episode_entries.append(entry)
     if not packet.episodes:

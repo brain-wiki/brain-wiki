@@ -83,11 +83,11 @@ def test_cli_raw_harvest_writes_once(setup: Path, brain_dir: Path, capsys):
     episodes = list((brain_dir / "inbox" / "episodes").rglob("*.md"))
     assert len(episodes) == 1
     fm = split(episodes[0].read_text()).data
-    assert (fm["captured"], fm["session"], fm["origin_turns"], fm["taint"]) == (
+    assert (fm["captured"], fm["session"], fm["origin_turns"], fm["inputs"]) == (
         "harvest",
         "s-good",
         "1-6",
-        "false",
+        "local",
     )
     assert main(["harvest", "--from", "claude-code", "--raw", "--apply"]) == 0
     assert len(list((brain_dir / "inbox" / "episodes").rglob("*.md"))) == 1

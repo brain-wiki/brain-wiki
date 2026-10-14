@@ -20,7 +20,7 @@ and are never indexed as knowledge or injected into prompts.
 | `reports/index.md` | Counts, last consolidation, links to the other reports |
 | `reports/contradictions.md` | Active `conflicts_with` pairs, with the qualifier and note |
 | `reports/stale.md` | Active notes that depend on superseded or archived notes |
-| `reports/unverified.md` | Notes with claims of `taint` true or unknown, by count |
+| `reports/unverified.md` | Notes with claims whose `inputs` are external or unknown, by count |
 | `reports/inbox.md` | Pending episodes by age and agent; open proposals |
 | `reports/duplicates.md` | Claims citing the same source span (BW206) |
 | `reports/orphans.md` | Notes with no incoming links and not in a hub |

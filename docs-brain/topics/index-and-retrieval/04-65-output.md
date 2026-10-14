@@ -27,7 +27,7 @@ Structured result (MCP `structuredContent`; JSON from the CLI with
       "score": 11.8,
       "snippet": "…the «trigram» tokenizer needs SQLite 3.34+…",
       "via": null,
-      "taint": null,
+      "inputs": null,
       "guards": [
         {"label": "supersedes", "id": "01J8…", "title": "Use ripgrep for search",
          "path": "topics/search/ripgrep.md", "status": "superseded"}
@@ -57,5 +57,5 @@ the handle for the next call, and puts guard warnings first:
 ```
 
 Episode hits are raw and unreviewed. Their text is wrapped in an
-`<untrusted-episode agent="…" taint="…">` envelope with a one-line
+`<untrusted-episode agent="…" inputs="…">` envelope with a one-line
 reminder that it is data, not instructions ([[security-and-privacy|10]]).

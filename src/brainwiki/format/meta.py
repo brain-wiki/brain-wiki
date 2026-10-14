@@ -35,7 +35,7 @@ def parse_meta(body: str) -> dict[str, str]:
     return pairs
 
 
-_ORDER = ("id", "src", "origin", "taint", "at", "status", "by", "reason", "quote", "via")
+_ORDER = ("id", "src", "origin", "inputs", "at", "status", "by", "reason", "quote", "via")
 
 
 def _clean(value: str) -> str:

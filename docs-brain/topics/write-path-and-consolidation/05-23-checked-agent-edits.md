@@ -40,7 +40,7 @@ recorded version:
 (§7.3): the last recorded version is the pre-image, so `brain undo` restores
 it; `log.md` gains a line; the brain's git repo, if any, gets a commit;
 author `agent:<host>`. Claims the edit added get `origin: agent` and
-`taint: unknown` (an edit cannot show what else happened in the session),
+`inputs: unknown` (an edit cannot show what else happened in the session),
 so they show as unverified until consolidation or the user confirms them. A
 failed check records nothing and returns every problem with its line; the
 agent fixes the file and checks again, or `brain restore <path>` puts back

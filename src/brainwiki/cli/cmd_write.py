@@ -24,14 +24,14 @@ def log(args: Any) -> int:
     host = getattr(args, "as_host", None)
     with open_engine(args.brain, host=host) as engine:
         if args.agent:
-            origin, taint, agent = "agent", args.taint or "unknown", args.agent
+            origin, inputs, agent = "agent", args.inputs or "unknown", args.agent
         else:
-            origin, taint, agent = "owner", args.taint or "false", None
+            origin, inputs, agent = "owner", args.inputs or "local", None
         result = write_episode(
             engine,
             EpisodeContent(summary=text.strip(), claims=args.claim),
             origin=origin,
-            taint=taint,
+            inputs=inputs,
             captured="cli",
             agent=agent,
             topics=args.topic,

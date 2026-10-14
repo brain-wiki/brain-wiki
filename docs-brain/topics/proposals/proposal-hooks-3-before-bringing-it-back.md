@@ -13,7 +13,7 @@ bw-part_of:
    the recorded payloads as fixtures.
 2. Decide how users trust hooks where the host requires it (Codex `/hooks`),
    and say so in `brain connect` output.
-3. Fix taint coverage: include shell tools in the matcher, or derive taint
+3. Fix input coverage: include shell tools in the matcher, or derive inputs
    from the transcript at write time, which also covers tools hooks cannot
    see.
 4. OpenClaw hook pack (`HOOK.md` plus a small handler running

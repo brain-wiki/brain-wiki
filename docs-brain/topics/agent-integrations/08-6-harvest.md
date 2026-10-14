@@ -31,5 +31,5 @@ distill = "claude-code"         # preset for CLI harvest; "raw" for no model (th
 ## Subsections
 - [[08-61-what-gets-skipped]]: What gets skipped
 - [[08-62-modes]]: Modes (Agent integrations)
-- [[08-63-taint-detection]]: Taint detection
+- [[08-63-detecting-external-inputs]]: Detecting external inputs
 - [[08-64-session-readers]]: Session readers

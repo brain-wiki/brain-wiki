@@ -18,7 +18,7 @@ _FIELD_ORDER = (
     "origin_turns",
     "device",
     "origin",
-    "taint",
+    "inputs",
     "captured",
     "created",
     "topics",
@@ -26,7 +26,7 @@ _FIELD_ORDER = (
     "source",
 )
 ORIGINS = ("owner", "agent", "import", "system")
-TAINTS = ("true", "false", "unknown")
+INPUTS = ("local", "external", "unknown")
 CAPTURED = ("mcp", "harvest", "cli", "import", "file")
 
 

@@ -12,4 +12,4 @@ bw-part_of:
 | Code | Rule | Severity | Fix |
 |---|---|---|---|
 | BW701 | Text matches a secret pattern (API key, token, private key). | error / error | — (the user must remove and rotate it) |
-| BW702 | Instruction-like text ("ignore previous instructions", "you must now…") in a claim with `taint` ≠ `false`. | warning / warning | — |
+| BW702 | Instruction-like text ("ignore previous instructions", "you must now…") in a claim with `inputs` ≠ `local`. | warning / warning | — |

@@ -57,7 +57,7 @@ bw-claims-superseded:
 | `id` | Claim id, `c-` plus a ULID. A claim you add may omit the block; `brain_check` adds one marking it as yours and unverified. |
 | `src` | Sources, comma-separated: `<brain path>#L<start>-L<end>` for episode lines, `<host>:<session>#T<start>-T<end>` for turns of an agent conversation, or a URL. |
 | `origin` | `owner`, `agent`, `import`, or `system`. |
-| `taint` | `true` or `unknown` when a source was untrusted or unchecked; omitted when false. |
+| `inputs` | `external` or `unknown` when a source read outside content or was unchecked; omitted when `local`. |
 | `at` | Date or date-time the claim was last asserted. |
 | `by` | For a superseded claim: the id of the claim that replaced it. |
 | `status` | `retracted` for a claim that was wrong with no replacement; otherwise omitted. |
@@ -129,7 +129,7 @@ type: episode
 created: 2026-10-10T19:22:11Z
 bw-agent: claude-code
 bw-origin: agent
-bw-taint: unknown
+bw-inputs: unknown
 bw-captured: mcp
 bw-topics: [lumen]
 ---

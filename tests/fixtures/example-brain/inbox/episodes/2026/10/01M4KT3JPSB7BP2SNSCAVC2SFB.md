@@ -3,7 +3,7 @@ id: 01M4KT3JPSB7BP2SNSCAVC2SFB
 type: episode
 bw-agent: claude-code
 bw-origin: agent
-bw-taint: false
+bw-inputs: local
 bw-captured: mcp
 created: 2026-10-03T12:00:00Z
 bw-topics: [search]

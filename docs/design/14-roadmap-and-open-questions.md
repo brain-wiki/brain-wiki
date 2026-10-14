@@ -45,7 +45,7 @@ What the built code does not yet prove:
 
 | Area | Gap | Covered by |
 |---|---|---|
-| Real hosts | The Antigravity CLI (1.3.3) was run with the plugin installed: skills, MCP, rules, orientation, taint payloads, rule proposals, and the headless preset work. Claude Code, Codex, OpenClaw, and Cursor were tested only with fixtures and the SDK's clients; the build machine has none of their CLIs | T-4, T-7, T-8, T-9 (other hosts) |
+| Real hosts | The Antigravity CLI (1.3.3) was run with the plugin installed: skills, MCP, rules, orientation, tool-call payloads, rule proposals, and the headless preset work. Claude Code, Codex, OpenClaw, and Cursor were tested only with fixtures and the SDK's clients; the build machine has none of their CLIs | T-4, T-7, T-8, T-9 (other hosts) |
 | Session readers | Claude Code and Antigravity readers were checked against local transcripts (structure only); the Codex reader follows the published source, not recorded files | T-6, T-11 |
 | Marketplace start-up | The bundle's MCP server starts through online `uvx`, by choice (D23): it delayed Antigravity's brain tools by up to two minutes behind a slow index; `brain connect` is the fast path | T-10 (macOS) |
 | Performance | Every budget the perf suite measures (doc 13 §5) passes on the bench's generated 10k brain (after M12: rebuild 26.4 s, one-file update 40 ms p95, search 33 ms p95, orientation 29.9 ms p95, warm lint 0.87 s); orientation has the least margin | `brain bench perf --sizes 10k` |
@@ -58,7 +58,7 @@ These change the design or defaults. Each has a recommendation.
 | # | Question | Options | Recommendation |
 |---|---|---|---|
 | Q1 | **How should session capture work when enabled?** | — | Moot for v0.1: capture was removed with the other host hooks ([proposal](../proposals/hooks.md)); harvest covers the same sessions afterwards. |
-| Q2 | **Should tainted sources route consolidation runs to review by default?** (`review_tainted`) | false: tainted claims land marked `[unverified]`; true: every run touching web-derived episodes waits for review | false. Coding sessions use web search constantly; true would put nearly every run in review. Rules stay protected regardless. |
+| Q2 | **Should sources with external inputs route consolidation runs to review by default?** (`review_external`) | false: their claims land marked `[unverified]`; true: every run touching web-derived episodes waits for review | false. Coding sessions use web search constantly; true would put nearly every run in review. Rules stay protected regardless. |
 | Q3 | **Privacy inside a brain** | Ordered levels per topic and note with a maximum per host (shipped, then removed); a model built on who receives content | **Open:** levels were removed until a design says what each protects against ([proposal](../proposals/privacy.md)). |
 | Q4 | **Hidden guard counts** reveal that a restricted superseding or conflicting note exists. | Keep counts; hide completely | Moot until privacy returns ([proposal](../proposals/privacy.md)). |
 | Q5 | **Windows support level for v0.1** | First-class; best-effort | Best-effort (core tests in CI, no host guarantees). |

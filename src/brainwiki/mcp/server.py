@@ -504,7 +504,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
                 summary=summary, claims=list(claims), open_questions=list(open_questions)
             ),
             origin="agent",
-            taint="unknown",  # MCP cannot see the rest of the session (05 §3.2)
+            inputs="unknown",  # MCP cannot see the rest of the session (05 §3.2)
             captured="mcp",
             agent=state.host,
             session=session,

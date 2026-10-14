@@ -186,7 +186,7 @@ in [agents/](agents/):
 ## 5. Hooks
 
 None in v0.1. A session-start briefing, capture at stop and compaction,
-taint from tool hooks, and per-prompt recall were built and removed before
+input tracking from tool hooks, and per-prompt recall were built and removed before
 release: the instruction block and `brain_orient` deliver the briefing, and
 harvest recovers sessions afterwards
 ([proposal](../proposals/hooks.md)).
@@ -232,21 +232,21 @@ distill = "claude-code"         # preset for CLI harvest; "raw" for no model (th
 A per-session watermark in brain-wiki's state records the last harvested
 turn, and episode `dedupe` keys make retries harmless.
 
-### 6.3 Taint detection
+### 6.3 Detecting external inputs
 
-A session is tainted from the first time an untrusted tool runs. Default
+A session has external inputs from the first time an untrusted tool runs. Default
 untrusted tools per host are web fetch and search tools, browser tools,
 MCP tools from servers other than brain-wiki, and shell commands that fetch
 from the network (`curl`, `wget`, URLs in arguments). Harvest scans the
-transcript: episodes from tainted sessions get `bw-taint: true`, others
-`false`. Episodes written over MCP get `unknown`, because the server cannot
+transcript: episodes from such sessions get `bw-inputs: external`, others
+`local`. Episodes written over MCP get `unknown`, because the server cannot
 see the rest of the session.
 
 ### 6.4 Session readers
 
 One reader per host lists sessions and yields normalized turns
 (`index`, `role`, `text`, `tool_name`, `tool_args_summary`, `timestamp`).
-Harvest, origin lookup, and taint detection all use it.
+Harvest, origin lookup, and input detection all use it.
 
 | Host | Where sessions live (defaults) |
 |---|---|

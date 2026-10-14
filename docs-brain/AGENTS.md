@@ -30,7 +30,7 @@
 | skills-and-onboarding | topics/skills-and-onboarding/skills-and-onboarding.md | The three skills, the guided setup flow, and brain doctor --json |
 | user-guide | topics/user-guide/user-guide.md | How to install, connect, use, and maintain brain-wiki |
 | visualizer | topics/visualizer/visualizer.md | 3D brain map |
-| write-path-and-consolidation | topics/write-path-and-consolidation/write-path-and-consolidation.md | Episodes, provenance and taint, ops, consolidation backends, validation, review, undo |
+| write-path-and-consolidation | topics/write-path-and-consolidation/write-path-and-consolidation.md | Episodes, provenance and inputs, ops, consolidation backends, validation, review, undo |
 <!-- brain-wiki:end -->
 
 # brain-wiki docs

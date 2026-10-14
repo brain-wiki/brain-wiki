@@ -175,7 +175,7 @@ def _open_issues(engine: Engine, stats: dict[str, Any]) -> dict[str, int]:
     unverified = engine.db.execute(
         # CROSS JOIN starts from the few unverified claims (claims_unverified), not every note.
         """SELECT COUNT(*) FROM claims c CROSS JOIN nodes n ON n.id = c.node_id
-            WHERE c.status = 'active' AND c.taint IN ('true', 'unknown')
+            WHERE c.status = 'active' AND c.inputs IN ('external', 'unknown')
               AND n.kind IN ('note', 'hub')"""
     ).fetchone()[0]
     return {"conflicts": stats["conflicts"], "unverified_claims": unverified}

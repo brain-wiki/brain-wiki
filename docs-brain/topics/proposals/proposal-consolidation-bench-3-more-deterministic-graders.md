@@ -17,4 +17,4 @@ bw-part_of:
 | Relation precision and recall | Verb, direction, endpoints |
 | Citation faithfulness | Each written claim's anchors appear inside the episode spans it cites |
 | Specificity | Anchors dropped by `supersede_claim` (the V9 warning), per run |
-| Taint propagation | Claims from tainted episodes carry `taint`, for model runs |
+| Inputs propagation | Claims from episodes with external inputs carry `inputs`, for model runs |

@@ -24,7 +24,7 @@ bw-part_of:
 | **consolidation run** | One pass that turns pending episodes into validated operations on notes. Has an id, a record, and an undo point. |
 | **op** | One structured edit proposed by an LLM: `add_claim`, `merge_claim`, `supersede_claim`, `retract_claim`, `add_relation`, `create_note`, `create_topic`, `skip_episode`. |
 | **origin** | Who produced content: `owner` (the human), `agent`, `import`, or `system`. |
-| **taint** | Whether untrusted external content (web, email, unknown tools) influenced an episode: `true`, `false`, or `unknown`. |
+| **inputs** | Whether the writer had read content from outside the user's control (web, email, third-party tools) before writing an episode or claim: `local`, `external`, or `unknown`. |
 | **agent profile** | Per-brain settings for one host (e.g. `claude-code`): what it may write. Every host that may use a brain reads all of it; privacy inside a brain is being redesigned ([[proposal-privacy\|proposal]]). |
 | **host** | An agent application that loads brain-wiki: Claude Code, Codex, Antigravity, OpenClaw, Cursor, or a generic MCP client. |
 | **index** | The SQLite database derived from a brain; stored in the user cache directory, never inside the brain. |

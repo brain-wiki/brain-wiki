@@ -21,9 +21,9 @@ bw-part_of:
   documentation and tested with synthetic payloads.
 - **Codex skips plugin hooks until the user trusts them in `/hooks`**, and in
   the ChatGPT desktop app runs them only for manually installed plugins.
-- **Taint had gaps.** The `PostToolUse` matcher (`WebFetch|WebSearch|mcp__.*`)
+- **Input tracking had gaps.** The `PostToolUse` matcher (`WebFetch|WebSearch|mcp__.*`)
   never saw shell commands, which Claude Code and Codex report as `Bash`, and
   Codex's hosted web search does not reach tool hooks at all.
 
-Without hooks, MCP writes are recorded with `bw-taint: unknown`, which is
+Without hooks, MCP writes are recorded with `bw-inputs: unknown`, which is
 never trusted, and every rule still needs the user's confirmation.

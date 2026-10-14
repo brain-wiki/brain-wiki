@@ -57,7 +57,7 @@ def test_agent_edit_is_recorded_with_unverified_claims_and_undo(example: Path):
         assert _pending_edits(eng) == []
     text = (example / FTS5).read_text()
     assert '"Queries return in under 50 ms. {id: c-' in text
-    assert "origin: agent; taint: unknown" in text
+    assert "origin: agent; inputs: unknown" in text
     assert f"· edit · {result['run']}" in (example / "log.md").read_text()
     assert main(["undo", result["run"]]) == 0
     assert (example / FTS5).read_text() == original
@@ -73,7 +73,7 @@ def test_claims_added_to_a_format_1_note_are_stamped_in_place(example: Path):
     with _agent(example) as eng:
         assert check_edits(eng, [legacy])["status"] == "recorded"
     text = (example / legacy).read_text()
-    assert "- Old.\n- New fact. <!-- id:c-" in text and "origin:agent; taint:unknown" in text
+    assert "- Old.\n- New fact. <!-- id:c-" in text and "origin:agent; inputs:unknown" in text
 
 
 def test_deleting_or_rewording_a_claim_fails_and_restore_puts_it_back(example: Path):

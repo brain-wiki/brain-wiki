@@ -11,7 +11,7 @@ bw-part_of:
 # Hooks
 
 None in v0.1. A session-start briefing, capture at stop and compaction,
-taint from tool hooks, and per-prompt recall were built and removed before
+input tracking from tool hooks, and per-prompt recall were built and removed before
 release: the instruction block and `brain_orient` deliver the briefing, and
 harvest recovers sessions afterwards
 ([[proposal-hooks|proposal]]).

@@ -80,7 +80,7 @@ def origin_window(engine: Engine, target: str, *, turns: str | None = None) -> d
         "session": row["session"],
         "turns": f"{start}-{end}",
         "window": window,
-        "untrusted": transcript.taint != "false",
+        "untrusted": transcript.inputs != "local",
     }
 
 

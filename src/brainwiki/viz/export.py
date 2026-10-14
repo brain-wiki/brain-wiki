@@ -117,7 +117,7 @@ def _flags(engine: Engine) -> dict[str, list[str]]:
         ),
         "unverified": (
             """SELECT DISTINCT node_id FROM claims
-               WHERE status='active' AND taint IN ('true','unknown')""",
+               WHERE status='active' AND inputs IN ('external','unknown')""",
             (),
         ),
         "lint_error": (
@@ -140,7 +140,7 @@ def _claim_counts(engine: Engine) -> dict[str, dict[str, int]]:
         """SELECT node_id,
                   SUM(status='active') AS active,
                   SUM(status='superseded') AS superseded,
-                  SUM(status='active' AND taint IN ('true','unknown')) AS unverified
+                  SUM(status='active' AND inputs IN ('external','unknown')) AS unverified
            FROM claims GROUP BY node_id"""
     ).fetchall()
     return {

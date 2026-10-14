@@ -43,10 +43,10 @@ Human edits are always allowed: it is the user's brain.
 
 ### 2.1 Ways an episode is written
 
-| Writer | `origin` | `taint` | `captured` | Notes |
+| Writer | `origin` | `inputs` | `captured` | Notes |
 |---|---|---|---|---|
-| `brain log` (CLI, interactive) | `owner` | `false` | `cli` | A person typed it. |
-| `brain log --agent <id>` (scripts) | `agent` | `unknown` unless `--taint` given | `cli` | |
+| `brain log` (CLI, interactive) | `owner` | `local` | `cli` | A person typed it. |
+| `brain log --agent <id>` (scripts) | `agent` | `unknown` unless `--inputs` given | `cli` | |
 | MCP `brain_log_episode` | `agent` | `unknown` (§3.2) | `mcp` | |
 | `brain harvest` from host session stores (opt-in) | `agent` | computed from the session's tool calls (§3.2) | `harvest` | §2.2 |
 | File created directly under `inbox/episodes/` | as written if valid, else `agent`; `owner` becomes `agent` | `unknown` (forced) | `file` | Self-declared provenance is not trusted. |
@@ -82,7 +82,7 @@ All writers go through one function, `write_episode()`, which:
 The scanner trusts an episode's declared provenance only when its marker
 matches its content. Anything else under `inbox/episodes/` (written by
 hand, by another program, edited after brain-wiki wrote it, or synced from
-another device) is indexed as a file: `bw-taint: unknown`, `captured: file`,
+another device) is indexed as a file: `bw-inputs: unknown`, `captured: file`,
 and never `origin: owner`. An episode logged on another device therefore
 counts as `unknown` here; most agent episodes are `unknown` anyway, because
 an MCP write can never prove its session clean (§3.2).
@@ -96,7 +96,7 @@ which gives:
 - episodes for sessions that happened before brain-wiki was installed
   (backfill, the fastest way to give a new brain real history);
 - episodes for sessions in which the agent logged nothing;
-- exact taint, because every tool call of the session is visible.
+- exact inputs, because every tool call of the session is visible.
 
 ```
 discover ─► filter ─► route ─► extract ─► distill (or raw) ─► write episodes ─► advance watermark
@@ -107,9 +107,9 @@ discover ─► filter ─► route ─► extract ─► distill (or raw) ─�
 | Discover | A per-host session reader lists sessions with id, working directory, start and last-modified time, size, and whether it is a subagent ([08 §6.4](08-agent-integrations.md#64-session-readers)). |
 | Filter | Skip subagent sessions, brain-wiki's own headless runs, sessions idle for less than `min_idle_minutes` (still in progress), and sessions with fewer than `min_user_turns` user messages. |
 | Route | Each session belongs to the brain its working directory resolves to, using the same project files and host defaults as brain selection ([03 §3](03-config-and-storage.md#3-choosing-a-brain)) plus optional path rules in `[harvest.routes]`. Sessions that resolve to no brain are skipped, never sent to the default brain. |
-| Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Injected brain-wiki context is stripped. Secrets are scrubbed. Taint is computed from the tool calls. |
+| Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Injected brain-wiki context is stripped. Secrets are scrubbed. Inputs are computed from the tool calls. |
 | Distill | One call to the configured headless preset ([08 §7](08-agent-integrations.md#7-headless-presets)) with the distill instructions (`prompts/distill.md`): the model returns `{skip, summary, claims[{text, turns}], negative_findings, open_questions, topics}`. Long sessions are split into chunks of at most 30k tokens, one episode per chunk. With `--raw`, no model is called and the episode holds a condensed transcript excerpt instead; consolidation distills it later. |
-| Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-taint`. The dedupe key `<host>:<session>:<turn range>` makes a repeated harvest write nothing new. |
+| Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-inputs`. The dedupe key `<host>:<session>:<turn range>` makes a repeated harvest write nothing new. |
 | Watermark | `<state>/harvest/<host>/<session>.json` records the last harvested turn, so a long-running session is harvested in increments. |
 
 **Who distills.** The distill step reaches an LLM the same three ways as
@@ -117,7 +117,7 @@ consolidation:
 
 | Backend | How | Best for |
 |---|---|---|
-| `agent` (in-session recipe) | The user runs `/brain:harvest` (the `harvest` MCP prompt, or the skill's harvest section) inside a host. The agent calls `brain_harvest_prepare`; brain-wiki discovers, filters, routes, extracts, and scrubs that host's new sessions and returns a packet of condensed turns (at most 15k tokens; call again for more). The agent distills and calls `brain_harvest_apply` with one entry per session (episode content, or `skip` with a reason). The server validates turn ranges and lengths, sets every provenance field itself (including taint computed from the parsed tool calls), writes the episodes, and advances watermarks. | Regular use: the agent the user already runs does the thinking, no extra process or credentials |
+| `agent` (in-session recipe) | The user runs `/brain:harvest` (the `harvest` MCP prompt, or the skill's harvest section) inside a host. The agent calls `brain_harvest_prepare`; brain-wiki discovers, filters, routes, extracts, and scrubs that host's new sessions and returns a packet of condensed turns (at most 15k tokens; call again for more). The agent distills and calls `brain_harvest_apply` with one entry per session (episode content, or `skip` with a reason). The server validates turn ranges and lengths, sets every provenance field itself (including inputs computed from the parsed tool calls), writes the episodes, and advances watermarks. | Regular use: the agent the user already runs does the thinking, no extra process or credentials |
 | `command` (headless) | `brain harvest --apply` calls the configured preset per chunk. | Large backfills, which would exhaust a chat session's context |
 | `raw` | No model: the episode is a condensed transcript excerpt; consolidation distills later. | No model available |
 
@@ -127,7 +127,7 @@ yet (Cursor, OpenClaw, new hosts), `brain_harvest_prepare` returns
 session history with its own tools, at the user's request, and log one
 episode per session with `brain_log_episode`, passing `session` and
 `origin_turns` as hints. Those episodes are `bw-captured: mcp` with
-`bw-taint: unknown`, because neither routing nor tool use was checked by
+`bw-inputs: unknown`, because neither routing nor tool use was checked by
 brain-wiki. They are usable knowledge but can never feed rules.
 
 **When it runs.** When the user asks: the recipe in a session, or
@@ -174,7 +174,7 @@ recorded version:
 (§7.3): the last recorded version is the pre-image, so `brain undo` restores
 it; `log.md` gains a line; the brain's git repo, if any, gets a commit;
 author `agent:<host>`. Claims the edit added get `origin: agent` and
-`taint: unknown` (an edit cannot show what else happened in the session),
+`inputs: unknown` (an edit cannot show what else happened in the session),
 so they show as unverified until consolidation or the user confirms them. A
 failed check records nothing and returns every problem with its line; the
 agent fixes the file and checks again, or `brain restore <path>` puts back
@@ -207,31 +207,32 @@ pre-image.
 Agents without file tools can still update notes through episodes and
 consolidation; a combined edit-and-check tool is future work.
 
-## 3. Provenance and taint
+## 3. Provenance and inputs
 
 ### 3.1 Fields
 
 - **`origin`** says who produced the content: `owner`, `agent`, `import`,
   `system`.
-- **`taint`** says whether untrusted external content may have influenced
-  it: `true`, `false`, `unknown`. External content means anything the user
-  did not write or explicitly vouch for: web pages, search results, issue
-  trackers, email, documents from others, output of MCP servers not marked
-  trusted.
+- **`inputs`** says whether the writer had read content from outside the
+  user's control before writing, which could carry instructions (indirect
+  prompt injection): `local`, `external`, `unknown`. External content means
+  anything the user did not write or explicitly vouch for: web pages,
+  search results, issue trackers, email, documents from others, output of
+  MCP servers other than brain-wiki.
 
 They are separate because they vary independently: an agent can produce a
-summary of the user's own notes (`agent`, `false`) or of a web page
-(`agent`, `true`).
+summary of the user's own notes (`agent`, `local`) or of a web page
+(`agent`, `external`).
 
-### 3.2 How taint is determined
+### 3.2 How inputs are determined
 
 | Path | Mechanism |
 |---|---|
-| Harvest | `true` if any tool call in the harvested turn range matches the host's untrusted-tool list (web fetch and search, browser tools, MCP servers other than brain-wiki, network shell commands; [08 §6.3](08-agent-integrations.md#63-taint-detection)), else `false`; a transcript the reader cannot fully parse yields `unknown`. |
+| Harvest | `external` if any tool call in the harvested turn range matches the host's untrusted-tool list (web fetch and search, browser tools, MCP servers other than brain-wiki, network shell commands; [08 §6.3](08-agent-integrations.md#63-detecting-external-inputs)), else `local`; a transcript the reader cannot fully parse yields `unknown`. |
 | MCP | `unknown`. The MCP protocol does not tell a server what else happened in the session, and the model's own claims about it are not evidence. |
-| Human CLI | `false`. |
+| Human CLI | `local`. |
 
-`unknown` is treated like `true` everywhere it matters for safety (§3.3).
+`unknown` is treated like `external` everywhere it matters for safety (§3.3).
 This makes MCP-only hosts slightly less convenient (their episodes need
 review before becoming rules, which they never could anyway) and keeps
 the guarantee simple.
@@ -239,9 +240,9 @@ the guarantee simple.
 ### 3.3 Invariants
 
 1. **No promotion to directives.** Nothing derived from content with
-   `taint` ≠ `false` is ever written to `rules.md` or the managed block of
+   `inputs` ≠ `local` is ever written to `rules.md` or the managed block of
    `AGENTS.md`. Consolidation cannot write either file at all.
-2. **Taint propagates.** A claim's `taint` is the worst taint of its
+2. **Inputs propagate.** A claim's `inputs` is the worst value of its
    source episodes, recorded in the claim metadata and shown as
    `[unverified]` in reads.
 3. **Untrusted text is framed as data.** Episodes returned by search or
@@ -326,7 +327,7 @@ Handles replace paths and ids so models never copy long identifiers:
   ],
   "episodes": [
     {"handle": "E1", "agent": "claude-code", "created": "2026-10-10T19:22:11Z",
-     "origin": "agent", "taint": "unknown", "candidates": ["N2"],
+     "origin": "agent", "inputs": "unknown", "candidates": ["N2"],
      "origin_available": true,
      "lines": ["1| Switched the search path to FTS5 after …", "2| …"]}
   ]
@@ -478,7 +479,7 @@ Semantics (what the deterministic writer does):
 
 | Op | Effect on disk |
 |---|---|
-| `add_claim` | Appends `"text {id; src; origin; taint; at}"` to the note's `bw-claims`. |
+| `add_claim` | Appends `"text {id; src; origin; inputs; at}"` to the note's `bw-claims`. |
 | `merge_claim` | Adds the new sources to the claim's `src` and updates `at`. The text is unchanged. |
 | `supersede_claim` | Puts the new claim in the old one's place in `bw-claims` and moves the old one to `bw-claims-superseded` with `by: <new id>`, the reason, and the date. |
 | `retract_claim` | Moves the claim to `bw-claims-superseded` with `status: retracted` and the reason, citing sources that show it was wrong. |
@@ -524,7 +525,7 @@ Budget overflow is an error that tells the user which rules are longest.
 | V7 | Completeness: episodes neither cited nor skipped. | Not an error: they stay pending and the run reports them. |
 | V8 | **Supersession ratio**: for a note with ≥ 4 active claims, superseded + retracted in this run ÷ active before > `max_supersede_ratio`. | Run is routed to review. |
 | V9 | **Specificity warning**: a superseding claim drops anchors (numbers, dates, versions, URLs, code spans, wikilinks) that appear in the old claim. | Warning in the run record and review file. Not blocking: changing a value is the point of superseding, and the old text is kept. |
-| V10 | Any touched topic has `review = "always"`, or sources include `taint` ≠ `false` and `review_tainted = true` (default `false`). | Run is routed to review. |
+| V10 | Any touched topic has `review = "always"`, or sources include `inputs` ≠ `local` and `review_external = true` (default `false`). | Run is routed to review. |
 | V11 | Lint (strict) on every touched file after the in-memory apply; errors already present before the run do not count. | Invalid; nothing is written. |
 
 **Why not a content-loss threshold on whole files?** Because the writer

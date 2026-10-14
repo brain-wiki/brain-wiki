@@ -25,7 +25,7 @@ description = "SQLite schema, freshness, search ranking, guard co-retrieval, rea
 
 [topics.write-path-and-consolidation]
 title = "Write path and consolidation"
-description = "Episodes, provenance and taint, ops, consolidation backends, validation, review, undo"
+description = "Episodes, provenance and inputs, ops, consolidation backends, validation, review, undo"
 
 [topics.lint-and-reports]
 title = "Lint and reports"

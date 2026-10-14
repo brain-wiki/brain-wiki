@@ -16,8 +16,8 @@ Of particular interest:
   without the user's confirmation;
 - profile or host limits that let an agent write what its profile does not
   allow, or use a brain it is not allowed to;
-- an episode or edit that passes as the user's own, or as untainted, when it
-  is not;
+- an episode or edit that passes as the user's own, or as having only local
+  inputs, when it is not;
 - secrets that reach a brain despite redaction;
 - path traversal from any input that becomes a file path;
 - the local visualizer server being reachable or writable from elsewhere;

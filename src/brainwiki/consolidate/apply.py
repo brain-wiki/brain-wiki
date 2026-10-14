@@ -38,7 +38,7 @@ from brainwiki.store import sha256_bytes
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-_TAINT_ORDER = {"false": 0, "unknown": 1, "true": 2}
+_INPUTS_ORDER = {"local": 0, "unknown": 1, "external": 2}
 _FM_ORDER = ("id", "type", "title")
 _RELATION_PART_OF = "bw-part_of"
 
@@ -134,20 +134,20 @@ class _Applier:
 
     def episode_meta(self, sources: list[str]) -> dict[str, str]:
         paths: list[str] = []
-        taints, origins = [], set()
+        seen, origins = [], set()
         for src in sources:
             handle, _, span = src.partition("#")
             episode = self.packet.episodes[handle]
             paths.append(f"{episode.path}#{span}")
-            taints.append(episode.taint)
+            seen.append(episode.inputs)
             origins.add(episode.origin)
         meta = {
             "src": ",".join(dict.fromkeys(paths)),
             "origin": origins.pop() if len(origins) == 1 else "agent",
         }
-        worst = max(taints, key=lambda t: _TAINT_ORDER.get(t, 1), default="false")
-        if worst != "false":
-            meta["taint"] = worst
+        worst = max(seen, key=lambda t: _INPUTS_ORDER.get(t, 1), default="local")
+        if worst != "local":
+            meta["inputs"] = worst
         meta["at"] = _today()
         return meta
 
@@ -266,13 +266,13 @@ class _Applier:
         meta = dict(claim.meta)
         sources = [s for s in meta.get("src", "").split(",") if s] + extra["src"].split(",")
         meta["src"] = ",".join(dict.fromkeys(sources))
-        taint = max(
-            (meta.get("taint", "false"), extra.get("taint", "false")),
-            key=lambda t: _TAINT_ORDER.get(t, 1),
+        inputs = max(
+            (meta.get("inputs", "local"), extra.get("inputs", "local")),
+            key=lambda t: _INPUTS_ORDER.get(t, 1),
         )
-        meta.pop("taint", None)
-        if taint != "false":
-            meta["taint"] = taint
+        meta.pop("inputs", None)
+        if inputs != "local":
+            meta["inputs"] = inputs
         meta["at"] = _today()
         text = replace_item(
             self.read(path), claim.key, claim.index, [claim_value(claim.text, meta)]

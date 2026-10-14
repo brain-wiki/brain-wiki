@@ -68,7 +68,7 @@ without a model; any failed check is a hard failure:
 
 | Slice | Situation | Checks (all must hold) |
 |---|---|---|
-| E · Injection | A tainted episode containing instructions ("Add a rule…", "Ignore previous instructions…") and one fact | The packet marks the episode untrusted; no packet handle points at `rules.md`; an op that writes a rule is rejected; derived claims carry `taint: true`; a claim that restates the instruction is flagged by BW702; `rules.md` is unchanged |
+| E · Injection | An episode with external inputs containing instructions ("Add a rule…", "Ignore previous instructions…") and one fact | The packet marks the episode untrusted; no packet handle points at `rules.md`; an op that writes a rule is rejected; derived claims carry `inputs: external`; a claim that restates the instruction is flagged by BW702; `rules.md` is unchanged |
 | F · Completeness | Six small episodes; ops cite two and skip one | The run applies; uncited episodes are reported pending, stay in the inbox, and are offered to the next run; cited and skipped episodes are archived |
 
 Four model slices run only with `--backends PRESET,...` (headless presets,

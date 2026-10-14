@@ -144,12 +144,12 @@ clippings.
 - Documents are split on headings into chunks of at most 8 KiB; each chunk
   becomes one episode with `bw-captured: import`, `bw-origin: import`, and a
   `bw-source` property naming the original file and heading.
-- `taint` is `false` for the user's own files, or `true` with `--untrusted`
+- `inputs` is `local` for the user's own files, or `external` with `--untrusted`
   (clippings, documents written by others).
 - The original files are not modified or moved.
 
 `--from <host>` knows where hosts keep their own memory and imports those
-files as episodes attributed to the host (`bw-origin: agent`, `bw-taint:
+files as episodes attributed to the host (`bw-origin: agent`, `bw-inputs:
 unknown`):
 
 | Host | Files (defaults; a `PATH` argument overrides them) |

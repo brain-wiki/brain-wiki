@@ -21,7 +21,7 @@ bw-part_of:
 | V7 | Completeness: episodes neither cited nor skipped. | Not an error: they stay pending and the run reports them. |
 | V8 | **Supersession ratio**: for a note with ≥ 4 active claims, superseded + retracted in this run ÷ active before > `max_supersede_ratio`. | Run is routed to review. |
 | V9 | **Specificity warning**: a superseding claim drops anchors (numbers, dates, versions, URLs, code spans, wikilinks) that appear in the old claim. | Warning in the run record and review file. Not blocking: changing a value is the point of superseding, and the old text is kept. |
-| V10 | Any touched topic has `review = "always"`, or sources include `taint` ≠ `false` and `review_tainted = true` (default `false`). | Run is routed to review. |
+| V10 | Any touched topic has `review = "always"`, or sources include `inputs` ≠ `local` and `review_external = true` (default `false`). | Run is routed to review. |
 | V11 | Lint (strict) on every touched file after the in-memory apply; errors already present before the run do not count. | Invalid; nothing is written. |
 
 **Why not a content-loss threshold on whole files?** Because the writer

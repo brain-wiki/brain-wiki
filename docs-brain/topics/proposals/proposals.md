@@ -28,7 +28,7 @@ Generated from `docs/proposals/`.
     - [[proposal-hooks-11-events]]: Events
     - [[proposal-hooks-12-outputs]]: Outputs
     - [[proposal-hooks-13-capture]]: Capture
-    - [[proposal-hooks-14-taint-from-hooks]]: Taint from hooks
+    - [[proposal-hooks-14-inputs-from-hooks]]: Inputs from hooks
     - [[proposal-hooks-15-rules-for-every-hook]]: Rules for every hook
   - [[proposal-hooks-2-why-it-was-removed]]: Why it was removed (Host hooks: briefing, capture, and recall)
   - [[proposal-hooks-3-before-bringing-it-back]]: Before bringing it back

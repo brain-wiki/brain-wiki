@@ -12,8 +12,8 @@ from brainwiki.config.dirs import brain_state_dir
 from brainwiki.errors import UsageError
 from brainwiki.format.episode import (
     CAPTURED,
+    INPUTS,
     ORIGINS,
-    TAINTS,
     EpisodeContent,
     episode_path,
     now_iso,
@@ -111,7 +111,7 @@ def write_episode(
     content: EpisodeContent,
     *,
     origin: str,
-    taint: str,
+    inputs: str,
     captured: str,
     agent: str | None = None,
     session: str | None = None,
@@ -122,7 +122,7 @@ def write_episode(
     source: str | None = None,
 ) -> EpisodeResult:
     """Write one immutable episode. Provenance comes from the caller's code path, never from text."""
-    if origin not in ORIGINS or taint not in TAINTS or captured not in CAPTURED:
+    if origin not in ORIGINS or inputs not in INPUTS or captured not in CAPTURED:
         raise UsageError("invalid provenance values")
     for name, value in (
         ("agent", agent),
@@ -165,7 +165,7 @@ def write_episode(
         "origin_turns": origin_turns,
         "device": device or engine.user.device_name,
         "origin": origin,
-        "taint": taint,
+        "inputs": inputs,
         "captured": captured,
         "created": now_iso(),
         "topics": hints,

@@ -1,6 +1,6 @@
 """Session readers: one per host, all yielding normalized turns (design doc 08 §6.4).
 
-Raw capture, harvest, origin lookup, and taint detection all read sessions through these.
+Harvest, origin lookup, and input detection all read sessions through these.
 Readers are defensive: a line they cannot parse is skipped and counted, never fatal, and they
 never write to a host's files.
 """
@@ -71,10 +71,10 @@ class Transcript:
         return not self.total_lines or self.unparsed / self.total_lines < _UNREADABLE_RATIO
 
     @property
-    def taint(self) -> str:
+    def inputs(self) -> str:
         if not self.readable:
             return "unknown"
-        return "true" if self.untrusted_tools else "false"
+        return "external" if self.untrusted_tools else "local"
 
     def user_turns(self) -> int:
         return sum(1 for t in self.turns if t.role == "user")
@@ -98,7 +98,7 @@ def strip_injected(text: str) -> str:
 
 
 def normalize_call(host: str, name: str, args: Any) -> tuple[str, Any]:
-    """Map a host's generic MCP call onto the `mcp_<server>_<tool>` names the taint rules use.
+    """Map a host's generic MCP call onto the `mcp_<server>_<tool>` names the untrusted-tool rules use.
 
     Antigravity reports every MCP call as `call_mcp_tool` with the server in its arguments, and
     names plugin servers `<plugin>_<server>` (e.g. `brain-wiki_brain-wiki`).

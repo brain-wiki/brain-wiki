@@ -33,7 +33,7 @@ ALIAS_KEYS = {f"{PREFIX}{alias}": alias for alias in ALIASES}
 FIELDS = {
     "stage": "bw-stage",
     "origin": "bw-origin",
-    "taint": "bw-taint",
+    "inputs": "bw-inputs",
     "agent": "bw-agent",
     "session": "bw-session",
     "origin_turns": "bw-turns",
@@ -45,9 +45,9 @@ FIELDS = {
 }
 _NOTE_FIELDS = ("stage",)  # the unprefixed names a note may still use (format 1)
 KNOWN = {CLAIMS, SUPERSEDED, *RELATION_KEYS, *FIELDS.values()}
-_META_KEYS = {"id", "src", "origin", "taint", "at", "status", "by", "reason", "quote", "via"}
+_META_KEYS = {"id", "src", "origin", "inputs", "at", "status", "by", "reason", "quote", "via"}
 _META_TAIL = re.compile(r"\s*\{(?P<body>[^{}]*)\}\s*$")
-_ORDER = ("id", "status", "by", "reason", "src", "origin", "taint", "at")
+_ORDER = ("id", "status", "by", "reason", "src", "origin", "inputs", "at")
 # Characters outside YAML's printable set (YAML 1.1 §5.1), as PyYAML's reader checks them.
 _NOT_YAML = re.compile("[^\x09\x0a\x0d\x20-\x7e\x85\xa0-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]")
 

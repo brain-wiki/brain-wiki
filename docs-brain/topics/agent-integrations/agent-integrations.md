@@ -21,7 +21,7 @@ Generated from `docs/design/08-agent-integrations.md`.
 - [[08-6-harvest]]: Harvest
   - [[08-61-what-gets-skipped]]: What gets skipped
   - [[08-62-modes]]: Modes (Agent integrations)
-  - [[08-63-taint-detection]]: Taint detection
+  - [[08-63-detecting-external-inputs]]: Detecting external inputs
   - [[08-64-session-readers]]: Session readers
 - [[08-7-headless-presets]]: Headless presets
 - [[08-8-brain-connect]]: `brain connect`

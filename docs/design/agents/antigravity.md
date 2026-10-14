@@ -41,7 +41,7 @@ the `agy` CLI. The cross-host mechanics are in
   the full one. The working directory comes from the app's
   `conversation_summaries.db`, which the CLI also writes since 1.3. Every
   MCP call appears as `call_mcp_tool` with `ServerName`; the reader renames
-  it to `mcp_<server>_<tool>` before the taint rules (T-3).
+  it to `mcp_<server>_<tool>` before the untrusted-tool rules (T-3).
 - Headless runs cannot drop tools, and a denied tool call ends the turn
   with no output, so the preset's prompt starts by saying not to use tools
   (T-5). `--json-schema` drops undeclared fields, so the preset relies on

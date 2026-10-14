@@ -113,7 +113,7 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
                 engine,
                 EpisodeContent(summary="brain-wiki setup check: zanzibar marmalade."),
                 origin="system",
-                taint="false",
+                inputs="local",
                 captured="cli",
             )
             found = any(

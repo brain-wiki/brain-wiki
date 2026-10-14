@@ -16,7 +16,7 @@ enabled = true
 hosts   = ["claude-code", "antigravity"]
 mode    = "prompted"            # prompted | raw | both
 min_turns = 5                   # prompted: only ask after this many turns
-untrusted_tools = []            # extra tool-name patterns that taint a session
+untrusted_tools = []            # extra tool-name patterns that count as external inputs
 trusted_mcp_servers = ["brain-wiki"]
 ```
 
@@ -25,6 +25,6 @@ trusted_mcp_servers = ["brain-wiki"]
 | `prompted` | At the first `stop` after `min_turns`, the hook asked the agent once, through the host's "continue with reason" output, to call `brain_log_episode` with durable learnings, or to do nothing | One short extra turn per session |
 | `raw` | At `pre_compact` and `session_end` (and `stop` for Antigravity), the hook read the transcript since the last capture point and wrote one episode with `bw-captured: hook` | No model call; consolidation distills |
 
-Capture points and taint were kept per session in
+Capture points and inputs were kept per session in
 `<state>/sessions/<host>/<id>.json`. `BRAIN_WIKI_INTERNAL=1`, set for
 brain-wiki's own headless runs, made every hook exit at once.

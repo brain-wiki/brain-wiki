@@ -15,7 +15,7 @@ changes, in the same change as the code, and the proposal is deleted.
 | [Consolidation bench, full design](consolidation-bench.md) | Designed, partly built (doc 11 has the built part) | About 20 scenarios in files, harvest-distillation slice, more graders, an optional LLM judge, multi-model agreement metrics, `brain bench capture`, the `agent` suite |
 | [Public memory benchmarks](public-benchmarks.md) | Designed, not scheduled | Bench adapters for LongMemEval and similar; probe coverage as a consolidation metric |
 | [Scheduled maintenance](scheduled-maintenance.md) | Built, then removed before 0.1; needs rethinking | Routine templates for hosts' schedulers and OS schedulers; a headless consolidation backend; one consolidation device |
-| [Host hooks](hooks.md) | Built, then removed before 0.1; needs real-host verification | `brain hook`: the briefing injected at session start, capture at stop and compaction, taint from tool hooks, per-prompt recall |
+| [Host hooks](hooks.md) | Built, then removed before 0.1; needs real-host verification | `brain hook`: the briefing injected at session start, capture at stop and compaction, input tracking from tool hooks, per-prompt recall |
 
 ## Backlog
 

@@ -18,9 +18,9 @@ brain, a set of episodes, and expectations.
 | B · Non-destructive merge | A rich note plus an episode confirming two facts and adding one | `merge_claim` for the confirmations, `add_claim` for the new fact; every prior anchor remains in the active view |
 | C · Update and contradiction | Two episodes where the second reverses a decision | Dependents appear in the stale report; "why did we change?" remains answerable from the note |
 | D · Relations | Episodes stating dependencies and replacements between notes | Expected verbs and directions for replacements too |
-| E · Injection | Tainted episodes containing instructions, run through real models | No claim restates an instruction as a directive |
+| E · Injection | Episodes with external inputs containing instructions, run through real models | No claim restates an instruction as a directive |
 | F · Completeness | Many small episodes, some trivial, run through real models | Every episode is cited or skipped with a reason |
-| G · Harvest distillation | Synthetic transcripts in each supported host's format, mixing durable decisions, dead ends, debugging noise, a web fetch, and an injected instruction in tool output | Episode claims cover the decisions and negative findings with correct turn ranges; noise produces nothing; `bw-taint: true`; no claim restates the injected instruction; subagent and in-progress sessions are skipped |
+| G · Harvest distillation | Synthetic transcripts in each supported host's format, mixing durable decisions, dead ends, debugging noise, a web fetch, and an injected instruction in tool output | Episode claims cover the decisions and negative findings with correct turn ranges; noise produces nothing; `bw-inputs: external`; no claim restates the injected instruction; subagent and in-progress sessions are skipped |
 
 ## 2. Scenario format
 
@@ -45,7 +45,7 @@ bench/scenarios/<slice>/<id>/
 | Relation precision and recall | Verb, direction, endpoints |
 | Citation faithfulness | Each written claim's anchors appear inside the episode spans it cites |
 | Specificity | Anchors dropped by `supersede_claim` (the V9 warning), per run |
-| Taint propagation | Claims from tainted episodes carry `taint`, for model runs |
+| Inputs propagation | Claims from episodes with external inputs carry `inputs`, for model runs |
 
 ## 4. Optional judge
 
@@ -92,7 +92,7 @@ on a fixture brain: ask about a decision that was later superseded and
 check that the answer states the current decision; ask the agent to
 remember something and check that an episode appears with the right
 provenance; run the `harvest` recipe over fixture sessions and check the
-episodes, their turn ranges, and that taint came from the server's parse
+episodes, their turn ranges, and that inputs came from the server's parse
 rather than the model; run guided onboarding on a fresh home directory
 and check the end state and that every write was preceded by a dry run;
 check skill triggering with should-trigger and near-miss prompts

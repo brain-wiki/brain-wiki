@@ -98,8 +98,8 @@ def validate(engine: Engine, packet: Packet, payload: Any) -> Validation:
                 )
                 continue
             result.cited.add(handle)
-            if episode.taint != "false" and manifest.consolidate.review_tainted:
-                result.review.append(f"{handle} is unverified and review_tainted is on")
+            if episode.inputs != "local" and manifest.consolidate.review_external:
+                result.review.append(f"{handle} is unverified and review_external is on")
 
     def check_text(index: int, text: str, what: str = "claim text") -> None:
         if "\n" in text or "\r" in text:

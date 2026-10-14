@@ -74,7 +74,7 @@ Semantics (what the deterministic writer does):
 
 | Op | Effect on disk |
 |---|---|
-| `add_claim` | Appends `"text {id; src; origin; taint; at}"` to the note's `bw-claims`. |
+| `add_claim` | Appends `"text {id; src; origin; inputs; at}"` to the note's `bw-claims`. |
 | `merge_claim` | Adds the new sources to the claim's `src` and updates `at`. The text is unchanged. |
 | `supersede_claim` | Puts the new claim in the old one's place in `bw-claims` and moves the old one to `bw-claims-superseded` with `by: <new id>`, the reason, and the date. |
 | `retract_claim` | Moves the claim to `bw-claims-superseded` with `status: retracted` and the reason, citing sources that show it was wrong. |

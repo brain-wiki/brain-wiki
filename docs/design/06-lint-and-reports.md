@@ -109,7 +109,7 @@ can repair it safely.
 |---|---|---|---|
 | BW501 | Episode changed after it was created (compared with the first hash the index saw; runs that edit an episode update it). | error / error | — |
 | BW502 | Episode path does not match `YYYY/MM/<ulid>.md` for its id. | error / warning | move it |
-| BW503 | Episode lacks required provenance fields. | error / warning | fill `bw-origin: agent`, `bw-taint: unknown` |
+| BW503 | Episode lacks required provenance fields. | error / warning | fill `bw-origin: agent`, `bw-inputs: unknown` |
 | BW504 | A proposal references an episode that no longer exists. | warning / warning | — |
 | BW505 | Episodes pending longer than `lint.stale_inbox_days` (default 14). | info / info | — |
 
@@ -126,7 +126,7 @@ can repair it safely.
 | Code | Rule | Severity | Fix |
 |---|---|---|---|
 | BW701 | Text matches a secret pattern (API key, token, private key). | error / error | — (the user must remove and rotate it) |
-| BW702 | Instruction-like text ("ignore previous instructions", "you must now…") in a claim with `taint` ≠ `false`. | warning / warning | — |
+| BW702 | Instruction-like text ("ignore previous instructions", "you must now…") in a claim with `inputs` ≠ `local`. | warning / warning | — |
 
 ## 4. How lint works
 
@@ -199,7 +199,7 @@ and are never indexed as knowledge or injected into prompts.
 | `reports/index.md` | Counts, last consolidation, links to the other reports |
 | `reports/contradictions.md` | Active `conflicts_with` pairs, with the qualifier and note |
 | `reports/stale.md` | Active notes that depend on superseded or archived notes |
-| `reports/unverified.md` | Notes with claims of `taint` true or unknown, by count |
+| `reports/unverified.md` | Notes with claims whose `inputs` are external or unknown, by count |
 | `reports/inbox.md` | Pending episodes by age and agent; open proposals |
 | `reports/duplicates.md` | Claims citing the same source span (BW206) |
 | `reports/orphans.md` | Notes with no incoming links and not in a hub |

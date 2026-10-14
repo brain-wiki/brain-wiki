@@ -92,7 +92,7 @@ def _unverified(engine: Engine) -> str:
         f"- {_link(r['path'], r['title'])}: {r['c']} unverified claim{'s' if r['c'] != 1 else ''}"
         for r in engine.db.execute(
             """SELECT n.path, n.title, COUNT(*) AS c FROM claims c JOIN nodes n ON n.id = c.node_id
-               WHERE c.taint IN ('true', 'unknown') AND c.status = 'active'
+               WHERE c.inputs IN ('external', 'unknown') AND c.status = 'active'
                GROUP BY n.id ORDER BY c DESC, n.path"""
         )
     ]

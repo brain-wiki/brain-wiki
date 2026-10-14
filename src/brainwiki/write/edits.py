@@ -261,7 +261,7 @@ def _stamp_claims(data: bytes, claims: list[Claim]) -> bytes:
         meta = dict(claim.meta)
         meta.setdefault("id", claim_id())
         meta.setdefault("origin", "agent")
-        meta.setdefault("taint", "unknown")
+        meta.setdefault("inputs", "unknown")
         meta.setdefault("at", today)
         if claim.key is not None:
             text = replace_item(text, claim.key, claim.index, [claim_value(claim.text, meta)])

@@ -77,7 +77,7 @@ class SearchCfg:
 @dataclass
 class ConsolidateCfg:
     review: str = "auto"
-    review_tainted: bool = False
+    review_external: bool = False
     max_episodes_per_run: int = 50
     max_supersede_ratio: float = 0.25
 
