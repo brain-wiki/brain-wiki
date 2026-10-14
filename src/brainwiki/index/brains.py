@@ -96,7 +96,9 @@ def format_brain_list(result: dict[str, Any], *, owner: bool = False) -> str:
     for r in rows:
         mark = "*" if r.get("default_here") else " "
         if not r["ok"]:
-            lines.append(f"{mark} {r['name']:<{width}}  (missing: {r.get('error', 'unreadable')})")
+            lines.append(
+                f"{mark} {r['name']:<{width}}  (unavailable: {r.get('error', 'unreadable')})"
+            )
             continue
         description = (r["description"] or "")[:desc_width]
         stats = [

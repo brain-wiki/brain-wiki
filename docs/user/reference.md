@@ -38,8 +38,9 @@ command's options.
 | `brain bench [SUITE…] [--sizes 1k,10k] [--backends …]` | Evaluation bench |
 | `brain hook HOST EVENT`, `brain mcp [--host HOST]` | Used by agent hosts |
 
-Exit codes: 0 success; 1 problems found (lint errors, invalid ops); 2 usage;
-3 not found; 4 conflict (stale, lock); 5 forbidden by a profile.
+Exit codes: 0 success; 1 problems found (lint errors, invalid ops) or a path
+that cannot be read or written; 2 usage; 3 not found; 4 conflict (stale,
+lock); 5 forbidden by a profile.
 
 ## Files
 

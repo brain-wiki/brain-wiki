@@ -132,7 +132,7 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `-q`, `-v`.
 | Code | Meaning |
 |---|---|
 | 0 | Success |
-| 1 | The command ran and found problems (lint errors, invalid ops, review required) |
+| 1 | The command ran and found problems (lint errors, invalid ops, review required), or a path could not be read or written (`os_error`) |
 | 2 | Usage error |
 | 3 | Not found (brain, note, run) |
 | 4 | Conflict (stale packet, files changed since run, lock timeout) |

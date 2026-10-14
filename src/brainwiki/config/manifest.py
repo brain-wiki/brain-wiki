@@ -179,19 +179,60 @@ class Manifest:
         return self.lint.profile
 
 
+def _checked(where: str, value: Any, default: Any, annotation: str = "") -> Any:
+    """`value` if it has the type of the setting's default; floats also take integers."""
+    if isinstance(default, bool):
+        ok, kind = isinstance(value, bool), "true or false"
+    elif isinstance(default, int):
+        ok, kind = isinstance(value, int) and not isinstance(value, bool), "a whole number"
+    elif isinstance(default, float):
+        ok, kind = isinstance(value, int | float) and not isinstance(value, bool), "a number"
+        value = float(value) if ok else value
+    elif isinstance(default, str):
+        ok, kind = isinstance(value, str), "a string"
+    elif isinstance(default, list):
+        ok = isinstance(value, list) and all(isinstance(v, str) for v in value)
+        kind = "a list of strings"
+    elif isinstance(default, dict):
+        numbers = annotation.endswith("float]")
+        kind = "a table of numbers" if numbers else "a table of strings"
+        ok = isinstance(value, dict) and all(
+            (isinstance(v, int | float) and not isinstance(v, bool))
+            if numbers
+            else isinstance(v, str)
+            for v in value.values()
+        )
+    else:
+        ok, kind = True, ""
+    if not ok:
+        raise FormatError(f"brain.toml: {where} must be {kind}, not {value!r}")
+    return value
+
+
 def _section(cls: type, raw: Any, name: str, unknown: list[str]) -> Any:
     if raw is None:
         return cls()
     if not isinstance(raw, dict):
         raise FormatError(f"[{name}] must be a table")
-    known = set(cls.__dataclass_fields__)
+    fields = cls.__dataclass_fields__
+    defaults = cls()
     kwargs = {}
     for key, value in raw.items():
-        if key in known:
-            kwargs[key] = value
+        if key in fields:
+            kwargs[key] = _checked(
+                f"{name}.{key}", value, getattr(defaults, key), str(fields[key].type)
+            )
         else:
             unknown.append(f"{name}.{key}")
     return cls(**kwargs)
+
+
+def _table(where: str, value: Any) -> dict[str, Any]:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise FormatError(f"[{where}] must be a table")
+    return value
 
 
 def parse_manifest(text: str) -> Manifest:
@@ -202,16 +243,20 @@ def parse_manifest(text: str) -> Manifest:
     unknown = [k for k in data if k not in _TOP_LEVEL]
     if "format" not in data or "id" not in data:
         raise FormatError("brain.toml must define 'format' and 'id'")
-    fmt = int(data["format"])
+    fmt = _checked("format", data["format"], 0)
+    for key in ("id", "name", "description"):
+        if key in data:
+            _checked(key, data[key], "")
     sections = {
         name: _section(cls, data.get(name), name, unknown) for name, cls in _SECTIONS.items()
     }
     topics: dict[str, TopicCfg] = {}
     layout: Layout = sections["layout"]
-    for slug, raw in (data.get("topics") or {}).items():
-        if not isinstance(raw, dict):
-            raise FormatError(f"[topics.{slug}] must be a table")
+    for slug, raw in _table("topics", data.get("topics")).items():
+        raw = _table(f"topics.{slug}", raw)
         unknown += [f"topics.{slug}.{k}" for k in raw if k not in _TOPIC_KEYS]
+        for key in _TOPIC_KEYS & set(raw):
+            _checked(f"topics.{slug}.{key}", raw[key], "")
         topics[slug] = TopicCfg(
             slug=slug,
             path=str(raw.get("path", f"{layout.topics_dir}/{slug}")).rstrip("/"),
@@ -219,22 +264,27 @@ def parse_manifest(text: str) -> Manifest:
             title=raw.get("title"),
             description=raw.get("description"),
             review=raw.get("review"),
-            agent_edits=str(raw["agent_edits"]) if "agent_edits" in raw else None,
+            agent_edits=raw.get("agent_edits"),
         )
-    agents = {str(k): dict(v) for k, v in (data.get("agents") or {}).items() if isinstance(v, dict)}
-    for name, raw in agents.items():
+    agents: dict[str, dict[str, Any]] = {}
+    for name, raw in _table("agents", data.get("agents")).items():
+        raw = _table(f"agents.{name}", raw)
         unknown += [f"agents.{name}.{k}" for k in raw if k not in _AGENT_KEYS]
-    manifest = Manifest(
+        if "write" in raw:
+            _checked(f"agents.{name}.write", raw["write"], [])
+        if "read_origin" in raw:
+            _checked(f"agents.{name}.read_origin", raw["read_origin"], False)
+        agents[str(name)] = dict(raw)
+    return Manifest(
         format=fmt,
-        id=str(data["id"]),
+        id=data["id"],
         name=data.get("name"),
-        description=str(data["description"]) if data.get("description") else None,
+        description=data.get("description") or None,
         topics=topics,
         agents=agents,
         unknown_keys=unknown,
         **sections,
     )
-    return manifest
 
 
 def load_manifest(root: Path) -> Manifest:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+import sqlite3
 from datetime import UTC, date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -266,6 +267,11 @@ _ORDER_BY = {
 }
 
 
+def _fts_rejected(exc: sqlite3.OperationalError) -> bool:
+    """FTS refused the query itself (a syntax edge case), as opposed to a locked or broken database."""
+    return "database" not in str(exc).lower()
+
+
 def search(
     engine: Engine,
     query: str = "",
@@ -417,7 +423,9 @@ def _query(
             return seen
         try:
             return count(match, table)
-        except Exception:  # noqa: BLE001 - see run()
+        except sqlite3.OperationalError as exc:  # see run()
+            if not _fts_rejected(exc):
+                raise
             return 0
 
     def run(
@@ -439,7 +447,9 @@ def _query(
                     f"SELECT rowid AS rid, {bm25} AS rank FROM {table} WHERE {table} MATCH ? ORDER BY rank LIMIT ? OFFSET ?",  # noqa: S608
                     (match, batch, offset_),
                 ).fetchall()
-            except Exception:  # an FTS syntax edge case must never fail a search
+            except sqlite3.OperationalError as exc:  # an odd query must never fail a search
+                if not _fts_rejected(exc):
+                    raise
                 sources.pop()
                 return 0
             if not cand:

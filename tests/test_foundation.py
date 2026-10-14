@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
 
 from brainwiki.config.manifest import parse_manifest
 from brainwiki.config.resolve import resolve_brain
-from brainwiki.errors import Conflict, NotConfigured, UsageError
+from brainwiki.errors import Conflict, FormatError, NotConfigured, UsageError
 from brainwiki.ids import is_ulid, new_ulid, ulid_datetime
 from brainwiki.store import LocalStore
 
@@ -67,6 +68,47 @@ def test_manifest_defaults_and_unknown_keys():
     }
     assert m.profile("unknown-host").write == ["episodes", "edit"]
     assert m.profile(None).can("consolidate")
+
+
+@pytest.mark.parametrize(
+    ("extra", "where"),
+    [
+        ('topics = ["x"]', "[topics]"),
+        ('agents = "x"', "[agents]"),
+        ('[search]\nfreshness_ms = "x"', "search.freshness_ms"),
+        ('[layout]\nignore = "drafts"', "layout.ignore"),
+        ('[agents.codex]\nwrite = "edit"', "agents.codex.write"),
+        ('[search.kind_factor]\nhub = "high"', "search.kind_factor"),
+        ("[topics.search]\ntitle = 3", "topics.search.title"),
+    ],
+)
+def test_manifest_rejects_values_of_the_wrong_type(extra: str, where: str):
+    with pytest.raises(FormatError, match=re.escape(where)):
+        parse_manifest(f'format = 2\nid = "01J9Z7M0W4K8P2R6T9V3X5Z7A1"\n{extra}\n')
+    assert parse_manifest(
+        'format = 2\nid = "01J9Z7M0W4K8P2R6T9V3X5Z7A1"\n[search]\nrecency_half_life_days = 90\n'
+    ).search.recency_half_life_days == pytest.approx(90.0)
+
+
+def test_a_broken_brain_does_not_break_the_others(
+    brain_dir: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    from brainwiki.cli.main import main
+    from brainwiki.config.user import register_brain
+    from brainwiki.lifecycle import init_brain
+
+    bad = init_brain(tmp_path / "brains" / "bad", "bad")
+    (bad / "brain.toml").write_text((bad / "brain.toml").read_text() + "\n[git]\nmode = 1\n")
+    register_brain("bad", bad)
+    assert main(["list"]) == 0
+    out = capsys.readouterr().out
+    assert "bad" in out and "unavailable: brain.toml: git.mode must be a string" in out
+    assert "test" in out
+    assert main(["lint", "nowhere.md"]) == 3
+    assert "no such file or folder in the brain" in capsys.readouterr().err
+    (tmp_path / "a-file").write_text("x")
+    assert main(["init", str(tmp_path / "a-file" / "brain")]) == 1
+    assert "os_error:" in capsys.readouterr().err
 
 
 def test_init_and_resolve(brain_dir: Path, tmp_path: Path):

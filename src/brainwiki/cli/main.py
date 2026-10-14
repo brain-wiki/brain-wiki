@@ -314,6 +314,10 @@ def main(argv: list[str] | None = None) -> int:
     except BrainError as exc:
         print(f"{exc.code}: {exc.message}", file=sys.stderr)
         return exc.exit_code
+    except OSError as exc:  # a path the user gave that cannot be read or written
+        where = f": {exc.filename}" if exc.filename else ""
+        print(f"os_error: {exc.strerror or exc}{where}", file=sys.stderr)
+        return 1
     except KeyboardInterrupt:
         return 130
 

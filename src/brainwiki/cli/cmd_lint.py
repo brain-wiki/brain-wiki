@@ -8,6 +8,7 @@ from typing import Any
 
 from brainwiki.cli.output import emit
 from brainwiki.engine import Engine, open_engine
+from brainwiki.errors import NotFound
 
 
 def _engine(args: Any) -> Engine:
@@ -58,6 +59,9 @@ def lint(args: Any) -> int:
             emit(args, {"installed": str(target)}, f"Installed {target}")
             return 0
         paths = brain_paths(engine, args.paths)
+        for raw, rel in zip(args.paths or [], paths or [], strict=True):
+            if not (engine.brain.root / rel).exists():
+                raise NotFound(f"no such file or folder in the brain: {raw}")
         select, ignore = _codes(args.select), _codes(args.ignore)
         if args.fix:
             from brainwiki.lint.fixes import fix
