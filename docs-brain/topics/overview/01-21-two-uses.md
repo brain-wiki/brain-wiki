@@ -48,5 +48,5 @@ Writes take one of three paths:
   change and records it with an undo point like any other run.
 
 The LLM that proposes operations is whatever the user already runs: the
-host agent itself (through MCP tools and a skill) or a headless agent CLI
-started by a scheduled job. brain-wiki needs no API keys.
+host agent itself, through MCP tools and a skill. brain-wiki needs no API
+keys.

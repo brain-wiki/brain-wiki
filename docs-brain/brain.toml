@@ -63,9 +63,9 @@ description = "Repo layout, dependencies, packaging, testing, performance budget
 title = "Roadmap and open questions"
 description = "Implementation milestones and status, decisions needed, verification items"
 
-[topics.skills-onboarding-and-routines]
-title = "Skills, onboarding, and routines"
-description = "The three skills, the guided setup flow, brain doctor --json, and routine templates for hosts' schedulers"
+[topics.skills-and-onboarding]
+title = "Skills and onboarding"
+description = "The three skills, the guided setup flow, and brain doctor --json"
 
 [topics.decisions]
 title = "Design overview and decisions"

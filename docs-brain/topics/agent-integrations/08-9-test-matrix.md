@@ -17,7 +17,7 @@ bw-part_of:
 | Orientation injected at start | ✓ | ✓ | ✓ (first call only) | hook pack |
 | Prompted capture asks once | ✓ | ✓ | ✓ | — |
 | Raw capture produces one episode per compaction | ✓ | ✓ | stop only | hook pack |
-| Self-exclusion during headless consolidation | ✓ | ✓ | ✓ | — |
+| Self-exclusion during headless harvest | ✓ | ✓ | ✓ | — |
 | Session reader parses recorded fixtures; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
 | Origin lookup returns the right window, and `not_available` when deleted | ✓ | ✓ | ✓ | — |
 | `brain connect` and `--uninstall` round trip | ✓ | ✓ | ✓ | ✓ |

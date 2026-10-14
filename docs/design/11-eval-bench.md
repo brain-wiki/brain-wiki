@@ -33,7 +33,7 @@ the command and version that produced them.
   lowest score across backends, because a brain is shared by every model
   that writes to it.
 - **Same code paths as production.** Model suites run through the real
-  consolidation pipeline and command backends ([05 §4.4](05-write-path-and-consolidation.md#44-backends)).
+  consolidation pipeline through headless agent CLIs ([08 §7](08-agent-integrations.md#7-headless-presets)).
 
 ## 3. Suites
 
@@ -126,7 +126,7 @@ the episodes, their turn ranges, and that taint came from the server's
 parse rather than the model; run guided onboarding on a fresh home
 directory and check the end state and that every write was preceded by a
 dry run; check skill triggering with should-trigger and near-miss prompts
-([15 §6](15-skills-onboarding-and-routines.md#6-testing)). Expensive and host-dependent; run manually before
+([15 §5](15-skills-and-onboarding.md#5-testing)). Expensive and host-dependent; run manually before
 releases.
 
 ## 4. Data

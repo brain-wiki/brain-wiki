@@ -44,7 +44,7 @@ the dev server with the token from `brain viz` (`?t=…`).
 | `docs/design/` | The design of what is implemented. Read the relevant document before changing behavior, and update it in the same change. |
 | `docs/proposals/` | Designs not yet built, and the backlog. Building one moves its content into `docs/design/`. |
 | `src/brainwiki/` | The package (layout in `docs/design/13-engineering.md` §2) |
-| `src/brainwiki/assets/` | Prompts and routine templates the engine uses; the skills' copies are generated from them |
+| `src/brainwiki/assets/` | Prompts the engine uses; the skills' copies are generated from them |
 | `plugin.json`, `mcp.json`, `.mcp.json`, `mcp_config.json`, `hooks/`, `hooks.json`, `rules/`, `skills/`, `.claude-plugin/`, `server.json` | The plugin, served from the repository root. These names are reserved by hosts. |
 | `src/brainwiki/viz/app/` | The visualizer's built bundle (source: brain-wiki-viz); do not edit by hand |
 | `scripts/sync_versions.py` | Writes the version into every manifest and regenerates skill references (`--check` in CI) |

@@ -17,7 +17,6 @@ def consolidate(args: Any) -> int:
 
     host = getattr(args, "as_host", None)
     with open_engine(args.brain, host=host) as engine:
-        backend = args.backend or engine.manifest.consolidate.backend
         if args.apply_file:
             if not args.run:
                 raise UsageError("--apply needs --run RUN (the id from --prepare)")
@@ -63,26 +62,10 @@ def consolidate(args: Any) -> int:
                     text,
                 )
             return 0
-        if backend != "command":
-            raise UsageError(
-                "this brain consolidates with the agent backend: ask your agent to consolidate the brain, "
-                "or run `brain consolidate --backend command`"
-            )
-        preset: str | list[str] = args.preset or engine.manifest.consolidate.command
-        result = pipeline.consolidate_command(
-            engine,
-            preset=preset,
-            model=args.model,
-            topic=args.topic,
-            max_episodes=args.max_episodes,
-            if_pending=args.if_pending,
-            dry_run=args.dry_run,
+        raise UsageError(
+            "consolidation runs in your agent's session: ask it to consolidate the brain. "
+            "To drive it yourself, run `brain consolidate --prepare`, then `--apply OPS.json --run RUN`"
         )
-        if result is None:
-            emit(args, {"run": None}, "Nothing to consolidate.")
-            return 0
-        emit(args, result.to_json(), result.format_text())
-        return 0 if result.status in ("applied", "review", "dry_run") else 1
 
 
 def review(args: Any) -> int:

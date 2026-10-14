@@ -19,5 +19,5 @@ the episodes, their turn ranges, and that taint came from the server's
 parse rather than the model; run guided onboarding on a fresh home
 directory and check the end state and that every write was preceded by a
 dry run; check skill triggering with should-trigger and near-miss prompts
-([[15-6-testing|15 §6]]). Expensive and host-dependent; run manually before
+([[15-5-testing|15 §5]]). Expensive and host-dependent; run manually before
 releases.

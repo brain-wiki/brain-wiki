@@ -1,6 +1,6 @@
 ---
 name: brain-setup
-description: Set up, connect, or reconfigure brain-wiki. Install the CLI, create a brain or adopt an existing Obsidian or Markdown vault, connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor), choose which agents see which brain, turn on session capture or harvest, and schedule routine maintenance in this agent's own scheduler. Use when the user asks to install, set up, onboard, connect, import, or schedule brain-wiki, or when brain-wiki says it is not configured.
+description: Set up, connect, or reconfigure brain-wiki. Install the CLI, create a brain or adopt an existing Obsidian or Markdown vault, connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor), choose which agents see which brain, and turn on session capture or harvest. Use when the user asks to install, set up, onboard, connect, or import brain-wiki, or when brain-wiki says it is not configured.
 ---
 # Set up brain-wiki
 
@@ -12,8 +12,8 @@ current state and offers only what is missing.
 
 - **Ask a few questions per step, then act.** Never a wall of questions up
   front.
-- **Dry run before any change outside the brain** (agent configs,
-  schedulers, crontab). Show the change, then apply it after a yes.
+- **Dry run before any change outside the brain** (agent configs). Show
+  the change, then apply it after a yes.
 - **Nothing that reads past sessions or sends content to a model is turned
   on without an explicit yes**, and the explanation comes first.
 - **Never move, rename, or delete the user's files.**
@@ -25,7 +25,7 @@ current state and offers only what is missing.
 ## Steps
 
 ```
-1 Check ─► 2 Install ─► 3 Brain ─► 4 Connect ─► 5 Privacy ─► 6 Capture/harvest ─► 7 Routines ─► 8 Verify ─► 9 Summary
+1 Check ─► 2 Install ─► 3 Brain ─► 4 Connect ─► 5 Privacy ─► 6 Capture/harvest ─► 7 Verify ─► 8 Summary
 ```
 
 ### 1. Check
@@ -36,7 +36,7 @@ Read from the result:
 
 - `brains`: existing brains, which is the default, pending episodes;
 - `hosts`: agent apps found on this machine, which are `connected`, and
-  their `capture`, `harvest`, and `routines`;
+  their `capture` and `harvest`;
 - `problems` and `next_steps`: what is missing, with the fixing command.
 
 If everything is set up, show a short summary and offer only the
@@ -124,46 +124,19 @@ backfill past sessions now, later, or never.
 - Backfill now: run the harvest recipe in the `brain-maintain` skill in this
   session, or `brain harvest --from HOST --apply` for large backfills.
 
-### 7. Routines
-
-Recommend:
-
-| Routine | Where | When |
-|---|---|---|
-| `brain-maintenance` | this agent app (the main one) | daily, 21:00 |
-| `brain-harvest` | each other connected app with harvest on | daily, 20:30 |
-| `brain-health` | this agent app | Mondays, 09:00 |
-
-For each routine the user wants:
-
-1. Run `brain schedule show ROUTINE --for HOST`. It prints the task:
-   name, schedule, instructions, folder.
-2. Create it in the app's own scheduler if you can; otherwise show the user
-   the exact steps. Per-app steps: [references/hosts.md](references/hosts.md).
-   Without an agent scheduler, use
-   `brain schedule install ROUTINE --via cron --dry-run`, then `--apply`
-   (also `launchd` or `systemd`).
-3. Ask the user to run it once now and to always allow the brain-wiki
-   tools it asks for, so later runs do not stop at a prompt.
-
-The routine texts are in [references/routines/](references/routines/):
-[brain-maintenance](references/routines/brain-maintenance.md),
-[brain-harvest](references/routines/brain-harvest.md),
-[brain-health](references/routines/brain-health.md).
-
-### 8. Verify
+### 7. Verify
 
 1. Log a test episode with `brain_log_episode`: summary
    "Setup check: brain-wiki works from HOST."
 2. Search for "setup check" with `brain_search` and confirm it comes back.
 3. Show the orientation (`brain_orient`).
-4. Remove the test episode: `brain runs list` to find its run, then
-   `brain undo RUN`.
+4. Leave the test episode in the inbox: consolidation skips it, since it
+   holds nothing durable.
 
 If the MCP tools are not available yet (new install), use `brain log`,
 `brain search`, and `brain orient` instead.
 
-### 9. Summary
+### 8. Summary
 
 List what was set up, where it lives, and how to undo each part:
 
@@ -171,6 +144,5 @@ List what was set up, where it lives, and how to undo each part:
 |---|---|
 | Brain created or imported | `brain brains remove NAME` (keeps the files); an import is undone with `brain undo RUN` |
 | Agent app connected | `brain connect HOST --uninstall` (restores the previous config) |
-| Routine | `brain schedule remove ROUTINE`; for desktop apps, delete it in the app |
 | Capture | run `brain connect HOST` again without `--capture` |
 | Harvest | remove the app from `[harvest] hosts` in the user config |

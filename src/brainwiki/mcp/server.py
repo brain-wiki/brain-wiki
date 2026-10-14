@@ -532,9 +532,6 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         if packet is None:
             return _result("Nothing to consolidate: no pending episodes.", {"run": None})
         text = pipeline.instructions() + "\n" + packet.model_text()
-        warning = pipeline.device_warning(engine)
-        if warning:
-            text = f"Note: {warning}\n\n{text}"
         return _result(
             text, {"run": packet.run, "episodes": len(packet.episodes), "notes": len(packet.notes)}
         )

@@ -18,7 +18,6 @@ can look at the original:
 | Backend | How |
 |---|---|
 | `agent` | The packet marks such episodes `origin_available: true`. The agent may call `brain_read_origin {episode, turns?}`, which returns a bounded window of normalized turns (default up to 20, never more than 60) around the episode's range. |
-| `command` | Off by default. With `[consolidate] origin_context_turns = N`, the packet includes up to N turns around each episode's range. This costs tokens and widens what the model reads, so it is opt-in. |
 | CLI | `brain origin <episode> [--turns A-B]` prints the same window for a person. |
 
 Rules for origin reads:

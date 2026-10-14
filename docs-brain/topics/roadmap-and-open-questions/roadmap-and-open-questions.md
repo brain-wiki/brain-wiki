@@ -19,7 +19,7 @@ Generated from `docs/design/14-roadmap-and-open-questions.md`.
   - [[m4]]: M4: Write path and runs
   - [[m5]]: M5: Consolidation
   - [[m6]]: M6: MCP server
-  - [[m7]]: M7: Agent integrations, skills, routines
+  - [[m7]]: M7: Agent integrations and skills
   - [[m8]]: M8: Import and harvest
   - [[m9]]: M9: Bench
   - [[m10]]: M10: Visualizer
@@ -51,8 +51,6 @@ Generated from `docs/design/14-roadmap-and-open-questions.md`.
   - [[t-9]]: T-9: Hook timeouts and output size limits per host in practice
   - [[t-10]]: T-10: Does uvx --from brain-wiki==<version> brain hook … (used by marketplace…
   - [[t-11]]: T-11: How much does the Claude Code transcript format vary across recent…
-  - [[t-12]]: T-12: Can an agent running inside each desktop app (Claude Code,…
-  - [[t-13]]: T-13: Antigravity /schedule
   - [[t-14]]: T-14: Does Obsidian treat links in list properties (bw-depends_on
 - [[14-4-future-work]]: Future work
 - [[14-prior-art]]: Prior art

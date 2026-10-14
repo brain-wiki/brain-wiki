@@ -101,7 +101,7 @@ discover ─► filter ─► route ─► extract ─► distill (or raw) ─�
 | Filter | Skip subagent sessions, brain-wiki's own headless runs, sessions idle for less than `min_idle_minutes` (still in progress), and sessions with fewer than `min_user_turns` user messages. |
 | Route | Each session belongs to the brain its working directory resolves to, using the same project files and host defaults as brain selection ([03 §3](03-config-and-storage.md#3-choosing-a-brain)) plus optional path rules in `[harvest.routes]`. Sessions that resolve to no brain are skipped, never sent to the default brain. |
 | Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Injected brain-wiki context is stripped. Secrets are scrubbed. Taint is computed from the tool calls. |
-| Distill | One call to the configured command backend with the distill instructions (`prompts/distill.md`): the model returns `{skip, summary, claims[{text, turns}], negative_findings, open_questions, topics}`. Long sessions are split into chunks of at most 30k tokens, one episode per chunk. With `--raw`, no model is called and the episode holds a condensed transcript excerpt instead; consolidation distills it later. |
+| Distill | One call to the configured headless preset ([08 §7](08-agent-integrations.md#7-headless-presets)) with the distill instructions (`prompts/distill.md`): the model returns `{skip, summary, claims[{text, turns}], negative_findings, open_questions, topics}`. Long sessions are split into chunks of at most 30k tokens, one episode per chunk. With `--raw`, no model is called and the episode holds a condensed transcript excerpt instead; consolidation distills it later. |
 | Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-taint`. The dedupe key `<host>:<session>:<turn range>` is shared with hook capture, so a session captured by a hook is not harvested again. |
 | Watermark | `<state>/harvest/<host>/<session>.json` records the last harvested turn, so a long-running session is harvested in increments. |
 
@@ -111,7 +111,7 @@ consolidation:
 | Backend | How | Best for |
 |---|---|---|
 | `agent` (in-session recipe) | The user runs `/brain:harvest` (the `harvest` MCP prompt, or the skill's harvest section) inside a host. The agent calls `brain_harvest_prepare`; brain-wiki discovers, filters, routes, extracts, and scrubs that host's new sessions and returns a packet of condensed turns (at most 15k tokens; call again for more). The agent distills and calls `brain_harvest_apply` with one entry per session (episode content, or `skip` with a reason). The server validates turn ranges and lengths, sets every provenance field itself (including taint computed from the parsed tool calls), writes the episodes, and advances watermarks. | Regular use: the agent the user already runs does the thinking, no extra process or credentials |
-| `command` (headless) | `brain harvest --apply` calls the configured preset per chunk. | Unattended schedules and large backfills, which would exhaust a chat session's context |
+| `command` (headless) | `brain harvest --apply` calls the configured preset per chunk. | Large backfills, which would exhaust a chat session's context |
 | `raw` | No model: the episode is a condensed transcript excerpt; consolidation distills later. | No model available |
 
 **Fallback for hosts without a reader.** For hosts brain-wiki cannot read
@@ -123,12 +123,9 @@ episode per session with `brain_log_episode`, passing `session` and
 `bw-taint: unknown`, because neither routing nor tool use was checked by
 brain-wiki. They are usable knowledge but can never feed rules.
 
-**Running it periodically.** The recipe can be run by hand; as a scheduled
-task in the host's own scheduler, created from the `brain-harvest` or
-`brain-maintenance` routine template ([15 §4](15-skills-onboarding-and-routines.md#4-routines));
-or headless from an OS scheduler. When harvest is enabled for a host,
-orientation includes the number of that host's sessions not yet harvested
-(a cached count, refreshed at most hourly), which serves as the nudge.
+**When it runs.** When the user asks: the recipe in a session, or
+`brain harvest --apply` in a terminal. Scheduled harvest was removed before
+0.1 ([proposal](../proposals/scheduled-maintenance.md)).
 
 Harvest is off by default and enabled per host (`[harvest] hosts` in the
 user config, plus `harvest` in the host's profile `write` list for the
@@ -275,11 +272,11 @@ rolled back from in-memory pre-images before the lock is released.
 | Trigger | Backend | How |
 |---|---|---|
 | User asks their agent ("consolidate my brain") | `agent` | The skill drives `brain_consolidate_prepare` / `brain_consolidate_apply` over MCP. |
-| Scheduled job | `command` | `brain consolidate --if-pending 5` from cron, launchd, or systemd; recipes in user docs. |
-| Manual | either | `brain consolidate` in a terminal. |
+| User drives it from a terminal | `agent` | `brain consolidate --prepare` writes the packet and instructions; any model or person produces the ops; `brain consolidate --apply OPS.json --run RUN` validates and applies them. |
 
 v0.1 never consolidates on its own in the background. Running an LLM costs
-money and attention, and the user should choose when.
+money and attention, and the user should choose when. Scheduled, headless
+consolidation was removed before 0.1 ([proposal](../proposals/scheduled-maintenance.md)).
 
 ### 4.3 Selecting and packaging work
 
@@ -292,10 +289,10 @@ brain ([privacy proposal](../proposals/privacy.md)).
 **Grouping.** For each episode, the engine finds candidate notes:
 topic hints, then an FTS query over the episode text (top 5), then the
 hubs of candidate topics. Episodes with overlapping candidates form one
-packet; packets are cut to a token budget (default 30k tokens for
-`command`; 15k for `agent`, because hosts cap tool results, for example
-Claude Code at 25k tokens by default; the tool raises its own cap with
-`_meta["anthropic/maxResultSizeChars"]` where supported). Leftover episodes wait for the next run.
+packet; packets are cut to a token budget (15k tokens, because hosts cap
+tool results, for example Claude Code at 25k tokens by default; the tool
+raises its own cap with `_meta["anthropic/maxResultSizeChars"]` where
+supported; the bench's headless runs use 30k). Leftover episodes wait for the next run.
 
 **Packet.** A JSON document that is the complete input to the LLM.
 Handles replace paths and ids so models never copy long identifiers:
@@ -336,8 +333,8 @@ proposal was made against (§7.3).
 
 ### 4.4 Backends
 
-A backend turns a packet into a list of ops. Both v0.1 backends use the
-same instructions and the same validator.
+A backend turns a packet into a list of ops. v0.1 has one, the agent the
+user is talking to; the instructions and the validator do not depend on it.
 
 **`agent` backend (in-session).** The host agent is the LLM.
 
@@ -354,34 +351,6 @@ same instructions and the same validator.
 
 Advantages: no extra process, no extra credentials, the user watches it
 happen and can steer. Cost: it uses the session's context window.
-
-**`command` backend (headless).** A one-shot subprocess per packet:
-
-```toml
-[consolidate]
-backend = "command"
-command = "claude-code"           # preset name, or a full argv list:
-# command = ["my-llm", "--json"]  # the prompt goes to stdin
-model   = ""                      # optional, passed to presets that accept it
-timeout_s = 600
-```
-
-1. Render the prompt: instructions + packet.
-2. Run the command in an empty temporary directory, with the prompt on
-   stdin, no inherited terminal, and the preset's flags that disable tools
-   where the host supports it. The model gets text in and returns text out.
-   It cannot read or change files.
-3. Extract the reply: the preset knows how to find the final message in
-   the host's JSON output; then the first JSON object with an `ops` array
-   is parsed (code fences stripped).
-4. On validation failure, retry once with the errors appended. A second
-   failure ends the run; episodes stay pending.
-
-Presets for Claude Code, Codex, Antigravity CLI, Cursor's CLI,
-and a plain local-model runner are defined in
-[08 §7](08-agent-integrations.md#7-headless-presets-for-the-command-backend).
-The backend's agent profile is the preset name (for example
-`[agents.claude-code]`).
 
 ### 4.5 Instruction contract
 
@@ -416,7 +385,6 @@ can look at the original:
 | Backend | How |
 |---|---|
 | `agent` | The packet marks such episodes `origin_available: true`. The agent may call `brain_read_origin {episode, turns?}`, which returns a bounded window of normalized turns (default up to 20, never more than 60) around the episode's range. |
-| `command` | Off by default. With `[consolidate] origin_context_turns = N`, the packet includes up to N turns around each episode's range. This costs tokens and widens what the model reads, so it is opt-in. |
 | CLI | `brain origin <episode> [--turns A-B]` prints the same window for a person. |
 
 Rules for origin reads:
@@ -579,8 +547,7 @@ packets while a proposal references them).
    advisory lock held for the duration of the apply).
 2. Check that every note the ops touch still has the hash recorded in the
    packet. A note edited since then makes the run stale: the agent backend
-   gets a `stale` error and re-prepares; the command backend re-prepares
-   once.
+   gets a `stale` error and re-prepares.
 3. Compute new contents for every touched file in memory; keep pre-images.
 4. Lint the new contents (V11).
 5. Write each file atomically (temporary file, `fsync`, rename); move
@@ -644,8 +611,7 @@ Retention: the last 200 runs or 90 days, whichever keeps more.
 
 | Failure | Result |
 |---|---|
-| Backend command missing or times out | Run fails before apply; episodes stay pending; error names the preset and the command line. |
-| Model returns prose instead of JSON | Extraction fails → one retry with a reminder → run fails. |
+| Model returns prose instead of JSON | `brain_consolidate_apply` rejects it with the reason; the run stays open for a corrected call. |
 | Model invents a handle or a span | V2/V3 reject it with the exact op index. |
 | Crash during apply | Writes are per-file atomic. On restart, a run directory without `finished` is detected; `brain doctor` restores pre-images for files whose hash matches the recorded `after`, so a half-applied run is rolled back. |
 | Index stale or busy | Selection uses a fresh scan; apply verifies note hashes from disk, not from the index. |

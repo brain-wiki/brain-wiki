@@ -86,7 +86,7 @@ Then, from any connected agent:
 | Write | `brain log`, `brain check`, `brain rule add` |
 | Curate | `brain consolidate`, `brain review`, `brain mv`, `brain undo` |
 | Check | `brain lint [--fix]`, `brain report`, `brain doctor` |
-| Agents | `brain connect`, `brain harvest`, `brain schedule`, `brain mcp` |
+| Agents | `brain connect`, `brain harvest`, `brain mcp` |
 | See it | `brain viz` (a local 3D map of the brain) |
 
 Every command takes `--json`, and every command that changes files has a

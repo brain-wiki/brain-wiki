@@ -31,6 +31,6 @@ Generated from `docs/design/08-agent-integrations.md`.
   - [[08-62-modes]]: Modes (Agent integrations)
   - [[08-63-taint-detection]]: Taint detection
   - [[08-64-session-readers]]: Session readers
-- [[08-7-headless-presets-for-the-command-backend]]: Headless presets for the command backend
+- [[08-7-headless-presets]]: Headless presets
 - [[08-8-brain-connect]]: `brain connect`
 - [[08-9-test-matrix]]: Test matrix

@@ -27,9 +27,8 @@ First release.
 - **Agents**: a stdio MCP server with ten tools and three prompts; hooks
   for orientation, taint tracking, and opt-in capture; session readers and
   harvest for Claude Code, Codex, and Antigravity; origin lookup; `brain
-  connect` for Claude Code, Codex, Antigravity, OpenClaw, and Cursor;
-  routine templates and `brain schedule`; a plugin bundle with three
-  skills.
+  connect` for Claude Code, Codex, Antigravity, OpenClaw, and Cursor; a
+  plugin bundle with three skills.
 - **Import**: overlay adoption of Obsidian vaults in phases, copying into
   a brain, documents and agent memory files as episodes.
 - **Visualizer**: `brain viz`, a local read-only 3D map with guard halos

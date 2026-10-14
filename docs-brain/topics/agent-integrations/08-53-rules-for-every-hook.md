@@ -19,6 +19,5 @@ bw-part_of:
 - **Quiet.** Only protocol JSON on stdout; diagnostics on stderr.
 - **No shell interpolation.** Payload content never reaches a command line.
 - **Self-exclusion.** If `BRAIN_WIKI_INTERNAL=1` is set (brain-wiki sets it
-  for every subprocess it starts, such as headless consolidation), hooks
-  exit immediately. This prevents a consolidation run from capturing
-  itself.
+  for every subprocess it starts, such as headless harvest), hooks exit
+  immediately. This prevents a harvest run from capturing itself.

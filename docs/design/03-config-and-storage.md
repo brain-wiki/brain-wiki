@@ -185,7 +185,7 @@ of the way:
 | Conflict copies (`… (conflicted copy …).md`, `.sync-conflict-…`, `name 2.md`, `name (1).md`, `-HOSTNAME.md`, `(Conflicted copy …)`) | Lint BW112 detects them with strict patterns, and with loose patterns only when the base file also exists and differs. Never auto-deleted. |
 | Online-only placeholders look like missing files | v0.1 has no sync engine that could propagate a "delete". A future sync component must treat a missing local file as unknown, not deleted, inside known cloud-drive folders. |
 | Temporary files from atomic writes | Prefix `.brain-tmp-`; dot files are ignored by brain-wiki and by most sync tools' default rules. |
-| Two devices consolidating the same episodes | Possible across sync gaps; see [05 §9](05-write-path-and-consolidation.md#9-concurrency-and-multiple-devices). `[consolidate] device = "…"` restricts scheduled runs to one machine. |
+| Two devices consolidating the same episodes | Possible across sync gaps; see [05 §9](05-write-path-and-consolidation.md#9-concurrency-and-multiple-devices). |
 
 ### 6.4 File access
 

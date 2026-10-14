@@ -74,16 +74,10 @@ class SearchCfg:
 
 @dataclass
 class ConsolidateCfg:
-    backend: str = "agent"
-    command: str | list[str] = "claude-code"
-    model: str = ""
-    timeout_s: int = 600
     review: str = "auto"
     review_tainted: bool = False
     max_episodes_per_run: int = 50
     max_supersede_ratio: float = 0.25
-    device: str = ""
-    origin_context_turns: int = 0
 
 
 @dataclass

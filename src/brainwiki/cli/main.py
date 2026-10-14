@@ -44,7 +44,6 @@ HANDLERS: dict[str, str] = {
     "connect": "brainwiki.cli.cmd_hosts:connect",
     "hook": "brainwiki.cli.cmd_hosts:hook",
     "mcp": "brainwiki.cli.cmd_hosts:mcp",
-    "schedule": "brainwiki.cli.cmd_hosts:schedule",
     "import": "brainwiki.cli.cmd_import:import_",
     "viz": "brainwiki.cli.cmd_viz:viz",
     "bench": "brainwiki.cli.cmd_bench:bench",
@@ -204,13 +203,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("dst")
     p.add_argument("--dry-run", action="store_true")
 
-    p = cmd("consolidate", "fold pending episodes into notes")
-    p.add_argument("--backend", choices=["agent", "command"])
-    p.add_argument("--command", dest="preset", metavar="PRESET")
-    p.add_argument("--model")
+    p = cmd("consolidate", "drive consolidation yourself (agents use brain_consolidate_*)")
     p.add_argument("--topic")
     p.add_argument("--max-episodes", type=int)
-    p.add_argument("--if-pending", type=int, default=0)
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--prepare", action="store_true", help="write a packet for an external driver")
     p.add_argument("--out")
@@ -275,15 +270,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = cmd("mcp", "run the stdio MCP server")
     p.add_argument("--host", default="auto")
-
-    p = cmd("schedule", "routine templates for host schedulers")
-    p.add_argument("action", choices=["list", "show", "install", "remove"])
-    p.add_argument("routine", nargs="?")
-    p.add_argument("--for", dest="for_host")
-    p.add_argument("--via", choices=["cron", "launchd", "systemd"])
-    p.add_argument("--at", default=None)
-    p.add_argument("--apply", action="store_true")
-    p.add_argument("--dry-run", action="store_true")
 
     p = cmd("import", "adopt or import existing Markdown")
     p.add_argument("path", nargs="?")

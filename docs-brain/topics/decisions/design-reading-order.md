@@ -25,7 +25,7 @@ bw-part_of:
 | 12 | [[visualizer\|Visualizer]] | 3D brain map |
 | 13 | [[engineering\|Engineering]] | Repo layout, dependencies, packaging, testing, performance budgets, release |
 | 14 | [[roadmap-and-open-questions\|Roadmap and open questions]] | Implementation milestones and status, decisions needed, verification items |
-| 15 | [[skills-onboarding-and-routines\|Skills, onboarding, and routines]] | The three skills, the guided setup flow, `brain doctor --json`, and routine templates for hosts' schedulers |
+| 15 | [[skills-and-onboarding\|Skills and onboarding]] | The three skills, the guided setup flow, and `brain doctor --json` |
 
 Normative documents (02, and the schemas in 04, 05, 07) use MUST, SHOULD,
 and MAY as in RFC 2119. The others explain and justify.

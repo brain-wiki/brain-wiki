@@ -12,8 +12,7 @@ bw-part_of:
 
 | Failure | Result |
 |---|---|
-| Backend command missing or times out | Run fails before apply; episodes stay pending; error names the preset and the command line. |
-| Model returns prose instead of JSON | Extraction fails → one retry with a reminder → run fails. |
+| Model returns prose instead of JSON | `brain_consolidate_apply` rejects it with the reason; the run stays open for a corrected call. |
 | Model invents a handle or a span | V2/V3 reject it with the exact op index. |
 | Crash during apply | Writes are per-file atomic. On restart, a run directory without `finished` is detected; `brain doctor` restores pre-images for files whose hash matches the recorded `after`, so a half-applied run is rolled back. |
 | Index stale or busy | Selection uses a fresh scan; apply verifies note hashes from disk, not from the index. |

@@ -13,6 +13,7 @@ changes, in the same change as the code, and the proposal is deleted.
 | [Remote sync and object storage](remote-sync.md) | Designed, not scheduled | `brain sync` to a private git remote, then GCS and S3; a store interface for a server with no local copy |
 | [Remote MCP for chat apps](remote-mcp.md) | Designed, not scheduled; waits on privacy | HTTP transport and OAuth for ChatGPT, claude.ai, and the Gemini app |
 | [Public memory benchmarks](public-benchmarks.md) | Designed, not scheduled | Bench adapters for LongMemEval and similar; probe coverage as a consolidation metric |
+| [Scheduled maintenance](scheduled-maintenance.md) | Built, then removed before 0.1; needs rethinking | Routine templates for hosts' schedulers and OS schedulers; a headless consolidation backend; one consolidation device |
 
 ## Backlog
 

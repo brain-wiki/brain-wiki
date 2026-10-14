@@ -1,7 +1,7 @@
 """`brain setup`: the onboarding flow as a terminal wizard (design doc 15 §3).
 
-Same steps as the brain-setup skill: detect, brain, connect, capture and harvest, routines,
-verify, summary. Every write outside the brain is shown as a dry run first, and nothing that
+Same steps as the brain-setup skill: detect, brain, connect, capture and harvest, verify,
+summary. Every write outside the brain is shown as a dry run first, and nothing that
 reads sessions is turned on without an explicit yes.
 """
 
@@ -104,9 +104,6 @@ def run_wizard(args: Any, ask: Ask = input, out: Callable[[str], None] = print) 
             set_value("harvest.enabled", True)
             set_value("harvest.hosts", harvest)
             summary.append(f"Harvest on for {', '.join(harvest)}")
-        out(
-            f"\nRoutines: `brain schedule show brain-maintenance --for {connected[0]}` prints a daily task to create."
-        )
 
     # Verify
     user = load_user_config()

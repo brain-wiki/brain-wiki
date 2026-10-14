@@ -17,7 +17,6 @@ undoable run.
 | How | When |
 |---|---|
 | Ask your agent: "consolidate my brain" | Day to day; needs `consolidate` in the host's profile |
-| `brain consolidate --backend command` | Headless, with your agent's CLI (`[consolidate] command = "claude-code"`, or `codex`, `antigravity`, `cursor`, `ollama`, or an argv list) |
 | `brain consolidate --prepare` then `--apply OPS.json --run RUN` | Driving it from your own tooling |
 
 Nothing is ever deleted: superseded claims move to the note's

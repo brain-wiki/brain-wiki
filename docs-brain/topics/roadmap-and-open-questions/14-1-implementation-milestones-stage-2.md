@@ -29,7 +29,7 @@ and trust.
 - [[m4]]: M4: Write path and runs
 - [[m5]]: M5: Consolidation
 - [[m6]]: M6: MCP server
-- [[m7]]: M7: Agent integrations, skills, routines
+- [[m7]]: M7: Agent integrations and skills
 - [[m8]]: M8: Import and harvest
 - [[m9]]: M9: Bench
 - [[m10]]: M10: Visualizer

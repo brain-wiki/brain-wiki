@@ -1,13 +1,13 @@
 ---
 id: 01M3250V005JCXBXK4HNJCDMN6
 type: proposal
-title: "Open questions"
+title: "Open questions (Privacy)"
 tags: [proposals]
 source: "docs/proposals/privacy.md#6-open-questions"
 bw-part_of:
   - "[[proposal-privacy]]"
 ---
-# Open questions
+# Open questions (Privacy)
 
 | # | Question | Options |
 |---|---|---|

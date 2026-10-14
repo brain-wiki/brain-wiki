@@ -1,4 +1,4 @@
-"""connect, hook, mcp, schedule."""
+"""connect, hook, mcp."""
 
 from __future__ import annotations
 
@@ -69,44 +69,3 @@ def connect(args: Any) -> int:
     lines.append(f"Undo with: brain connect {args.host} --uninstall")
     emit(args, record, "\n".join(lines))
     return 1 if failed else 0
-
-
-def schedule(args: Any) -> int:
-    from brainwiki.cli.output import emit
-    from brainwiki.engine import open_engine
-    from brainwiki.errors import UsageError
-    from brainwiki.hosts import schedule as sc
-
-    if args.action == "list":
-        items = sc.schedule_state()
-        text = (
-            "\n".join(f"{i['key']}  {i['kind']}  {i['cron']}" for i in items)
-            or "No routines installed."
-        )
-        emit(args, items, text)
-        return 0
-    if not args.routine:
-        raise UsageError(f"brain schedule {args.action} needs a routine: {', '.join(sc.ROUTINES)}")
-    if args.action == "remove":
-        steps = sc.remove(args.routine)
-        emit(args, {"steps": steps}, "\n".join(steps))
-        return 0
-    with open_engine(args.brain, host=getattr(args, "as_host", None)) as engine:
-        if args.action == "show":
-            if not args.for_host:
-                raise UsageError("brain schedule show needs --for HOST")
-            shown = sc.show(engine, args.routine, args.for_host, at=args.at)
-            text = "\n".join(shown["steps"]) + "\n\n" + shown["prompt"]
-            emit(args, shown, text)
-            return 0
-        plan = sc.plan_install(engine, args.routine, host=args.for_host, via=args.via, at=args.at)
-    if not args.apply:
-        emit(args, plan, sc.describe(plan) + "\n\nNothing changed. Run again with --apply.")
-        return 0
-    sc.install(plan)
-    emit(
-        args,
-        plan,
-        f"Installed {plan['key']} ({plan['kind']}). Remove with: brain schedule remove {args.routine}",
-    )
-    return 0

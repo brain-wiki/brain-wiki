@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
-import stat
 from pathlib import Path
 
 import pytest
@@ -13,7 +11,6 @@ from brainwiki.config.resolve import open_brain
 from brainwiki.config.user import load_user_config
 from brainwiki.engine import Engine
 from brainwiki.hosts import connect as cn
-from brainwiki.hosts import schedule as sc
 from brainwiki.importer import overlay
 from brainwiki.importer.episodes import memory_files, split_document
 from brainwiki.importer.survey import survey
@@ -159,50 +156,6 @@ def test_connect_antigravity_and_cursor_with_uninstall(
     assert set(json.loads(cursor.read_text())["mcpServers"]) == {"other"}
     main(["connect", "antigravity", "--uninstall"])
     assert not link.exists() and cn.load_record("antigravity") is None
-
-
-def test_schedule_show_for_each_host(brain_dir: Path):
-    with Engine(open_brain(brain_dir)) as engine:
-        claude = sc.show(engine, "brain-maintenance", "claude-code", at="06:30")
-        assert claude["cron"] == "30 6 * * *" and "{brain}" not in claude["prompt"]
-        assert str(brain_dir) in claude["prompt"] or "test" in claude["prompt"]
-        assert claude["missing_capabilities"] == ["harvest", "consolidate"]
-        agy = sc.show(engine, "brain-harvest", "antigravity")
-        assert agy["steps"][0].startswith('Run in Antigravity: /schedule "')
-        assert any("ends when that session exits" in step for step in agy["steps"])
-        claw = sc.show(engine, "brain-maintenance", "openclaw")
-        assert "openclaw automations create" in claw["steps"][0]
-        with pytest.raises(Exception, match="cloud"):
-            sc.show(engine, "brain-maintenance", "cursor")
-        assert sc.on_calendar("0 9 * * 1") == "Mon *-*-* 09:00:00"
-
-
-def fake_crontab(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    store = tmp_path / "crontab.txt"
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    script = bin_dir / "crontab"
-    script.write_text(
-        f'#!/bin/sh\nif [ "$1" = "-l" ]; then cat "{store}" 2>/dev/null; else cat > "{store}"; fi\n'
-    )
-    script.chmod(script.stat().st_mode | stat.S_IXUSR)
-    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
-    return store
-
-
-def test_schedule_install_cron_and_remove(
-    brain_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
-    store = fake_crontab(tmp_path, monkeypatch)
-    store.write_text("0 1 * * * echo keep-me\n")
-    assert main(["schedule", "install", "brain-maintenance", "--via", "cron"]) == 0
-    assert "keep-me" in store.read_text() and "brain-wiki" not in store.read_text()  # dry run
-    assert main(["schedule", "install", "brain-maintenance", "--via", "cron", "--apply"]) == 0
-    text = store.read_text()
-    assert "keep-me" in text and "harvest --apply" in text and "--if-pending 5" in text
-    assert [i["kind"] for i in sc.schedule_state()] == ["cron"]
-    main(["schedule", "remove", "brain-maintenance"])
-    assert "brain-wiki" not in store.read_text() and "keep-me" in store.read_text()
 
 
 def vault(tmp_path: Path) -> Path:

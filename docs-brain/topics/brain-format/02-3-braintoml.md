@@ -47,15 +47,10 @@ kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7 }
 recency_half_life_days = 180
 
 [consolidate]
-backend = "agent"                           # agent | command
-command = "claude-code"                     # preset name or full argv list, for backend = "command"
-model   = ""                                # optional, for presets that accept one
-timeout_s = 600
 review  = "auto"                            # auto (review only when checks trigger) | always
 review_tainted = false                      # route runs with tainted sources to review
 max_episodes_per_run = 50
 max_supersede_ratio  = 0.25                 # above this, a run is routed to review (see 05)
-device  = ""                                # if set, scheduled runs only on this device
 
 [reports]
 after_consolidate = true

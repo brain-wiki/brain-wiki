@@ -1,12 +1,12 @@
 ---
-id: 01M3250V005BW84YTRS7CTQQD2
+id: 01M3250V00MYWGX369ZED4P3PY
 type: design
 title: "Skill bodies (outlines)"
-aliases: ["15 §5"]
-tags: [skills-onboarding-and-routines]
-source: "docs/design/15-skills-onboarding-and-routines.md#5-skill-bodies-outlines"
+aliases: ["15 §4"]
+tags: [skills-and-onboarding]
+source: "docs/design/15-skills-and-onboarding.md#4-skill-bodies-outlines"
 bw-part_of:
-  - "[[skills-onboarding-and-routines]]"
+  - "[[skills-and-onboarding]]"
 ---
 # Skill bodies (outlines)
 

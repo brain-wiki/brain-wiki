@@ -1,21 +1,21 @@
 ---
-id: 01M3250V00EEC9XN64BJKK3E6F
+id: 01M3250V00G64VX3J6JTZMCKCJ
 type: design
 title: "The flow"
 aliases: ["15 §3.2"]
-tags: [skills-onboarding-and-routines]
-source: "docs/design/15-skills-onboarding-and-routines.md#32-the-flow"
+tags: [skills-and-onboarding]
+source: "docs/design/15-skills-and-onboarding.md#32-the-flow"
 bw-part_of:
   - "[[15-3-onboarding]]"
 ---
 # The flow
 
 ```
-detect ─► install ─► brain ─► connect ─► privacy ─► capture/harvest ─► routines ─► verify ─► summary
-  │          │          │         │          │              │               │           │
-doctor   CLI on PATH  create or  other     defaults or    opt-in per      template    test episode,
---json   (uv tool     adopt      agents    separate       host, with a    per host    search,
-         install)     (import)   found     brains, host   dry run         (§4)        orientation
+detect ─► install ─► brain ─► connect ─► privacy ─► capture/harvest ─► verify ─► summary
+  │          │          │         │          │              │               │
+doctor   CLI on PATH  create or  other     defaults or    opt-in per      test episode,
+--json   (uv tool     adopt      agents    separate       host, with a    search,
+         install)     (import)   found     brains, host   dry run         orientation
                                  on disk   limits
 ```
 
@@ -27,6 +27,5 @@ doctor   CLI on PATH  create or  other     defaults or    opt-in per      templa
 | Connect | Lists agents `doctor` found installed and not yet connected; runs `brain connect <host> --dry-run` for each and shows the change | Which agents to connect | each host's config, with backups |
 | Privacy | Explains in three sentences: one brain is fine to start; every connected agent reads all of it; separate brains for separate lives (work and personal). Offers a second brain and host limits | Keep defaults, or set up a second brain / limits | `brain.toml`, user config |
 | Capture and harvest | Explains both in plain terms, including what is read and what may be sent to a model; for harvest, runs a dry run and shows how many past sessions exist and an estimated cost of backfill | Per host: capture on/off, harvest on/off, backfill now/later/never | user config; episodes if backfill runs |
-| Routines | Recommends one daily maintenance routine on this host and a harvest-only routine on other connected hosts (§4); creates them through the host's scheduler where the agent can, otherwise shows exact steps | Which routines, what time | the host's scheduled task (or a crontab/launchd/systemd entry via `brain schedule`) |
-| Verify | Logs a test episode, searches for it, shows orientation, then removes the test episode (it is a run, so undo removes it) | — | a temporary episode |
-| Summary | Lists everything configured, where it lives, and how to undo each part (`brain connect --uninstall`, `brain schedule remove`, `brain brains remove`) | — | nothing |
+| Verify | Logs a test episode, searches for it, and shows orientation; the test episode stays in the inbox, and consolidation skips it as holding nothing durable | — | one episode |
+| Summary | Lists everything configured, where it lives, and how to undo each part (`brain connect --uninstall`, `brain brains remove`) | — | nothing |

@@ -20,7 +20,6 @@ Generated from `docs/user/`.
   - [[user-agents-which-agent-may-do-what]]: Which agent may do what
   - [[user-agents-capture-off-by-default]]: Capture (off by default)
   - [[user-agents-harvest-off-by-default]]: Harvest (off by default)
-  - [[user-agents-scheduled-routines]]: Scheduled routines
 - [[user-getting-started]]: Getting started
   - [[user-getting-started-install]]: Install
   - [[user-getting-started-create-a-brain]]: Create a brain

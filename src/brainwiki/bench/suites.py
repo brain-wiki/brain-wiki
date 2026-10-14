@@ -771,7 +771,7 @@ MODEL_SCENARIOS = [
 
 
 def _model_run(engine: Engine, preset: str, timeout: int) -> tuple[Any, int | None]:
-    """The command backend's loop (pipeline.consolidate_command), keeping the attempt count."""
+    """One headless model run per packet, with one retry carrying the validator's errors."""
     from brainwiki.consolidate import pipeline
     from brainwiki.consolidate.presets import extract_ops, run_command
     from brainwiki.consolidate.schema import LOOSE_SCHEMA

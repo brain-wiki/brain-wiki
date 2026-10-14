@@ -26,7 +26,7 @@
 | proposals | topics/proposals/proposals.md | Designs not implemented yet, and the backlog of ideas without a design |
 | roadmap-and-open-questions | topics/roadmap-and-open-questions/roadmap-and-open-questions.md | Implementation milestones and status, decisions needed, verification items |
 | security-and-privacy | topics/security-and-privacy/security-and-privacy.md | Threat model and mitigations |
-| skills-onboarding-and-routines | topics/skills-onboarding-and-routines/skills-onboarding-and-routines.md | The three skills, the guided setup flow, brain doctor --json, and routine templates for hosts' schedulers |
+| skills-and-onboarding | topics/skills-and-onboarding/skills-and-onboarding.md | The three skills, the guided setup flow, and brain doctor --json |
 | user-guide | topics/user-guide/user-guide.md | How to install, connect, use, and maintain brain-wiki |
 | visualizer | topics/visualizer/visualizer.md | 3D brain map |
 | write-path-and-consolidation | topics/write-path-and-consolidation/write-path-and-consolidation.md | Episodes, provenance and taint, ops, consolidation backends, validation, review, undo |

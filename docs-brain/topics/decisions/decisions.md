@@ -20,7 +20,7 @@ Generated from `docs/design/README.md`.
   - [[d5]]: D5: Guard co-retrieval
   - [[d6]]: D6: Three write paths: an append-only inbox open to any agent
   - [[d7]]: D7: The LLM only proposes JSON ops
-  - [[d8]]: D8: Consolidation reaches an LLM through the host agent (MCP) or a headless…
+  - [[d8]]: D8: Consolidation reaches an LLM through the host agent (MCP)
   - [[d9]]: D9: Provenance and taint are set by the code path that writes, never by…
   - [[d10]]: D10: No access control inside a brain for now
   - [[d11]]: D11: v0.1 storage is a local directory with optional git integration

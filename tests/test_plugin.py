@@ -10,7 +10,6 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-ROUTINES = ROOT / "src/brainwiki/assets/routines"
 SKILLS = ROOT / "skills"
 
 JSON_FILES = [
@@ -109,7 +108,6 @@ def test_sync_check_reports_drift(tmp_path):
     ]:
         (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
         (tmp_path / rel).write_bytes((ROOT / rel).read_bytes())
-    (tmp_path / "src/brainwiki/assets/routines").mkdir()
     pin = (tmp_path / "mcp.json").read_text(encoding="utf-8")
     (tmp_path / "mcp.json").write_text(
         re.sub(r"brain-wiki==[^\"]+", "brain-wiki==9.9.9", pin), encoding="utf-8"
@@ -145,26 +143,6 @@ def test_skills_shipped():
         "brain-setup",
         "brain-maintain",
     }
-
-
-@pytest.mark.parametrize("routine", sorted(ROUTINES.glob("*.md")), ids=lambda p: p.stem)
-def test_routine_template(routine):
-    meta, body = frontmatter(routine)
-    assert set(meta) == {"name", "title", "cron", "hosts", "needs", "allow_tools", "working_dir"}
-    assert meta["name"] == routine.stem
-    assert len(meta["cron"].split()) == 5
-    assert set(meta["allow_tools"]) <= TOOLS
-    assert "brain_propose_rule" not in meta["allow_tools"]
-    assert set(meta["needs"]) <= {"episodes", "consolidate", "harvest", "review"}
-    assert meta["working_dir"] == "{brain_path}"
-    assert set(re.findall(r"\{([^{}]*)\}", body)) <= PLACEHOLDERS
-    assert "{" not in re.sub(r"\{(brain|brain_path|host)\}", "", body)
-
-
-def test_health_routine_reads_only():
-    meta, _ = frontmatter(ROUTINES / "brain-health.md")
-    assert set(meta["allow_tools"]) == {"brain_orient", "brain_search", "brain_read"}
-    assert meta["needs"] == []
 
 
 @pytest.mark.parametrize(

@@ -54,10 +54,6 @@ read_origin = false
 | `write` | What it may do: `episodes` (record), `propose_rules` (suggest rules, always confirmed by the user), `consolidate` (fold episodes into notes), `harvest` (summarize its own past sessions), `review` (handle proposals). | `["episodes"]` |
 | `read_origin` | May reread the original conversation behind an episode. Conversations hold far more than the episode kept, so this is off unless needed. | `false` |
 
-- Routines need matching `write` entries: `brain-maintenance` needs
-  `harvest` and `consolidate`; `brain-harvest` needs `harvest`;
-  `brain-health` needs nothing.
-
 Profiles prevent accidents and limit what a confused or misled agent can
 change. They are not a lock against other programs running as the user,
 which can read and write the files anyway.

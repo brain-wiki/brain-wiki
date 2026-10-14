@@ -1,14 +1,14 @@
 ---
-id: 01M3250V00NAWH8WARBBY16HZB
+id: 01M3250V00XMBAFECBHG44KPY6
 type: design
-title: "The skills (Skills, onboarding, and routines)"
+title: "The skills (Skills and onboarding)"
 aliases: ["15 §2"]
-tags: [skills-onboarding-and-routines]
-source: "docs/design/15-skills-onboarding-and-routines.md#2-the-skills"
+tags: [skills-and-onboarding]
+source: "docs/design/15-skills-and-onboarding.md#2-the-skills"
 bw-part_of:
-  - "[[skills-onboarding-and-routines]]"
+  - "[[skills-and-onboarding]]"
 ---
-# The skills (Skills, onboarding, and routines)
+# The skills (Skills and onboarding)
 
 The plugin ships three skills under `skills/`, all conforming to the Agent
 Skills specification (name matches its folder, description under 1,024
@@ -18,8 +18,8 @@ demand, no host-specific frontmatter keys).
 | Skill | Purpose | Loaded when |
 |---|---|---|
 | `brain` | Everyday use: recall, read warnings, record, propose rules only on request | Questions about past work, preferences, decisions; "remember…"; end of meaningful work |
-| `brain-setup` | Onboarding and reconfiguration: install, create or adopt a brain, connect agents, privacy, capture and harvest, routines | "Set up / install / connect / import / schedule brain-wiki"; or brain-wiki reports it is not configured |
-| `brain-maintain` | Upkeep: harvest, consolidate, review proposals, health check, undo | "Consolidate / harvest / clean up / review / check my brain"; scheduled routines |
+| `brain-setup` | Onboarding and reconfiguration: install, create or adopt a brain, connect agents, privacy, capture and harvest | "Set up / install / connect / import brain-wiki"; or brain-wiki reports it is not configured |
+| `brain-maintain` | Upkeep: harvest, consolidate, review proposals, health check, undo | "Consolidate / harvest / clean up / review / check my brain" |
 
 **Why three skills, not one.** Hosts load every skill's name and
 description into context up front (about 100 tokens each) and the body only
@@ -45,17 +45,15 @@ and when):
 > **brain-setup**: Set up, connect, or reconfigure brain-wiki: install the
 > CLI, create a brain or adopt an existing Obsidian or Markdown vault,
 > connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor),
-> choose which agents see which brain, turn on session capture or harvest,
-> and schedule routine maintenance in this agent's own scheduler. Use when
-> the user asks to install, set up, onboard, connect, import, or schedule
-> brain-wiki, or when brain-wiki says it is not configured.
+> choose which agents see which brain, and turn on session capture or
+> harvest. Use when the user asks to install, set up, onboard, connect, or
+> import brain-wiki, or when brain-wiki says it is not configured.
 
 > **brain-maintain**: Maintain a brain-wiki brain: harvest recent agent
 > sessions into the inbox, consolidate pending episodes into notes, review
 > proposals, check health (contradictions, stale notes, lint), and undo a
 > bad run. Use when the user asks to consolidate, harvest, clean up,
-> review, or check their brain, and when running a scheduled brain-wiki
-> routine.
+> review, or check their brain.
 
 **Layout:**
 
@@ -67,12 +65,8 @@ skills/
 ├── brain-setup/
 │   ├── SKILL.md                        the onboarding flow (§3)
 │   └── references/
-│       ├── hosts.md                    per-host connect, permission, and scheduler notes
-│       ├── privacy.md                  separate brains and profiles, in plain words
-│       └── routines/                   routine templates (§4)
-│           ├── brain-maintenance.md
-│           ├── brain-harvest.md
-│           └── brain-health.md
+│       ├── hosts.md                    per-host connect and permission notes
+│       └── privacy.md                  separate brains and profiles, in plain words
 └── brain-maintain/
     ├── SKILL.md
     └── references/
@@ -80,6 +74,6 @@ skills/
         └── harvest.md                  the harvest recipe and the self-read fallback
 ```
 
-The routine templates and instruction texts are generated from the same
+The instruction texts are generated from the same
 sources the engine uses (`brainwiki/assets/`), so the skill and the CLI can
 never disagree. `scripts/sync_versions.py` regenerates them at release.

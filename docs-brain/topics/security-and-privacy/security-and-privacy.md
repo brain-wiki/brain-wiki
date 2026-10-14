@@ -29,7 +29,6 @@ Generated from `docs/design/10-security-and-privacy.md`.
   - [[threat-t13]]: T13: Sync-tool damage
   - [[threat-t14]]: T14: Supply chain
   - [[threat-t15]]: T15: Impersonating plugins
-  - [[threat-t16]]: T16: Unattended routines act without the user watching
   - [[threat-t17]]: T17: A direct agent edit damages a note
   - [[threat-t18]]: T18: Over-reading agent transcripts
 - [[10-4-privacy-model]]: Privacy model

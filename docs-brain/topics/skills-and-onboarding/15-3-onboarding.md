@@ -1,12 +1,12 @@
 ---
-id: 01M3250V00D9XE53JYGXFJDFB9
+id: 01M3250V00J8FS4SGTENAJXQDM
 type: design
 title: "Onboarding"
 aliases: ["15 §3"]
-tags: [skills-onboarding-and-routines]
-source: "docs/design/15-skills-onboarding-and-routines.md#3-onboarding"
+tags: [skills-and-onboarding]
+source: "docs/design/15-skills-and-onboarding.md#3-onboarding"
 bw-part_of:
-  - "[[skills-onboarding-and-routines]]"
+  - "[[skills-and-onboarding]]"
 ---
 # Onboarding
 

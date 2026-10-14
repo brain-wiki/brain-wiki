@@ -12,7 +12,7 @@ bw-part_of:
 
 - Sessions with `BRAIN_WIKI_INTERNAL=1` (brain-wiki's own runs). Harvest
   also skips sessions whose working directory is under brain-wiki's state
-  directory, which is where headless consolidation runs.
+  directory, which is where headless harvest runs.
 - Subagent sessions, where the host distinguishes them.
 - Non-interactive (headless) sessions, unless `capture_headless = true`.
 - Sessions shorter than `min_turns` for prompted mode, or with fewer than

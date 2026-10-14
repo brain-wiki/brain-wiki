@@ -17,12 +17,9 @@ from brainwiki.consolidate.packet import (
     build_packet,
     drop_packet,
     load_packet,
-    pending_episodes,
     save_packet,
 )
-from brainwiki.consolidate.presets import extract_ops, run_command
 from brainwiki.consolidate.review import load_proposal, proposal_path, write_proposal
-from brainwiki.consolidate.schema import LOOSE_SCHEMA
 from brainwiki.consolidate.validate import validate
 from brainwiki.errors import Conflict, Forbidden, InvalidOps
 from brainwiki.ids import run_id
@@ -86,13 +83,6 @@ def _require(profile: Profile) -> None:
         )
 
 
-def device_warning(engine: Engine) -> str | None:
-    device = engine.manifest.consolidate.device
-    if device and device != engine.user.device_name:
-        return f"this brain is set to consolidate on {device!r}; this device is {engine.user.device_name!r}"
-    return None
-
-
 def prepare(
     engine: Engine,
     profile: Profile,
@@ -136,9 +126,6 @@ def apply(
     result = ApplyResult(packet.run, "invalid")
     validation = validate(engine, packet, payload)
     result.errors, result.warnings = list(validation.errors), list(validation.warnings)
-    warning = device_warning(engine)
-    if warning:
-        result.warnings.append(warning)
     if not validation.ok:
         return result
     ops = payload["ops"]
@@ -205,58 +192,6 @@ def apply_run(
 ) -> ApplyResult:
     packet = load_packet(engine, run)
     return apply(engine, packet, payload, profile, dry_run=dry_run, agent=agent, backend=backend)
-
-
-def consolidate_command(
-    engine: Engine,
-    *,
-    preset: str | list[str],
-    model: str | None = None,
-    timeout: int | None = None,
-    topic: str | None = None,
-    max_episodes: int | None = None,
-    if_pending: int = 0,
-    dry_run: bool = False,
-) -> ApplyResult | None:
-    """The headless backend: one subprocess per packet, one retry with the validator's errors."""
-    name = preset if isinstance(preset, str) else "custom"
-    profile = engine.manifest.profile(name)
-    if if_pending and len(pending_episodes(engine, topic=topic)) < if_pending:
-        return None
-    packet = prepare(engine, profile, backend="command", topic=topic, max_episodes=max_episodes)
-    if packet is None:
-        return None
-    prompt = instructions() + "\n" + packet.model_text() + "\n"
-    timeout = timeout or engine.manifest.consolidate.timeout_s
-    model = model or engine.manifest.consolidate.model or None
-    result: ApplyResult | None = None
-    for attempt in range(2):
-        reply = run_command(preset, prompt, model=model, timeout=timeout, schema=LOOSE_SCHEMA)
-        payload = extract_ops(reply)
-        if payload is None:
-            errors = ['the reply did not contain a JSON object with an "ops" array']
-            result = ApplyResult(packet.run, "invalid", errors=errors)
-        else:
-            result = apply(
-                engine,
-                packet,
-                payload,
-                profile,
-                dry_run=dry_run,
-                agent=name,
-                backend="command",
-                model=model,
-            )
-        if result.status != "invalid" or attempt == 1:
-            break
-        prompt += (
-            "\n\nYour previous reply was rejected:\n"
-            + "\n".join(f"- {e}" for e in result.errors)
-            + '\nReturn the corrected {"ops": [...]} only.\n'
-        )
-    if result is not None and result.status in ("invalid", "stale"):
-        drop_packet(engine, packet.run)
-    return result
 
 
 # -- review ---------------------------------------------------------------

@@ -25,9 +25,7 @@ name = "{name}"
 # description = "What this brain is for, in one line (shown by `brain list`)"
 
 [consolidate]
-backend = "agent"          # agent (your agent does it via MCP) | command (headless CLI)
-command = "claude-code"    # preset for the command backend
-review  = "auto"           # auto | always
+review = "auto"            # auto | always: whether consolidation waits for your review
 
 [agents.default]           # what agents without their own profile may write
 write       = ["episodes"]

@@ -19,10 +19,10 @@ brain ([[proposal-privacy|privacy proposal]]).
 **Grouping.** For each episode, the engine finds candidate notes:
 topic hints, then an FTS query over the episode text (top 5), then the
 hubs of candidate topics. Episodes with overlapping candidates form one
-packet; packets are cut to a token budget (default 30k tokens for
-`command`; 15k for `agent`, because hosts cap tool results, for example
-Claude Code at 25k tokens by default; the tool raises its own cap with
-`_meta["anthropic/maxResultSizeChars"]` where supported). Leftover episodes wait for the next run.
+packet; packets are cut to a token budget (15k tokens, because hosts cap
+tool results, for example Claude Code at 25k tokens by default; the tool
+raises its own cap with `_meta["anthropic/maxResultSizeChars"]` where
+supported; the bench's headless runs use 30k). Leftover episodes wait for the next run.
 
 **Packet.** A JSON document that is the complete input to the LLM.
 Handles replace paths and ids so models never copy long identifiers:

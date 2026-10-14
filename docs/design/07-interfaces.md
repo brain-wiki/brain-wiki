@@ -77,9 +77,7 @@ brain restore PATH                                       # put back the last rec
 brain log [TEXT | -] [--topic T]... [--agent HOST] [--taint true|false|unknown]
 brain rule add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
-brain consolidate [--backend agent|command] [--command PRESET] [--model M]
-                  [--topic T] [--max-episodes N] [--if-pending N] [--dry-run]
-brain consolidate --prepare [--out PACKET.json]          # for external drivers
+brain consolidate --prepare [--topic T] [--max-episodes N] [--out PACKET.json]
 brain consolidate --apply OPS.json --run RUN [--dry-run]
 brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--dry-run | --apply]
 brain harvest --status                                   # per host: unharvested sessions, last run
@@ -99,7 +97,6 @@ brain import PATH --into BRAIN [--dry-run | --apply]
 brain import PATH --to-episodes [--agent HOST]
 
 brain connect HOST [--brain NAME] [--scope user|project] [--briefing-hook] [--capture] [--print] [--force] [--dry-run] [--uninstall]
-brain schedule list | show ROUTINE --for HOST | install ROUTINE (--for HOST | --via cron|launchd|systemd) [--at HH:MM] [--dry-run | --apply] | remove ROUTINE
 brain hook HOST EVENT                                     # called by hosts; JSON on stdin
 brain mcp [--host HOST]                                   # stdio MCP server
 

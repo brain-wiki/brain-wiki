@@ -22,7 +22,6 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = Path("src/brainwiki/assets")
-ROUTINES_OUT = Path("skills/brain-setup/references/routines")
 
 PIN = re.compile(r"brain-wiki==[^\s\"']+")
 
@@ -94,8 +93,6 @@ def expected(root: Path, version: str) -> tuple[dict[Path, str], list[str]]:
         Path("skills/brain-maintain/references/consolidate.md"): ASSETS / "prompts/consolidate.md",
         Path("skills/brain-maintain/references/harvest.md"): ASSETS / "prompts/harvest.md",
     }
-    for routine in sorted((root / ASSETS / "routines").glob("*.md")):
-        sources[ROUTINES_OUT / routine.name] = ASSETS / "routines" / routine.name
     for target, source in sources.items():
         if not (root / source).is_file():
             problems.append(f"missing: {source.as_posix()}")
@@ -125,15 +122,6 @@ def _rule(root: Path) -> str | None:
     return module.antigravity_rule(module.Access())
 
 
-def stale(root: Path, managed: dict[Path, str]) -> list[Path]:
-    """Generated routine copies whose source no longer exists."""
-    return [
-        path.relative_to(root)
-        for path in sorted((root / ROUTINES_OUT).glob("*.md"))
-        if path.relative_to(root) not in managed
-    ]
-
-
 def run(root: Path, check: bool) -> int:
     version = read_version(root)
     managed, problems = expected(root, version)
@@ -158,10 +146,6 @@ def run(root: Path, check: bool) -> int:
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
-    for rel in stale(root, managed):
-        drift.append(f"{rel.as_posix()} (no source)")
-        if not check:
-            (root / rel).unlink()
 
     verb = "out of sync" if check else "updated"
     for item in drift:

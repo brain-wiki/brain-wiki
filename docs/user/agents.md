@@ -54,7 +54,6 @@ starts it at once.
 - Antigravity cannot show brain-wiki's confirmation form, so a rule an
   agent proposes waits for you: `brain rule list`, then
   `brain rule accept <id>`.
-- A `/schedule` made in the CLI (`agy`) stops when that session exits.
 
 ## What agents get
 
@@ -146,19 +145,3 @@ Sessions are routed to the brain their working directory belongs to; a
 session that belongs to no brain is skipped, never filed into your default
 brain. Claude Code deletes transcripts after 30 days by default, so harvest
 at least weekly.
-
-## Scheduled routines
-
-```sh
-brain schedule show brain-maintenance --for claude-code   # fields for the desktop app's routines
-brain schedule show brain-harvest --for antigravity       # a /schedule line to run in the brain folder
-brain schedule install brain-maintenance --for openclaw --apply
-brain schedule install brain-maintenance --via cron --apply   # or launchd, systemd
-brain schedule remove brain-maintenance
-```
-
-Routines: `brain-maintenance` (daily: harvest, then consolidate when at
-least 5 episodes are pending), `brain-harvest` (daily, harvest only, for
-your other agents), `brain-health` (weekly, read-only summary). Set
-`[consolidate] device = "<this machine>"` in `brain.toml` so consolidation
-runs on one machine only.

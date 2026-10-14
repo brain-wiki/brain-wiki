@@ -1,10 +1,10 @@
 ---
-id: 01M3250V00H21TCQH6P1DEVFNS
+id: 01M3250V00Q2K3YPS70JC64198
 type: design
 title: "Rules for the setup skill"
 aliases: ["15 §3.3"]
-tags: [skills-onboarding-and-routines]
-source: "docs/design/15-skills-onboarding-and-routines.md#33-rules-for-the-setup-skill"
+tags: [skills-and-onboarding]
+source: "docs/design/15-skills-and-onboarding.md#33-rules-for-the-setup-skill"
 bw-part_of:
   - "[[15-3-onboarding]]"
 ---
@@ -12,8 +12,8 @@ bw-part_of:
 
 - **One decision at a time, batched sensibly.** Ask the few questions a step
   needs together, then act; never a wall of questions up front.
-- **Dry run before any write outside the brain** (host configs, schedulers,
-  crontab), and show the diff.
+- **Dry run before any write outside the brain** (host configs), and show
+  the diff.
 - **Nothing that reads sessions or sends content to a model is turned on
   without an explicit yes**, and the explanation comes first.
 - **Never move, rename, or delete the user's files.** Import is overlay

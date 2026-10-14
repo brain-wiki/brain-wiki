@@ -10,8 +10,8 @@ bw-part_of:
 ---
 # Backends
 
-A backend turns a packet into a list of ops. Both v0.1 backends use the
-same instructions and the same validator.
+A backend turns a packet into a list of ops. v0.1 has one, the agent the
+user is talking to; the instructions and the validator do not depend on it.
 
 **`agent` backend (in-session).** The host agent is the LLM.
 
@@ -28,31 +28,3 @@ same instructions and the same validator.
 
 Advantages: no extra process, no extra credentials, the user watches it
 happen and can steer. Cost: it uses the session's context window.
-
-**`command` backend (headless).** A one-shot subprocess per packet:
-
-```toml
-[consolidate]
-backend = "command"
-command = "claude-code"           # preset name, or a full argv list:
-# command = ["my-llm", "--json"]  # the prompt goes to stdin
-model   = ""                      # optional, passed to presets that accept it
-timeout_s = 600
-```
-
-1. Render the prompt: instructions + packet.
-2. Run the command in an empty temporary directory, with the prompt on
-   stdin, no inherited terminal, and the preset's flags that disable tools
-   where the host supports it. The model gets text in and returns text out.
-   It cannot read or change files.
-3. Extract the reply: the preset knows how to find the final message in
-   the host's JSON output; then the first JSON object with an `ops` array
-   is parsed (code fences stripped).
-4. On validation failure, retry once with the errors appended. A second
-   failure ends the run; episodes stay pending.
-
-Presets for Claude Code, Codex, Antigravity CLI, Cursor's CLI,
-and a plain local-model runner are defined in
-[[08-7-headless-presets-for-the-command-backend|08 §7]].
-The backend's agent profile is the preset name (for example
-`[agents.claude-code]`).

@@ -15,4 +15,4 @@ bw-part_of:
 - [[proposal-privacy-3-requirements]]: Requirements (Privacy)
 - [[proposal-privacy-4-draft-model]]: Draft model
 - [[proposal-privacy-5-options]]: Options
-- [[proposal-privacy-6-open-questions]]: Open questions
+- [[proposal-privacy-6-open-questions]]: Open questions (Privacy)

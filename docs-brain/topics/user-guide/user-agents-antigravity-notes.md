@@ -17,4 +17,3 @@ bw-part_of:
 - Antigravity cannot show brain-wiki's confirmation form, so a rule an
   agent proposes waits for you: `brain rule list`, then
   `brain rule accept <id>`.
-- A `/schedule` made in the CLI (`agy`) stops when that session exits.

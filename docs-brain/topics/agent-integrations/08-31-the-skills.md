@@ -12,6 +12,5 @@ bw-part_of:
 
 The plugin ships three skills, `brain` (everyday use), `brain-setup`
 (onboarding and reconfiguration), and `brain-maintain` (harvest,
-consolidation, review, health), plus routine templates for the hosts' own
-schedulers. Their design, the onboarding flow, and the templates are in
-[[skills-onboarding-and-routines|15]].
+consolidation, review, health). Their design and the onboarding flow are in
+[[skills-and-onboarding|15]].

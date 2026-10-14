@@ -67,7 +67,6 @@ def package_contents() -> bool:
             top = {m.name.split("/")[1] for m in sdist.getmembers() if "/" in m.name}
     required = [f"brainwiki/assets/plugin/{p}" for p in PLUGIN_FILES] + [
         "brainwiki/assets/prompts/consolidate.md",
-        "brainwiki/assets/routines/brain-maintenance.md",
         "brainwiki/viz/app/index.html",
         "brainwiki/assets/plugin/skills/brain/SKILL.md",
     ]

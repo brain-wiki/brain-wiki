@@ -16,4 +16,3 @@ bw-part_of:
 - [[user-agents-which-agent-may-do-what]]: Which agent may do what
 - [[user-agents-capture-off-by-default]]: Capture (off by default)
 - [[user-agents-harvest-off-by-default]]: Harvest (off by default)
-- [[user-agents-scheduled-routines]]: Scheduled routines

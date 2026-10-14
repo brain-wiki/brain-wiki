@@ -24,7 +24,7 @@ Generated from `docs/proposals/`.
     - [[proposal-privacy-44-enforcement-points]]: Enforcement points
     - [[proposal-privacy-45-links]]: Links (Privacy)
   - [[proposal-privacy-5-options]]: Options
-  - [[proposal-privacy-6-open-questions]]: Open questions
+  - [[proposal-privacy-6-open-questions]]: Open questions (Privacy)
 - [[proposal-public-benchmarks]]: Public memory benchmarks
   - [[proposal-public-benchmarks-1-targets]]: Targets
   - [[proposal-public-benchmarks-2-probe-coverage]]: Probe coverage
@@ -39,3 +39,9 @@ Generated from `docs/proposals/`.
   - [[proposal-remote-sync-4-server-mode-reading-object-storage]]: Server mode reading object storage
   - [[proposal-remote-sync-5-what-leaves-the-machine]]: What leaves the machine
   - [[proposal-remote-sync-6-alternatives-considered]]: Alternatives considered (Remote sync and object storage)
+- [[proposal-scheduled-maintenance]]: Scheduled maintenance
+  - [[proposal-scheduled-maintenance-1-what-was-built]]: What was built
+    - [[proposal-scheduled-maintenance-11-routine-templates]]: Routine templates
+    - [[proposal-scheduled-maintenance-12-headless-consolidation]]: Headless consolidation
+  - [[proposal-scheduled-maintenance-2-why-it-was-removed]]: Why it was removed
+  - [[proposal-scheduled-maintenance-3-open-questions]]: Open questions (Scheduled maintenance)

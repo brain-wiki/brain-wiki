@@ -230,31 +230,6 @@ def test_review_flow(example: Path):
         assert "FTS5 handles prefix queries." in (example / "topics/search/fts5.md").read_text()
 
 
-FAKE_MODEL = """
-import json, sys
-prompt = sys.stdin.read()
-packet, _ = json.JSONDecoder().raw_decode(prompt.split("## Packet", 1)[1].strip())
-ops = [{"op": "skip_episode", "episode": ep["handle"], "reason": "test"} for ep in packet["episodes"]]
-if "previous reply was rejected" not in prompt:
-    ops.append({"op": "skip_episode", "episode": "E999", "reason": "invented"})
-print("Here you go:\\n```json\\n" + json.dumps({"ops": ops}) + "\\n```")
-"""
-
-
-def test_command_backend_retries_with_errors(example: Path, tmp_path: Path):
-    script = tmp_path / "fake_model.py"
-    script.write_text(FAKE_MODEL)
-    with eng(example) as e:
-        path = log(e, "Nothing durable here.")
-        assert (
-            pipeline.consolidate_command(e, preset=[sys.executable, str(script)], if_pending=5)
-            is None
-        )
-        result = pipeline.consolidate_command(e, preset=[sys.executable, str(script)])
-        assert result is not None and result.status == "applied", result.errors
-        assert not (example / path).exists()
-
-
 FAKE_AGY = """#!{python}
 import json, sys
 open({log!r}, "w").write(json.dumps({{"argv": sys.argv[1:], "stdin": sys.stdin.read()}}))

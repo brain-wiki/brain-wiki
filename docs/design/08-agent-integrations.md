@@ -10,7 +10,7 @@ when higher ones are missing.
 | Tier | Mechanism | What the agent gains |
 |---|---|---|
 | 0 · Files | The brain's own `AGENTS.md` ([02 §11](02-brain-format.md#11-agentsmd)) | Any file-reading agent opened in the brain folder can read and log episodes. |
-| 1 · Skills | `skills/brain`, `skills/brain-setup`, `skills/brain-maintain` in the plugin | Knows when and how to use, set up, and maintain the brain, through the CLI or MCP ([15](15-skills-onboarding-and-routines.md)). |
+| 1 · Skills | `skills/brain`, `skills/brain-setup`, `skills/brain-maintain` in the plugin | Knows when and how to use, set up, and maintain the brain, through the CLI or MCP ([15](15-skills-and-onboarding.md)). |
 | 2 · MCP | `brain mcp --host <id>` (stdio) | Orient, search with guards, read, log, propose rules, consolidate. |
 | 3 · Hooks | `brain hook <host> <event>` | Orientation injected at session start; optional capture at stop or compaction; optional recall per prompt. |
 | 4 · Native memory | Host-specific memory APIs | Not built ([backlog](../proposals/README.md#backlog)). |
@@ -97,9 +97,8 @@ more; `brain connect` avoids the wait.
 
 The plugin ships three skills, `brain` (everyday use), `brain-setup`
 (onboarding and reconfiguration), and `brain-maintain` (harvest,
-consolidation, review, health), plus routine templates for the hosts' own
-schedulers. Their design, the onboarding flow, and the templates are in
-[15](15-skills-onboarding-and-routines.md).
+consolidation, review, health). Their design and the onboarding flow are in
+[15](15-skills-and-onboarding.md).
 
 ### 3.2 The static instruction block
 
@@ -340,9 +339,8 @@ Injected text is wrapped in markers
 - **Quiet.** Only protocol JSON on stdout; diagnostics on stderr.
 - **No shell interpolation.** Payload content never reaches a command line.
 - **Self-exclusion.** If `BRAIN_WIKI_INTERNAL=1` is set (brain-wiki sets it
-  for every subprocess it starts, such as headless consolidation), hooks
-  exit immediately. This prevents a consolidation run from capturing
-  itself.
+  for every subprocess it starts, such as headless harvest), hooks exit
+  immediately. This prevents a harvest run from capturing itself.
 
 ## 6. Capture and harvest
 
@@ -386,7 +384,7 @@ nudge   = true                  # show unharvested-session counts in orientation
 
 - Sessions with `BRAIN_WIKI_INTERNAL=1` (brain-wiki's own runs). Harvest
   also skips sessions whose working directory is under brain-wiki's state
-  directory, which is where headless consolidation runs.
+  directory, which is where headless harvest runs.
 - Subagent sessions, where the host distinguishes them.
 - Non-interactive (headless) sessions, unless `capture_headless = true`.
 - Sessions shorter than `min_turns` for prompted mode, or with fewer than
@@ -436,10 +434,10 @@ host versions. A line they cannot parse is skipped and counted; a session
 with too many unparseable lines is reported as unreadable rather than
 half-read. Readers never write to a host's files.
 
-## 7. Headless presets for the command backend
+## 7. Headless presets
 
-The command backend ([05 §4.4](05-write-path-and-consolidation.md#44-backends))
-runs a host CLI once per packet, prompt on stdin, in an empty temporary
+Headless harvest (`brain harvest --apply`, [05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions))
+and the bench's model runs ([11](11-eval-bench.md)) run a host CLI once per packet, prompt on stdin, in an empty temporary
 directory, with `BRAIN_WIKI_INTERNAL=1`.
 
 | Preset | Command (sketch) | Final text | Isolation |
@@ -506,7 +504,7 @@ because CLIs change faster than this document.
 | Orientation injected at start | ✓ | ✓ | ✓ (first call only) | hook pack |
 | Prompted capture asks once | ✓ | ✓ | ✓ | — |
 | Raw capture produces one episode per compaction | ✓ | ✓ | stop only | hook pack |
-| Self-exclusion during headless consolidation | ✓ | ✓ | ✓ | — |
+| Self-exclusion during headless harvest | ✓ | ✓ | ✓ | — |
 | Session reader parses recorded fixtures; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
 | Origin lookup returns the right window, and `not_available` when deleted | ✓ | ✓ | ✓ | — |
 | `brain connect` and `--uninstall` round trip | ✓ | ✓ | ✓ | ✓ |

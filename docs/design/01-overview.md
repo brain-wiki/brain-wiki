@@ -89,8 +89,8 @@ Writes take one of three paths:
   change and records it with an undo point like any other run.
 
 The LLM that proposes operations is whatever the user already runs: the
-host agent itself (through MCP tools and a skill) or a headless agent CLI
-started by a scheduled job. brain-wiki needs no API keys.
+host agent itself, through MCP tools and a skill. brain-wiki needs no API
+keys.
 
 ## 3. Goals
 
@@ -112,9 +112,11 @@ started by a scheduled job. brain-wiki needs no API keys.
 - **Remote MCP for chat apps** (ChatGPT web, claude.ai, the Gemini app). The
   design is a [proposal](../proposals/remote-mcp.md); the implementation is
   not in v0.1.
-- **Built-in LLM API clients.** Consolidation goes through the host agent or
-  a headless agent CLI. A direct-API backend is a later addition behind the
-  same interface.
+- **Built-in LLM API clients.** Consolidation goes through the host agent.
+  A direct-API backend is a later addition behind the same interface.
+- **Scheduled maintenance.** Harvest and consolidation run when the user
+  asks; the scheduled version was removed before 0.1
+  ([proposal](../proposals/scheduled-maintenance.md)).
 - **Required embeddings.** Search is lexical (SQLite FTS5) plus graph
   expansion. Vector search is an optional later addition.
 - **Remote storage backends.** v0.1 supports a local directory, optionally a
@@ -159,20 +161,20 @@ agent-readable without restructuring it.
 
 | # | Scenario | Flow (details in) |
 |---|---|---|
-| S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, which brains each may use, capture and harvest, and routines, with a dry run before every write. [15](15-skills-onboarding-and-routines.md) |
+| S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, which brains each may use, and capture and harvest, with a dry run before every write. [15](15-skills-and-onboarding.md) |
 | S1 | **Session start.** An agent starts in a project. | The static block `brain connect` wrote tells it to call `brain_list` and `brain_orient` when the task may depend on the user's knowledge; the briefing (what the brain holds, rules, topics, recent changes) fits a fixed budget. [04](04-index-and-retrieval.md), [08 §3.2](08-agent-integrations.md#32-the-static-instruction-block) |
 | S2 | **Recall during a task.** The agent asks about a past decision. | `search` returns the matching notes plus every note that supersedes or conflicts with them; the agent opens one with `read` and follows its relations with `neighbors`, or reads files directly when allowed. [04](04-index-and-retrieval.md) |
 | S2b | **An agent updates a note.** The user says "Maya moved to the platform team." | The agent edits the person's note and runs `brain check`, which validates and records the edit. [05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits) |
 | S3 | **Capture.** The agent learned something worth keeping. | It logs an episode (MCP or CLI), or the opt-in session-end hook writes one from the transcript. [05](05-write-path-and-consolidation.md) |
 | S3b | **Harvest and backfill.** Sessions happened without capture, or before brain-wiki existed. | `brain harvest` reads finished sessions from the hosts' own stores, routes each to a brain by project, and distills them into episodes, after a dry run. [05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions) |
-| S4 | **Consolidation.** Pending episodes are folded into topic notes. | Either the user asks their agent to consolidate (agent backend), or a scheduled job runs a headless agent CLI (command backend). [05](05-write-path-and-consolidation.md) |
+| S4 | **Consolidation.** Pending episodes are folded into topic notes. | The user asks their agent to consolidate; it runs in the session, where the user can watch and steer. [05](05-write-path-and-consolidation.md) |
 | S5 | **Human editing.** The user edits notes in Obsidian. | Edits are picked up by the next freshness check; lint reports problems. [06](06-lint-and-reports.md) |
 | S6 | **Bring an existing vault.** | `brain import --overlay` adopts a folder in place, with a dry-run report before any change. [09](09-import.md) |
 | S7 | **Work and personal.** | Two named brains; a project file or host setting picks the right one; agents can be limited to a subset. [03](03-config-and-storage.md) |
 | S8 | **A bad consolidation.** | `brain undo <run>` restores the prior state exactly. [05](05-write-path-and-consolidation.md) |
 | S9 | **Inspect the brain.** | `brain viz` opens a 3D map of topics, notes, and relations. [12](12-visualizer.md) |
 | S10 | **Compare models.** | `brain bench` runs the same consolidation scenarios through several headless CLIs and reports validity and agreement. [11](11-eval-bench.md) |
-| S11 | **An agent builds its own knowledge.** A long-running assistant learns how the user's tools, services, and projects behave. | It logs episodes as it works; a scheduled routine consolidates them unattended into agent-origin claims, marked unverified when web or tool output influenced them; later sessions on any host recall them with their sources. [05](05-write-path-and-consolidation.md), [15](15-skills-onboarding-and-routines.md) |
+| S11 | **An agent builds its own knowledge.** A long-running assistant learns how the user's tools, services, and projects behave. | It logs episodes as it works, and corrects notes directly with `brain check`; when the user asks, consolidation turns its episodes into agent-origin claims, marked unverified when web or tool output influenced them; later sessions on any host recall them with their sources. [05](05-write-path-and-consolidation.md), [15](15-skills-and-onboarding.md) |
 
 ## 7. Glossary
 

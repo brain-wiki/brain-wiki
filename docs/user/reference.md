@@ -23,7 +23,7 @@ command's options.
 | `brain index [--rebuild \| --status]` | Inspect or rebuild the index |
 | `brain log [TEXT \| -] [--topic T] [--claim C] [--agent HOST] [--taint …]` | Write an episode |
 | `brain rule add TEXT [--quote Q] [--replaces ID] \| list \| accept ID \| reject ID` | Rules |
-| `brain consolidate [--backend agent\|command] [--command PRESET] [--if-pending N] [--dry-run]` | Consolidate |
+| `brain consolidate --prepare [--topic T] [--out FILE]`, `--apply OPS.json --run RUN [--dry-run]` | Drive consolidation yourself (agents use `brain_consolidate_*`) |
 | `brain consolidate --prepare [--out F]` / `--apply OPS.json --run RUN` | Drive consolidation externally |
 | `brain review list \| show RUN \| accept RUN \| reject RUN` | Proposals waiting for review |
 | `brain runs [list \| show RUN]`, `brain undo [RUN] [--force]` | Run history and undo |
@@ -33,7 +33,6 @@ command's options.
 | `brain harvest [--from HOST] [--since 30d] [--project P] [--raw \| --distill PRESET] [--apply] [--status]` | Harvest sessions |
 | `brain origin EPISODE [--turns A-B]` | Show an episode's original conversation |
 | `brain connect HOST [--scope user\|project] [--briefing-hook] [--capture] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent |
-| `brain schedule list \| show R --for HOST \| install R (--for openclaw \| --via cron\|launchd\|systemd) [--at HH:MM] [--apply] \| remove R` | Routines |
 | `brain import PATH (--overlay [--phase N] \| --into BRAIN \| --to-episodes) [--apply]`, `brain import --from HOST` | Import |
 | `brain viz [--topic T] [--export FILE.html\|.json\|.graphml]` | The brain map |
 | `brain bench [SUITE…] [--sizes 1k,10k] [--backends …]` | Evaluation bench |

@@ -123,7 +123,7 @@ For a session whose turns 12–15 settle a storage question:
 ## If `brain_harvest_prepare` returns `unsupported_host`
 
 brain-wiki cannot read this agent's session history yet. Only when the user
-asked for a harvest in this conversation (never in a scheduled run), you may
+asked for a harvest in this conversation, you may
 use this fallback:
 
 1. Tell the user brain-wiki cannot read this agent's history directly, and

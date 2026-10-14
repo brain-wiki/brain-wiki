@@ -13,8 +13,8 @@ bw-part_of:
 | Trigger | Backend | How |
 |---|---|---|
 | User asks their agent ("consolidate my brain") | `agent` | The skill drives `brain_consolidate_prepare` / `brain_consolidate_apply` over MCP. |
-| Scheduled job | `command` | `brain consolidate --if-pending 5` from cron, launchd, or systemd; recipes in user docs. |
-| Manual | either | `brain consolidate` in a terminal. |
+| User drives it from a terminal | `agent` | `brain consolidate --prepare` writes the packet and instructions; any model or person produces the ops; `brain consolidate --apply OPS.json --run RUN` validates and applies them. |
 
 v0.1 never consolidates on its own in the background. Running an LLM costs
-money and attention, and the user should choose when.
+money and attention, and the user should choose when. Scheduled, headless
+consolidation was removed before 0.1 ([[proposal-scheduled-maintenance|proposal]]).

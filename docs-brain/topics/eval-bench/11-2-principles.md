@@ -22,4 +22,4 @@ bw-part_of:
   lowest score across backends, because a brain is shared by every model
   that writes to it.
 - **Same code paths as production.** Model suites run through the real
-  consolidation pipeline and command backends ([[05-44-backends|05 §4.4]]).
+  consolidation pipeline through headless agent CLIs ([[08-7-headless-presets|08 §7]]).

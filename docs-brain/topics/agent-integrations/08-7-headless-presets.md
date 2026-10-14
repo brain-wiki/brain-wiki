@@ -1,17 +1,17 @@
 ---
-id: 01M3250V003PJPQW9K38TY32VE
+id: 01M3250V00TST9FSK6KS8ER0KA
 type: design
-title: "Headless presets for the command backend"
+title: "Headless presets"
 aliases: ["08 §7"]
 tags: [agent-integrations]
-source: "docs/design/08-agent-integrations.md#7-headless-presets-for-the-command-backend"
+source: "docs/design/08-agent-integrations.md#7-headless-presets"
 bw-part_of:
   - "[[agent-integrations]]"
 ---
-# Headless presets for the command backend
+# Headless presets
 
-The command backend ([[05-44-backends|05 §4.4]])
-runs a host CLI once per packet, prompt on stdin, in an empty temporary
+Headless harvest (`brain harvest --apply`, [[05-22-harvesting-sessions|05 §2.2]])
+and the bench's model runs ([[eval-bench|11]]) run a host CLI once per packet, prompt on stdin, in an empty temporary
 directory, with `BRAIN_WIKI_INTERNAL=1`.
 
 | Preset | Command (sketch) | Final text | Isolation |

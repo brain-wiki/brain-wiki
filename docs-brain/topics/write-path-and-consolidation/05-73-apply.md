@@ -14,8 +14,7 @@ bw-part_of:
    advisory lock held for the duration of the apply).
 2. Check that every note the ops touch still has the hash recorded in the
    packet. A note edited since then makes the run stale: the agent backend
-   gets a `stale` error and re-prepares; the command backend re-prepares
-   once.
+   gets a `stale` error and re-prepares.
 3. Compute new contents for every touched file in memory; keep pre-images.
 4. Lint the new contents (V11).
 5. Write each file atomically (temporary file, `fsync`, rename); move

@@ -12,6 +12,6 @@ bw-part_of:
 
 **Supply chain.** A compromised dependency, including one bundled into the visualizer.
 
-**Mitigations:** Few runtime dependencies, pinned in the lockfile; the visualizer's JavaScript built from a lockfile that resolves from the public npm registry only, with CI rebuilding the committed bundle and failing on any difference; releases built in CI with provenance.
+**Mitigations:** Few runtime dependencies, with version bounds; the visualizer's JavaScript built from a lockfile that resolves from the public npm registry only, with CI rebuilding the committed bundle and failing on any difference; releases built in CI with provenance.
 
 **Residual risk:** Standard open-source supply-chain risk.
