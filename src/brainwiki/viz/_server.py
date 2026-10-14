@@ -249,7 +249,7 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _file(self, path: Path, mime: str) -> None:
         if not path.is_file():
-            body = b"the visualizer app is not built (see viz-app/)\n"
+            body = b"the visualizer app is not built; see CONTRIBUTING.md (brain-wiki-viz)\n"
             self._send(HTTPStatus.SERVICE_UNAVAILABLE, body, "text/plain; charset=utf-8")
             return
         self._send(HTTPStatus.OK, path.read_bytes(), mime)

@@ -29,7 +29,7 @@ Clone it next to this one, then:
 
 ```sh
 cd ../brain-wiki-viz
-npm ci                       # Node 20 or newer
+npm ci                       # Node 20.19+, or 22.12+ on Node 22
 npm run check                # type check, unit tests, lockfile check
 git commit …                 # commit the source first: the build records its commit
 npm run build                # writes ../brain-wiki/src/brainwiki/viz/app/
