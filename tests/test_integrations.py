@@ -260,6 +260,29 @@ def test_setup_wizard_creates_brain(tmp_path: Path):
     assert not list((tmp_path / "brains" / "mine" / "inbox" / "episodes").rglob("*.md"))
 
 
+def test_setup_wizard_offers_a_harvest_route_for_a_single_brain(
+    brain_dir: Path, monkeypatch: pytest.MonkeyPatch
+):
+    import brainwiki.doctor
+
+    host = {"id": "claude-code", "installed": True, "connected": True}
+    monkeypatch.setattr(
+        brainwiki.doctor,
+        "run_doctor",
+        lambda: {
+            "version": "0",
+            "device": "d",
+            "brains": [{"name": "test", "path": str(brain_dir), "default": True}],
+            "hosts": [host],
+        },
+    )
+    answers = iter(["y", "y"])  # harvest claude-code; route ~ to the brain
+    assert run_wizard(None, ask=lambda _: next(answers, "n"), out=lambda _: None) == 0
+    user = load_user_config()
+    assert user.harvest_enabled("claude-code")
+    assert user.harvest["routes"] == {"~/**": "test"}
+
+
 def test_reconnecting_keeps_user_config_and_cleans_old_blocks(
     brain_dir: Path, no_host_clis: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):

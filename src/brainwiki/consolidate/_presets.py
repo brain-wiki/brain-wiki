@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from brainwiki.config import state_dir
 from brainwiki.errors import NotAvailable, UsageError
 
 # Headless runs cannot approve tools; Antigravity ends the turn with no output after a denied
@@ -160,7 +161,9 @@ def run_command(
     schema: dict[str, Any] | None = None,
 ) -> str:
     """Run a preset (or a custom argv) once and return the model's final text."""
-    with tempfile.TemporaryDirectory(prefix="brain-wiki-") as tmp:
+    work = state_dir() / "headless"  # under the state dir, so harvest skips these sessions
+    work.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="run-", dir=work) as tmp:
         call = _Call(model or None, None, Path(tmp))
         prompt = _HEADLESS_PREAMBLE + prompt
         stdin = prompt

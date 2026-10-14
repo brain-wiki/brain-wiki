@@ -1,7 +1,8 @@
 """`brain setup`: the onboarding flow as a terminal wizard (design doc 15 §3).
 
-Same steps as the brain-setup skill: detect, brain, connect, harvest, verify, summary. Every write outside the brain is shown as a dry run first, and nothing that
-reads sessions is turned on without an explicit yes.
+The brain-setup skill's steps without install and permissions: detect, brain, connect,
+harvest, verify, summary. Every write outside the brain is shown as a dry run first, and
+nothing that reads sessions is turned on without an explicit yes.
 """
 
 from __future__ import annotations
@@ -99,6 +100,16 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
             set_value("harvest.enabled", True)
             set_value("harvest.hosts", harvest)
             summary.append(f"Harvest on for {', '.join(harvest)}")
+            user = load_user_config()
+            if len(user.brains) == 1 and not user.harvest.get("routes"):
+                (only,) = user.brains
+                out(
+                    "Each session goes to the brain of the folder it ran in; sessions in no "
+                    "brain's folder are skipped."
+                )
+                if _yes(ask, f"Harvest sessions from any folder under your home into {only!r}?"):
+                    set_value("harvest.routes", {"~/**": only})
+                    summary.append(f"Sessions under ~ go to {only!r} ([harvest.routes])")
 
     # Verify
     user = load_user_config()

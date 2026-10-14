@@ -84,12 +84,31 @@ def _save_doc(path: Path, doc: tomlkit.TOMLDocument) -> None:
     path.write_text(tomlkit.dumps(doc), encoding="utf-8")
 
 
+def _brain_id(root: Path) -> str | None:
+    try:
+        return str(tomllib.loads((root / "brain.toml").read_text(encoding="utf-8")).get("id"))
+    except (OSError, tomllib.TOMLDecodeError):
+        return None
+
+
+def _moved(old: Path, new: Path) -> bool:
+    """A name may follow its brain to a new folder: the old folder is no longer a brain, or
+    both hold the same brain (03 §5, Move)."""
+    old_id = _brain_id(old.expanduser())
+    return old_id is None or old_id == _brain_id(new)
+
+
 def registration_conflict(name: str, brain_path: Path, *, path: Path | None = None) -> str | None:
-    """Why `name` cannot be registered for `brain_path`: the name or the folder is taken."""
+    """Why `name` cannot be registered for `brain_path`: the name is taken by another brain, or
+    the folder is registered under another name."""
     user = load_user_config(path)
     target = brain_path.expanduser().resolve()
     current = user.brains.get(name)
-    if current is not None and current.expanduser().resolve() != target:
+    if (
+        current is not None
+        and current.expanduser().resolve() != target
+        and not _moved(current, target)
+    ):
         return (
             f"a brain named {name!r} is already registered at {current}; pick another name, "
             f"or `brain brains remove {name}` first"

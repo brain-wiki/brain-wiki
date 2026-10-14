@@ -168,3 +168,16 @@ def test_a_registered_name_is_never_silently_repointed(brain_dir: Path, tmp_path
     assert main(["init", str(other), "--name", "test"]) == 4
     assert not other.exists() and load_user_config().brains["test"] == before
     assert main(["brains", "add", "again", str(brain_dir)]) == 4
+
+
+def test_a_name_follows_its_brain_to_a_new_folder(brain_dir: Path, tmp_path: Path):
+    import shutil
+
+    from brainwiki.cli import main
+    from brainwiki.config._user import load_user_config
+
+    moved = tmp_path / "moved"
+    shutil.move(brain_dir, moved)
+    assert main(["brains", "add", "test", str(moved)]) == 0
+    user = load_user_config()
+    assert user.brains["test"].resolve() == moved.resolve() and user.default == "test"
