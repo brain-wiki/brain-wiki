@@ -81,7 +81,10 @@ decoration for its own sake.
   starfield backdrop. Camera moves are eased flights, not jumps.
 - **Navigation is a 2.5D map,** not a free 3D camera: the view keeps a fixed
   tilt and heading, dragging pans across the galactic plane, and the wheel
-  or a pinch zooms toward the cursor. Depth still separates dense clusters,
+  or a trackpad pinch zooms toward the point of the map under the cursor
+  (the look target stays on the map's level, so a zoom never stalls in empty
+  space above it); a touchscreen pinch zooms toward the middle of the view.
+  Depth still separates dense clusters,
   but nobody gets lost upside down. Bloom and
   the constellation dust ease down at the topic and note levels, where the
   camera sits inside the glow and full strength would merge a cluster into
@@ -105,20 +108,24 @@ decoration for its own sake.
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
   inside their constellation, a parent topic at the center of the
-  constellation its sub-topics form; notes are laid out per topic by gravity
-  and linked by folder, facing the camera. Each folder is a circle. At its
-  core, its own notes form a sunflower: the folder note (at the top, the
-  topic index) in the middle, then the rest by length on the golden angle, so
-  long notes gather at the core and short ones ring the rim. A note's room
-  grows with its length (radius with the fourth root of its lines). The
-  folder's sub-folders orbit that core, each in a wedge of its own, the
-  largest first; an empty wedge keeps the way in from the parent clear. A
-  line runs from each folder's core to its parent's, and since every circle
-  stays inside its wedge, no link crosses another or runs through a folder it
-  does not join. Each nesting level sits one tier farther back from the
-  camera, straight along the view, so depth never moves a star on screen.
-  Typed links are drawn but do not move stars. The same brain always produces
-  the same map, and no layout ever spans the whole brain.
+  constellation its sub-topics form; notes are gathered per topic by gravity
+  and linked by folder, facing the camera, with no outlines. Each folder's
+  own notes form a star cluster: the folder note (at the top, the topic
+  index) at the core, the rest on a projected Plummer profile in order of
+  length, so the core is dense, the halo sparse, and long notes sink to the
+  middle. Each note's direction is random but seeded by its id, so stars
+  clump instead of spacing out evenly; links between notes of one folder pull
+  them together while gravity holds each at its depth, and close neighbors
+  push apart. A note's room grows with its length (radius with the fourth
+  root of its lines). The folder's sub-folders orbit that core, each in a
+  wedge of its own, the largest first; an empty wedge keeps the way in from
+  the parent clear. A line runs from each folder's core to its parent's, and
+  since every folder stays inside its wedge, no link crosses another or runs
+  through a folder it does not join. Each nesting level sits one tier farther
+  back from the camera, straight along the view, so depth never moves a star
+  on screen. Typed links are drawn but do not move stars outside their
+  folder. The same brain always produces the same map, and no layout ever
+  spans the whole brain.
 - **Labels say what things are.** The galaxy is the look, not the vocabulary:
   the interface says Overview, Group (of topics), Topic, and Note, never
   galaxy or constellation; *issues*, not flags; *session captures*, not
@@ -128,9 +135,9 @@ decoration for its own sake.
 - **The hierarchy follows the folders.** Inside a topic, the map's tree is
   the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
   folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is its core, where
-  its links meet; a folder without one is still a circle, with its longest
+  its links meet; a folder without one is still a cluster, with its longest
   note at the core, or, when it holds only sub-folders, an empty junction.
-  Each circle is labeled at its top. A folder's label
+  Each folder is labeled just above its topmost note. A folder's label
   drops the leading ` · ` parts its parent folders' titles already say
   ("Lumen guide · Sync · Conflicts" reads "Conflicts"). A written `part_of` that
   points elsewhere is a relation, not the note's place.
@@ -138,7 +145,7 @@ decoration for its own sake.
 
 | Relation | Trail |
 |---|---|
-| `part_of` | The folder tree (the dock's **Folders** chip, on by default): each folder's faint circle, and one line from its core to its parent's, brighter at the parent end; a note's place in its circle says which folder holds it, so notes draw no lines |
+| `part_of` | The folder tree (the dock's **Folders** chip, on by default): one line from each folder's core to its parent's, brighter at the parent end; a note's place in its folder's cluster says which folder holds it, so notes draw no lines |
 | `depends_on` | Blue, flowing prerequisite → dependent |
 | `conflicts_with` | Red, always shown when either end is visible |
 | `supersedes` | Amber, flowing old → new |
@@ -329,6 +336,7 @@ at most 200 per flag.
 | A force layout per topic, seeded by its folder tree (strong tree springs, sub-folders in random directions) | Deep or lopsided folder trees crossed themselves: 77 of 175 tree lines crossed on a 176-note topic five folders deep, and the 3D scatter hid how deep a folder sat. |
 | A radial tree per topic (a slice per folder, a line per note) | No crossings, but a line per note turned a folder of 200 dailies into a spiky ball, lines routed along rings to avoid crossings read as bent polylines, and nothing showed how much a note holds. |
 | Plain circle packing per topic (nested circles, no lines) | Compact, but containment alone did not read as levels, the topic index often landed at the edge of the topic, and lines added from a folder to its sub-folders ran through sibling circles (7 of 33 on a 176-note topic). Orbits around each folder's core fix both, at some cost in space when a folder has many sub-folders. |
+| Sunflower clusters inside folder outlines | No crossings, but the golden-angle spacing laid notes out evenly (a folder of 200 dailies became a uniform disc), which read as a grid rather than a cluster, and the outlines added clutter the links already conveyed. |
 | 2.5D terrain atlas (topics as territories, notes as towns) | Easiest to navigate, but the galaxy keeps depth for separating dense clusters and matches the brain metaphor; both use the same levels and API. |
 | No build step (vendored ES modules, hand-written JS) | Keeps contributors off Node, but a HUD of this size and custom shaders are much harder to maintain without types and a bundler; committing the bundle keeps users off Node anyway. |
 | React | Preact gives the same model at a fraction of the size. |
