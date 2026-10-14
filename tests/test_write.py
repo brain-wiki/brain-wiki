@@ -19,7 +19,7 @@ from brainwiki.runs import Run
 from brainwiki.runs.record import save_record
 from brainwiki.runs.undo import undo
 from brainwiki.write import rules
-from brainwiki.write.episode import MAX_EPISODE_BYTES, write_episode
+from brainwiki.write.episode import _MAX_EPISODE_BYTES, write_episode
 from brainwiki.write.move import move_note
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
@@ -160,7 +160,7 @@ def test_dedupe_and_validation(brain_dir: Path):
             captured="cli",
         )
         assert big.truncated
-        assert len((brain_dir / big.path).read_bytes()) <= MAX_EPISODE_BYTES + 100
+        assert len((brain_dir / big.path).read_bytes()) <= _MAX_EPISODE_BYTES + 100
 
 
 def test_cli_log_provenance(brain_dir: Path, capsys):

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -18,10 +17,10 @@ from brainwiki.hosts.sessions import (
     summarize_args,
 )
 
-HOST = "claude-code"
+_HOST = "claude-code"
 
 
-def default_root() -> Path:
+def _default_root() -> Path:
     base = os.environ.get("CLAUDE_CONFIG_DIR")
     return (Path(base).expanduser() if base else Path.home() / ".claude") / "projects"
 
@@ -48,13 +47,13 @@ def _text_and_tools(content: Any) -> tuple[str, list[tuple[str, str]], bool]:
 
 
 class ClaudeCodeReader:
-    host = HOST
+    host = _HOST
 
     def __init__(self, root: Path | None = None):
         self.root = root
 
     def roots(self) -> list[Path]:
-        return [self.root or default_root()]
+        return [self.root or _default_root()]
 
     def _head(self, path: Path) -> dict[str, Any]:
         meta: dict[str, Any] = {}
@@ -92,7 +91,7 @@ class ClaudeCodeReader:
                 meta = self._head(path)
                 out.append(
                     SessionInfo(
-                        host=HOST,
+                        host=_HOST,
                         id=str(meta.get("sessionId") or path.stem),
                         path=path,
                         cwd=meta.get("cwd"),
@@ -111,7 +110,7 @@ class ClaudeCodeReader:
                 st = path.stat()
                 meta = self._head(path)
                 return SessionInfo(
-                    HOST,
+                    _HOST,
                     session_id,
                     path,
                     meta.get("cwd"),
@@ -122,15 +121,17 @@ class ClaudeCodeReader:
         return None
 
     def read(self, info: SessionInfo) -> Transcript:
-        return read_transcript(info)
+        return _read_transcript(info)
 
     @staticmethod
     def info_for_path(path: Path, session_id: str | None = None) -> SessionInfo:
         st = path.stat()
-        return SessionInfo(HOST, session_id or path.stem, path, None, None, st.st_mtime, st.st_size)
+        return SessionInfo(
+            _HOST, session_id or path.stem, path, None, None, st.st_mtime, st.st_size
+        )
 
 
-def read_transcript(info: SessionInfo) -> Transcript:
+def _read_transcript(info: SessionInfo) -> Transcript:
     turns: list[Turn] = []
     untrusted: list[str] = []
     unparsed = total = 0
@@ -156,7 +157,7 @@ def read_transcript(info: SessionInfo) -> Transcript:
             if only_results:
                 continue
             for name, summary in tools:
-                if is_untrusted(HOST, name, summary):
+                if is_untrusted(_HOST, name, summary):
                     untrusted.append(name)
             text = strip_injected(text)
             labels = [f"{name}: {summary}" if summary else name for name, summary in tools]
@@ -170,9 +171,3 @@ def read_transcript(info: SessionInfo) -> Transcript:
                 continue
             turns.append(Turn(len(turns) + 1, role, text, labels, entry.get("timestamp")))
     return Transcript(info, turns, unparsed, total, untrusted)
-
-
-def iso(ts: float) -> str:
-    return (
-        datetime.fromtimestamp(ts, tz=UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    )

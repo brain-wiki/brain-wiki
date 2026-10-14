@@ -13,7 +13,7 @@ from brainwiki.config.user import register_brain
 from brainwiki.engine import Engine
 from brainwiki.errors import Forbidden
 from brainwiki.runs import load_record
-from brainwiki.write.edits import check_edits, pending_edits, restore
+from brainwiki.write.edits import _pending_edits, check_edits, restore
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 FTS5 = "topics/search/fts5.md"
@@ -54,7 +54,7 @@ def test_agent_edit_is_recorded_with_unverified_claims_and_undo(example: Path):
         assert result["status"] == "recorded", result
         record = load_record(eng.brain.key, result["run"])
         assert record.kind == "edit" and record.agent == "claude-code"
-        assert pending_edits(eng) == []
+        assert _pending_edits(eng) == []
     text = (example / FTS5).read_text()
     assert '"Queries return in under 50 ms. {id: c-' in text
     assert "origin: agent; taint: unknown" in text
@@ -83,7 +83,7 @@ def test_deleting_or_rewording_a_claim_fails_and_restore_puts_it_back(example: P
         failed = check_edits(eng, [FTS5])
         assert failed["status"] == "failed"
         assert [p["code"] for p in failed["problems"]] == ["claim_reworded"]
-        assert pending_edits(eng)[0]["path"] == FTS5  # still pending, nothing recorded
+        assert _pending_edits(eng)[0]["path"] == FTS5  # still pending, nothing recorded
         restored = restore(eng, FTS5)
         assert restored["status"] == "restored" and Path(restored["saved"]).exists()
     assert (example / FTS5).read_text() == original
@@ -151,21 +151,21 @@ def test_hand_edits_are_pending_until_adopted_and_never_nag(example: Path):
         "---\ntype: idea\n---\n# New idea\n\nTry BM25F.\n"
     )
     with Engine(open_brain(example)) as eng:
-        pending = {p["path"]: p for p in pending_edits(eng)}
+        pending = {p["path"]: p for p in _pending_edits(eng)}
         assert pending[FTS5]["change"] == "changed" and "+We switched" not in pending[FTS5]["diff"]
         assert "painfully" in pending[FTS5]["diff"]
         assert pending["topics/search/new-idea.md"]["change"] == "created"
     assert main(["lint"]) in (0, 1)  # pending edits are not lint problems
     assert main(["check", "--adopt", FTS5, "topics/search/new-idea.md"]) == 0
     with Engine(open_brain(example)) as eng:
-        assert pending_edits(eng) == []
+        assert _pending_edits(eng) == []
 
 
 def test_runs_and_hand_renames_move_the_recorded_version(example: Path):
     assert main(["mv", "topics/search/vector-only.md", "topics/search/vectors.md"]) == 0
     (example / "topics/search/ripgrep.md").rename(example / "topics/search/rg.md")
     with Engine(open_brain(example)) as eng:
-        assert pending_edits(eng) == []
+        assert _pending_edits(eng) == []
 
 
 def test_rollback_keeps_the_agent_version(example: Path):
@@ -176,9 +176,9 @@ def test_rollback_keeps_the_agent_version(example: Path):
     edited = (example / FTS5).read_bytes()
     with _agent(example) as eng:
         run = Run(eng, "edit")
-        from brainwiki.write.edits import baseline
+        from brainwiki.write.edits import _baseline
 
-        _, base = baseline(eng, FTS5)
+        _, base = _baseline(eng, FTS5)
         run.adopt(FTS5, base, edited + b"\nstamped\n")
         record = run.commit(log=False, use_git=False)
         rollback(eng, record)

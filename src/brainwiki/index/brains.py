@@ -12,7 +12,7 @@ from brainwiki.engine import Engine
 from brainwiki.errors import BrainError
 
 
-def brain_stats(engine: Engine) -> dict[str, Any]:
+def _brain_stats(engine: Engine) -> dict[str, Any]:
     """Counts over the brain's notes."""
     from brainwiki.index.orient import brief_stats, topic_rows
 
@@ -67,7 +67,7 @@ def list_brains(
             continue
         engine = engine_for(brain) if engine_for else Engine(brain, host=host, user=user)
         try:
-            stats = brain_stats(engine)
+            stats = _brain_stats(engine)
         finally:
             if engine_for is None:
                 engine.close()

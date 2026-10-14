@@ -16,14 +16,14 @@ from brainwiki.runs import Run, RunRecord
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-RULES = "rules.md"
-MAX_RULE_CHARS = 300
-MAX_QUOTE_CHARS = 500
+_RULES = "rules.md"
+_MAX_RULE_CHARS = 300
+_MAX_QUOTE_CHARS = 500
 
 
 def list_rules(engine: Engine) -> list[dict[str, Any]]:
     try:
-        text = engine.store.read_text(RULES)
+        text = engine.store.read_text(_RULES)
     except OSError:
         return []
     rules, _ = parse_rules(text)
@@ -43,16 +43,16 @@ def list_rules(engine: Engine) -> list[dict[str, Any]]:
 
 def _validate(text: str, quote: str) -> tuple[str, str]:
     text, quote = " ".join(text.split()), " ".join(quote.split())
-    if not text or len(text) > MAX_RULE_CHARS:
-        raise UsageError(f"a rule must be 1 to {MAX_RULE_CHARS} characters")
-    if not quote or len(quote) > MAX_QUOTE_CHARS:
-        raise UsageError(f"the quote must be 1 to {MAX_QUOTE_CHARS} characters")
+    if not text or len(text) > _MAX_RULE_CHARS:
+        raise UsageError(f"a rule must be 1 to {_MAX_RULE_CHARS} characters")
+    if not quote or len(quote) > _MAX_QUOTE_CHARS:
+        raise UsageError(f"the quote must be 1 to {_MAX_QUOTE_CHARS} characters")
     return text, quote
 
 
 def _stage_rule(run: Run, text: str, quote: str, replaces: str | None, via: str | None) -> str:
     engine = run.engine
-    current = run.read(RULES) or RULES_HEADER
+    current = run.read(_RULES) or RULES_HEADER
     new_id = rule_id()
     meta = {
         "id": new_id,
@@ -99,7 +99,7 @@ def _stage_rule(run: Run, text: str, quote: str, replaces: str | None, via: str 
     rules, malformed = parse_rules(updated)
     if malformed or not any(r.id == new_id for r in rules):
         raise UsageError("the rule could not be written in a parseable form")
-    run.write(RULES, updated)
+    run.write(_RULES, updated)
     return new_id
 
 

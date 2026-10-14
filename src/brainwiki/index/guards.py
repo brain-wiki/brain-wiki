@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-MAX_CHAIN = 5
+_MAX_CHAIN = 5
 _ORDER = {"superseded_by": 0, "conflicts_with": 1, "supersedes": 2}
 
 
@@ -28,11 +28,11 @@ def _newer_than(engine: Engine, node_id: str) -> list[str]:
     return [r["src"] for r in rows]
 
 
-def successor_chain(engine: Engine, node_id: str) -> list[str]:
+def _successor_chain(engine: Engine, node_id: str) -> list[str]:
     """From a superseding node, the chain forward to the newest successor (inclusive)."""
     chain = [node_id]
     seen = {node_id}
-    for _ in range(MAX_CHAIN):
+    for _ in range(_MAX_CHAIN):
         newer = [n for n in _newer_than(engine, chain[-1]) if n not in seen]
         if not newer:
             break
@@ -77,7 +77,7 @@ def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]
                 label = "conflicts_with"
             via: list[str] = []
             if label == "superseded_by":
-                chain = [n for n in successor_chain(engine, neighbor) if node(n) is not None]
+                chain = [n for n in _successor_chain(engine, neighbor) if node(n) is not None]
                 if not chain:
                     continue
                 neighbor, via = chain[-1], chain[:-1]
@@ -119,11 +119,11 @@ def _ts(value: Any) -> float:
         return 0.0
 
 
-BANNER_LIMIT = 3
+_BANNER_LIMIT = 3
 
 
 def banners(
-    guard_info: dict[str, Any], target: str | None = None, limit: int = BANNER_LIMIT
+    guard_info: dict[str, Any], target: str | None = None, limit: int = _BANNER_LIMIT
 ) -> list[str]:
     """Warning lines for a hit or read: the first `limit` guards in full, then a count.
 

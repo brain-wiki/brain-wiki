@@ -43,7 +43,7 @@ FIELDS = {
     "dedupe": "bw-dedupe",
     "source": "bw-source",
 }
-NOTE_FIELDS = ("stage",)  # the unprefixed names a note may still use (format 1)
+_NOTE_FIELDS = ("stage",)  # the unprefixed names a note may still use (format 1)
 KNOWN = {CLAIMS, SUPERSEDED, *RELATION_KEYS, *FIELDS.values()}
 _META_KEYS = {"id", "src", "origin", "taint", "at", "status", "by", "reason", "quote", "via"}
 _META_TAIL = re.compile(r"\s*\{(?P<body>[^{}]*)\}\s*$")
@@ -204,7 +204,7 @@ def _items_of(lines: list[str], span: tuple[int, int, str]) -> list[str]:
     return [str(v) for v in as_items(value) if v is not None]
 
 
-def set_list(text: str, key: str, values: list[str], *, after: tuple[str, ...] = ()) -> str:
+def _set_list(text: str, key: str, values: list[str], *, after: tuple[str, ...] = ()) -> str:
     """Write `key` as a block list of `values` (removing it when empty); creates frontmatter."""
     newline = _newline(text)
     block = [f"{key}:{newline}", *[f"  - {quote(v)}{newline}" for v in values]] if values else []
@@ -237,7 +237,7 @@ def list_values(text: str, key: str) -> list[str]:
 
 
 def add_items(text: str, key: str, values: list[str]) -> str:
-    return set_list(text, key, [*list_values(text, key), *values], after=tuple(_field_order(key)))
+    return _set_list(text, key, [*list_values(text, key), *values], after=tuple(_field_order(key)))
 
 
 def replace_item(text: str, key: str, index: int, new: list[str]) -> str:
@@ -245,7 +245,7 @@ def replace_item(text: str, key: str, index: int, new: list[str]) -> str:
     if not 0 <= index < len(values):
         return text
     values[index : index + 1] = new
-    return set_list(text, key, values)
+    return _set_list(text, key, values)
 
 
 def move_item(text: str, key: str, value: str, new_key: str, new_value: str) -> str:
@@ -254,7 +254,7 @@ def move_item(text: str, key: str, value: str, new_key: str, new_value: str) -> 
     if value not in values:
         return text
     values.remove(value)
-    return add_items(set_list(text, key, values), new_key, [new_value])
+    return add_items(_set_list(text, key, values), new_key, [new_value])
 
 
 def _field_order(key: str) -> list[str]:
@@ -317,7 +317,7 @@ def to_format2(text: str) -> str:
         out = add_items(out, CLAIMS, claims)
     if superseded:
         out = add_items(out, SUPERSEDED, superseded)
-    for name in NOTE_FIELDS:
+    for name in _NOTE_FIELDS:
         if name in doc.frontmatter.legacy_fields:
             value = doc.frontmatter.raw.get(name)
             out = set_fields(remove_field(out, name), {FIELDS[name]: value})
@@ -331,7 +331,7 @@ def is_format1(doc: ParsedDoc) -> bool:
     return (
         any(c.key is None for c in doc.claims)
         or any(r.key is None for r in doc.relations)
-        or any(n in doc.frontmatter.legacy_fields for n in NOTE_FIELDS)
+        or any(n in doc.frontmatter.legacy_fields for n in _NOTE_FIELDS)
     )
 
 

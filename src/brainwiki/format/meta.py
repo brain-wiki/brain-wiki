@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-META_RE = re.compile(r"\s*<!--\s*(?P<body>.*?)\s*-->\s*$")
+_META_RE = re.compile(r"\s*<!--\s*(?P<body>.*?)\s*-->\s*$")
 
 
 def parse_meta(body: str) -> dict[str, str]:
@@ -57,7 +57,7 @@ def format_meta(meta: dict[str, str]) -> str:
 
 def split_meta(line: str) -> tuple[str, dict[str, str] | None]:
     """Return (text without the trailing comment, meta or None)."""
-    match = META_RE.search(line)
+    match = _META_RE.search(line)
     if not match:
         return line.rstrip(), None
     return line[: match.start()].rstrip(), parse_meta(match.group("body"))

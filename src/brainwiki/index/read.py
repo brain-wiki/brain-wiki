@@ -263,5 +263,5 @@ def format_read_text(result: dict[str, Any]) -> str:
     return (head + "\n\n" if head else "") + result.get("content", "")
 
 
-def props(node: dict[str, Any]) -> dict[str, Any]:
+def _props(node: dict[str, Any]) -> dict[str, Any]:
     return json.loads(node.get("props") or "{}")

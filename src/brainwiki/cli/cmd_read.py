@@ -35,7 +35,7 @@ def search(args: Any) -> int:
             topics=args.topic,
             types=args.types,
             tags=args.tags,
-            where=parse_where(args.where),
+            where=_parse_where(args.where),
             since=args.since,
             until=args.until,
             sort=args.sort,
@@ -56,7 +56,7 @@ def search(args: Any) -> int:
     return 0
 
 
-def parse_where(items: list[str]) -> dict[str, str]:
+def _parse_where(items: list[str]) -> dict[str, str]:
     where = {}
     for item in items or []:
         key, sep, value = item.partition("=")

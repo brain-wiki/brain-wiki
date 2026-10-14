@@ -13,21 +13,21 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
-MARKER_RE = re.compile(r"<brain-wiki-context>.*?</brain-wiki-context>", re.S)
+_MARKER_RE = re.compile(r"<brain-wiki-context>.*?</brain-wiki-context>", re.S)
 _HOST_INJECTED = re.compile(
     r"<(system-reminder|command-name|command-message|local-command-stdout)>.*?</\1>", re.S
 )
 _NETWORK_SHELL = re.compile(r"\b(curl|wget|http|https)\b|https?://", re.I)
-UNREADABLE_RATIO = 0.5
+_UNREADABLE_RATIO = 0.5
 MAX_TRANSCRIPT_BYTES = 20 * 1024 * 1024
 
 # Tool names (or prefixes ending in "*") that bring outside content into a session.
-UNTRUSTED_TOOLS: dict[str, tuple[str, ...]] = {
+_UNTRUSTED_TOOLS: dict[str, tuple[str, ...]] = {
     "claude-code": ("WebFetch", "WebSearch", "mcp__*"),
     "codex": ("web_search", "web_fetch", "mcp__*"),
     "antigravity": ("search_web", "read_url_content", "read_browser_page", "browser_*", "mcp_*"),
 }
-SHELL_TOOLS = {"Bash", "shell", "local_shell", "exec_command", "run_command"}
+_SHELL_TOOLS = {"Bash", "shell", "local_shell", "exec_command", "run_command"}
 
 
 @dataclass
@@ -68,7 +68,7 @@ class Transcript:
 
     @property
     def readable(self) -> bool:
-        return not self.total_lines or self.unparsed / self.total_lines < UNREADABLE_RATIO
+        return not self.total_lines or self.unparsed / self.total_lines < _UNREADABLE_RATIO
 
     @property
     def taint(self) -> str:
@@ -94,7 +94,7 @@ class Reader(Protocol):
 
 def strip_injected(text: str) -> str:
     """Remove brain-wiki's own injected context and host-injected wrappers before capture."""
-    return _HOST_INJECTED.sub("", MARKER_RE.sub("", text)).strip()
+    return _HOST_INJECTED.sub("", _MARKER_RE.sub("", text)).strip()
 
 
 def normalize_call(host: str, name: str, args: Any) -> tuple[str, Any]:
@@ -156,16 +156,16 @@ def is_untrusted(
     trusted = tuple(trusted_mcp_servers)
     if tool.startswith(("mcp__", "mcp_")) and any(server in tool for server in trusted):
         return False
-    patterns = UNTRUSTED_TOOLS.get(host, ()) + tuple(extra)
+    patterns = _UNTRUSTED_TOOLS.get(host, ()) + tuple(extra)
     for pattern in patterns:
         if pattern.endswith("*") and tool.startswith(pattern[:-1]):
             return True
         if tool == pattern:
             return True
-    return tool in SHELL_TOOLS and bool(_NETWORK_SHELL.search(args_summary))
+    return tool in _SHELL_TOOLS and bool(_NETWORK_SHELL.search(args_summary))
 
 
-def readers() -> dict[str, Reader]:
+def _readers() -> dict[str, Reader]:
     from brainwiki.hosts.antigravity import AntigravityReader
     from brainwiki.hosts.claude_code import ClaudeCodeReader
     from brainwiki.hosts.codex import CodexReader
@@ -174,4 +174,4 @@ def readers() -> dict[str, Reader]:
 
 
 def reader_for(host: str) -> Reader | None:
-    return readers().get(host)
+    return _readers().get(host)

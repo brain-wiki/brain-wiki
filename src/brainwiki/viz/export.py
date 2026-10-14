@@ -18,9 +18,9 @@ if TYPE_CHECKING:
     from brainwiki.viz.lod import Atlas
 
 APP_DIR = Path(__file__).parent / "app"
-SYMMETRIC = {"conflicts_with", "related_to"}
-MAX_RUNS = 20
-SKIP_RUN_STATUSES = {"applying", "failed"}
+_SYMMETRIC = {"conflicts_with", "related_to"}
+_MAX_RUNS = 20
+_SKIP_RUN_STATUSES = {"applying", "failed"}
 _XML_INVALID = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
 
 
@@ -77,7 +77,7 @@ def _links(engine: Engine, ids: set[str]) -> list[dict[str, Any]]:
         src, dst, rel = row["src"], row["dst"], row["rel"]
         if src not in ids or dst not in ids:
             continue
-        a, b = (min(src, dst), max(src, dst)) if rel in SYMMETRIC else (src, dst)
+        a, b = (min(src, dst), max(src, dst)) if rel in _SYMMETRIC else (src, dst)
         if (a, b, rel) in seen:
             continue
         seen.add((a, b, rel))
@@ -223,7 +223,7 @@ def _runs(engine: Engine, ids: set[str]) -> list[dict[str, Any]]:
     episodes_dir = engine.manifest.layout.episodes_dir + "/"
     out: list[dict[str, Any]] = []
     for record in list_records(engine.brain.key):
-        if record.status in SKIP_RUN_STATUSES:
+        if record.status in _SKIP_RUN_STATUSES:
             continue
         episodes = sum(1 for f in record.files if f.moved_to or f.path.startswith(episodes_dir))
         paths = [f.final_path for f in record.files if not f.append_only]
@@ -236,7 +236,7 @@ def _runs(engine: Engine, ids: set[str]) -> list[dict[str, Any]]:
                 "touched": _resolve_paths(engine, paths, ids),
             }
         )
-        if len(out) >= MAX_RUNS:
+        if len(out) >= _MAX_RUNS:
             break
     return out
 
@@ -261,7 +261,7 @@ def to_json(graph: dict[str, Any]) -> str:
     return json.dumps(graph, ensure_ascii=False, indent=2)
 
 
-def script_json(graph: dict[str, Any]) -> str:
+def _script_json(graph: dict[str, Any]) -> str:
     """JSON safe to embed in a <script> element: no '<', '>' or '&' survive literally."""
     text = json.dumps(graph, ensure_ascii=False, separators=(",", ":"))
     return (
@@ -369,7 +369,7 @@ def to_standalone_html(atlas: Atlas, app_dir: Path | None = None) -> str:
         "topics": {slug: atlas.topic(slug) for slug in atlas.topics},
         "health": atlas.health(),
     }
-    data = f'<script type="application/json" id="brain-data">{script_json(payload)}</script>'
+    data = f'<script type="application/json" id="brain-data">{_script_json(payload)}</script>'
     scripts: list[str] = []
     styles: list[str] = []
 

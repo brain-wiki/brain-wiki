@@ -12,7 +12,7 @@ from brainwiki.config.manifest import MANIFEST, Manifest, load_manifest
 from brainwiki.config.user import UserConfig, load_user_config
 from brainwiki.errors import Forbidden, NotConfigured, NotFound
 
-PROJECT_FILE = ".brain-wiki.toml"
+_PROJECT_FILE = ".brain-wiki.toml"
 
 
 @dataclass
@@ -28,14 +28,14 @@ class Brain:
     @property
     def key(self) -> str:
         """Key for machine state; copies of one brain at different paths get distinct keys."""
-        return state_key(self.manifest.id, self.root)
+        return _state_key(self.manifest.id, self.root)
 
     @property
     def display_name(self) -> str:
         return self.name or self.manifest.name or self.root.name
 
 
-def state_key(brain_id: str, root: Path) -> str:
+def _state_key(brain_id: str, root: Path) -> str:
     from brainwiki.config.dirs import state_dir
 
     marker = state_dir() / "brains" / brain_id / "root"
@@ -56,7 +56,7 @@ def open_brain(root: Path, name: str | None = None) -> Brain:
     return Brain(root=root.resolve(), manifest=load_manifest(root), name=name)
 
 
-def find_brain_root(start: Path) -> Path | None:
+def _find_brain_root(start: Path) -> Path | None:
     current = start.resolve()
     for candidate in [current, *current.parents]:
         if (candidate / MANIFEST).is_file():
@@ -67,7 +67,7 @@ def find_brain_root(start: Path) -> Path | None:
 def _project_choice(cwd: Path) -> str | None:
     current = cwd.resolve()
     for candidate in [current, *current.parents]:
-        project = candidate / PROJECT_FILE
+        project = candidate / _PROJECT_FILE
         if project.is_file():
             try:
                 data = tomllib.loads(project.read_text(encoding="utf-8"))
@@ -117,7 +117,7 @@ def resolve_brain(
             continue
         _check_host_limit(brain, host, host_cfg.brains)
         return brain
-    root = find_brain_root(cwd)
+    root = _find_brain_root(cwd)
     if root is not None:
         brain = open_brain(root)
         _check_host_limit(brain, host, host_cfg.brains)
@@ -156,7 +156,7 @@ def route_brain(cwd: str | None, host: str, user: UserConfig) -> Brain | None:
     brain = _from_choice(choice, user) if choice else None
     if brain is not None:
         return brain
-    root = find_brain_root(path) if path.exists() else None
+    root = _find_brain_root(path) if path.exists() else None
     if root is not None:
         return open_brain(root)
     for name, brain_root in user.brains.items():

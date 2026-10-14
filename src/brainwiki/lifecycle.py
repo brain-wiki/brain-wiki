@@ -16,7 +16,7 @@ from brainwiki.ids import new_ulid
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-BRAIN_TOML_TEMPLATE = """\
+_BRAIN_TOML_TEMPLATE = """\
 # brain.toml: this directory is a brain-wiki brain. Settings here travel with the brain.
 # Machine-specific choices (where brains live, defaults per agent) are in the user config.
 format = {format}
@@ -87,7 +87,7 @@ def init_brain(path: Path, name: str | None = None) -> Path:
         raise UsageError(f"{path} exists and is not a directory")
     path.mkdir(parents=True, exist_ok=True)
     name = name or path.name
-    text = BRAIN_TOML_TEMPLATE.format(format=FORMAT_VERSION, id=new_ulid(), name=name)
+    text = _BRAIN_TOML_TEMPLATE.format(format=FORMAT_VERSION, id=new_ulid(), name=name)
     parse_manifest(text)  # the template must always be valid
     (path / MANIFEST).write_text(text, encoding="utf-8")
     for sub in ("topics", "inbox/episodes", "inbox/agents", "archive/episodes", "reports"):

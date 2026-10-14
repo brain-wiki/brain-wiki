@@ -14,9 +14,9 @@ from brainwiki.errors import FormatError
 
 MANIFEST = "brain.toml"
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
-WRITE_CAPABILITIES = ("episodes", "edit", "propose_rules", "consolidate", "harvest", "review")
+_WRITE_CAPABILITIES = ("episodes", "edit", "propose_rules", "consolidate", "harvest", "review")
 # What an agent without its own profile may do: log episodes and correct notes it checks.
-DEFAULT_WRITE = ("episodes", "edit")
+_DEFAULT_WRITE = ("episodes", "edit")
 AGENT_EDITS = ("allow", "review", "deny")
 
 
@@ -109,7 +109,7 @@ class TopicCfg:
 @dataclass
 class Profile:
     name: str
-    write: list[str] = field(default_factory=lambda: list(DEFAULT_WRITE))
+    write: list[str] = field(default_factory=lambda: list(_DEFAULT_WRITE))
     read_origin: bool = False
 
     def can(self, capability: str) -> bool:
@@ -152,13 +152,13 @@ class Manifest:
         if host in (None, "owner"):
             return Profile(
                 name="owner",
-                write=list(WRITE_CAPABILITIES),
+                write=list(_WRITE_CAPABILITIES),
                 read_origin=True,
             )
         raw = self.agents.get(host) or self.agents.get("default") or {}
         return Profile(
             name=host if host in self.agents else "default",
-            write=[str(w) for w in raw.get("write", DEFAULT_WRITE)],
+            write=[str(w) for w in raw.get("write", _DEFAULT_WRITE)],
             read_origin=bool(raw.get("read_origin", False)),
         )
 

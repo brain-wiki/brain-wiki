@@ -16,7 +16,7 @@ from brainwiki.lint.model import LintResult, Problem
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-CHECKED_KINDS = (
+_CHECKED_KINDS = (
     "note",
     "hub",
     "episode",
@@ -90,7 +90,7 @@ def lint(
 
         for path, data in staged.items():
             kind = kinds.get(path) or classify(engine, path, ctx.topics)
-            if kind not in CHECKED_KINDS or profile_for(path) == "off":
+            if kind not in _CHECKED_KINDS or profile_for(path) == "off":
                 continue
             checked += 1
             problems += check_file(ctx, path, kind, data, fixes=False)
@@ -98,7 +98,7 @@ def lint(
         for row in rows:
             path = row["path"]
             kind = kinds[path]
-            if kind not in CHECKED_KINDS or not _in_scope(path, scope):
+            if kind not in _CHECKED_KINDS or not _in_scope(path, scope):
                 continue
             if profile_for(path) == "off":
                 continue

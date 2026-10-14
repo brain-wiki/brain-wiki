@@ -78,13 +78,6 @@ def append_to_section(
     return _join(lines, newline)
 
 
-def replace_line(text: str, line_no: int, new_line: str) -> str:
-    newline = _newline(text)
-    lines = _split(text)
-    lines[line_no - 1] = new_line
-    return _join(lines, newline)
-
-
 def replace_line_matching(text: str, original: str, new_line: str, hint: int | None = None) -> str:
     """Replace the line whose content equals `original`, nearest to `hint` (1-based).
 
@@ -99,22 +92,3 @@ def replace_line_matching(text: str, original: str, new_line: str, hint: int | N
     target = min(matches, key=lambda i: abs(i + 1 - (hint or i + 1)))
     lines[target] = new_line
     return _join(lines, newline)
-
-
-def insert_before_line(text: str, line_no: int, new_lines: list[str]) -> str:
-    newline = _newline(text)
-    lines = _split(text)
-    lines[line_no - 1 : line_no - 1] = new_lines
-    return _join(lines, newline)
-
-
-def section_lines(text: str, section: str) -> list[str]:
-    lines = _split(text)
-    found = _find_section(lines, section)
-    if not found:
-        return []
-    return lines[found[0] + 1 : found[1]]
-
-
-def line_count(text: str) -> int:
-    return len(text.splitlines())

@@ -50,9 +50,9 @@ if TYPE_CHECKING:
     from brainwiki.runs import Run
 
 LINT_VERSION = "1"
-NOTE_KINDS = ("note", "hub")
-EPISODE_KINDS = ("episode", "archived_episode")
-SECRET_KINDS = (
+_NOTE_KINDS = ("note", "hub")
+_EPISODE_KINDS = ("episode", "archived_episode")
+_SECRET_KINDS = (
     "note",
     "hub",
     "episode",
@@ -62,7 +62,7 @@ SECRET_KINDS = (
     "agents_md",
     "proposal",
 )
-MARKER_KINDS = (*NOTE_KINDS, "rules", "agents_md", "log")
+_MARKER_KINDS = (*_NOTE_KINDS, "rules", "agents_md", "log")
 
 _CONFLICT_MARKER = re.compile(r"^(?:<{7}|>{7})(?: |$)|^={7}$")
 _INJECTION = re.compile(
@@ -127,15 +127,15 @@ def check_text(
     ctx: FileContext, rel: str, kind: str, text: str, *, fixes: bool = False
 ) -> list[Problem]:
     problems: list[Problem] = []
-    if kind in NOTE_KINDS:
+    if kind in _NOTE_KINDS:
         problems += _check_note(ctx, rel, kind, text, fixes)
-    elif kind in EPISODE_KINDS:
+    elif kind in _EPISODE_KINDS:
         problems += _check_episode(ctx, rel, kind, text, fixes)
     elif kind == "rules":
         problems += _check_rules(ctx, rel, text)
-    if kind in MARKER_KINDS:
+    if kind in _MARKER_KINDS:
         problems += _conflict_markers(rel, text)
-    if kind in SECRET_KINDS:
+    if kind in _SECRET_KINDS:
         for hit in find_secrets(text):
             problems.append(
                 Problem(
@@ -429,7 +429,7 @@ def _check_rules(ctx: FileContext, rel: str, text: str) -> list[Problem]:
     return problems
 
 
-GATED_KINDS = (*NOTE_KINDS, *EPISODE_KINDS, "rules")
+_GATED_KINDS = (*_NOTE_KINDS, *_EPISODE_KINDS, "rules")
 
 
 def run_gate(engine: Engine) -> Callable[[Run], list[Problem]]:
@@ -448,7 +448,7 @@ def run_gate(engine: Engine) -> Callable[[Run], list[Problem]]:
             if after is None:
                 continue
             kind = classify(engine, path, ctx.topics)
-            if kind not in GATED_KINDS:
+            if kind not in _GATED_KINDS:
                 continue
 
             def errors(text: str | None, path: str = path, kind: str = kind) -> list[Problem]:

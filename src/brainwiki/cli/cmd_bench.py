@@ -13,12 +13,12 @@ from typing import Any
 
 from brainwiki.errors import UsageError
 
-SUITES = ("retrieval", "lint", "consolidation", "perf", "agent")
-DEFAULT_SUITES = ["retrieval", "lint", "perf"]
+_SUITES = ("retrieval", "lint", "consolidation", "perf", "agent")
+_DEFAULT_SUITES = ["retrieval", "lint", "perf"]
 _ENV = ("BRAIN_WIKI_CONFIG", "BRAIN_WIKI_STATE_DIR", "BRAIN_WIKI_CACHE_DIR", "BRAIN_WIKI_DATA_DIR")
 
 
-def parse_sizes(raw: str) -> list[int]:
+def _parse_sizes(raw: str) -> list[int]:
     sizes = []
     for item in (s.strip().lower() for s in raw.split(",") if s.strip()):
         try:
@@ -31,7 +31,7 @@ def parse_sizes(raw: str) -> list[int]:
 
 
 @contextmanager
-def isolated_state(base: Path) -> Iterator[None]:
+def _isolated_state(base: Path) -> Iterator[None]:
     """Keep bench indexes, runs, and user config away from the user's own brain-wiki state."""
     saved = {k: os.environ.get(k) for k in (*_ENV, "BRAIN_WIKI_BRAIN", "BRAIN_WIKI_INTERNAL")}
     os.environ["BRAIN_WIKI_CONFIG"] = str(base / "config.toml")
@@ -56,11 +56,11 @@ def bench(args: Any) -> int:
         text, regressions = report.compare(Path(args.compare[0]), Path(args.compare[1]))
         print(text)
         return 1 if regressions else 0
-    names = args.suites or DEFAULT_SUITES
-    unknown = [n for n in names if n not in SUITES]
+    names = args.suites or _DEFAULT_SUITES
+    unknown = [n for n in names if n not in _SUITES]
     if unknown:
-        raise UsageError(f"unknown suite(s) {', '.join(unknown)}; choose from {', '.join(SUITES)}")
-    sizes = parse_sizes(args.sizes)
+        raise UsageError(f"unknown suite(s) {', '.join(unknown)}; choose from {', '.join(_SUITES)}")
+    sizes = _parse_sizes(args.sizes)
     backends = [b.strip() for b in (args.backends or "").split(",") if b.strip()]
     out = Path(args.out) if args.out else Path(tempfile.mkdtemp(prefix="brain-bench-"))
     work = out / "work"
@@ -69,7 +69,7 @@ def bench(args: Any) -> int:
     work.mkdir(parents=True)
 
     results = []
-    with isolated_state(work / ".state"):
+    with _isolated_state(work / ".state"):
         for name in names:
             started = time.monotonic()
             if name in ("retrieval", "perf"):

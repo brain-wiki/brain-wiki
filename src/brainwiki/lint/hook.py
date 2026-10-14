@@ -10,7 +10,7 @@ from pathlib import Path
 from brainwiki.errors import Conflict, NotAvailable
 from brainwiki.runs.git import git_dir_path, is_work_tree, run_git
 
-HOOK = """#!/bin/sh
+_HOOK = """#!/bin/sh
 # brain-wiki: lint the staged files of this brain (installed by `brain lint --install-hook`).
 command -v brain >/dev/null 2>&1 || {{ echo "brain-wiki: 'brain' is not on PATH; skipping lint" >&2; exit 0; }}
 cd "$(git rev-parse --show-toplevel)/{rel}" || exit 1
@@ -49,6 +49,6 @@ def install_hook(root: Path) -> Path:
     top = run_git(root, "rev-parse", "--show-toplevel").stdout.strip()
     rel = os.path.relpath(root, top).replace(os.sep, "/") if top else "."
     hooks.mkdir(parents=True, exist_ok=True)
-    target.write_text(HOOK.format(rel="" if rel == "." else rel), encoding="utf-8")
+    target.write_text(_HOOK.format(rel="" if rel == "." else rel), encoding="utf-8")
     target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     return target

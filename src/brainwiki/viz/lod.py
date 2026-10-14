@@ -9,27 +9,27 @@ import colorsys
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-SINGLE_MAX = 12
-GROUP_MIN = 4
-GROUP_MAX = 40
-RECENT_DAYS = 7
-MAX_EXTERNAL = 400
-FLOWS_PER_TOPIC = 8
-MAX_HEALTH = 200
+_SINGLE_MAX = 12
+_GROUP_MIN = 4
+_GROUP_MAX = 40
+_RECENT_DAYS = 7
+_MAX_EXTERNAL = 400
+_FLOWS_PER_TOPIC = 8
+_MAX_HEALTH = 200
 MAX_SEARCH = 20
 _PASSES = 50
 _EPS = 1e-12
 
-Adjacency = dict[str, dict[str, float]]
+_Adjacency = dict[str, dict[str, float]]
 
 
 # --- constellations -------------------------------------------------------
 
 
-def topic_weights(nodes: list[dict[str, Any]], links: list[dict[str, Any]]) -> Adjacency:
+def topic_weights(nodes: list[dict[str, Any]], links: list[dict[str, Any]]) -> _Adjacency:
     """Undirected topic graph: weight = typed links between two different topics."""
     topic_of = {n["id"]: n["topic"] for n in nodes}
-    adj: Adjacency = {}
+    adj: _Adjacency = {}
     for link in links:
         if not link["typed"]:
             continue
@@ -41,10 +41,10 @@ def topic_weights(nodes: list[dict[str, Any]], links: list[dict[str, Any]]) -> A
     return adj
 
 
-def group_topics(slugs: list[str], adj: Adjacency) -> list[list[str]]:
+def _group_topics(slugs: list[str], adj: _Adjacency) -> list[list[str]]:
     """Deterministic constellations: sorted slug lists, largest first."""
     slugs = sorted(set(slugs))
-    if len(slugs) <= SINGLE_MAX:
+    if len(slugs) <= _SINGLE_MAX:
         return [slugs] if slugs else []
     present = set(slugs)
     sub = {s: {t: w for t, w in adj.get(s, {}).items() if t in present} for s in slugs}
@@ -57,12 +57,12 @@ def group_topics(slugs: list[str], adj: Adjacency) -> list[list[str]]:
 
 
 def tree_groups(
-    slugs: list[str], parents: dict[str, str | None], adj: Adjacency
+    slugs: list[str], parents: dict[str, str | None], adj: _Adjacency
 ) -> list[list[str]]:
     """Constellations from the topic tree (02 §2): each top-level topic that has sub-topics, with
     everything below it; the remaining topics are grouped by their links (`group_topics`)."""
     present = sorted(set(slugs))
-    if len(present) <= SINGLE_MAX:
+    if len(present) <= _SINGLE_MAX:
         return [present] if present else []
 
     def root(slug: str) -> str:
@@ -77,16 +77,16 @@ def tree_groups(
         by_root.setdefault(root(slug), []).append(slug)
     trees = [members for members in by_root.values() if len(members) > 1]
     rest = [members[0] for members in by_root.values() if len(members) == 1]
-    groups = trees + (group_topics(rest, adj) if rest else [])
+    groups = trees + (_group_topics(rest, adj) if rest else [])
     return sorted(groups, key=lambda g: (-len(g), g[0]))
 
 
 def _chunks(slugs: list[str]) -> list[list[str]]:
-    return [slugs[i : i + GROUP_MAX] for i in range(0, len(slugs), GROUP_MAX)]
+    return [slugs[i : i + _GROUP_MAX] for i in range(0, len(slugs), _GROUP_MAX)]
 
 
-def _split(group: list[str], adj: Adjacency) -> list[list[str]]:
-    if len(group) <= GROUP_MAX:
+def _split(group: list[str], adj: _Adjacency) -> list[list[str]]:
+    if len(group) <= _GROUP_MAX:
         return [group]
     parts = _merge_small(_cluster(group, adj), adj)
     if len(parts) < 2:
@@ -94,7 +94,7 @@ def _split(group: list[str], adj: Adjacency) -> list[list[str]]:
     return [p for part in parts for p in _split(part, adj)]
 
 
-def _cluster(members: list[str], adj: Adjacency) -> list[list[str]]:
+def _cluster(members: list[str], adj: _Adjacency) -> list[list[str]]:
     """Two levels of Louvain local moving over the subgraph induced by `members`."""
     inside = set(members)
     sub = {m: {t: w for t, w in adj.get(m, {}).items() if t in inside} for m in members}
@@ -105,7 +105,7 @@ def _cluster(members: list[str], adj: Adjacency) -> list[list[str]]:
     # Second level: each first-level community becomes one node.
     names = [g[0] for g in level1]
     owner = {m: g[0] for g in level1 for m in g}
-    agg: Adjacency = {n: {} for n in names}
+    agg: _Adjacency = {n: {} for n in names}
     for m in members:
         for t, w in sub[m].items():
             a, b = owner[m], owner[t]
@@ -117,7 +117,7 @@ def _cluster(members: list[str], adj: Adjacency) -> list[list[str]]:
     return _groups(members, merged)
 
 
-def _local_moving(order: list[str], adj: Adjacency, degree: dict[str, float]) -> dict[str, int]:
+def _local_moving(order: list[str], adj: _Adjacency, degree: dict[str, float]) -> dict[str, int]:
     comm = {n: i for i, n in enumerate(order)}
     m2 = sum(degree.values())
     if m2 <= 0:
@@ -155,10 +155,10 @@ def _groups(order: list[str], comm: dict[str, int]) -> list[list[str]]:
     return sorted((sorted(g) for g in by.values()), key=lambda g: g[0])
 
 
-def _merge_small(groups: list[list[str]], adj: Adjacency) -> list[list[str]]:
+def _merge_small(groups: list[list[str]], adj: _Adjacency) -> list[list[str]]:
     groups = [list(g) for g in groups]
     while len(groups) > 1:
-        small = [g for g in groups if len(g) < GROUP_MIN]
+        small = [g for g in groups if len(g) < _GROUP_MIN]
         if not small:
             break
         group = min(small, key=lambda g: (len(g), g[0]))
@@ -187,23 +187,23 @@ def _frac(x: float) -> float:
     return x - int(x)
 
 
-def constellation_hue(index: int) -> float:
+def _constellation_hue(index: int) -> float:
     return (210 + 137.508 * index) % 360
 
 
-def constellation_color(index: int) -> str:
-    return _hex(constellation_hue(index), 0.70, 0.62)
+def _constellation_color(index: int) -> str:
+    return _hex(_constellation_hue(index), 0.70, 0.62)
 
 
-def topic_color(index: int, position: int) -> str:
+def _topic_color(index: int, position: int) -> str:
     """Constellation hue shifted by up to ±18°, lightness 55–72%, spread by golden ratio."""
     offset = 36 * (_frac(0.5 + position * 0.618034) - 0.5)
     lightness = 0.55 + 0.17 * _frac(0.5 + position * 0.381966)
-    return _hex(constellation_hue(index) + offset, 0.70, lightness)
+    return _hex(_constellation_hue(index) + offset, 0.70, lightness)
 
 
 def topic_colors(groups: list[list[str]]) -> dict[str, str]:
-    return {slug: topic_color(i, j) for i, g in enumerate(groups) for j, slug in enumerate(g)}
+    return {slug: _topic_color(i, j) for i, g in enumerate(groups) for j, slug in enumerate(g)}
 
 
 # --- payloads ---------------------------------------------------------------
@@ -262,7 +262,7 @@ class Atlas:
                 {
                     "id": f"c{i + 1}",
                     "title": " · ".join(titles) + (" · …" if len(group) > 3 else ""),
-                    "color": constellation_color(i),
+                    "color": _constellation_color(i),
                     "topics": group,
                 }
             )
@@ -305,7 +305,7 @@ class Atlas:
         return sum(1 for n in self.graph["nodes"] if n["kind"] == "episode")
 
     def _topic_summaries(self) -> list[dict[str, Any]]:
-        cutoff = (self.today - timedelta(days=RECENT_DAYS)).isoformat()
+        cutoff = (self.today - timedelta(days=_RECENT_DAYS)).isoformat()
         by_topic: dict[str, list[dict[str, Any]]] = {}
         for node in self.notes:
             by_topic.setdefault(node["topic"], []).append(node)
@@ -360,7 +360,7 @@ class Atlas:
         for flow in ranked:
             a, b = kept.get(flow["a"], 0), kept.get(flow["b"], 0)
             kept[flow["a"]], kept[flow["b"]] = a + 1, b + 1
-            if min(a, b) < FLOWS_PER_TOPIC:
+            if min(a, b) < _FLOWS_PER_TOPIC:
                 out.append(flow)
         return out
 
@@ -398,7 +398,7 @@ class Atlas:
                     "dir": "out" if out else "in",
                 }
             )
-            if len(external) >= MAX_EXTERNAL:
+            if len(external) >= _MAX_EXTERNAL:
                 break
         return {
             "slug": slug,
@@ -423,7 +423,7 @@ class Atlas:
             "counts": counts,
             "items": {
                 flag: sorted(items[flag], key=lambda r: (r["topic"], r["title"], r["id"]))[
-                    :MAX_HEALTH
+                    :_MAX_HEALTH
                 ]
                 for flag in counts
             },

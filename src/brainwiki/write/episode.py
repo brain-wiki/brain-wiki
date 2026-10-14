@@ -28,7 +28,7 @@ from brainwiki.write.secrets import scrub
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-MAX_EPISODE_BYTES = 64 * 1024
+_MAX_EPISODE_BYTES = 64 * 1024
 _TURNS = re.compile(r"^[0-9]+-[0-9]+$")
 _PLAIN = re.compile(r"^[^\r\n\x00]{1,200}$")
 
@@ -174,7 +174,7 @@ def write_episode(
     }
     rendered = render_episode(fields, scrubbed)
     head, sep, body = rendered.partition("\n---\n")
-    body, truncated = _cap(body, MAX_EPISODE_BYTES - len(head) - len(sep))
+    body, truncated = _cap(body, _MAX_EPISODE_BYTES - len(head) - len(sep))
     text = head + sep + body
     if dedupe and not _claim_marker(engine, dedupe, ulid, rel):
         found = _existing(engine, dedupe)

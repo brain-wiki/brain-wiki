@@ -12,7 +12,7 @@ from pathlib import Path, PurePosixPath
 
 from brainwiki.errors import Conflict, UsageError
 
-TMP_PREFIX = ".brain-tmp-"
+_TMP_PREFIX = ".brain-tmp-"
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -99,7 +99,7 @@ class LocalStore:
                 raise Conflict(f"{rel} changed since it was read")
         target.parent.mkdir(parents=True, exist_ok=True)
         mode = target.stat().st_mode & 0o777 if target.exists() else None
-        fd, tmp = tempfile.mkstemp(prefix=TMP_PREFIX, dir=target.parent)
+        fd, tmp = tempfile.mkstemp(prefix=_TMP_PREFIX, dir=target.parent)
         try:
             with os.fdopen(fd, "wb") as fh:
                 fh.write(data)

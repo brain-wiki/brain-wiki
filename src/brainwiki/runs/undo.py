@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
 
-def latest_undoable(brain_key: str) -> RunRecord:
+def _latest_undoable(brain_key: str) -> RunRecord:
     for record in list_records(brain_key):
         if record.status == "applied" and record.kind != "undo" and not record.undone_by:
             return record
@@ -35,7 +35,7 @@ def undo(
     engine: Engine, run: str | None = None, *, force: bool = False, agent: str | None = None
 ) -> RunRecord:
     key = engine.brain.key
-    record = load_record(key, run) if run else latest_undoable(key)
+    record = load_record(key, run) if run else _latest_undoable(key)
     if record.undone_by:
         raise Conflict(f"{record.run} was already undone by {record.undone_by}")
     if record.status != "applied":

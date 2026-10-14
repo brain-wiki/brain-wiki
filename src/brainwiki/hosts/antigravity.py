@@ -25,15 +25,15 @@ from brainwiki.hosts.sessions import (
     summarize_args,
 )
 
-HOST = "antigravity"
-LOGS = Path(".system_generated") / "logs"
-TRANSCRIPTS = ("transcript_full.jsonl", "transcript.jsonl")
-USER_STEPS = {"USER_INPUT"}
-MODEL_STEPS = {"PLANNER_RESPONSE"}
-UNTRUSTED_STEPS = {"SEARCH_WEB", "READ_URL_CONTENT", "BROWSER_ACTION"}
+_HOST = "antigravity"
+_LOGS = Path(".system_generated") / "logs"
+_TRANSCRIPTS = ("transcript_full.jsonl", "transcript.jsonl")
+_USER_STEPS = {"USER_INPUT"}
+_MODEL_STEPS = {"PLANNER_RESPONSE"}
+_UNTRUSTED_STEPS = {"SEARCH_WEB", "READ_URL_CONTENT", "BROWSER_ACTION"}
 
 
-def default_app_dirs() -> list[Path]:
+def _default_app_dirs() -> list[Path]:
     base = Path.home() / ".gemini"
     return sorted(p for p in base.glob("antigravity*") if p.is_dir()) if base.is_dir() else []
 
@@ -72,24 +72,24 @@ def _summaries(app_dir: Path) -> dict[str, dict[str, Any]]:
 
 
 class AntigravityReader:
-    host = HOST
+    host = _HOST
 
     def __init__(self, app_dirs: list[Path] | None = None):
         self._app_dirs = app_dirs
 
     def roots(self) -> list[Path]:
-        return self._app_dirs or default_app_dirs()
+        return self._app_dirs or _default_app_dirs()
 
     def list_sessions(self) -> list[SessionInfo]:
         out = []
         for app_dir in self.roots():
             summaries = _summaries(app_dir)
             for logs in (
-                (app_dir / "brain").glob(f"*/{LOGS.as_posix()}")
+                (app_dir / "brain").glob(f"*/{_LOGS.as_posix()}")
                 if (app_dir / "brain").is_dir()
                 else []
             ):
-                path = next((logs / n for n in TRANSCRIPTS if (logs / n).is_file()), None)
+                path = next((logs / n for n in _TRANSCRIPTS if (logs / n).is_file()), None)
                 if path is None:
                     continue
                 conversation = logs.parents[1].name
@@ -97,7 +97,7 @@ class AntigravityReader:
                 st = path.stat()
                 out.append(
                     SessionInfo(
-                        host=HOST,
+                        host=_HOST,
                         id=conversation,
                         path=path,
                         cwd=meta.get("cwd"),
@@ -132,23 +132,23 @@ class AntigravityReader:
                     unparsed += 1
                     continue
                 kind = str(step.get("type") or "")
-                if kind in UNTRUSTED_STEPS:
+                if kind in _UNTRUSTED_STEPS:
                     untrusted.append(kind.lower())
-                if kind in USER_STEPS:
+                if kind in _USER_STEPS:
                     text = strip_injected(str(step.get("content") or ""))
                     if text:
                         turns.append(Turn(len(turns) + 1, "user", text, [], step.get("created_at")))
-                elif kind in MODEL_STEPS:
+                elif kind in _MODEL_STEPS:
                     text = strip_injected(str(step.get("content") or ""))
                     labels = []
                     for call in step.get("tool_calls") or []:
                         if not isinstance(call, dict):
                             continue
                         name, args = normalize_call(
-                            HOST, str(call.get("name") or "tool"), call.get("args")
+                            _HOST, str(call.get("name") or "tool"), call.get("args")
                         )
                         summary = summarize_args(args)
-                        if is_untrusted(HOST, name, summary):
+                        if is_untrusted(_HOST, name, summary):
                             untrusted.append(name)
                         labels.append(f"{name}: {summary}" if summary else name)
                     if not text and not labels:

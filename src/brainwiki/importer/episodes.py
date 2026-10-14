@@ -15,7 +15,7 @@ from brainwiki.write.episode import write_episode
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-CHUNK_BYTES = 8 * 1024
+_CHUNK_BYTES = 8 * 1024
 _HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$")
 
 
@@ -48,7 +48,7 @@ def memory_files(host: str, override: Path | None = None) -> list[Path]:
     raise UnsupportedHost(f"no known memory files for {host!r}; pass --path")
 
 
-def split_document(text: str) -> list[tuple[str | None, str]]:
+def _split_document(text: str) -> list[tuple[str | None, str]]:
     """Split on headings into chunks of at most CHUNK_BYTES: [(heading, text)]."""
     sections: list[tuple[str | None, list[str]]] = [(None, [])]
     for line in text.splitlines():
@@ -61,7 +61,7 @@ def split_document(text: str) -> list[tuple[str | None, str]]:
     for heading, lines in sections:
         body = "\n".join(lines).strip()
         while body:
-            piece = body.encode("utf-8")[:CHUNK_BYTES].decode("utf-8", "ignore")
+            piece = body.encode("utf-8")[:_CHUNK_BYTES].decode("utf-8", "ignore")
             if len(piece) < len(body) and "\n" in piece:
                 piece = piece[: piece.rfind("\n")]
             chunks.append((heading, piece.strip()))
@@ -91,7 +91,7 @@ def import_documents(
             name = path.relative_to(base).as_posix()
         except ValueError:
             name = path.name
-        for heading, chunk in split_document(text):
+        for heading, chunk in _split_document(text):
             source = name + (f"#{heading}" if heading else "")
             if dry_run:
                 results.append({"source": source, "bytes": len(chunk.encode("utf-8"))})

@@ -14,14 +14,14 @@ from brainwiki.format.normalize import RELATION_PROPERTIES, STATUSES, property_l
 from brainwiki.index.resolver import norm_key
 from brainwiki.index.topics import slugify
 
-DAILY = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
-HUB_NAMES = ("index.md", "_index.md", "README.md")
-TEMPLATE_NAMES = {"templates", "_templates", "template"}
-INBOX_NAMES = {"inbox", "_inbox"}
-ATTACHMENT_NAMES = {"attachments", "assets", "files", "images", "media", "_resources"}
-MAX_PARSE_BYTES = 2 * 1024 * 1024
-NUMBERED = re.compile(r"^\d+[\s._-]+")  # "90 Templates", "00 Inbox": PARA-style prefixes
-CONFLICT = re.compile(r"\.sync-conflict-|(?i:conflicted copy)| \(\d+\)\.md$")
+_DAILY = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
+_HUB_NAMES = ("index.md", "_index.md", "README.md")
+_TEMPLATE_NAMES = {"templates", "_templates", "template"}
+_INBOX_NAMES = {"inbox", "_inbox"}
+_ATTACHMENT_NAMES = {"attachments", "assets", "files", "images", "media", "_resources"}
+_MAX_PARSE_BYTES = 2 * 1024 * 1024
+_NUMBERED = re.compile(r"^\d+[\s._-]+")  # "90 Templates", "00 Inbox": PARA-style prefixes
+_CONFLICT = re.compile(r"\.sync-conflict-|(?i:conflicted copy)| \(\d+\)\.md$")
 
 
 @dataclass
@@ -90,8 +90,8 @@ def survey(root: Path) -> Survey:
             ignore.add(templates)
     for child in sorted(root.iterdir()):
         if child.is_dir() and not child.name.startswith("."):
-            lowered = NUMBERED.sub("", child.name.lower())
-            if lowered in TEMPLATE_NAMES or lowered in ATTACHMENT_NAMES:
+            lowered = _NUMBERED.sub("", child.name.lower())
+            if lowered in _TEMPLATE_NAMES or lowered in _ATTACHMENT_NAMES:
                 ignore.add(child.name)
     files = [
         p
@@ -104,9 +104,9 @@ def survey(root: Path) -> Survey:
     for path in files:
         rel = path.relative_to(root).as_posix()
         result.notes.append(rel)
-        if CONFLICT.search(path.name):
+        if _CONFLICT.search(path.name):
             result.conflicts.append(rel)
-        if path.stat().st_size > MAX_PARSE_BYTES:
+        if path.stat().st_size > _MAX_PARSE_BYTES:
             result.oversized.append(rel)
             continue
         try:
@@ -143,11 +143,11 @@ def survey(root: Path) -> Survey:
         if len(parts) > 1:
             folders[parts[0]] += 1
             name = parts[-1]
-            if name in HUB_NAMES and len(parts) == 2:
+            if name in _HUB_NAMES and len(parts) == 2:
                 hub_votes[name] += 1
             elif len(parts) == 2 and name[:-3] == parts[0]:
                 hub_votes["{folder}.md"] += 1
-            if DAILY.match(name):
+            if _DAILY.match(name):
                 daily[parts[0]] += 1
     if hub_votes:
         result.hub_filename = hub_votes.most_common(1)[0][0]
@@ -157,7 +157,7 @@ def survey(root: Path) -> Survey:
             result.daily_folder = folder
     used: set[str] = set()
     for folder in sorted(folders):
-        if NUMBERED.sub("", folder.lower()) in INBOX_NAMES:
+        if _NUMBERED.sub("", folder.lower()) in _INBOX_NAMES:
             continue
         slug = "journal" if folder == result.daily_folder else slugify(folder)
         base, n = slug, 2

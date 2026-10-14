@@ -14,7 +14,7 @@ from brainwiki.engine import Engine
 from brainwiki.index.neighbors import neighbors
 from brainwiki.index.orient import orient
 from brainwiki.index.search import search
-from brainwiki.index.topics import build_tree
+from brainwiki.index.topics import _build_tree
 from brainwiki.lint import lint
 from brainwiki.runs.undo import undo
 from brainwiki.viz.lod import tree_groups
@@ -33,7 +33,7 @@ path = "topics/search/guide"
 
 def test_tree_slugs_parents_and_inheritance():
     manifest = parse_manifest(MANIFEST)
-    tree = build_tree(
+    tree = _build_tree(
         manifest,
         ["topics/people", "topics/search"],
         [

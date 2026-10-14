@@ -8,7 +8,7 @@ import pytest
 from brainwiki.bench import suites
 from brainwiki.bench.generate import generate
 from brainwiki.bench.report import hard_failures
-from brainwiki.cli.cmd_bench import parse_sizes
+from brainwiki.cli.cmd_bench import _parse_sizes
 from brainwiki.cli.main import main
 
 
@@ -79,12 +79,12 @@ def test_wikilink_after_token_is_not_a_secret():
 
 
 def test_injection_slice_writes_no_rule_and_taints_claims(tmp_path: Path):
-    checks = suites._slice_injection(suites.base_brain(tmp_path / "brain"))
+    checks = suites._slice_injection(suites._base_brain(tmp_path / "brain"))
     assert all(checks.values()), checks
 
 
 def test_completeness_slice_keeps_uncited_episodes_pending(tmp_path: Path):
-    checks = suites._slice_completeness(suites.base_brain(tmp_path / "brain"))
+    checks = suites._slice_completeness(suites._base_brain(tmp_path / "brain"))
     assert all(checks.values()), checks
 
 
@@ -106,7 +106,7 @@ def test_perf_suite_runs_hook_end_to_end(tmp_path: Path):
 
 
 def test_parse_sizes():
-    assert parse_sizes("1k,10k,200") == [1000, 10000, 200]
+    assert _parse_sizes("1k,10k,200") == [1000, 10000, 200]
 
 
 def test_cli_writes_results_and_compares(tmp_path: Path, capsys: pytest.CaptureFixture[str]):

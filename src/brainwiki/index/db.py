@@ -17,7 +17,7 @@ from brainwiki.index.schema import DDL, SCHEMA_VERSION, TRIGRAM_DDL
 log = logging.getLogger(__name__)
 
 
-def config_hash(manifest: Manifest) -> str:
+def _config_hash(manifest: Manifest) -> str:
     relevant = {
         "layout": vars(manifest.layout),
         "topics": {k: vars(v) for k, v in sorted(manifest.topics.items())},
@@ -27,7 +27,7 @@ def config_hash(manifest: Manifest) -> str:
     ]
 
 
-def index_path(brain_key: str) -> Path:
+def _index_path(brain_key: str) -> Path:
     return brain_cache_dir(brain_key) / "index.sqlite"
 
 
@@ -56,7 +56,7 @@ def _create(conn: sqlite3.Connection, root: Path, manifest: Manifest) -> None:
         "schema_version": str(SCHEMA_VERSION),
         "brain_id": manifest.id,
         "brain_root": str(root),
-        "config_hash": config_hash(manifest),
+        "config_hash": _config_hash(manifest),
         "engine_version": brainwiki.__version__,
         "last_scan_ns": "0",
         "fts_trigram": "1" if trigram else "0",
@@ -87,14 +87,14 @@ def _meta(conn: sqlite3.Connection) -> dict[str, str]:
 def open_index(
     brain_key: str, root: Path, manifest: Manifest, *, rebuild: bool = False
 ) -> sqlite3.Connection:
-    path = index_path(brain_key)
+    path = _index_path(brain_key)
     try:
         conn = _connect(path)
         meta = _meta(conn)
         stale = rebuild or (
             not meta
             or meta.get("schema_version") != str(SCHEMA_VERSION)
-            or meta.get("config_hash") != config_hash(manifest)
+            or meta.get("config_hash") != _config_hash(manifest)
             or meta.get("brain_id") != manifest.id
         )
         if stale:

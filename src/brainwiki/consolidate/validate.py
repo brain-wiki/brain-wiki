@@ -20,7 +20,6 @@ _ANCHOR = re.compile(
     r"https?://\S+|`[^`]+`|\[\[[^\]]+\]\]|\b\d{4}-\d{2}-\d{2}\b|\bv?\d+(?:\.\d+)+\b|\b\d+(?:[.,]\d+)?\s?(?:%|ms|s|kb|mb|gb|x)?\b",
     re.IGNORECASE,
 )
-SOURCE_OPS = ("add_claim", "merge_claim", "supersede_claim", "retract_claim", "add_relation")
 
 
 @dataclass
@@ -45,7 +44,7 @@ class Validation:
         }
 
 
-def anchors(text: str) -> set[str]:
+def _anchors(text: str) -> set[str]:
     return {m.group(0).lower().strip() for m in _ANCHOR.finditer(text)}
 
 
@@ -172,7 +171,7 @@ def validate(engine: Engine, packet: Packet, payload: Any) -> Validation:
             if kind != "merge_claim":
                 superseded_per_note[claim.note] += 1
             if kind == "supersede_claim":
-                lost = anchors(claim.text) - anchors(op["text"])
+                lost = _anchors(claim.text) - _anchors(op["text"])
                 if lost:
                     result.warnings.append(
                         f"ops[{index}]: the new text of {op['claim']} drops {', '.join(sorted(lost))}"

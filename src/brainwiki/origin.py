@@ -12,8 +12,8 @@ from brainwiki.write.secrets import scrub
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-DEFAULT_CONTEXT = 20
-MAX_TURNS = 60
+_DEFAULT_CONTEXT = 20
+_MAX_TURNS = 60
 _RANGE = re.compile(r"^(\d+)-(\d+)$")
 
 
@@ -64,10 +64,10 @@ def origin_window(engine: Engine, target: str, *, turns: str | None = None) -> d
             raise UsageError("turns must look like 12-40")
         start, end = int(match.group(1)), int(match.group(2))
     else:
-        pad = max(0, (DEFAULT_CONTEXT - (end - start + 1)) // 2)
+        pad = max(0, (_DEFAULT_CONTEXT - (end - start + 1)) // 2)
         start, end = max(1, start - pad), end + pad
-    if end - start + 1 > MAX_TURNS:
-        end = start + MAX_TURNS - 1
+    if end - start + 1 > _MAX_TURNS:
+        end = start + _MAX_TURNS - 1
     window = []
     for turn in transcript.turns:
         if start <= turn.index <= end:

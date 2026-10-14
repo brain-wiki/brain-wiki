@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
 LOG_FILE = "log.md"
-MAX_LOG_FILE_LINES = 20
+_MAX_LOG_FILE_LINES = 20
 
 
 @dataclass
@@ -243,7 +243,7 @@ class Run:
             body.extend(lines)
         else:
             entries = self.entries
-            for entry in entries[:MAX_LOG_FILE_LINES]:
+            for entry in entries[:_MAX_LOG_FILE_LINES]:
                 if entry.deleted:
                     body.append(f"- {entry.path}: deleted")
                 elif entry.base is None:
@@ -252,8 +252,8 @@ class Run:
                     body.append(f"- {entry.path} → {entry.moved_to}")
                 else:
                     body.append(f"- {entry.path}: changed")
-            if len(entries) > MAX_LOG_FILE_LINES:
-                body.append(f"- … {len(entries) - MAX_LOG_FILE_LINES} more files")
+            if len(entries) > _MAX_LOG_FILE_LINES:
+                body.append(f"- … {len(entries) - _MAX_LOG_FILE_LINES} more files")
         return "\n".join([header, *body]) + "\n"
 
     def _stage_log(self, lines: list[str] | None) -> None:

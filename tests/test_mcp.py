@@ -9,7 +9,7 @@ from mcp_types import ElicitResult, Implementation
 
 from brainwiki.config.user import register_brain
 from brainwiki.hosts import session_state
-from brainwiki.mcp.server import INSTRUCTIONS, build_server
+from brainwiki.mcp.server import _INSTRUCTIONS, build_server
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 TOOLS = [
@@ -57,7 +57,7 @@ async def decline(context, params):
 
 @pytest.mark.anyio
 async def test_tool_list_contract(example: Path):
-    assert len(INSTRUCTIONS) < 2000
+    assert len(_INSTRUCTIONS) < 2000
     async with Client(build_server("claude-code")) as client:
         tools = (await client.list_tools()).tools
         assert [t.name for t in tools] == TOOLS

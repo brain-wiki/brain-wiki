@@ -24,16 +24,16 @@ from brainwiki.viz.lod import MAX_SEARCH, Atlas
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-HOST = "127.0.0.1"
-IDLE_SECONDS = 30 * 60
-MAX_MARKDOWN = 200_000
+_HOST = "127.0.0.1"
+_IDLE_SECONDS = 30 * 60
+_MAX_MARKDOWN = 200_000
 # Read at request time, so tests can point the server at a stand-in build.
-APP_DIR: Path = export.APP_DIR
-CSP = (
+_APP_DIR: Path = export.APP_DIR
+_CSP = (
     "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
     "connect-src 'self'; worker-src 'self'; font-src 'self'"
 )
-MIME = {
+_MIME = {
     ".js": "text/javascript; charset=utf-8",
     ".css": "text/css; charset=utf-8",
     ".html": "text/html; charset=utf-8",
@@ -61,11 +61,11 @@ _NOTE_FIELDS = (
 )
 
 
-class VizServer(ThreadingHTTPServer):
+class _VizServer(ThreadingHTTPServer):
     daemon_threads = True
 
     def __init__(self, engine: Engine, port: int, topics: list[str] | None = None):
-        super().__init__((HOST, port), _Handler)
+        super().__init__((_HOST, port), _Handler)
         self.engine = engine
         self.topics = topics
         self.token = secrets.token_urlsafe(24)
@@ -75,7 +75,7 @@ class VizServer(ThreadingHTTPServer):
 
     @property
     def url(self) -> str:
-        return f"http://{HOST}:{self.server_address[1]}/?t={self.token}"
+        return f"http://{_HOST}:{self.server_address[1]}/?t={self.token}"
 
     @property
     def cookie_name(self) -> str:
@@ -147,7 +147,7 @@ class VizServer(ThreadingHTTPServer):
         # Markdown, and wikilinks resolved to the notes they name.
         fm = split(text)
         out["properties"] = fm.raw  # as written: no plain-name copies of bw- fields
-        out["markdown"] = fm.body[:MAX_MARKDOWN]
+        out["markdown"] = fm.body[:_MAX_MARKDOWN]
         out["links"] = links
         return out
 
@@ -163,7 +163,7 @@ class VizServer(ThreadingHTTPServer):
             for row in rows
         }
 
-    def watch_idle(self, idle_seconds: float = IDLE_SECONDS, interval: float = 30.0) -> None:
+    def watch_idle(self, idle_seconds: float = _IDLE_SECONDS, interval: float = 30.0) -> None:
         def run() -> None:
             while True:
                 time.sleep(interval)
@@ -180,8 +180,8 @@ class _Handler(BaseHTTPRequestHandler):
     _set_cookie = False
 
     @property
-    def viz(self) -> VizServer:
-        return cast(VizServer, self.server)
+    def viz(self) -> _VizServer:
+        return cast(_VizServer, self.server)
 
     def log_message(self, format: str, *args: Any) -> None:
         return
@@ -213,7 +213,7 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _route(self, path: str, query: dict[str, list[str]]) -> None:
         if path in ("/", "/index.html"):
-            self._file(_app_dir() / "index.html", MIME[".html"])
+            self._file(_app_dir() / "index.html", _MIME[".html"])
         elif path.startswith("/assets/"):
             self._asset(path[len("/assets/") :])
         elif path == "/api/world":
@@ -254,7 +254,7 @@ class _Handler(BaseHTTPRequestHandler):
             return
         base = (_app_dir() / "assets").resolve()
         target = (base / name).resolve()
-        mime = MIME.get(target.suffix)
+        mime = _MIME.get(target.suffix)
         if not target.is_relative_to(base) or not target.is_file() or mime is None:
             self._not_found()
             return
@@ -270,7 +270,7 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _json(self, data: Any) -> None:
         body = json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        self._send(HTTPStatus.OK, body, MIME[".json"])
+        self._send(HTTPStatus.OK, body, _MIME[".json"])
 
     def _not_found(self) -> None:
         self._send(HTTPStatus.NOT_FOUND, b"not found\n", "text/plain; charset=utf-8")
@@ -279,7 +279,7 @@ class _Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Content-Security-Policy", CSP)
+        self.send_header("Content-Security-Policy", _CSP)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Cache-Control", "no-store")
@@ -294,17 +294,17 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 def _app_dir() -> Path:
-    return APP_DIR
+    return _APP_DIR
 
 
-def make_server(engine: Engine, port: int = 0, topics: list[str] | None = None) -> VizServer:
-    return VizServer(engine, port, topics)
+def _make_server(engine: Engine, port: int = 0, topics: list[str] | None = None) -> _VizServer:
+    return _VizServer(engine, port, topics)
 
 
 def serve(
     engine: Engine, port: int, open_browser: bool, *, topics: list[str] | None = None
 ) -> None:
-    server = make_server(engine, port, topics)
+    server = _make_server(engine, port, topics)
     server.watch_idle()
     print(f"brain viz: {server.url}")
     # Flush: through a pipe (an agent's shell tool, `| tee`) the token URL would otherwise

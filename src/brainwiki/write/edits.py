@@ -29,16 +29,16 @@ from brainwiki.store import sha256_bytes
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-PROTECTED_FILES = ("rules.md", "log.md", "brain.toml", "AGENTS.md")
-LOSS_WARN = 0.10
-LOSS_ERROR = 0.50
-DIFF_LINES = 60
+_PROTECTED_FILES = ("rules.md", "log.md", "brain.toml", "AGENTS.md")
+_LOSS_WARN = 0.10
+_LOSS_ERROR = 0.50
+_DIFF_LINES = 60
 _SYNC_COPY = re.compile(r"(?i)\.sync-conflict-|\(conflicted copy|\bconflict(ed)?[- ]copy\b")
 _JSON_BLOCK = re.compile(r"```json\n(?P<body>.*?)\n```", re.S)
 
 
 @dataclass
-class Problem:
+class _Problem:
     path: str
     code: str
     message: str
@@ -66,7 +66,7 @@ class _Change:
     current: bytes | None  # the file now; None when deleted
     final: bytes | None = None  # what to record: current plus stamps
     added_claims: int = 0
-    problems: list[Problem] = field(default_factory=list)
+    problems: list[_Problem] = field(default_factory=list)
 
     @property
     def kind(self) -> str:
@@ -78,7 +78,7 @@ class _Change:
 # -- baselines -------------------------------------------------------------------------
 
 
-def baseline(engine: Engine, rel: str) -> tuple[bool, bytes | None]:
+def _baseline(engine: Engine, rel: str) -> tuple[bool, bytes | None]:
     """(whether a recorded version exists, its content; None when recorded as absent)."""
     row = engine.db.execute("SELECT sha256, content FROM baselines WHERE path=?", (rel,)).fetchone()
     if row is None:
@@ -91,7 +91,7 @@ def _read(engine: Engine, rel: str) -> bytes | None:
     return path.read_bytes() if path.is_file() else None
 
 
-def normalize_path(engine: Engine, raw: str) -> str:
+def _normalize_path(engine: Engine, raw: str) -> str:
     """A brain-relative path from a relative or absolute one; never outside the brain."""
     text = raw.strip()
     if not text:
@@ -110,9 +110,9 @@ def normalize_path(engine: Engine, raw: str) -> str:
     return text
 
 
-def protected_reason(engine: Engine, rel: str) -> str | None:
+def _protected_reason(engine: Engine, rel: str) -> str | None:
     layout = engine.manifest.layout
-    if rel in PROTECTED_FILES:
+    if rel in _PROTECTED_FILES:
         return f"{rel} is never edited directly"
     for folder, what in (
         (layout.inbox_dir, "inbox files (episodes and proposals)"),
@@ -124,7 +124,7 @@ def protected_reason(engine: Engine, rel: str) -> str | None:
     return None
 
 
-def pending_edits(engine: Engine) -> list[dict[str, Any]]:
+def _pending_edits(engine: Engine) -> list[dict[str, Any]]:
     """Notes whose file differs from their last recorded version, with diffs."""
     engine.scan()
     rows = engine.db.execute(
@@ -135,7 +135,7 @@ def pending_edits(engine: Engine) -> list[dict[str, Any]]:
     out = []
     for row in rows:
         rel = row["path"]
-        _, base = baseline(engine, rel)
+        _, base = _baseline(engine, rel)
         current = _read(engine, rel)
         if current is None and base is None:
             continue
@@ -153,7 +153,7 @@ def _text(data: bytes | None) -> str:
     return data.decode("utf-8", "replace") if data is not None else ""
 
 
-def _diff(change: _Change, limit: int = DIFF_LINES) -> str:
+def _diff(change: _Change, limit: int = _DIFF_LINES) -> str:
     lines = list(
         difflib.unified_diff(
             _text(change.base).splitlines(keepends=True),
@@ -207,7 +207,7 @@ def _check_claims(change: _Change) -> list[Claim]:
             now = after_ids.get(claim.id)
             if now is None:
                 change.problems.append(
-                    Problem(
+                    _Problem(
                         change.path,
                         "claim_deleted",
                         f'claim "{_short(text)}" was deleted; supersede it instead ({_SUPERSEDE})',
@@ -220,7 +220,7 @@ def _check_claims(change: _Change) -> list[Claim]:
                 and clean_claim_text(now.text) != text
             ):
                 change.problems.append(
-                    Problem(
+                    _Problem(
                         change.path,
                         "claim_reworded",
                         f'claim "{_short(text)}" was reworded in place; supersede it instead '
@@ -230,7 +230,7 @@ def _check_claims(change: _Change) -> list[Claim]:
                 )
         elif claim.status == "active" and text not in after_texts:
             change.problems.append(
-                Problem(
+                _Problem(
                     change.path,
                     "claim_deleted",
                     f'claim "{_short(text)}" was deleted or reworded; supersede it instead',
@@ -295,7 +295,7 @@ def _lint_new(engine: Engine, change: _Change) -> None:
             before[key] -= 1
             continue
         change.problems.append(
-            Problem(
+            _Problem(
                 change.path,
                 problem.code,
                 problem.message,
@@ -313,7 +313,7 @@ def _check_ids(engine: Engine, change: _Change) -> None:
         before_id = parse_document(change.path, _text(change.base)).fm.get("id")
         if before_id and str(before_id) != str(after_id or ""):
             change.problems.append(
-                Problem(
+                _Problem(
                     change.path,
                     "id_changed",
                     f"the note's id changed from {before_id}; put it back",
@@ -325,7 +325,7 @@ def _check_ids(engine: Engine, change: _Change) -> None:
         ).fetchone()
         if clash:
             change.problems.append(
-                Problem(
+                _Problem(
                     change.path, "id_duplicate", f"id {after_id} is already used by {clash['path']}"
                 )
             )
@@ -342,7 +342,7 @@ def _check_links(engine: Engine, change: _Change) -> None:
     ):
         if row["raw_target"] not in before:
             change.problems.append(
-                Problem(
+                _Problem(
                     change.path,
                     "link_unresolved",
                     f"[[{row['raw_target']}]] does not resolve to a note",
@@ -356,24 +356,24 @@ def _validate(engine: Engine, change: _Change, *, allow_shrink: bool) -> list[Cl
     rel = change.path
     if _SYNC_COPY.search(rel.rsplit("/", 1)[-1]):
         change.problems.append(
-            Problem(
+            _Problem(
                 rel, "sync_debris", "this looks like a sync-conflict copy; merge it and delete it"
             )
         )
     added = _check_claims(change)
     loss = _loss(change)
-    if loss > LOSS_ERROR and not allow_shrink:
+    if loss > _LOSS_ERROR and not allow_shrink:
         change.problems.append(
-            Problem(
+            _Problem(
                 rel,
                 "loss",
                 f"the edit removed {loss:.0%} of the note's text; restore what was lost, or pass "
                 "allow_shrink if the removal is intended",
             )
         )
-    elif loss > LOSS_WARN:
+    elif loss > _LOSS_WARN:
         change.problems.append(
-            Problem(rel, "loss", f"the edit removed {loss:.0%} of the note's text", "warning")
+            _Problem(rel, "loss", f"the edit removed {loss:.0%} of the note's text", "warning")
         )
     _check_ids(engine, change)
     _lint_new(engine, change)
@@ -406,7 +406,7 @@ def check_edits(
     from brainwiki.index.scanner import NOTE_KINDS, classify, discovered_topics
 
     if not paths:
-        pending = pending_edits(engine)
+        pending = _pending_edits(engine)
         return {"brain": engine.brain.display_name, "status": "pending", "pending": pending}
     owner = engine.profile.name == "owner"
     if adopt and not owner:
@@ -419,20 +419,20 @@ def check_edits(
     engine.scan(force=True)
     topics = discovered_topics(engine)
     changes: list[_Change] = []
-    problems: list[Problem] = []
+    problems: list[_Problem] = []
     unchanged: list[str] = []
     for raw in dict.fromkeys(paths):
-        rel = normalize_path(engine, raw)
-        reason = protected_reason(engine, rel)
+        rel = _normalize_path(engine, raw)
+        reason = _protected_reason(engine, rel)
         if reason:
-            problems.append(Problem(rel, "protected", reason))
+            problems.append(_Problem(rel, "protected", reason))
             continue
         if classify(engine, rel, topics) not in NOTE_KINDS:
             problems.append(
-                Problem(rel, "not_a_note", "brain_check records edits of notes and hubs only")
+                _Problem(rel, "not_a_note", "brain_check records edits of notes and hubs only")
             )
             continue
-        known, base = baseline(engine, rel)
+        known, base = _baseline(engine, rel)
         current = _read(engine, rel)
         if not known and current is None:
             raise NotFound(f"no note at {rel}")
@@ -453,7 +453,7 @@ def check_edits(
             policy = _policy(engine, change.path)
             if policy == "deny":
                 change.problems.append(
-                    Problem(
+                    _Problem(
                         change.path,
                         "edits_denied",
                         "this topic does not accept agent edits; restore the file "
@@ -519,8 +519,8 @@ def restore(engine: Engine, raw: str) -> dict[str, Any]:
     from brainwiki.config.dirs import brain_state_dir
 
     engine.scan(force=True)
-    rel = normalize_path(engine, raw)
-    known, base = baseline(engine, rel)
+    rel = _normalize_path(engine, raw)
+    known, base = _baseline(engine, rel)
     if not known:
         raise NotFound(f"no recorded version of {rel}")
     current = _read(engine, rel)

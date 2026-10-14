@@ -19,14 +19,14 @@ from brainwiki.runs.git import is_work_tree, run_git
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-INBOX = "inbox"
+_INBOX = "inbox"
 
 
 def _toml_string(value: str) -> str:
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def manifest_text(found: Survey, name: str) -> str:
+def _manifest_text(found: Survey, name: str) -> str:
     lines = [
         "# brain.toml: written by `brain import --overlay`. Edit freely; notes were not moved.",
         f"format = {FORMAT_VERSION}",
@@ -86,7 +86,7 @@ def report(found: Survey, name: str) -> str:
         "## brain.toml that phase 0 writes",
         "",
         "```toml",
-        manifest_text(found, name).rstrip(),
+        _manifest_text(found, name).rstrip(),
         "```",
     ]
     return "\n".join(lines) + "\n"
@@ -115,7 +115,7 @@ def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict
     found = survey(root)
     name = name or root.name
     created = []
-    (root / MANIFEST).write_text(manifest_text(found, name), encoding="utf-8")
+    (root / MANIFEST).write_text(_manifest_text(found, name), encoding="utf-8")
     created.append(MANIFEST)
     agents = root / "AGENTS.md"
     current = agents.read_text(encoding="utf-8") if agents.exists() else ""
@@ -125,7 +125,7 @@ def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict
         if not (root / filename).exists():
             (root / filename).write_text(content, encoding="utf-8")
             created.append(filename)
-    for sub in (f"{INBOX}/episodes", f"{INBOX}/agents", "archive/episodes", "reports"):
+    for sub in (f"{_INBOX}/episodes", f"{_INBOX}/agents", "archive/episodes", "reports"):
         (root / sub).mkdir(parents=True, exist_ok=True)
     (root / "reports" / "import-plan.md").write_text(report(found, name), encoding="utf-8")
     if register:

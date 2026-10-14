@@ -12,16 +12,16 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-Ask = Callable[[str], str]
+_Ask = Callable[[str], str]
 
 
-def _yes(ask: Ask, question: str, default: bool = False) -> bool:
+def _yes(ask: _Ask, question: str, default: bool = False) -> bool:
     hint = "[Y/n]" if default else "[y/N]"
     answer = ask(f"{question} {hint} ").strip().lower()
     return default if not answer else answer in ("y", "yes")
 
 
-def run_wizard(args: Any, ask: Ask = input, out: Callable[[str], None] = print) -> int:
+def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print) -> int:
     from brainwiki.config.user import load_user_config, register_brain, set_value
     from brainwiki.doctor import run_doctor
     from brainwiki.hosts import connect as cn

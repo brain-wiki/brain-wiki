@@ -15,13 +15,13 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-BEGIN = "<!-- brain-wiki:begin v1 -->"
-END = "<!-- brain-wiki:end -->"
+_BEGIN = "<!-- brain-wiki:begin v1 -->"
+_END = "<!-- brain-wiki:end -->"
 _BLOCK_RE = re.compile(
     r"<!-- brain-wiki:begin v\d+ -->\n?(?P<body>.*?)<!-- brain-wiki:end -->\n?", re.S
 )
-CODEX_CAP = 32 * 1024  # bytes Codex reads across its instruction files
-OPENCLAW_CAP = 20_000  # characters OpenClaw injects per bootstrap file
+_CODEX_CAP = 32 * 1024  # bytes Codex reads across its instruction files
+_OPENCLAW_CAP = 20_000  # characters OpenClaw injects per bootstrap file
 
 _HEAD = """## brain-wiki: the user's long-term memory
 
@@ -77,8 +77,8 @@ def block_text(access: Access, *, skill: bool = True) -> str:
     return _HEAD + "\n" + body + (_SKILL if skill else "")
 
 
-def marked_block(access: Access) -> str:
-    return f"{BEGIN}\n{block_text(access)}{END}\n"
+def _marked_block(access: Access) -> str:
+    return f"{_BEGIN}\n{block_text(access)}{_END}\n"
 
 
 def server_instructions(access: Access) -> str:
@@ -115,10 +115,10 @@ def antigravity_rule(access: Access) -> str:
     )
 
 
-def cursor_rule(access: Access) -> str:
+def _cursor_rule(access: Access) -> str:
     return (
         "---\ndescription: The user's long-term memory (brain-wiki)\nalwaysApply: true\n---\n"
-        + marked_block(access)
+        + _marked_block(access)
     )
 
 
@@ -168,19 +168,19 @@ class Target:
     cap: int | None = None  # warn when the file nears what the host loads
 
 
-def codex_home() -> Path:
+def _codex_home() -> Path:
     return Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
 
 
-def codex_instructions() -> Path:
+def _codex_instructions() -> Path:
     """The one global file Codex reads: a non-empty override wins over AGENTS.md."""
-    override = codex_home() / "AGENTS.override.md"
+    override = _codex_home() / "AGENTS.override.md"
     if override.is_file() and override.read_text(encoding="utf-8").strip():
         return override
-    return codex_home() / "AGENTS.md"
+    return _codex_home() / "AGENTS.md"
 
 
-def openclaw_workspace() -> Path:
+def _openclaw_workspace() -> Path:
     """OpenClaw's workspace, resolved the way OpenClaw documents it."""
     if os.environ.get("OPENCLAW_WORKSPACE_DIR"):
         return Path(os.environ["OPENCLAW_WORKSPACE_DIR"]).expanduser()
@@ -206,7 +206,7 @@ def targets(
     notes: list[str] = []
     if host == "claude-code":
         base = cwd / ".claude" if scope == "project" else Path.home() / ".claude"
-        return [Target(base / "rules" / "brain-wiki.md", marked_block(access), True)], notes
+        return [Target(base / "rules" / "brain-wiki.md", _marked_block(access), True)], notes
     if host == "codex":
         if scope == "project":
             notes.append(
@@ -214,14 +214,14 @@ def targets(
                 "AGENTS.md is shared with its team; the user-level block covers every project."
             )
             return [], notes
-        return [Target(codex_instructions(), marked_block(access), False, CODEX_CAP)], notes
+        return [Target(_codex_instructions(), _marked_block(access), False, _CODEX_CAP)], notes
     if host == "openclaw":
-        target = openclaw_workspace() / "AGENTS.md"
-        return [Target(target, marked_block(access), False, OPENCLAW_CAP)], notes
+        target = _openclaw_workspace() / "AGENTS.md"
+        return [Target(target, _marked_block(access), False, _OPENCLAW_CAP)], notes
     if host == "cursor":
         if scope == "project":
             path = cwd / ".cursor" / "rules" / "brain-wiki.mdc"
-            return [Target(path, cursor_rule(access), True)], notes
+            return [Target(path, _cursor_rule(access), True)], notes
         notes.append(
             "Cursor keeps user rules in its settings: paste this into Settings → Rules, or run "
             "`brain connect cursor --scope project` in a project.\n\n" + block_text(access)

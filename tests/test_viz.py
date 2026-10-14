@@ -20,13 +20,13 @@ from brainwiki.engine import Engine
 from brainwiki.viz import export
 from brainwiki.viz import server as viz_server
 from brainwiki.viz.export import (
+    _script_json,
     build_graph,
-    script_json,
     to_graphml,
     to_standalone_html,
 )
-from brainwiki.viz.lod import GROUP_MAX, Atlas, group_topics, topic_weights
-from brainwiki.viz.server import CSP, VizServer, make_server
+from brainwiki.viz.lod import _GROUP_MAX, Atlas, _group_topics, topic_weights
+from brainwiki.viz.server import _CSP, _make_server, _VizServer
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 FTS5 = "01M4KT3JPRY4W6766VT18CQS91"
@@ -215,7 +215,7 @@ def app_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     (root / "assets" / "index-test.js").write_text(APP_JS, encoding="utf-8")
     (root / "assets" / "index-test.css").write_text(APP_CSS, encoding="utf-8")
     (root / "assets" / "font.woff2").write_bytes(b"wOF2")
-    monkeypatch.setattr(viz_server, "APP_DIR", root)
+    monkeypatch.setattr(viz_server, "_APP_DIR", root)
     monkeypatch.setattr(export, "APP_DIR", root)
     return root
 
@@ -343,8 +343,8 @@ def test_search_titles_matches_aliases(example: Path):
 def test_small_brain_has_one_constellation():
     adj = {"a": {"b": 3.0}, "b": {"a": 3.0}}
     slugs = [f"t{i:02d}" for i in range(12)]
-    assert group_topics(slugs, adj) == [sorted(slugs)]
-    assert group_topics([], {}) == []
+    assert _group_topics(slugs, adj) == [sorted(slugs)]
+    assert _group_topics([], {}) == []
 
 
 def _topic_graph(notes: dict[str, int], edges: list[tuple[str, str]]) -> dict:
@@ -399,7 +399,7 @@ def test_constellations_on_generated_brain(tmp_path: Path):
     assert [c["id"] for c in first] == [f"c{i + 1}" for i in range(len(first))]
     placed = [s for c in first for s in c["topics"]]
     assert sorted(placed) == sorted(slugs)
-    assert all(1 <= len(c["topics"]) <= GROUP_MAX for c in first)
+    assert all(1 <= len(c["topics"]) <= _GROUP_MAX for c in first)
     sizes = [len(c["topics"]) for c in first]
     assert sizes == sorted(sizes, reverse=True)
     colors = {t["slug"]: t["color"] for t in graph["topics"]}
@@ -413,10 +413,10 @@ def test_constellations_split_and_chunk():
     clique = [f"k{i:03d}" for i in range(90)]
     adj = {a: {b: 1.0 for b in clique if b != a} for a in clique}
     loose = [f"z{i:03d}" for i in range(45)]
-    groups = group_topics(clique + loose, adj)
+    groups = _group_topics(clique + loose, adj)
     assert sorted(s for g in groups for s in g) == sorted(clique + loose)
-    assert all(len(g) <= GROUP_MAX for g in groups)
-    assert group_topics(clique + loose, adj) == groups
+    assert all(len(g) <= _GROUP_MAX for g in groups)
+    assert _group_topics(clique + loose, adj) == groups
     assert [len(g) for g in groups] == [40, 40, 40, 10, 5]
 
 
@@ -487,7 +487,7 @@ def test_standalone_html_escapes_titles(example: Path, app_dir: Path):
     assert "<" not in blob.group(1)
     data = json.loads(blob.group(1))
     assert set(data) == {"world", "topics", "health"}
-    assert blob.group(1) == script_json(
+    assert blob.group(1) == _script_json(
         {
             "world": atlas.world(),
             "topics": {slug: atlas.topic(slug) for slug in atlas.topics},
@@ -525,9 +525,9 @@ def test_standalone_html_refuses_unsafe_assets(example: Path, app_dir: Path):
 
 
 @pytest.fixture
-def server(example: Path, app_dir: Path) -> Iterator[VizServer]:
+def server(example: Path, app_dir: Path) -> Iterator[_VizServer]:
     eng = engine_for(example, host="someone")
-    srv = make_server(eng, 0)
+    srv = _make_server(eng, 0)
     thread = threading.Thread(target=srv.serve_forever, daemon=True)
     thread.start()
     try:
@@ -539,7 +539,9 @@ def server(example: Path, app_dir: Path) -> Iterator[VizServer]:
         eng.close()
 
 
-def _get(srv: VizServer, path: str, cookie: str | None = None) -> tuple[int, dict[str, str], bytes]:
+def _get(
+    srv: _VizServer, path: str, cookie: str | None = None
+) -> tuple[int, dict[str, str], bytes]:
     conn = http.client.HTTPConnection("127.0.0.1", srv.server_address[1], timeout=10)
     try:
         conn.request("GET", path, headers={"Cookie": cookie} if cookie else {})
@@ -549,7 +551,7 @@ def _get(srv: VizServer, path: str, cookie: str | None = None) -> tuple[int, dic
         conn.close()
 
 
-def _api(srv: VizServer, path: str) -> object:
+def _api(srv: _VizServer, path: str) -> object:
     sep = "&" if "?" in path else "?"
     status, headers, body = _get(srv, f"{path}{sep}t={srv.token}")
     assert status == 200, path
@@ -590,7 +592,7 @@ ROUTES = (
 )
 
 
-def test_server_requires_token(server: VizServer):
+def test_server_requires_token(server: _VizServer):
     assert server.server_address[0] == "127.0.0.1"
     for path in ROUTES:
         sep = "&" if "?" in path else "?"
@@ -599,7 +601,7 @@ def test_server_requires_token(server: VizServer):
         assert "set-cookie" not in _get(server, path)[1]
 
 
-def test_server_session_cookie(server: VizServer):
+def test_server_session_cookie(server: _VizServer):
     status, headers, body = _get(server, f"/?t={server.token}")
     assert status == 200
     assert headers["content-type"].startswith("text/html")
@@ -616,13 +618,13 @@ def test_server_session_cookie(server: VizServer):
     assert _get(server, "/api/world", cookie='bad"cookie; x')[0] == 403
 
 
-def test_server_headers_and_assets(server: VizServer):
+def test_server_headers_and_assets(server: _VizServer):
     t = server.token
     status, headers, _ = _get(server, f"/assets/index-test.js?t={t}")
     assert status == 200
     assert headers["content-type"].startswith("text/javascript")
-    assert headers["content-security-policy"] == CSP
-    assert "worker-src 'self'" in CSP
+    assert headers["content-security-policy"] == _CSP
+    assert "worker-src 'self'" in _CSP
     assert headers["x-content-type-options"] == "nosniff"
     assert headers["referrer-policy"] == "no-referrer"
     assert headers["cache-control"] == "no-store"
@@ -630,7 +632,7 @@ def test_server_headers_and_assets(server: VizServer):
     assert _get(server, f"/assets/font.woff2?t={t}")[1]["content-type"] == "font/woff2"
 
 
-def test_server_api(server: VizServer):
+def test_server_api(server: _VizServer):
     world = _api(server, "/api/world")
     assert isinstance(world, dict)
     assert world["profile"] == "default"
@@ -654,7 +656,7 @@ def test_server_api(server: VizServer):
     assert _get(server, f"/api/note/{GPU}?t={server.token}")[0] == 200
 
 
-def test_server_note_preview(server: VizServer, example: Path):
+def test_server_note_preview(server: _VizServer, example: Path):
     peek = "01M4KT3JPSB7BP2SNSCAVC2SZZ"
     write(
         example,
@@ -676,7 +678,7 @@ def test_server_note_preview(server: VizServer, example: Path):
     }
 
 
-def test_server_search(server: VizServer):
+def test_server_search(server: _VizServer):
     assert _api(server, "/api/search?q=") == {"results": []}
     found = _api(server, "/api/search?q=FTS5")
     assert isinstance(found, dict)
@@ -689,7 +691,7 @@ def test_server_search(server: VizServer):
     assert body and len(body) <= 20
 
 
-def test_server_rebuilds_only_on_change(server: VizServer, example: Path):
+def test_server_rebuilds_only_on_change(server: _VizServer, example: Path):
     first = server.atlas()
     assert server.atlas() is first
     write(example, "topics/search/new.md", "---\ntitle: Brand new note\n---\n# Brand new note\n")
@@ -700,7 +702,7 @@ def test_server_rebuilds_only_on_change(server: VizServer, example: Path):
     assert any(n["title"] == "Brand new note" for n in second.notes)
 
 
-def test_server_blocks_traversal(server: VizServer):
+def test_server_blocks_traversal(server: _VizServer):
     t = server.token
     for path in (
         "/assets/../index.html",
@@ -715,7 +717,7 @@ def test_server_blocks_traversal(server: VizServer):
         assert _get(server, f"{path}?t={t}")[0] == 404, path
 
 
-def test_server_refuses_writes(server: VizServer):
+def test_server_refuses_writes(server: _VizServer):
     conn = http.client.HTTPConnection("127.0.0.1", server.server_address[1], timeout=10)
     try:
         conn.request("POST", f"/api/world?t={server.token}", body=b"{}")
@@ -725,9 +727,9 @@ def test_server_refuses_writes(server: VizServer):
 
 
 def test_server_reports_missing_build(example: Path, tmp_path: Path, monkeypatch):
-    monkeypatch.setattr(viz_server, "APP_DIR", tmp_path / "missing")
+    monkeypatch.setattr(viz_server, "_APP_DIR", tmp_path / "missing")
     with engine_for(example) as eng:
-        srv = make_server(eng, 0)
+        srv = _make_server(eng, 0)
         thread = threading.Thread(target=srv.serve_forever, daemon=True)
         thread.start()
         try:

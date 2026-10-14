@@ -6,7 +6,7 @@ import argparse
 import importlib
 import sys
 
-HANDLERS: dict[str, str] = {
+_HANDLERS: dict[str, str] = {
     "version": "brainwiki.cli.cmd_core:version",
     "init": "brainwiki.cli.cmd_core:init",
     "list": "brainwiki.cli.cmd_core:list_",
@@ -66,7 +66,7 @@ def _common(*, suppress: bool) -> argparse.ArgumentParser:
     return common
 
 
-def build_parser() -> argparse.ArgumentParser:
+def _build_parser() -> argparse.ArgumentParser:
     common = _common(suppress=True)
     parser = argparse.ArgumentParser(
         prog="brain",
@@ -468,12 +468,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
+    parser = _build_parser()
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()
         return 2
-    module_name, func_name = HANDLERS[args.command].split(":")
+    module_name, func_name = _HANDLERS[args.command].split(":")
     from brainwiki.errors import BrainError
 
     try:

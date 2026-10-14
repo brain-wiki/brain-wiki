@@ -14,8 +14,8 @@ from brainwiki.config.dirs import brain_state_dir
 from brainwiki.errors import NotFound
 from brainwiki.ids import is_prefixed, ulid_datetime
 
-KEEP_RUNS = 200
-KEEP_DAYS = 90
+_KEEP_RUNS = 200
+_KEEP_DAYS = 90
 
 
 @dataclass
@@ -70,14 +70,14 @@ class RunRecord:
         return cls(files=files, **{k: v for k, v in data.items() if k in known})
 
 
-def runs_dir(brain_key: str) -> Path:
+def _runs_dir(brain_key: str) -> Path:
     path = brain_state_dir(brain_key) / "runs"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
 def run_dir(brain_key: str, run: str) -> Path:
-    return runs_dir(brain_key) / run
+    return _runs_dir(brain_key) / run
 
 
 def save_record(brain_key: str, record: RunRecord) -> None:
@@ -98,7 +98,7 @@ def load_record(brain_key: str, run: str) -> RunRecord:
 def list_records(brain_key: str) -> list[RunRecord]:
     """Newest first. Prepared runs that were never applied (a packet, no record) are skipped."""
     records = []
-    for child in sorted(runs_dir(brain_key).iterdir(), reverse=True):
+    for child in sorted(_runs_dir(brain_key).iterdir(), reverse=True):
         if not is_prefixed(child.name, "run-") or not (child / "record.json").is_file():
             continue
         try:
@@ -129,12 +129,12 @@ def prune(brain_key: str, now: datetime | None = None) -> int:
     """Keep the last KEEP_RUNS runs or KEEP_DAYS days, whichever keeps more."""
     now = now or datetime.now(UTC)
     names = sorted(
-        (c.name for c in runs_dir(brain_key).iterdir() if is_prefixed(c.name, "run-")),
+        (c.name for c in _runs_dir(brain_key).iterdir() if is_prefixed(c.name, "run-")),
         reverse=True,
     )
-    cutoff = now - timedelta(days=KEEP_DAYS)
+    cutoff = now - timedelta(days=_KEEP_DAYS)
     removed = 0
-    for name in names[KEEP_RUNS:]:
+    for name in names[_KEEP_RUNS:]:
         if ulid_datetime(name[4:]) < cutoff:
             shutil.rmtree(run_dir(brain_key, name), ignore_errors=True)
             removed += 1

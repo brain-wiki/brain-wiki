@@ -82,6 +82,7 @@ def main() -> int:
         run("ruff check", python, "-m", "ruff", "check", "src", "tests", "scripts"),
         run("ruff format", python, "-m", "ruff", "format", "--check", "src", "tests", "scripts"),
         run("tests", python, "-m", "pytest", "-q"),
+        run("visibility", python, "scripts/check_visibility.py"),
         run("plugin versions", python, "scripts/sync_versions.py", "--check"),
         run("docs brain", python, "scripts/build_docs_brain.py", "--check"),
         run("visualizer bundle", python, "scripts/check_viz.py"),

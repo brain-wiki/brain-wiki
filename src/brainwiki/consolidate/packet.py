@@ -25,10 +25,10 @@ from brainwiki.store import sha256_bytes
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-INSTRUCTIONS_VERSION = 1
-RUN_TTL_SECONDS = 3600
-BUDGETS = {"agent": 15_000, "command": 30_000}
-MAX_CANDIDATES = 5
+_INSTRUCTIONS_VERSION = 1
+_RUN_TTL_SECONDS = 3600
+_BUDGETS = {"agent": 15_000, "command": 30_000}
+_MAX_CANDIDATES = 5
 _WORD = re.compile(r"[^\W\d_]{4,}", re.UNICODE)
 _STOP = frozenset(
     [
@@ -210,7 +210,7 @@ def load_packet(engine: Engine, run: str, *, check_expiry: bool = True) -> Packe
     if (
         check_expiry
         and packet.backend == "agent"
-        and time.time() - packet.created > RUN_TTL_SECONDS
+        and time.time() - packet.created > _RUN_TTL_SECONDS
     ):
         raise Expired(f"{run} expired; prepare a new run")
     return packet
@@ -221,7 +221,7 @@ def drop_packet(engine: Engine, run: str) -> None:
 
 
 # -- selection -------------------------------------------------------------
-def reserved_episodes(engine: Engine) -> set[str]:
+def _reserved_episodes(engine: Engine) -> set[str]:
     """Episodes referenced by open proposals: they stay out of new packets until reviewed."""
     directory = engine.store.abspath(engine.manifest.layout.proposals_dir)
     found: set[str] = set()
@@ -234,9 +234,9 @@ def reserved_episodes(engine: Engine) -> set[str]:
     return found
 
 
-def pending_episodes(engine: Engine, *, topic: str | None = None) -> list[Any]:
+def _pending_episodes(engine: Engine, *, topic: str | None = None) -> list[Any]:
     """Pending episodes, oldest first."""
-    reserved = reserved_episodes(engine)
+    reserved = _reserved_episodes(engine)
     rows = engine.db.execute(
         """SELECT id, path, fm_id, agent, origin, taint, props, created, session, origin_turns,
                   device FROM nodes WHERE kind = 'episode' ORDER BY COALESCE(fm_id, created, path)"""
@@ -286,7 +286,7 @@ def _candidates(engine: Engine, text: str, hints: list[str]) -> list[str]:
         except Exception:  # noqa: BLE001 - an FTS syntax edge case must not block consolidation
             rows = []
         notes = [r["id"] for r in rows if r["id"] not in found]
-        found += notes[:MAX_CANDIDATES]
+        found += notes[:_MAX_CANDIDATES]
     return found
 
 
@@ -327,8 +327,8 @@ def build_packet(
     engine.scan(force=True)
     manifest = engine.manifest
     limit = max_episodes or manifest.consolidate.max_episodes_per_run
-    budget = (budget_tokens or BUDGETS.get(backend, 15_000)) * 4  # characters
-    episodes = pending_episodes(engine, topic=topic)[: max(limit * 3, limit)]
+    budget = (budget_tokens or _BUDGETS.get(backend, 15_000)) * 4  # characters
+    episodes = _pending_episodes(engine, topic=topic)[: max(limit * 3, limit)]
     if not episodes:
         return None
     packet = Packet(
@@ -478,7 +478,7 @@ def build_packet(
     packet.data = {
         "run": run,
         "brain": packet.brain,
-        "instructions_version": INSTRUCTIONS_VERSION,
+        "instructions_version": _INSTRUCTIONS_VERSION,
         "limits": {
             "max_ops": min(MAX_OPS, 10 * len(packet.episodes) + 20),
             "claim_max_chars": CLAIM_MAX_CHARS,

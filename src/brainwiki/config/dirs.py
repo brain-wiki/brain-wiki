@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-APP = "brain-wiki"
+_APP = "brain-wiki"
 
 
 def _home() -> Path:
@@ -14,7 +14,7 @@ def _home() -> Path:
 
 
 def _windows_base(var: str) -> Path:
-    return Path(os.environ.get(var) or (_home() / "AppData" / "Local")) / APP
+    return Path(os.environ.get(var) or (_home() / "AppData" / "Local")) / _APP
 
 
 def config_file() -> Path:
@@ -24,7 +24,7 @@ def config_file() -> Path:
     if sys.platform == "win32":
         return _windows_base("APPDATA") / "config.toml"
     base = os.environ.get("XDG_CONFIG_HOME") or str(_home() / ".config")
-    return Path(base) / APP / "config.toml"
+    return Path(base) / _APP / "config.toml"
 
 
 def state_dir() -> Path:
@@ -34,7 +34,7 @@ def state_dir() -> Path:
     if sys.platform == "win32":
         return _windows_base("LOCALAPPDATA") / "state"
     base = os.environ.get("XDG_STATE_HOME") or str(_home() / ".local" / "state")
-    return Path(base) / APP
+    return Path(base) / _APP
 
 
 def cache_dir() -> Path:
@@ -44,7 +44,7 @@ def cache_dir() -> Path:
     if sys.platform == "win32":
         return _windows_base("LOCALAPPDATA") / "cache"
     base = os.environ.get("XDG_CACHE_HOME") or str(_home() / ".cache")
-    return Path(base) / APP
+    return Path(base) / _APP
 
 
 def data_dir() -> Path:
@@ -54,7 +54,7 @@ def data_dir() -> Path:
     if sys.platform == "win32":
         return _windows_base("LOCALAPPDATA") / "data"
     base = os.environ.get("XDG_DATA_HOME") or str(_home() / ".local" / "share")
-    return Path(base) / APP
+    return Path(base) / _APP
 
 
 def brain_state_dir(brain_key: str) -> Path:

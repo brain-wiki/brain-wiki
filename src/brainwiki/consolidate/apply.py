@@ -38,9 +38,9 @@ from brainwiki.store import sha256_bytes
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-TAINT_ORDER = {"false": 0, "unknown": 1, "true": 2}
+_TAINT_ORDER = {"false": 0, "unknown": 1, "true": 2}
 _FM_ORDER = ("id", "type", "title")
-RELATION_PART_OF = "bw-part_of"
+_RELATION_PART_OF = "bw-part_of"
 
 
 @dataclass
@@ -88,7 +88,7 @@ def _today() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%d")
 
 
-class Applier:
+class _Applier:
     def __init__(self, engine: Engine, packet: Packet, run: Run, *, strict_hashes: bool):
         self.engine = engine
         self.packet = packet
@@ -145,7 +145,7 @@ class Applier:
             "src": ",".join(dict.fromkeys(paths)),
             "origin": origins.pop() if len(origins) == 1 else "agent",
         }
-        worst = max(taints, key=lambda t: TAINT_ORDER.get(t, 1), default="false")
+        worst = max(taints, key=lambda t: _TAINT_ORDER.get(t, 1), default="false")
         if worst != "false":
             meta["taint"] = worst
         meta["at"] = _today()
@@ -224,7 +224,7 @@ class Applier:
             *[f"{k}: {format_value(v)}" for k, v in fields.items()],
         ]
         if hub:
-            lines.append(f"{RELATION_PART_OF}: {quote(relation_value(self.hub_link(hub)))}")
+            lines.append(f"{_RELATION_PART_OF}: {quote(relation_value(self.hub_link(hub)))}")
         lines.append(f"{CLAIMS}:")
         for claim in op["claims"]:
             meta = {"id": claim_id(), **self.episode_meta(claim["sources"])}
@@ -268,7 +268,7 @@ class Applier:
         meta["src"] = ",".join(dict.fromkeys(sources))
         taint = max(
             (meta.get("taint", "false"), extra.get("taint", "false")),
-            key=lambda t: TAINT_ORDER.get(t, 1),
+            key=lambda t: _TAINT_ORDER.get(t, 1),
         )
         meta.pop("taint", None)
         if taint != "false":
@@ -362,7 +362,7 @@ def stage(
         packet_sha256=packet.sha256,
         run_id=packet.run,
     )
-    applier = Applier(engine, packet, run, strict_hashes=strict_hashes)
+    applier = _Applier(engine, packet, run, strict_hashes=strict_hashes)
     applier.verify_hashes()
     order = {"create_topic": 0, "create_note": 1}
     for op in sorted(ops, key=lambda o: order.get(o["op"], 2)):

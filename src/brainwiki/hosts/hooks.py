@@ -16,7 +16,7 @@ from brainwiki.hosts.detect import detect_host
 
 log = logging.getLogger("brainwiki.hooks")
 
-EVENTS: dict[str, str] = {
+_EVENTS: dict[str, str] = {
     "SessionStart": "session_start",
     "UserPromptSubmit": "prompt",
     "PostToolUse": "tool_used",
@@ -28,11 +28,11 @@ EVENTS: dict[str, str] = {
     "session:compact:before": "pre_compact",
     "command:reset": "session_end",
 }
-NORMALIZED = {"session_start", "prompt", "tool_used", "stop", "pre_compact", "session_end"}
-HOSTS_WITH_END_EVENTS = {"claude-code", "codex", "openclaw"}
-ORIENT_MAX_CHARS = 8000
-RECALL_MAX_CHARS = 2400
-SETUP_HINT_SESSIONS = 3
+_NORMALIZED = {"session_start", "prompt", "tool_used", "stop", "pre_compact", "session_end"}
+_HOSTS_WITH_END_EVENTS = {"claude-code", "codex", "openclaw"}
+_ORIENT_MAX_CHARS = 8000
+_RECALL_MAX_CHARS = 2400
+_SETUP_HINT_SESSIONS = 3
 OPEN, CLOSE = "<brain-wiki-context>", "</brain-wiki-context>"
 
 
@@ -53,15 +53,15 @@ def _cwd(payload: dict[str, Any]) -> Any:
     return cwd
 
 
-def wrap(text: str) -> str:
+def _wrap(text: str) -> str:
     return f"{OPEN}\n{text}\n{CLOSE}"
 
 
 def _context_output(host: str, event: str, text: str) -> str:
     if host == "antigravity":
-        return json.dumps({"injectSteps": [{"ephemeralMessage": wrap(text)}]})
+        return json.dumps({"injectSteps": [{"ephemeralMessage": _wrap(text)}]})
     return json.dumps(
-        {"hookSpecificOutput": {"hookEventName": event, "additionalContext": wrap(text)}}
+        {"hookSpecificOutput": {"hookEventName": event, "additionalContext": _wrap(text)}}
     )
 
 
@@ -80,7 +80,7 @@ def handle(host_arg: str, event_arg: str, stdin_text: str) -> str:
     except ValueError:
         payload = {}
     host = detect_host(host_arg, payload)
-    event = event_arg if event_arg in NORMALIZED else EVENTS.get(event_arg)
+    event = event_arg if event_arg in _NORMALIZED else _EVENTS.get(event_arg)
     if event is None:
         return _empty(host)
     try:
@@ -120,11 +120,11 @@ def _dispatch(host: str, raw_event: str, event: str, payload: dict[str, Any]) ->
         out = ""
         if mode in ("prompted", "both"):
             out = _prompted(host, session, transcript, user)
-        if not out and mode in ("raw", "both") and host not in HOSTS_WITH_END_EVENTS:
-            capture_raw(host, session, transcript, cwd)
+        if not out and mode in ("raw", "both") and host not in _HOSTS_WITH_END_EVENTS:
+            _capture_raw(host, session, transcript, cwd)
         return out
     if event in ("pre_compact", "session_end") and mode in ("raw", "both"):
-        capture_raw(host, session, transcript, cwd)
+        _capture_raw(host, session, transcript, cwd)
     return ""
 
 
@@ -145,7 +145,7 @@ def _session_start(host: str, raw_event: str, cwd: Any, user: Any) -> str:
             from brainwiki.hosts import session_state
 
             seen = session_state.load(host, "__setup_hint__").get("count", 0)
-            if seen < SETUP_HINT_SESSIONS:
+            if seen < _SETUP_HINT_SESSIONS:
                 session_state.update(host, "__setup_hint__", count=seen + 1)
                 return _context_output(
                     host, raw_event, "brain-wiki is installed but not set up; ask me to set it up."
@@ -153,7 +153,7 @@ def _session_start(host: str, raw_event: str, cwd: Any, user: Any) -> str:
         return ""
     with engine:
         text = orient(engine)["text"]
-    return _context_output(host, raw_event, text[:ORIENT_MAX_CHARS])
+    return _context_output(host, raw_event, text[:_ORIENT_MAX_CHARS])
 
 
 def _tool_used(host: str, session: str, payload: dict[str, Any], user: Any) -> str:
@@ -201,7 +201,7 @@ def _recall(host: str, cwd: Any, prompt: str, user: Any) -> str:
         lines.append(f"- {hit['title']} ({hit['path']})")
         for guard in hit.get("guards", [])[:3]:
             lines.append(f"  - ⚠ {guard['label']}: {guard['title']}")
-    return _context_output(host, "UserPromptSubmit", "\n".join(lines)[:RECALL_MAX_CHARS])
+    return _context_output(host, "UserPromptSubmit", "\n".join(lines)[:_RECALL_MAX_CHARS])
 
 
 def _prompted(host: str, session: str, transcript: Any, user: Any) -> str:
@@ -246,7 +246,7 @@ def render_turns(turns: list[Any], per_turn: int = 1500) -> str:
     return "\n".join(lines)
 
 
-def capture_raw(host: str, session: str, transcript: Any, cwd: Any) -> str | None:
+def _capture_raw(host: str, session: str, transcript: Any, cwd: Any) -> str | None:
     """Write the turns since the last capture point as one raw episode. Returns its path."""
     from brainwiki.format.episode import EpisodeContent
     from brainwiki.hosts import session_state

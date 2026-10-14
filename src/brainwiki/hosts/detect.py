@@ -6,7 +6,6 @@ import os
 from collections.abc import Mapping
 from typing import Any
 
-HOSTS = ("claude-code", "codex", "antigravity", "openclaw", "cursor", "generic")
 _CLIENT_NAMES = (
     ("claude", "claude-code"),
     ("codex", "codex"),

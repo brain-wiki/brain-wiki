@@ -26,8 +26,8 @@ from brainwiki.format.meta import strip_meta_comments
 from brainwiki.format.relations import Relation, RelationError, parse_relation_line
 
 HEADING_RE = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<text>.+?)\s*#*\s*$")
-CLAIMS = "claims"
-RELATIONS = "relations"
+_CLAIMS = "claims"
+_RELATIONS = "relations"
 _LIST_ITEM_RE = re.compile(r"^\s*[-*+]\s+\S")
 
 
@@ -120,7 +120,7 @@ def parse_document(path: str, text: str) -> ParsedDoc:
     claim_links: list[Link] = []
     if fm.present and not fm.error:
         _frontmatter_parts(doc, text, history, claim_links)
-    claims_section = doc.section(CLAIMS)
+    claims_section = doc.section(_CLAIMS)
     if claims_section:
         claims, problems = parse_claim_block(lines_of(claims_section))
         doc.claims = claims
@@ -130,7 +130,7 @@ def parse_document(path: str, text: str) -> ParsedDoc:
             if claim.status != "active":
                 history.append(claim.text)
                 superseded_lines.update(range(claim.line, claim.last_line + 1))
-    relations_section = doc.section(RELATIONS)
+    relations_section = doc.section(_RELATIONS)
     if relations_section:
         for line_no, line in lines_of(relations_section):
             if not _LIST_ITEM_RE.match(line):

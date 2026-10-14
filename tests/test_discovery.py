@@ -142,23 +142,23 @@ def test_relative_dates_and_bad_input():
     from datetime import date
 
     from brainwiki.errors import UsageError
-    from brainwiki.index.search import date_bound, parse_cursor
+    from brainwiki.index.search import _date_bound, parse_cursor
 
     today = date(2026, 10, 12)
-    assert date_bound("7d", today=today) == "2026-10-05"
-    assert date_bound("2w", today=today) == "2026-09-28"
-    assert date_bound("2026-10-01T10:00:00", today=today) == "2026-10-01"
+    assert _date_bound("7d", today=today) == "2026-10-05"
+    assert _date_bound("2w", today=today) == "2026-09-28"
+    assert _date_bound("2026-10-01T10:00:00", today=today) == "2026-10-01"
     with pytest.raises(UsageError):
-        date_bound("last week")
+        _date_bound("last week")
     with pytest.raises(UsageError):
         parse_cursor("abc")
 
 
 def test_question_ranks_by_its_content_words(example: Path):
-    from brainwiki.index.search import content_tokens, search
+    from brainwiki.index.search import _content_tokens, search
 
-    assert content_tokens("why did we pick FTS5?") == ["pick", "fts5"]
-    assert content_tokens("what is it") == ["what", "is", "it"]  # nothing but filler: keep it
+    assert _content_tokens("why did we pick FTS5?") == ["pick", "fts5"]
+    assert _content_tokens("what is it") == ["what", "is", "it"]  # nothing but filler: keep it
     with _engine(example) as eng:
         found = search(eng, "why did we switch from ripgrep?", intent="none")
     titles = [r["title"] for r in found["results"]]
@@ -289,7 +289,7 @@ def test_briefing_truncates_topics_with_a_browse_pointer(example: Path):
 
 
 def test_instructions_follow_the_host_profile(example: Path):
-    from brainwiki.hosts.instructions import Access, host_access, marked_block, server_instructions
+    from brainwiki.hosts.instructions import Access, _marked_block, host_access, server_instructions
 
     (example / "brain.toml").write_text(
         (example / "brain.toml").read_text()
@@ -301,7 +301,7 @@ def test_instructions_follow_the_host_profile(example: Path):
     restricted = server_instructions(Access(edit=False))
     assert "Markdown files directly" in restricted and "do not edit" in restricted
     assert "brain_check" not in restricted and "Details: the `brain` skill" not in restricted
-    full = marked_block(Access(edit=True))
+    full = _marked_block(Access(edit=True))
     assert full.startswith("<!-- brain-wiki:begin v1 -->\n## brain-wiki")
     assert full.rstrip().endswith("<!-- brain-wiki:end -->") and "brain_check" in full
     assert len(server_instructions(Access(edit=True))) < 2000

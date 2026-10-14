@@ -13,8 +13,8 @@ from brainwiki.cli.output import emit
 from brainwiki.engine import Engine, open_engine
 from brainwiki.index.search import node_filters, parse_cursor
 
-NOTE_KINDS = ["note", "hub"]
-STATUSES = ["active", "superseded"]
+_NOTE_KINDS = ["note", "hub"]
+_STATUSES = ["active", "superseded"]
 
 
 def _engine(args: Any) -> Engine:
@@ -22,7 +22,7 @@ def _engine(args: Any) -> Engine:
 
 
 def _note_where(engine: Engine) -> tuple[str, list[Any]]:
-    return node_filters(engine, NOTE_KINDS, STATUSES, None)
+    return node_filters(engine, _NOTE_KINDS, _STATUSES, None)
 
 
 def _listing(

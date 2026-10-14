@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from brainwiki.format.document import ParsedDoc, parse_document
+from brainwiki.format.document import parse_document
 from brainwiki.ids import is_ulid
 from brainwiki.index.resolver import Resolver, name_rows
 from brainwiki.index.topics import (
@@ -26,9 +26,9 @@ from brainwiki.store import sha256_bytes
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-MAX_INDEX_BYTES = 2 * 1024 * 1024
-STATUSES = ("active", "superseded", "archived")
-NODE_KINDS = ("note", "hub", "episode", "archived_episode", "agent_file")
+_MAX_INDEX_BYTES = 2 * 1024 * 1024
+_STATUSES = ("active", "superseded", "archived")
+_NODE_KINDS = ("note", "hub", "episode", "archived_episode", "agent_file")
 _BASELINE_KEEP = (
     "INSERT OR IGNORE INTO episode_hashes(episode_id, sha256, path, first_seen) VALUES (?, ?, ?, ?)"
 )
@@ -37,7 +37,7 @@ _NOTE_BASE = "INSERT OR {mode} INTO baselines(path, sha256, content, since) VALU
 NOTE_KINDS = ("note", "hub")
 
 
-def set_baseline(
+def _set_baseline(
     conn: sqlite3.Connection, rel: str, data: bytes | None, *, keep: bool = False
 ) -> None:
     """Record `data` (None: absent) as the note's last recorded version; `keep` leaves an existing one."""
@@ -254,7 +254,7 @@ def scan(
             if rel not in seen:
                 conn.execute("DELETE FROM baselines WHERE path=?", (rel,))
             elif classify(engine, rel, topics) in NOTE_KINDS:
-                set_baseline(conn, rel, engine.store.read_bytes(rel))
+                _set_baseline(conn, rel, engine.store.read_bytes(rel))
         parsed_nodes: list[tuple[str, str]] = []
         for rel, data in to_parse:
             st = seen[rel]
@@ -265,9 +265,9 @@ def scan(
             )
             if kind in NOTE_KINDS:
                 if sanctioned or fresh:
-                    set_baseline(conn, rel, data, keep=not sanctioned)
+                    _set_baseline(conn, rel, data, keep=not sanctioned)
                 else:  # changed outside a run: keep the recorded version; a new file was absent
-                    set_baseline(conn, rel, None, keep=True)
+                    _set_baseline(conn, rel, None, keep=True)
             names_changed = names_changed or changed_names
             if node_id:
                 parsed_nodes.append((node_id, rel))
@@ -402,7 +402,7 @@ def _index_file(
         old_names = set()
     conn.execute("DELETE FROM diagnostics WHERE path=?", (rel,))
     sha = sha256_bytes(data)
-    if kind not in NODE_KINDS:
+    if kind not in _NODE_KINDS:
         conn.execute(
             "INSERT OR REPLACE INTO files(path, kind, mtime_ns, size, sha256, node_id, parse_errors) VALUES (?, ?, ?, ?, ?, NULL, 0)",
             (rel, kind, mtime_ns, size, sha),
@@ -414,7 +414,7 @@ def _index_file(
     except UnicodeDecodeError:
         text = data.decode("utf-8", errors="replace")
         decode_error = "file is not valid UTF-8"
-    if size > MAX_INDEX_BYTES:
+    if size > _MAX_INDEX_BYTES:
         text = ""
     doc = parse_document(rel, text)
     manifest = engine.manifest
@@ -427,7 +427,7 @@ def _index_file(
         if clash and clash["path"] != rel:
             node_id = f"path:{rel}"  # the file indexed later yields; lint reports the duplicate
     status = str(fm.get("status") or "active")
-    if status not in STATUSES:
+    if status not in _STATUSES:
         status = "active"
     note_type = str(
         fm.get("type") or ("hub" if kind == "hub" else "episode" if "episode" in kind else "note")
@@ -500,7 +500,7 @@ def _index_file(
             if fm.get("stage") is not None
             else (
                 str(fm["status"])
-                if fm.get("status") and str(fm["status"]) not in STATUSES
+                if fm.get("status") and str(fm["status"]) not in _STATUSES
                 else None
             ),
             str(fm.get("created")) if fm.get("created") else None,
@@ -669,7 +669,3 @@ def _reresolve_all(conn: sqlite3.Connection) -> None:
     paths = {row["id"]: row["path"] for row in conn.execute("SELECT id, path FROM nodes")}
     for edge in conn.execute("SELECT id, raw_target, declared_in, flip FROM edges").fetchall():
         _apply_resolution(conn, edge, resolver, paths.get(edge["declared_in"], ""))
-
-
-def doc_for(engine: Engine, rel: str) -> ParsedDoc:
-    return parse_document(rel, engine.store.read_text(rel))

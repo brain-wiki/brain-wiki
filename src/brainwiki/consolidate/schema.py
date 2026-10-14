@@ -6,7 +6,7 @@ from typing import Any
 
 from jsonschema import Draft202012Validator
 
-OP_NAMES = (
+_OP_NAMES = (
     "add_claim",
     "merge_claim",
     "supersede_claim",
@@ -36,7 +36,7 @@ def _op(name: str, required: list[str], properties: dict[str, Any]) -> dict[str,
     }
 
 
-OP_SCHEMAS: dict[str, dict[str, Any]] = {
+_OP_SCHEMAS: dict[str, dict[str, Any]] = {
     "add_claim": _op(
         "add_claim",
         ["note", "text", "sources"],
@@ -112,16 +112,6 @@ OP_SCHEMAS: dict[str, dict[str, Any]] = {
     ),
 }
 
-# The full schema, as published to models and docs: a one-of over the op schemas.
-OPS_SCHEMA: dict[str, Any] = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["ops"],
-    "properties": {
-        "ops": {"type": "array", "maxItems": MAX_OPS, "items": {"oneOf": list(OP_SCHEMAS.values())}}
-    },
-}
 
 # A loose shape for CLIs that constrain output: enough to force JSON with an ops array, without
 # the oneOf that some structured-output implementations reject. The validator does the rest.
@@ -134,13 +124,13 @@ LOOSE_SCHEMA: dict[str, Any] = {
             "items": {
                 "type": "object",
                 "required": ["op"],
-                "properties": {"op": {"type": "string", "enum": list(OP_NAMES)}},
+                "properties": {"op": {"type": "string", "enum": list(_OP_NAMES)}},
             },
         }
     },
 }
 
-_VALIDATORS = {name: Draft202012Validator(schema) for name, schema in OP_SCHEMAS.items()}
+_VALIDATORS = {name: Draft202012Validator(schema) for name, schema in _OP_SCHEMAS.items()}
 
 
 def schema_errors(data: Any) -> list[str]:
@@ -155,7 +145,7 @@ def schema_errors(data: Any) -> list[str]:
     for index, op in enumerate(ops):
         name = op.get("op") if isinstance(op, dict) else None
         if name not in _VALIDATORS:
-            errors.append(f"ops[{index}]: unknown op {name!r}; use one of {', '.join(OP_NAMES)}")
+            errors.append(f"ops[{index}]: unknown op {name!r}; use one of {', '.join(_OP_NAMES)}")
             continue
         for error in sorted(_VALIDATORS[name].iter_errors(op), key=lambda e: list(e.path)):
             where = ".".join(str(p) for p in error.path)

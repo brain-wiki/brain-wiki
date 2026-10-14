@@ -7,7 +7,7 @@ import sqlite3
 from collections import defaultdict
 from dataclasses import dataclass
 
-ORDER = ("path", "stem", "alias", "title", "id")
+_ORDER = ("path", "stem", "alias", "title", "id")
 
 
 def norm_key(text: str) -> str:
@@ -41,7 +41,7 @@ class Resolver:
         self.keys: dict[str, dict[str, set[str]]] | None = None
         self._cache: dict[tuple[str, str], set[str]] = {}
         if preload:
-            self.keys = {k: defaultdict(set) for k in ORDER}
+            self.keys = {k: defaultdict(set) for k in _ORDER}
             for row in conn.execute("SELECT key, kind, node_id FROM names"):
                 self.keys[row["kind"]][row["key"]].add(row["node_id"])
 

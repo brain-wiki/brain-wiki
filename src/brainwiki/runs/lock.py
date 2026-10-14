@@ -16,7 +16,7 @@ from brainwiki.errors import Busy
 _LOCKS: dict[str, FileLock] = {}
 
 
-def lock_path(brain_key: str) -> Path:
+def _lock_path(brain_key: str) -> Path:
     path = state_dir() / "locks" / f"{brain_key}.lock"
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
@@ -26,7 +26,7 @@ def lock_path(brain_key: str) -> Path:
 def brain_lock(brain_key: str, timeout: float = 30.0) -> Iterator[None]:
     lock = _LOCKS.get(brain_key)
     if lock is None:
-        lock = _LOCKS[brain_key] = FileLock(str(lock_path(brain_key)))
+        lock = _LOCKS[brain_key] = FileLock(str(_lock_path(brain_key)))
     try:
         lock.acquire(timeout=timeout)
     except Timeout as exc:

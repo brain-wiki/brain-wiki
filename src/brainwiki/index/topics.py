@@ -29,7 +29,7 @@ def hub_name(layout: Layout, folder: str) -> str:
     return layout.hub_filename.replace("{folder}", folder.rsplit("/", 1)[-1])
 
 
-def is_hub_file(layout: Layout, rel: str) -> bool:
+def _is_hub_file(layout: Layout, rel: str) -> bool:
     folder, _, name = rel.rpartition("/")
     return bool(folder) and name == hub_name(layout, folder)
 
@@ -104,7 +104,7 @@ class TopicTree:
         )
 
 
-def build_tree(manifest: Manifest, top_dirs: Iterable[str], hub_files: Iterable[str]) -> TopicTree:
+def _build_tree(manifest: Manifest, top_dirs: Iterable[str], hub_files: Iterable[str]) -> TopicTree:
     """The tree from the folders directly under the topics directory and the hub files below it."""
     layout = manifest.layout
     base = "" if layout.topics_dir in (".", "") else layout.topics_dir.rstrip("/") + "/"
@@ -167,7 +167,7 @@ def build_tree(manifest: Manifest, top_dirs: Iterable[str], hub_files: Iterable[
         found: dict[str, str] = {}
         for owner in [slug, *_chain(parents, slug)]:
             cfg = declared.get(owner)
-            for name in INHERITED:
+            for name in _INHERITED:
                 value = getattr(cfg, name, None) if cfg else None
                 if value is not None and name not in found:
                     found[name] = value
@@ -175,7 +175,7 @@ def build_tree(manifest: Manifest, top_dirs: Iterable[str], hub_files: Iterable[
     return TopicTree(paths, parents, settings)
 
 
-INHERITED = ("review", "agent_edits")
+_INHERITED = ("review", "agent_edits")
 
 
 def _chain(parents: dict[str, str | None], slug: str) -> list[str]:
@@ -188,24 +188,24 @@ def _chain(parents: dict[str, str | None], slug: str) -> list[str]:
 
 def topic_tree(engine: Engine) -> TopicTree:
     """The engine's topic tree, rebuilt only when the top-level folders or hub files change."""
-    hubs = hub_files(engine)
+    hubs = _hub_files(engine)
     top = _top_dirs(engine)
     key = (id(engine.manifest), top, hubs)
     cached = getattr(engine, "_topic_tree", None)
     if cached is not None and cached[0] == key:
         return cached[1]
-    tree = build_tree(engine.manifest, top, hubs)
+    tree = _build_tree(engine.manifest, top, hubs)
     engine._topic_tree = (key, tree)  # type: ignore[attr-defined]
     return tree
 
 
-def hub_files(engine: Engine) -> frozenset[str]:
+def _hub_files(engine: Engine) -> frozenset[str]:
     """Hub files in the brain as of the last scan (the scan keeps this current)."""
     cached = getattr(engine, "_hub_files", None)
     if cached is None:
         layout = engine.manifest.layout
         rows = engine.db.execute("SELECT path FROM files")
-        cached = frozenset(r[0] for r in rows if is_hub_file(layout, r[0]))
+        cached = frozenset(r[0] for r in rows if _is_hub_file(layout, r[0]))
         engine._hub_files = cached  # type: ignore[attr-defined]
     return cached
 
@@ -213,15 +213,15 @@ def hub_files(engine: Engine) -> frozenset[str]:
 def note_hub_changes(engine: Engine, present: Iterable[str], absent: Iterable[str]) -> None:
     """Keep the hub-file set current after a scan saw files appear or disappear."""
     layout = engine.manifest.layout
-    current = set(hub_files(engine))
-    current.update(p for p in present if is_hub_file(layout, p))
-    current.difference_update(p for p in absent if is_hub_file(layout, p))
+    current = set(_hub_files(engine))
+    current.update(p for p in present if _is_hub_file(layout, p))
+    current.difference_update(p for p in absent if _is_hub_file(layout, p))
     engine._hub_files = frozenset(current)  # type: ignore[attr-defined]
 
 
 def set_hub_files(engine: Engine, paths: Iterable[str]) -> None:
     layout = engine.manifest.layout
-    engine._hub_files = frozenset(p for p in paths if is_hub_file(layout, p))  # type: ignore[attr-defined]
+    engine._hub_files = frozenset(p for p in paths if _is_hub_file(layout, p))  # type: ignore[attr-defined]
 
 
 def _top_dirs(engine: Engine) -> tuple[str, ...]:

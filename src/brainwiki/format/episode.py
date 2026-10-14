@@ -10,7 +10,7 @@ from brainwiki.format.fields import field as bw_field
 from brainwiki.format.frontmatter import format_value
 from brainwiki.ids import ulid_datetime
 
-FIELD_ORDER = (
+_FIELD_ORDER = (
     "id",
     "type",
     "agent",
@@ -45,8 +45,8 @@ def episode_path(episodes_dir: str, ulid: str) -> str:
 
 def render_episode(fields: dict[str, Any], content: EpisodeContent) -> str:
     lines = ["---"]
-    keys = [k for k in FIELD_ORDER if fields.get(k) not in (None, "", [])]
-    keys += sorted(k for k in fields if k not in FIELD_ORDER and fields[k] not in (None, "", []))
+    keys = [k for k in _FIELD_ORDER if fields.get(k) not in (None, "", [])]
+    keys += sorted(k for k in fields if k not in _FIELD_ORDER and fields[k] not in (None, "", []))
     for key in keys:
         lines.append(f"{bw_field(key)}: {format_value(fields[key])}")
     lines.append("---")

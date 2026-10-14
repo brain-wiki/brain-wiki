@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -143,7 +142,7 @@ def topic_rows(engine: Engine, stats: dict[str, Any] | None = None) -> list[dict
     return rows
 
 
-def pending_stats(engine: Engine, stats: dict[str, Any] | None = None) -> dict[str, Any]:
+def _pending_stats(engine: Engine, stats: dict[str, Any] | None = None) -> dict[str, Any]:
     stats = stats or brief_stats(engine)
     oldest = stats["oldest_episode"]
     oldest_days = (
@@ -162,7 +161,7 @@ def pending_stats(engine: Engine, stats: dict[str, Any] | None = None) -> dict[s
     }
 
 
-def recent_changes(engine: Engine, count: int = 5) -> list[str]:
+def _recent_changes(engine: Engine, count: int = 5) -> list[str]:
     try:
         text = engine.store.read_text("log.md")
     except OSError:
@@ -171,7 +170,7 @@ def recent_changes(engine: Engine, count: int = 5) -> list[str]:
     return entries[-count:][::-1]
 
 
-def open_issues(engine: Engine, stats: dict[str, Any]) -> dict[str, int]:
+def _open_issues(engine: Engine, stats: dict[str, Any]) -> dict[str, int]:
     """Active conflicts between notes, and unverified claims in notes."""
     unverified = engine.db.execute(
         # CROSS JOIN starts from the few unverified claims (claims_unverified), not every note.
@@ -182,7 +181,9 @@ def open_issues(engine: Engine, stats: dict[str, Any]) -> dict[str, int]:
     return {"conflicts": stats["conflicts"], "unverified_claims": unverified}
 
 
-def contents(engine: Engine, stats: dict[str, Any], topics: list[dict[str, Any]]) -> dict[str, Any]:
+def _contents(
+    engine: Engine, stats: dict[str, Any], topics: list[dict[str, Any]]
+) -> dict[str, Any]:
     """What the brain holds, for the briefing's overview section."""
     return {
         "notes": stats["notes"],
@@ -193,11 +194,11 @@ def contents(engine: Engine, stats: dict[str, Any], topics: list[dict[str, Any]]
             (t["slug"], t["notes"]) for t in sorted(topics, key=lambda t: -t["notes"])[:5]
         ],
         "homes": stats["homes"],
-        **open_issues(engine, stats),
+        **_open_issues(engine, stats),
     }
 
 
-def query_examples(info: dict[str, Any], topics: list[dict[str, Any]]) -> list[str]:
+def _query_examples(info: dict[str, Any], topics: list[dict[str, Any]]) -> list[str]:
     """Three calls built from this brain's own topics and types."""
     by_size = sorted(topics, key=lambda t: -t["notes"])
     subject = (by_size[0]["title"] if by_size else "") or "the project"
@@ -226,8 +227,8 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
     rules, _ = parse_rules(rules_text)
     stats = brief_stats(engine)
     topics = topic_rows(engine, stats=stats)
-    inbox = pending_stats(engine, stats)
-    info = contents(engine, stats, topics)
+    inbox = _pending_stats(engine, stats)
+    info = _contents(engine, stats, topics)
     today = datetime.now(UTC).strftime("%Y-%m-%d")
     budget_chars = engine.manifest.budgets.orient_max_tokens * 4
 
@@ -281,8 +282,8 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
             "Consider consolidating (brain_consolidate_prepare) when the user agrees."
         )
     inbox_lines += extra_lines or []
-    howto = ["## How to query", *query_examples(info, topics)]
-    changes = recent_changes(engine)
+    howto = ["## How to query", *_query_examples(info, topics)]
+    changes = _recent_changes(engine)
     change_lines = ["## Recent changes"] + [f"- {c}" for c in changes]
     if info["updated_7d"]:
         change_lines.append(f"{info['updated_7d']} notes updated in the last 7 days.")
@@ -353,10 +354,6 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         "open_proposals": inbox["proposals"],
         "notes": info["notes"],
     }
-
-
-def strip_markdown(text: str) -> str:
-    return re.sub(r"[*_`]", "", text)
 
 
 def agents_block(engine: Engine, extra: list[dict[str, Any]] | None = None) -> str:

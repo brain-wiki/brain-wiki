@@ -6,8 +6,8 @@ import re
 from dataclasses import dataclass
 from urllib.parse import unquote
 
-WIKILINK_RE = re.compile(r"(?P<embed>!?)\[\[(?P<inner>[^\[\]\n]+?)\]\]")
-MDLINK_RE = re.compile(r"(?<!!)\[(?P<label>[^\]\n]*)\]\((?P<href>[^)\s]+)\)")
+_WIKILINK_RE = re.compile(r"(?P<embed>!?)\[\[(?P<inner>[^\[\]\n]+?)\]\]")
+_MDLINK_RE = re.compile(r"(?<!!)\[(?P<label>[^\]\n]*)\]\((?P<href>[^)\s]+)\)")
 _FENCE_RE = re.compile(r"^(\s*)(```|~~~)")
 _INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
 
@@ -44,7 +44,7 @@ def extract_links(
         line_no = first_line + offset
         if skip_lines and line_no in skip_lines:
             continue
-        for match in WIKILINK_RE.finditer(line):
+        for match in _WIKILINK_RE.finditer(line):
             inner = match.group("inner")
             label = None
             if "|" in inner:
@@ -58,7 +58,7 @@ def extract_links(
             links.append(
                 Link(line_no, inner.strip(), heading, label, bool(match.group("embed")), "wiki")
             )
-        for match in MDLINK_RE.finditer(line):
+        for match in _MDLINK_RE.finditer(line):
             href = match.group("href")
             if "://" in href or href.startswith(("#", "mailto:")):
                 continue

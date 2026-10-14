@@ -15,11 +15,11 @@ from brainwiki.index.guards import banners, guards_for
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-WEIGHTS = (8.0, 6.0, 3.0, 2.0, 1.0, 0.2)
+_WEIGHTS = (8.0, 6.0, 3.0, 2.0, 1.0, 0.2)
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 _CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]+")
 _RELATIVE_RE = re.compile(r"^(\d+)([dwmy])$")
-INTENTS = {
+_INTENTS = {
     "none": [],
     "context": [("part_of", "out")],
     "why": [("depends_on", "out")],
@@ -27,10 +27,10 @@ INTENTS = {
     "history": [("supersedes", "out"), ("supersedes", "in")],
     "related": [("related_to", "both"), ("links_to", "both")],
 }
-SORTS = ("relevance", "recent", "title")
+_SORTS = ("relevance", "recent", "title")
 # Words that carry no topic on their own. Dropped from a query when content words remain, so a
 # question phrased as a sentence ranks by what it is about (04 §6.2).
-FILLER = frozenset(
+_FILLER = frozenset(
     {
         "a",
         "about",
@@ -123,12 +123,12 @@ FILLER = frozenset(
 )
 # Frontmatter keys indexed as columns rather than in `props`; `status` also matches a custom stage.
 _COLUMNS = {"type", "status", "stage", "topic", "created", "updated"}
-FACET_LIMIT = 10
+_FACET_LIMIT = 10
 
 
-def content_tokens(query: str) -> list[str]:
+def _content_tokens(query: str) -> list[str]:
     tokens = [t.lower() for t in _TOKEN_RE.findall(query)]
-    content = [t for t in tokens if t not in FILLER]
+    content = [t for t in tokens if t not in _FILLER]
     return content or tokens
 
 
@@ -139,7 +139,7 @@ def _fts_query(tokens: list[str], *, any_: bool) -> str:
     return (" OR " if any_ else " ").join(quoted)
 
 
-def date_bound(value: str | None, *, today: date | None = None) -> str | None:
+def _date_bound(value: str | None, *, today: date | None = None) -> str | None:
     """`YYYY-MM-DD`, or `7d` / `4w` / `3m` / `1y` before today, as an ISO date."""
     if not value:
         return None
@@ -298,12 +298,12 @@ def search(
     conn = engine.db
     limit = max(1, min(50, limit))
     offset = parse_cursor(cursor)
-    tokens = content_tokens(query)
+    tokens = _content_tokens(query)
     cjk_runs = _CJK_RE.findall(query)
     browse = not tokens and not cjk_runs
     sort = sort or ("recent" if browse else "relevance")
-    if sort not in SORTS:
-        raise UsageError(f"sort must be one of {', '.join(SORTS)}")
+    if sort not in _SORTS:
+        raise UsageError(f"sort must be one of {', '.join(_SORTS)}")
     if include_episodes is None:
         include_episodes = not browse
     kinds = (
@@ -320,8 +320,8 @@ def search(
         types=types,
         tags=tags,
         where=where,
-        since=date_bound(since),
-        until=date_bound(until),
+        since=_date_bound(since),
+        until=_date_bound(until),
     )
     result: dict[str, Any] = {
         "brain": engine.brain.display_name,
@@ -429,7 +429,7 @@ def _query(
             return 0
 
     def run(
-        match: str, table: str = "fts", weights: tuple[float, ...] = WEIGHTS, snippet_col: int = 4
+        match: str, table: str = "fts", weights: tuple[float, ...] = _WEIGHTS, snippet_col: int = 4
     ) -> int | None:
         """Rank inside FTS, filter by profile in growing batches, then build snippets for the
         winners only. Returns how many nodes match when every candidate was seen, else None."""
@@ -565,14 +565,14 @@ def _facets(conn: Any, matched: tuple[str, list[Any]]) -> dict[str, dict[str, in
         rows = conn.execute(
             f"""SELECT {key} AS k, COUNT(*) AS c FROM {source} WHERE n.id IN ({sql}) AND {key} IS NOT NULL
                 GROUP BY {key} ORDER BY c DESC, k LIMIT ?""",  # noqa: S608
-            (*params, FACET_LIMIT),
+            (*params, _FACET_LIMIT),
         ).fetchall()
         out[name] = {str(r["k"]): r["c"] for r in rows}
     return out
 
 
 def _expand(engine: Engine, ranked: list[dict[str, Any]], intent: str) -> list[dict[str, Any]]:
-    rules = INTENTS.get(intent, [])
+    rules = _INTENTS.get(intent, [])
     if not rules or not ranked:
         return []
     seen = {r["id"] for r in ranked}
@@ -613,7 +613,7 @@ def _expand(engine: Engine, ranked: list[dict[str, Any]], intent: str) -> list[d
 def format_search_text(result: dict[str, Any], fmt: str = "text") -> str:
     results = result.get("results") or []
     total = result.get("total", len(results))
-    browsing = not content_tokens(result["query"]) and not _CJK_RE.search(result["query"])
+    browsing = not _content_tokens(result["query"]) and not _CJK_RE.search(result["query"])
     if fmt == "paths":
         return "\n".join(dict.fromkeys(r["path"] for r in results))
     lines: list[str] = []

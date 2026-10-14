@@ -19,7 +19,7 @@ def _yaml() -> tuple[Any, type]:
     return yaml, getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
 
-MAX_FRONTMATTER_BYTES = 64 * 1024
+_MAX_FRONTMATTER_BYTES = 64 * 1024
 _KEY_RE = re.compile(r"^([A-Za-z0-9_][A-Za-z0-9_.-]*)\s*:")
 
 
@@ -60,7 +60,7 @@ def split(text: str) -> Frontmatter:
             raw = "".join(lines[1:idx])
             body = "".join(lines[idx + 1 :])
             fm = Frontmatter(present=True, end_line=idx + 1, body=body, body_start_line=idx + 2)
-            if len(raw.encode("utf-8")) > MAX_FRONTMATTER_BYTES:
+            if len(raw.encode("utf-8")) > _MAX_FRONTMATTER_BYTES:
                 fm.error = "frontmatter larger than 64 KiB"
                 return fm
             yaml, loader = _yaml()

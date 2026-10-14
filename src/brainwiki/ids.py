@@ -10,8 +10,8 @@ from datetime import UTC, datetime
 
 _ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 _DECODE = {c: i for i, c in enumerate(_ALPHABET)}
-ULID_PATTERN = r"[0-7][0-9A-HJKMNP-TV-Z]{25}"
-_ULID_RE = re.compile(rf"^{ULID_PATTERN}$")
+_ULID_PATTERN = r"[0-7][0-9A-HJKMNP-TV-Z]{25}"
+_ULID_RE = re.compile(rf"^{_ULID_PATTERN}$")
 
 _lock = threading.Lock()
 _last_ms = -1

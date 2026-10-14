@@ -15,7 +15,7 @@ from brainwiki import __version__
 from brainwiki.config.dirs import config_file, state_dir
 from brainwiki.config.user import load_user_config
 
-HOST_PROBES: dict[str, dict[str, list[str]]] = {
+_HOST_PROBES: dict[str, dict[str, list[str]]] = {
     "claude-code": {"bins": ["claude"], "dirs": ["~/.claude"]},
     "codex": {"bins": ["codex"], "dirs": ["~/.codex"]},
     "antigravity": {
@@ -27,7 +27,7 @@ HOST_PROBES: dict[str, dict[str, list[str]]] = {
 }
 
 
-def sqlite_capabilities() -> dict[str, Any]:
+def _sqlite_capabilities() -> dict[str, Any]:
     conn = sqlite3.connect(":memory:")
     caps = {"version": sqlite3.sqlite_version, "fts5": False, "trigram": False}
     try:
@@ -42,14 +42,14 @@ def sqlite_capabilities() -> dict[str, Any]:
     return caps
 
 
-def host_installed(host: str) -> bool:
-    probe = HOST_PROBES.get(host, {})
+def _host_installed(host: str) -> bool:
+    probe = _HOST_PROBES.get(host, {})
     if any(shutil.which(b) for b in probe.get("bins", [])):
         return True
     return any(Path(d).expanduser().exists() for d in probe.get("dirs", []))
 
 
-def host_connection(host: str) -> dict[str, Any] | None:
+def _host_connection(host: str) -> dict[str, Any] | None:
     record = state_dir() / "connect" / f"{host}.json"
     if record.exists():
         try:
@@ -59,7 +59,7 @@ def host_connection(host: str) -> dict[str, Any] | None:
     return None
 
 
-def missing_instructions(connection: dict[str, Any]) -> list[str]:
+def _missing_instructions(connection: dict[str, Any]) -> list[str]:
     """Instruction files `brain connect` wrote that no longer carry the block (08 §3.2)."""
     from brainwiki.hosts.instructions import find_block
 
@@ -124,7 +124,7 @@ def run_doctor() -> dict[str, Any]:
         "cli": {"on_path": bool(shutil.which("brain")), "path": shutil.which("brain")},
         "brains": [],
         "hosts": [],
-        "sqlite": sqlite_capabilities(),
+        "sqlite": _sqlite_capabilities(),
         "problems": [],
         "next_steps": [],
     }
@@ -178,9 +178,9 @@ def run_doctor() -> dict[str, Any]:
                 "fix": "use a Python build with FTS5 (python.org, uv, or distro builds include it)",
             }
         )
-    for host in HOST_PROBES:
-        installed = host_installed(host)
-        connection = host_connection(host)
+    for host in _HOST_PROBES:
+        installed = _host_installed(host)
+        connection = _host_connection(host)
         entry: dict[str, Any] = {
             "id": host,
             "installed": installed,
@@ -188,7 +188,7 @@ def run_doctor() -> dict[str, Any]:
         }
         if connection:
             entry.update({k: connection.get(k) for k in ("plugin", "capture") if k in connection})
-            missing = missing_instructions(connection)
+            missing = _missing_instructions(connection)
             entry["instructions"] = not missing
             for path in missing:
                 report["problems"].append(

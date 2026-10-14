@@ -27,15 +27,15 @@ from brainwiki.hosts.sessions import SessionInfo, Transcript, Turn, reader_for
 from brainwiki.ids import run_id
 from brainwiki.write.secrets import scrub
 
-PACKET_CHARS = 60_000  # ~15k tokens for the in-agent recipe
+_PACKET_CHARS = 60_000  # ~15k tokens for the in-agent recipe
 CHUNK_CHARS = 120_000  # ~30k tokens per headless distill call
-TURN_CHARS = 2_000
-RUN_TTL_SECONDS = 3600
+_TURN_CHARS = 2_000
+_RUN_TTL_SECONDS = 3600
 _SINCE = re.compile(r"^(\d+)([hdw])$")
 _TURNS = re.compile(r"^(\d+)-(\d+)$")
 
 
-def parse_since(value: str | None, default: str = "30d") -> float:
+def _parse_since(value: str | None, default: str = "30d") -> float:
     match = _SINCE.match(value or default)
     if not match:
         raise UsageError(f"--since must look like 12h, 30d, or 2w, not {value!r}")
@@ -49,7 +49,7 @@ def _watermark_path(host: str, session: str) -> Path:
     return state_dir() / "harvest" / host / f"{digest}.json"
 
 
-def watermark(host: str, session: str) -> int:
+def _watermark(host: str, session: str) -> int:
     try:
         return int(
             json.loads(_watermark_path(host, session).read_text(encoding="utf-8")).get(
@@ -61,7 +61,7 @@ def watermark(host: str, session: str) -> int:
 
 
 def advance(host: str, session: str, last_turn: int) -> None:
-    if last_turn <= watermark(host, session):
+    if last_turn <= _watermark(host, session):
         return
     path = _watermark_path(host, session)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -110,7 +110,7 @@ def discover(
 ) -> list[Candidate]:
     """Every session of these hosts in the window, with a skip reason where one applies."""
     now = now or time.time()
-    window = parse_since(since, str(user.harvest.get("since") or "30d"))
+    window = _parse_since(since, str(user.harvest.get("since") or "30d"))
     min_idle = float(user.harvest.get("min_idle_minutes", 60)) * 60
     min_user_turns = int(user.harvest.get("min_user_turns", 3))
     own = str(state_dir().resolve())
@@ -123,7 +123,7 @@ def discover(
         for info in reader.list_sessions():
             if now - info.modified > window:
                 continue
-            candidate = Candidate(info, None, watermark(host, info.id) + 1)
+            candidate = Candidate(info, None, _watermark(host, info.id) + 1)
             out.append(candidate)
             cwd = str(Path(info.cwd).expanduser()) if info.cwd else ""
             if info.subagent:
@@ -160,8 +160,8 @@ def condense(turns: list[Turn], budget: int) -> tuple[list[dict[str, Any]], bool
     used = 0
     for turn in turns:
         text, _ = scrub(" ".join(turn.text.split()))
-        if len(text) > TURN_CHARS:
-            text = text[: TURN_CHARS - 1] + "…"
+        if len(text) > _TURN_CHARS:
+            text = text[: _TURN_CHARS - 1] + "…"
         entry = Turn(turn.index, turn.role, text, [scrub(t)[0] for t in turn.tools[:8]]).to_json()
         cost = len(json.dumps(entry, ensure_ascii=False))
         if out and used + cost > budget:
@@ -175,7 +175,7 @@ def chunks(turns: list[Turn], budget: int = CHUNK_CHARS) -> list[list[Turn]]:
     groups: list[list[Turn]] = [[]]
     used = 0
     for turn in turns:
-        cost = min(len(turn.text), TURN_CHARS) + 100
+        cost = min(len(turn.text), _TURN_CHARS) + 100
         if groups[-1] and used + cost > budget:
             groups.append([])
             used = 0
@@ -327,8 +327,8 @@ def prepare_packet(
     run = run_id()
     sessions, mapping, used = [], {}, 0
     for candidate in found[:max_sessions]:
-        budget = max(4000, PACKET_CHARS - used)
-        if sessions and used >= PACKET_CHARS:
+        budget = max(4000, _PACKET_CHARS - used)
+        if sessions and used >= _PACKET_CHARS:
             break
         turns, truncated = condense(candidate.new_turns, budget)
         if not turns:
@@ -367,7 +367,7 @@ def apply_packet(
     if not target.is_file():
         raise NotFound(f"no harvest run {run}; call brain_harvest_prepare")
     state = json.loads(target.read_text(encoding="utf-8"))
-    if time.time() - float(state["created"]) > RUN_TTL_SECONDS:
+    if time.time() - float(state["created"]) > _RUN_TTL_SECONDS:
         raise Expired(f"{run} expired; call brain_harvest_prepare again")
     if state["host"] != host:
         raise NotFound(f"{run} belongs to another host")

@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 
 
-def git_available() -> bool:
+def _git_available() -> bool:
     return shutil.which("git") is not None
 
 
@@ -20,7 +20,7 @@ def run_git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
 
 
 def is_work_tree(root: Path) -> bool:
-    if not git_available():
+    if not _git_available():
         return False
     result = run_git(root, "rev-parse", "--is-inside-work-tree")
     return result.returncode == 0 and result.stdout.strip() == "true"

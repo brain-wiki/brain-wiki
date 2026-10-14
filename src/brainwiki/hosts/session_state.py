@@ -24,7 +24,7 @@ def load(host: str, session: str) -> dict[str, Any]:
         return {}
 
 
-def save(host: str, session: str, data: dict[str, Any]) -> None:
+def _save(host: str, session: str, data: dict[str, Any]) -> None:
     path = _marker(host, session)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(f".{os.getpid()}.tmp")
@@ -35,7 +35,7 @@ def save(host: str, session: str, data: dict[str, Any]) -> None:
 def update(host: str, session: str, **values: Any) -> dict[str, Any]:
     data = load(host, session)
     data.update(values)
-    save(host, session, data)
+    _save(host, session, data)
     return data
 
 
@@ -43,7 +43,7 @@ def mark_tainted(host: str, session: str, tool: str) -> None:
     data = load(host, session)
     if not data.get("tainted"):
         data.update(tainted=True, tool=tool)
-        save(host, session, data)
+        _save(host, session, data)
 
 
 def session_taint(host: str, session: str | None) -> str:

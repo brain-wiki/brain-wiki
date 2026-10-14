@@ -18,10 +18,10 @@ from brainwiki.hosts.sessions import (
     summarize_args,
 )
 
-HOST = "codex"
+_HOST = "codex"
 
 
-def default_roots() -> list[Path]:
+def _default_roots() -> list[Path]:
     base = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
     return [base / "sessions", base / "archived_sessions"]
 
@@ -56,20 +56,20 @@ def _message_text(content: Any) -> str:
 
 
 class CodexReader:
-    host = HOST
+    host = _HOST
 
     def __init__(self, roots: list[Path] | None = None):
         self._roots = roots
 
     def roots(self) -> list[Path]:
-        return self._roots or default_roots()
+        return self._roots or _default_roots()
 
     def _info(self, path: Path) -> SessionInfo:
         st = path.stat()
         meta = _meta(path)
         source = str(meta.get("source") or "")
         return SessionInfo(
-            host=HOST,
+            host=_HOST,
             id=str(meta.get("id") or path.stem),
             path=path,
             cwd=meta.get("cwd"),
@@ -134,7 +134,7 @@ class CodexReader:
                         with contextlib.suppress(ValueError):
                             raw = json.loads(raw)
                     summary = summarize_args(raw)
-                    if is_untrusted(HOST, name, summary) or kind == "web_search_call":
+                    if is_untrusted(_HOST, name, summary) or kind == "web_search_call":
                         untrusted.append(name)
                     label = f"{name}: {summary}" if summary else name
                     if turns and turns[-1].role == "assistant":

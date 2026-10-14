@@ -28,8 +28,8 @@ from brainwiki.errors import Conflict, NotAvailable, UnsupportedHost, UsageError
 from brainwiki.hosts import instructions as ins
 
 HOSTS = ("claude-code", "codex", "antigravity", "openclaw", "cursor", "generic")
-MARKETPLACE = "brain-wiki-local"
-PLUGIN_FILES = (
+_MARKETPLACE = "brain-wiki-local"
+_PLUGIN_FILES = (
     "plugin.json",
     "mcp.json",
     ".mcp.json",
@@ -38,7 +38,7 @@ PLUGIN_FILES = (
     "rules",
     "skills",
 )
-UNTRUSTED_MATCHER = "WebFetch|WebSearch|mcp__.*"
+_UNTRUSTED_MATCHER = "WebFetch|WebSearch|mcp__.*"
 
 
 @dataclass
@@ -87,7 +87,7 @@ class Plan:
         return "\n".join(lines)
 
 
-def brain_executable() -> str:
+def _brain_executable() -> str:
     """The installed `brain` command, as an absolute path."""
     sibling = Path(sys.executable).parent / ("brain.exe" if os.name == "nt" else "brain")
     if sibling.is_file():
@@ -100,7 +100,7 @@ def brain_executable() -> str:
     )
 
 
-def plugin_source() -> Path:
+def _plugin_source() -> Path:
     """Plugin files shipped in the wheel, or the repository root in a source checkout."""
     packaged = Path(str(resources.files("brainwiki") / "assets" / "plugin"))
     if (packaged / "plugin.json").is_file():
@@ -122,7 +122,7 @@ def _mcp_entry(brain: str, host: str, brain_name: str | None, *, typed: bool) ->
     return entry
 
 
-def materialize(
+def _materialize(
     host: str,
     *,
     capture: bool,
@@ -135,10 +135,10 @@ def materialize(
     No hooks unless asked for (08 §3): agents learn the brains from the instruction block and
     `brain_list`; `briefing_hook` injects the briefing at session start, `capture` records.
     """
-    source = plugin_source()
-    brain = brain_executable()
+    source = _plugin_source()
+    brain = _brain_executable()
     files: dict[str, str] = {}
-    for item in PLUGIN_FILES:
+    for item in _PLUGIN_FILES:
         path = source / item
         if path.is_dir():
             for child in sorted(path.rglob("*")):
@@ -171,7 +171,7 @@ def materialize(
     if briefing_hook:
         claude_hooks["SessionStart"] = [claude_hook("SessionStart")]
     if capture:
-        claude_hooks["PostToolUse"] = [claude_hook("PostToolUse", matcher=UNTRUSTED_MATCHER)]
+        claude_hooks["PostToolUse"] = [claude_hook("PostToolUse", matcher=_UNTRUSTED_MATCHER)]
         claude_hooks["Stop"] = [claude_hook("Stop")]
         for event in ("PreCompact", "SessionEnd"):
             claude_hooks[event] = [claude_hook(event, timeout=60)]
@@ -210,7 +210,7 @@ def materialize(
     if antigravity:
         files["hooks.json"] = json.dumps({"brain-wiki": antigravity}, indent=2) + "\n"
     marketplace = json.loads(files[".claude-plugin/marketplace.json"])
-    marketplace["name"] = MARKETPLACE
+    marketplace["name"] = _MARKETPLACE
     files[".claude-plugin/marketplace.json"] = json.dumps(marketplace, indent=2) + "\n"
     return files
 
@@ -219,7 +219,7 @@ def _record_path(host: str) -> Path:
     return state_dir() / "connect" / f"{host}.json"
 
 
-def load_record(host: str) -> dict[str, Any] | None:
+def _load_record(host: str) -> dict[str, Any] | None:
     try:
         return json.loads(_record_path(host).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -239,7 +239,7 @@ def _plan_instructions(
 ) -> tuple[list[Instruction], list[str]]:
     """The instruction files to write, refusing to overwrite a block the user edited."""
     targets, notes = ins.targets(host, scope, access)
-    record = load_record(host) or {}
+    record = _load_record(host) or {}
     recorded = {item["path"]: item.get("sha256") for item in record.get("instructions", [])}
     out = []
     for target in targets:
@@ -289,7 +289,7 @@ def plan(
     result = Plan(
         host,
         plugin_dir,
-        materialize(
+        _materialize(
             host,
             capture=capture,
             brain_name=brain_name,
@@ -303,13 +303,13 @@ def plan(
         if shutil.which("claude"):
             result.commands += [
                 ["claude", "plugin", "marketplace", "add", str(plugin_dir)],
-                ["claude", "plugin", "install", f"brain-wiki@{MARKETPLACE}", "--scope", scope],
+                ["claude", "plugin", "install", f"brain-wiki@{_MARKETPLACE}", "--scope", scope],
             ]
             result.verify = ["claude", "plugin", "list"]
         else:
             result.notes.append(
                 f"The `claude` command was not found. In Claude Code run: /plugin marketplace add {plugin_dir} "
-                f"then /plugin install brain-wiki@{MARKETPLACE}"
+                f"then /plugin install brain-wiki@{_MARKETPLACE}"
             )
     elif host == "codex":
         if shutil.which("codex"):
@@ -336,7 +336,7 @@ def plan(
         before = config.read_text(encoding="utf-8") if config.exists() else ""
         data = json.loads(before) if before.strip() else {}
         data.setdefault("mcpServers", {})["brain-wiki"] = _mcp_entry(
-            brain_executable(), "cursor", brain_name, typed=False
+            _brain_executable(), "cursor", brain_name, typed=False
         )
         result.edits.append((config, before, json.dumps(data, indent=2) + "\n"))
     else:
@@ -348,7 +348,7 @@ def print_text(host: str, brain_name: str | None, access: ins.Access | None = No
     """The MCP entry and the instruction block, for hosts brain-wiki cannot configure itself."""
     access = access or ins.host_access(host)
     entry = {
-        "mcpServers": {"brain-wiki": _mcp_entry(brain_executable(), host, brain_name, typed=True)}
+        "mcpServers": {"brain-wiki": _mcp_entry(_brain_executable(), host, brain_name, typed=True)}
     }
     return (
         "Add this to your MCP client's configuration:\n"
@@ -442,7 +442,7 @@ def apply(result: Plan, *, capture: bool, brain_name: str | None, scope: str) ->
 
 
 def uninstall(host: str, *, dry_run: bool = False) -> list[str]:
-    record = load_record(host)
+    record = _load_record(host)
     if record is None:
         return [f"{host} is not connected by brain-wiki; nothing to undo"]
     steps: list[str] = []
@@ -453,14 +453,14 @@ def uninstall(host: str, *, dry_run: bool = False) -> list[str]:
                 "claude",
                 "plugin",
                 "uninstall",
-                f"brain-wiki@{MARKETPLACE}",
+                f"brain-wiki@{_MARKETPLACE}",
                 "--scope",
                 str(record.get("scope") or "user"),
             ],
-            ["claude", "plugin", "marketplace", "remove", MARKETPLACE],
+            ["claude", "plugin", "marketplace", "remove", _MARKETPLACE],
         ]
     elif host == "codex" and shutil.which("codex"):
-        commands = [["codex", "plugin", "marketplace", "remove", MARKETPLACE]]
+        commands = [["codex", "plugin", "marketplace", "remove", _MARKETPLACE]]
     elif host == "openclaw":
         steps.append("Remove the brain-wiki plugin in OpenClaw (`openclaw plugins` lists it).")
     for command in commands:

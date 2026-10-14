@@ -18,12 +18,12 @@ from brainwiki.format.agents_md import replace_block
 from brainwiki.format.fields import claim_value, quote, relation_value
 from brainwiki.lifecycle import default_agents_block, init_brain
 
-BRAIN_EXTRA = """
+_BRAIN_EXTRA = """
 [git]
 mode = "off"
 """
 
-COMMON = """
+_COMMON = """
 the of and to in is for that on with as it be by this are from or at an was not but have
 which can we use when all new one more will if they so has data been their than only also
 into after first two most over such time some these way may should could would each other
@@ -54,7 +54,7 @@ _EPOCH = datetime(2026, 1, 1, tzinfo=UTC)
 def _vocabulary() -> list[str]:
     """Common words first (most frequent), then pseudo-words; fixed, independent of the brain seed."""
     rng = random.Random(1729)  # noqa: S311 - not security sensitive
-    words = list(dict.fromkeys(COMMON))
+    words = list(dict.fromkeys(_COMMON))
     seen = set(words)
     synthetic: list[str] = []
     while len(synthetic) < 3200:
@@ -430,7 +430,7 @@ def _write_manifest(
     path = root / "brain.toml"
     text = path.read_text(encoding="utf-8")
     text = re.sub(r'^id = ".*"$', f'id = "{brain_id}"', text, count=1, flags=re.M)
-    lines = [text.rstrip("\n"), BRAIN_EXTRA]
+    lines = [text.rstrip("\n"), _BRAIN_EXTRA]
     for t in sorted(topics):
         lines += [f"[topics.{t}]", f'title = "{titles[t]}"', f'description = "{about[t]}"', ""]
     path.write_text("\n".join(lines), encoding="utf-8")

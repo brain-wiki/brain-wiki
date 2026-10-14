@@ -12,7 +12,7 @@ from brainwiki.config.user import load_user_config
 from brainwiki.engine import Engine
 from brainwiki.hosts import connect as cn
 from brainwiki.importer import overlay
-from brainwiki.importer.episodes import memory_files, split_document
+from brainwiki.importer.episodes import _split_document, memory_files
 from brainwiki.importer.survey import survey
 from brainwiki.lint import lint
 from brainwiki.runs.undo import undo
@@ -20,7 +20,7 @@ from brainwiki.setup_wizard import run_wizard
 
 
 def test_connect_materializes_with_installed_brain(brain_dir: Path):
-    files = cn.materialize("claude-code", capture=True, brain_name="test")
+    files = cn._materialize("claude-code", capture=True, brain_name="test")
     server = json.loads(files[".mcp.json"])["mcpServers"]["brain-wiki"]
     assert Path(server["command"]).name == "brain" and server["args"] == [
         "mcp",
@@ -36,12 +36,12 @@ def test_connect_materializes_with_installed_brain(brain_dir: Path):
         "uvx" not in files["hooks.json"]
         and "PostToolUse" in json.loads(files["hooks.json"])["brain-wiki"]
     )
-    assert json.loads(files[".claude-plugin/marketplace.json"])["name"] == cn.MARKETPLACE
+    assert json.loads(files[".claude-plugin/marketplace.json"])["name"] == cn._MARKETPLACE
     assert "skills/brain/SKILL.md" in files
-    plain = cn.materialize("codex", capture=False, brain_name=None)
+    plain = cn._materialize("codex", capture=False, brain_name=None)
     assert "hooks/hooks.json" not in plain and "hooks.json" not in plain
     assert "hooks" not in json.loads(plain["plugin.json"])["extensions"]["com.openai"]
-    briefing = cn.materialize("codex", capture=False, brain_name=None, briefing_hook=True)
+    briefing = cn._materialize("codex", capture=False, brain_name=None, briefing_hook=True)
     assert list(json.loads(briefing["hooks/hooks.json"])["hooks"]) == ["SessionStart"]
     assert json.loads(briefing["plugin.json"])["extensions"]["com.openai"]["hooks"]
     assert list(json.loads(briefing["hooks.json"])["brain-wiki"]) == ["PreInvocation"]
@@ -64,13 +64,13 @@ def test_connect_writes_the_instruction_block_and_uninstall_removes_it(
     brain_dir: Path, no_host_clis: None
 ):
     from brainwiki.errors import Conflict
-    from brainwiki.hosts.instructions import BEGIN
+    from brainwiki.hosts.instructions import _BEGIN
 
     rules = Path.home() / ".claude" / "rules" / "brain-wiki.md"
     assert main(["connect", "claude-code"]) == 0
     text = rules.read_text()
     assert (
-        text.startswith(BEGIN) and "brain_list" in text and "brain_check" in text
+        text.startswith(_BEGIN) and "brain_list" in text and "brain_check" in text
     )  # default: edit
     assert main(["connect", "claude-code"]) == 0  # unchanged block: rewritten quietly
     rules.write_text(text.replace("once per session", "twice per session"))
@@ -147,7 +147,7 @@ def test_connect_antigravity_and_cursor_with_uninstall(
     rule = (link / "rules" / "brain-wiki.md").read_text()
     assert "trigger: always_on" in rule and "brain_check" in rule
     assert not (link / "hooks.json").exists()
-    assert cn.load_record("antigravity")["links"] == [str(link)]
+    assert cn._load_record("antigravity")["links"] == [str(link)]
     cursor = Path.home() / ".cursor" / "mcp.json"
     cursor.parent.mkdir(parents=True)
     cursor.write_text(json.dumps({"mcpServers": {"other": {"command": "x"}}}))
@@ -157,7 +157,7 @@ def test_connect_antigravity_and_cursor_with_uninstall(
     main(["connect", "cursor", "--uninstall"])
     assert set(json.loads(cursor.read_text())["mcpServers"]) == {"other"}
     main(["connect", "antigravity", "--uninstall"])
-    assert not link.exists() and cn.load_record("antigravity") is None
+    assert not link.exists() and cn._load_record("antigravity") is None
 
 
 def vault(tmp_path: Path) -> Path:
@@ -247,7 +247,7 @@ def test_to_episodes_and_from_host(
 ):
     doc = tmp_path / "meeting.md"
     doc.write_text("# Decisions\n\nUse FTS5.\n\n# Follow-ups\n\nMeasure CJK.\n")
-    assert [h for h, _ in split_document(doc.read_text())] == ["Decisions", "Follow-ups"]
+    assert [h for h, _ in _split_document(doc.read_text())] == ["Decisions", "Follow-ups"]
     assert main(["import", str(doc), "--to-episodes", "--apply"]) == 0
     assert main(["import", str(doc), "--to-episodes", "--apply"]) == 0  # deduped on rerun
     episodes = list((brain_dir / "inbox/episodes").rglob("*.md"))

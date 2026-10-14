@@ -11,10 +11,10 @@ from brainwiki.index.read import resolve_target
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-TYPED = ("supersedes", "conflicts_with", "depends_on", "part_of", "related_to")
-RELATIONS = (*TYPED, "links_to")
-DIRECTIONS = ("out", "in", "both")
-_PRIORITY = {rel: i for i, rel in enumerate(RELATIONS)}
+_TYPED = ("supersedes", "conflicts_with", "depends_on", "part_of", "related_to")
+_RELATIONS = (*_TYPED, "links_to")
+_DIRECTIONS = ("out", "in", "both")
+_PRIORITY = {rel: i for i, rel in enumerate(_RELATIONS)}
 
 
 def neighbors(
@@ -31,12 +31,12 @@ def neighbors(
     Within each depth, guards come first, then dependencies, containment, and plain links,
     newest first, so a `limit` keeps the neighbors that matter most.
     """
-    rels = list(dict.fromkeys(relations or TYPED))
-    unknown = [r for r in rels if r not in RELATIONS]
+    rels = list(dict.fromkeys(relations or _TYPED))
+    unknown = [r for r in rels if r not in _RELATIONS]
     if unknown:
-        raise UsageError(f"unknown relation {unknown[0]!r}; use {', '.join(RELATIONS)}")
-    if direction not in DIRECTIONS:
-        raise UsageError(f"direction must be one of {', '.join(DIRECTIONS)}")
+        raise UsageError(f"unknown relation {unknown[0]!r}; use {', '.join(_RELATIONS)}")
+    if direction not in _DIRECTIONS:
+        raise UsageError(f"direction must be one of {', '.join(_DIRECTIONS)}")
     depth = max(1, min(3, depth))
     limit = max(1, min(100, limit))
     root = resolve_target(engine, target)

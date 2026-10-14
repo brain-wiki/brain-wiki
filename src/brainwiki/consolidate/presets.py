@@ -21,14 +21,14 @@ from brainwiki.errors import NotAvailable, UsageError
 
 # Headless runs cannot approve tools; Antigravity ends the turn with no output after a denied
 # tool call, and its custom agents cannot drop tools (T-5), so the prompt has to say it.
-HEADLESS_PREAMBLE = (
+_HEADLESS_PREAMBLE = (
     "You are running headless: everything you need is in this message. Do not call tools, "
     "load skills, or read files; reply directly.\n\n"
 )
 
 
 @dataclass
-class Call:
+class _Call:
     model: str | None
     schema: str | None  # JSON Schema as a string, for CLIs that constrain output
     workdir: Path
@@ -39,11 +39,11 @@ def _plain(prompt: str) -> str:
 
 
 @dataclass
-class Preset:
+class _Preset:
     name: str
     binary: str
-    argv: Callable[[Call], list[str]]
-    extract: Callable[[str, Call], str]
+    argv: Callable[[_Call], list[str]]
+    extract: Callable[[str, _Call], str]
     uses_schema: bool = False
     stdin: Callable[[str], str] = _plain
 
@@ -66,14 +66,14 @@ def _json_field(stdout: str, *keys: str) -> str:
     return _pick(data, keys, stdout) if isinstance(data, dict) else stdout
 
 
-def _claude(call: Call) -> list[str]:
+def _claude(call: _Call) -> list[str]:
     argv = ["claude", "--bare", "-p", "--output-format", "json"]
     if call.schema:
         argv += ["--json-schema", call.schema]
     return argv + (["--model", call.model] if call.model else [])
 
 
-def _codex(call: Call) -> list[str]:
+def _codex(call: _Call) -> list[str]:
     argv = [
         "codex",
         "exec",
@@ -88,7 +88,7 @@ def _codex(call: Call) -> list[str]:
     return argv + (["-m", call.model] if call.model else [])
 
 
-def _codex_extract(stdout: str, call: Call) -> str:
+def _codex_extract(stdout: str, call: _Call) -> str:
     last = call.workdir / "last-message.txt"
     if last.is_file() and last.read_text(encoding="utf-8").strip():
         return last.read_text(encoding="utf-8")
@@ -104,7 +104,7 @@ def _codex_extract(stdout: str, call: Call) -> str:
     return message or stdout
 
 
-def _agy(call: Call) -> list[str]:
+def _agy(call: _Call) -> list[str]:
     # `agy -p` takes the prompt as its value; stream-json input keeps it on stdin and off argv.
     # No --json-schema: agy drops fields the schema does not declare and forces an extra turn.
     # The default (high) effort spent five minutes thinking on a one-episode packet.
@@ -117,7 +117,7 @@ def _agy_stdin(prompt: str) -> str:
     return json.dumps({"event": "user", "message": {"content": prompt}}) + "\n"
 
 
-def _agy_extract(stdout: str, call: Call) -> str:
+def _agy_extract(stdout: str, call: _Call) -> str:
     result: dict[str, Any] | None = None
     for line in stdout.splitlines():
         try:
@@ -129,17 +129,17 @@ def _agy_extract(stdout: str, call: Call) -> str:
     return _pick(result, ("response",), stdout) if result else stdout
 
 
-PRESETS: dict[str, Preset] = {
-    "claude-code": Preset(
+PRESETS: dict[str, _Preset] = {
+    "claude-code": _Preset(
         "claude-code",
         "claude",
         _claude,
         lambda out, _: _json_field(out, "structured_output", "result"),
         True,
     ),
-    "codex": Preset("codex", "codex", _codex, _codex_extract),
-    "antigravity": Preset("antigravity", "agy", _agy, _agy_extract, stdin=_agy_stdin),
-    "cursor": Preset(
+    "codex": _Preset("codex", "codex", _codex, _codex_extract),
+    "antigravity": _Preset("antigravity", "agy", _agy, _agy_extract, stdin=_agy_stdin),
+    "cursor": _Preset(
         "cursor",
         "agent",
         lambda c: (
@@ -147,7 +147,7 @@ PRESETS: dict[str, Preset] = {
         ),
         lambda out, _: _json_field(out, "result"),
     ),
-    "ollama": Preset(
+    "ollama": _Preset(
         "ollama", "ollama", lambda c: ["ollama", "run", c.model or "llama3.1"], lambda out, _: out
     ),
 }
@@ -163,8 +163,8 @@ def run_command(
 ) -> str:
     """Run a preset (or a custom argv) once and return the model's final text."""
     with tempfile.TemporaryDirectory(prefix="brain-wiki-") as tmp:
-        call = Call(model or None, None, Path(tmp))
-        prompt = HEADLESS_PREAMBLE + prompt
+        call = _Call(model or None, None, Path(tmp))
+        prompt = _HEADLESS_PREAMBLE + prompt
         stdin = prompt
         if isinstance(command, list):
             if not command:

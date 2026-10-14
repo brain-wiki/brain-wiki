@@ -10,14 +10,14 @@ from typing import Any
 
 from brainwiki.bench.suites import SuiteResult
 
-SCHEMA = 1
+_SCHEMA = 1
 
 
 def build(results: list[SuiteResult], **meta: Any) -> dict[str, Any]:
     import brainwiki
 
     return {
-        "schema": SCHEMA,
+        "schema": _SCHEMA,
         "version": brainwiki.__version__,
         "created": datetime.now(UTC).replace(microsecond=0).isoformat(),
         **meta,
@@ -98,7 +98,7 @@ def table(data: dict[str, Any], *, markdown: bool = False, collapse: int = 6) ->
     return "\n".join(_render(rows, header, markdown))
 
 
-def markdown(data: dict[str, Any]) -> str:
+def _markdown(data: dict[str, Any]) -> str:
     lines = [
         "# brain-wiki bench",
         "",
@@ -130,7 +130,7 @@ def write(out: Path, data: dict[str, Any]) -> tuple[Path, Path]:
     out.mkdir(parents=True, exist_ok=True)
     results, report = out / "results.json", out / "report.md"
     results.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    report.write_text(markdown(data), encoding="utf-8")
+    report.write_text(_markdown(data), encoding="utf-8")
     return results, report
 
 

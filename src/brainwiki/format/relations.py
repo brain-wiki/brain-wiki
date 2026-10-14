@@ -49,7 +49,7 @@ ALIASES: dict[str, str] = {
     "similar_to": "related_to",
     "analogous_to": "related_to",
 }
-GUARD_RELS = frozenset({"conflicts_with", "supersedes"})
+_GUARD_RELS = frozenset({"conflicts_with", "supersedes"})
 SYMMETRIC_RELS = frozenset({"conflicts_with", "related_to"})
 INVERSE: dict[str, str] = {
     "part_of": "has_part",
@@ -90,7 +90,7 @@ class Relation:
 
     @property
     def is_guard(self) -> bool:
-        return self.rel in GUARD_RELS
+        return self.rel in _GUARD_RELS
 
     @property
     def symmetric(self) -> bool:
@@ -113,7 +113,7 @@ def canonical_verb(word: str) -> tuple[str | None, bool]:
     return None, False
 
 
-def parse_target(target: str) -> tuple[str, str | None]:
+def _parse_target(target: str) -> tuple[str, str | None]:
     """Return (link target without heading, label)."""
     wiki = _WIKI_INNER.match(target)
     if wiki:
@@ -132,7 +132,7 @@ def parse_target(target: str) -> tuple[str, str | None]:
     return target, None
 
 
-def parse_qualifiers(raw: str | None) -> tuple[str | None, dict[str, str]]:
+def _parse_qualifiers(raw: str | None) -> tuple[str | None, dict[str, str]]:
     if not raw:
         return None, {}
     qualifier = None
@@ -167,8 +167,8 @@ def parse_relation_line(text: str, line: int) -> Relation | RelationError:
     verb, is_alias = canonical_verb(written)
     if verb is None:
         return RelationError(line, "BW302", f"unknown relation verb {written!r}")
-    target, label = parse_target(match.group("target"))
-    qualifier, attrs = parse_qualifiers(match.group("qual"))
+    target, label = _parse_target(match.group("target"))
+    qualifier, attrs = _parse_qualifiers(match.group("qual"))
     if is_alias and qualifier is None:
         qualifier = written.lower()
     rel, flip = CANONICAL[verb]
@@ -205,7 +205,7 @@ def canonicalize_line(text: str) -> str | None:
     qual = match.group("qual")
     if qual is None:
         return f"{head} ({written.lower()}){tail}"
-    if parse_qualifiers(qual)[0] is None:
+    if _parse_qualifiers(qual)[0] is None:
         start = match.start("qual") - match.end("target")
         return head + tail[:start] + f"{written.lower()}, " + tail[start:]
     return head + tail
