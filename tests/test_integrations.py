@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import io
 import json
+import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -258,6 +261,23 @@ def test_setup_wizard_creates_brain(tmp_path: Path):
     assert "mine" in load_user_config().brains
     assert any("Verify: search works." in line for line in output)
     assert not list((tmp_path / "brains" / "mine" / "inbox" / "episodes").rglob("*.md"))
+
+
+def test_setup_guide_gives_an_agent_the_setup_skill(capsys):
+    assert main(["setup", "--guide"]) == 0
+    out = capsys.readouterr().out
+    assert out.startswith("# brain-wiki setup guide for agents")
+    assert "### 4. Connect" in out and "name: brain-setup" not in out
+    links = re.findall(r"\]\((/[^)]+)\)", out)  # references, as paths an agent can open
+    assert links and all(Path(link).is_file() for link in links)
+
+
+def test_setup_without_a_terminal_points_an_agent_to_the_guide(
+    monkeypatch: pytest.MonkeyPatch, capsys
+):
+    monkeypatch.setattr(sys, "stdin", io.StringIO())
+    assert main(["setup"]) == 2
+    assert "brain setup --guide" in capsys.readouterr().out
 
 
 def test_setup_wizard_offers_a_harvest_route_for_a_single_brain(

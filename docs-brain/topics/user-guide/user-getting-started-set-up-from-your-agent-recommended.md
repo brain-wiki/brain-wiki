@@ -19,6 +19,13 @@ you through the choices below, explaining each and showing every change
 before it makes it. You can rerun it at any time; it offers only what is
 missing.
 
+Without the plugin, any agent that can run commands can do the same:
+
+> Install brain-wiki with `uv tool install brain-wiki`, then run
+> `brain setup --guide` and follow it.
+
+`brain setup --guide` prints the skill's steps for the agent to follow.
+
 | Choice | What to know |
 |---|---|
 | Where the brain lives | An ordinary folder of Markdown you own, such as `~/brains/personal`. Keep it outside code repositories; a synced folder works. Or adopt an existing Obsidian vault in place ([[user-import\|Import]]). |

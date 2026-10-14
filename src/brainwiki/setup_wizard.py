@@ -1,8 +1,9 @@
-"""`brain setup`: the onboarding flow as a terminal wizard (design doc 15 §3).
+"""`brain setup`, the onboarding flow as a terminal wizard, and `brain setup --guide`, the same
+flow as instructions for an AI agent (design doc 15 §3).
 
-The brain-setup skill's steps without install and permissions: detect, brain, connect,
-harvest, verify, summary. Every write outside the brain is shown as a dry run first, and
-nothing that reads sessions is turned on without an explicit yes.
+The wizard runs the brain-setup skill's steps without install and permissions: detect, brain,
+connect, harvest, verify, summary. Every write outside the brain is shown as a dry run first,
+and nothing that reads sessions is turned on without an explicit yes.
 """
 
 from __future__ import annotations
@@ -13,6 +14,33 @@ from pathlib import Path
 from typing import Any
 
 _Ask = Callable[[str], str]
+
+_GUIDE_HEADER = """\
+# brain-wiki setup guide for agents
+
+This is the output of `brain setup --guide`. If you are an AI agent, walk the user through the
+steps below in this conversation. A person can run `brain setup` in a terminal instead, which
+goes through the main steps interactively.
+
+brain-wiki's tools (`brain_*`) may not be available to you yet. Until they are, use the `brain`
+command for every step (`uvx --from brain-wiki brain ...` if it is not installed). Once step 4
+connects the app you are running in, its tools and skills load in a new session.
+
+---
+
+"""
+
+
+def setup_guide() -> str:
+    """The brain-setup skill, for an agent that has no plugin and starts from `brain setup`."""
+    from brainwiki.hosts import plugin_source
+
+    skill = plugin_source() / "skills" / "brain-setup"
+    text = (skill / "SKILL.md").read_text(encoding="utf-8")
+    if text.startswith("---"):
+        text = text.split("---", 2)[2].lstrip()
+    text = text.replace("](references/", f"]({(skill / 'references').as_posix()}/")
+    return _GUIDE_HEADER + text
 
 
 def _yes(ask: _Ask, question: str, default: bool = False) -> bool:
@@ -29,7 +57,8 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
 
     if ask is input and not sys.stdin.isatty():
         out(
-            "brain setup is interactive. Run it in a terminal, or ask your agent to set up brain-wiki."
+            "brain setup is an interactive wizard and needs a terminal. "
+            "An AI agent should run `brain setup --guide` and walk the user through it."
         )
         return 2
     report = run_doctor()

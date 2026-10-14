@@ -19,7 +19,13 @@ from brainwiki.config._manifest import (
     Profile,
     parse_manifest,
 )
-from brainwiki.config._resolve import Brain, open_brain, resolve_brain, route_brain
+from brainwiki.config._resolve import (
+    AGENT_SETUP_HINT,
+    Brain,
+    open_brain,
+    resolve_brain,
+    route_brain,
+)
 from brainwiki.config._user import (
     UserConfig,
     load_user_config,
@@ -31,6 +37,7 @@ from brainwiki.config._user import (
 
 __all__ = [
     "AGENT_EDITS",
+    "AGENT_SETUP_HINT",
     "Brain",
     "Layout",
     "MANIFEST",

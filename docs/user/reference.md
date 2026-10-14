@@ -12,7 +12,7 @@ lists each command's options.
 | `brain init [PATH] [--name N] [--git] [--no-register]` | Create a brain and register it |
 | `brain brains [list \| add NAME PATH \| remove NAME [--purge-state] \| rename OLD NEW \| default NAME]` | Manage registered brains |
 | `brain doctor` | Check configuration, brains, SQLite, and agents |
-| `brain setup` | Interactive onboarding |
+| `brain setup [--guide]` | Set up step by step in the terminal; `--guide` prints the steps for an AI agent to walk you through |
 | `brain list` | Brains you (or `--as HOST`) may use, with what each holds |
 | `brain orient` | The briefing, as agents see it |
 | `brain topics [SLUG]` | The topic tree with note counts |

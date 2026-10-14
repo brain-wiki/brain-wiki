@@ -14,7 +14,7 @@ bw-part_of:
 brain init [PATH] [--name NAME] [--git] [--no-register]
 brain brains [list | add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME]
 brain doctor [--json]
-brain setup                                              # interactive onboarding wizard (15 §3)
+brain setup [--guide]                                    # onboarding wizard; --guide: the steps for an agent (15 §3)
 
 brain list                                               # brains this host may use (04 §9.1)
 brain orient

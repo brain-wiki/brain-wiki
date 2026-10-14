@@ -12,6 +12,13 @@ you through the choices below, explaining each and showing every change
 before it makes it. You can rerun it at any time; it offers only what is
 missing.
 
+Without the plugin, any agent that can run commands can do the same:
+
+> Install brain-wiki with `uv tool install brain-wiki`, then run
+> `brain setup --guide` and follow it.
+
+`brain setup --guide` prints the skill's steps for the agent to follow.
+
 | Choice | What to know |
 |---|---|
 | Where the brain lives | An ordinary folder of Markdown you own, such as `~/brains/personal`. Keep it outside code repositories; a synced folder works. Or adopt an existing Obsidian vault in place ([Import](import.md)). |
@@ -24,8 +31,20 @@ missing.
 
 ```sh
 uv tool install brain-wiki     # or: pipx install brain-wiki
+brain setup
+```
+
+`brain setup` goes step by step: create a brain (or adopt a vault) and choose
+git, connect the agent apps it finds, and turn on harvest. It shows every
+change outside the brain before making it. To let an app consolidate or
+propose rules, add its profile afterwards ([Agents](agents.md#which-agent-may-do-what)).
+
+The same steps by hand:
+
+```sh
 brain doctor
 brain init ~/brains/personal --name personal --git
+brain connect claude-code      # try --dry-run first
 ```
 
 `brain doctor` reports its version and SQLite, your brains, and which agents

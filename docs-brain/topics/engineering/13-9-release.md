@@ -18,11 +18,11 @@ bw-part_of:
    sdist and wheel, publishes them to PyPI with trusted publishing, and
    creates the GitHub release from the changelog entry, marked a pre-release
    for a development version. Its job that publishes `server.json` to the MCP
-   Registry (GitHub OIDC) is turned off: a Registry install gets only the MCP
-   server, without the skills or setup flow, so listing waits until the
-   repository is public and a server-only first run works (today the
-   `not_configured` hint names a `brain` command and a skill such a user does
-   not have). When turned on, it lists final versions only.
+   Registry (GitHub OIDC) is turned off until the project decides to be
+   listed, with the repository public first: a Registry install gets only the
+   MCP server, and its first run depends on the `not_configured` hint leading
+   to `uvx --from brain-wiki brain setup --guide` (15 §3.1). When turned on,
+   it lists final versions only.
 3. Move `main` to the next `.devN` version. The plugin files keep pointing at
    the newest dated release, final or development (`scripts/sync_versions.py`),
    because the Claude Code and Codex marketplaces read the repository

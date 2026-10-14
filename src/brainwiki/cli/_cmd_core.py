@@ -150,6 +150,9 @@ def doctor(args: Any) -> int:
 
 
 def setup(args: Any) -> int:
-    from brainwiki.setup_wizard import run_wizard
+    from brainwiki.setup_wizard import run_wizard, setup_guide
 
+    if args.guide:
+        print(setup_guide(), end="")
+        return 0
     return run_wizard(args)

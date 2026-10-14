@@ -100,7 +100,7 @@ def _brain_executable() -> str:
     )
 
 
-def _plugin_source() -> Path:
+def plugin_source() -> Path:
     """Plugin files shipped in the wheel, or the repository root in a source checkout."""
     packaged = Path(str(resources.files("brainwiki") / "assets" / "plugin"))
     if (packaged / "plugin.json").is_file():
@@ -122,7 +122,7 @@ def _materialize(
     host: str, *, brain_name: str | None, access: ins.Access | None = None
 ) -> dict[str, str]:
     """The plugin files for this host, rewritten to use the installed `brain`."""
-    source = _plugin_source()
+    source = plugin_source()
     brain = _brain_executable()
     files: dict[str, str] = {}
     for item in _PLUGIN_FILES:

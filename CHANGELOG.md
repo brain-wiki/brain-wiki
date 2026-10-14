@@ -2,6 +2,11 @@
 
 ## 0.1.0.dev1 (unreleased)
 
+- `brain setup --guide` prints the setup steps for an AI agent, so any agent
+  that can run commands can set brain-wiki up from one prompt, without the
+  plugin. Without a terminal, `brain setup` points to it, and an agent that
+  finds no brain is told to use the `brain-setup` skill or the guide.
+
 ## 0.1.0.dev0 (2026-10-14)
 
 First release.

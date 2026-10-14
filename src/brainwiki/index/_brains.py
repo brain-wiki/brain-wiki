@@ -6,7 +6,14 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from brainwiki.config import Brain, UserConfig, load_user_config, open_brain, resolve_brain
+from brainwiki.config import (
+    AGENT_SETUP_HINT,
+    Brain,
+    UserConfig,
+    load_user_config,
+    open_brain,
+    resolve_brain,
+)
 from brainwiki.engine import Engine
 from brainwiki.errors import BrainError
 
@@ -85,9 +92,10 @@ def format_brain_list(result: dict[str, Any], *, owner: bool = False) -> str:
     rows = result["brains"]
     if not rows:
         return (
-            "No brains registered. Create one with `brain init <path>`."
+            "No brains registered. Create one with `brain setup`, or `brain init <path>`."
             if owner
-            else "No brains are available to this host."
+            else f"No brains are available to this host. If brain-wiki is not set up yet, "
+            f"{AGENT_SETUP_HINT}."
         )
     width = max(len(r["name"]) for r in rows)
     desc_width = min(max(len(r.get("description") or "") for r in rows), 48)

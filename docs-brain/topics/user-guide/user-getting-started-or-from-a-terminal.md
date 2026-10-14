@@ -11,8 +11,20 @@ bw-part_of:
 
 ```sh
 uv tool install brain-wiki     # or: pipx install brain-wiki
+brain setup
+```
+
+`brain setup` goes step by step: create a brain (or adopt a vault) and choose
+git, connect the agent apps it finds, and turn on harvest. It shows every
+change outside the brain before making it. To let an app consolidate or
+propose rules, add its profile afterwards ([[user-agents-which-agent-may-do-what|Agents]]).
+
+The same steps by hand:
+
+```sh
 brain doctor
 brain init ~/brains/personal --name personal --git
+brain connect claude-code      # try --dry-run first
 ```
 
 `brain doctor` reports its version and SQLite, your brains, and which agents

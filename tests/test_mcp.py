@@ -189,7 +189,11 @@ async def test_host_from_client_name_and_not_configured(
     monkeypatch.chdir(tmp_path)
     async with Client(build_server("claude-code")) as client:
         result = await client.call_tool("brain_orient", {})
-    assert result.is_error and "brain-setup" in result.content[0].text
+        listed = await client.call_tool("brain_list", {})
+    # A plugin install has the skill; a bare MCP install needs the uvx form of the guide.
+    assert result.is_error and "brain-setup skill" in result.content[0].text
+    assert "uvx --from brain-wiki brain setup --guide" in result.content[0].text
+    assert "brain setup --guide" in listed.content[0].text
 
 
 @pytest.mark.anyio

@@ -55,12 +55,18 @@ uv, Homebrew, and most Linux builds include, and [uv](https://docs.astral.sh/uv/
 | Antigravity | `agy plugin install https://github.com/brain-wiki/brain-wiki` |
 | OpenClaw, Cursor, other MCP clients | Install the command, then `brain connect openclaw`, `brain connect cursor`, or `brain connect generic --print` (see below) |
 
+No plugin yet, or an agent not listed? Ask any agent that can run commands:
+
+> Install brain-wiki with `uv tool install brain-wiki`, then run
+> `brain setup --guide` and follow it.
+
 **2. Ask your agent to set it up.**
 
 > Set up brain-wiki.
 
-The `brain-setup` skill explains each choice, lets you decide, and shows
-every change before making it:
+The `brain-setup` skill (or the guide `brain setup --guide` prints, which
+holds the same steps) explains each choice, lets you decide, and shows every
+change before making it:
 
 - where your brain lives (a new folder, or an Obsidian vault adopted in
   place) and whether to track it with git;
@@ -82,13 +88,16 @@ every change before making it:
 
 ```sh
 uv tool install brain-wiki      # or: pipx install brain-wiki
-brain doctor                    # checks SQLite, your brains, and the agents on this machine
-brain init ~/brains/personal --name personal --git
-brain connect claude-code       # or codex, antigravity, openclaw, cursor; try --dry-run first
+brain setup                     # step by step: create a brain, connect your agents, harvest
 brain log "Lumen keeps attachments next to their notes; Obsidian expects relative paths."
 brain search "attachments"
 brain viz                       # a local 3D map of the brain
 ```
+
+Or do the steps yourself: `brain doctor` (checks SQLite, your brains, and
+the agents on this machine), `brain init ~/brains/personal --name personal
+--git`, and `brain connect claude-code` (or codex, antigravity, openclaw,
+cursor; try `--dry-run` first).
 
 Keep brains outside your code repositories. Agents may log and correct
 notes by default; to let one consolidate or propose rules, give it a profile

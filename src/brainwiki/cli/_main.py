@@ -124,7 +124,12 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     cmd("doctor", "check configuration, brains, index, and host wiring")
-    cmd("setup", "interactive onboarding wizard")
+    p = cmd("setup", "set up step by step: create a brain, connect agents, turn on harvest")
+    p.add_argument(
+        "--guide",
+        action="store_true",
+        help="print the steps for an AI agent to walk you through instead",
+    )
 
     cmd("orient", "print orientation for an agent")
 

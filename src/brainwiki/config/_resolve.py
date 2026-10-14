@@ -14,6 +14,14 @@ from brainwiki.errors import Forbidden, NotConfigured, NotFound
 
 _PROJECT_FILE = ".brain-wiki.toml"
 
+# For an agent that finds no brain: a plugin install has the skill; a bare MCP install (e.g. from
+# the MCP Registry) has neither the skill nor the `brain` command, so name the uvx form too.
+AGENT_SETUP_HINT = (
+    "set brain-wiki up with the user: use the brain-setup skill if you have it, otherwise run "
+    "`brain setup --guide` (or `uvx --from brain-wiki brain setup --guide` if the brain command "
+    "is not installed) and follow it"
+)
+
 
 @dataclass
 class Brain:
@@ -123,7 +131,8 @@ def resolve_brain(
         _check_host_limit(brain, host, host_cfg.brains)
         return brain
     raise NotConfigured(
-        "no brain is configured; run `brain init <path>` or ask your agent to set up brain-wiki"
+        "no brain is configured; run `brain setup` in a terminal, or ask your agent to run "
+        "`brain setup --guide` and walk you through it"
     )
 
 

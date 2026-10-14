@@ -22,8 +22,8 @@ from mcp_types import CallToolResult, TextContent, ToolAnnotations
 from pydantic import BaseModel, Field
 
 from brainwiki import __version__
+from brainwiki.config import AGENT_SETUP_HINT, load_user_config, resolve_brain
 from brainwiki.config import Brain as BrainRef
-from brainwiki.config import load_user_config, resolve_brain
 from brainwiki.engine import Engine
 from brainwiki.errors import BrainError, Forbidden, NotFound
 from brainwiki.hosts import (
@@ -173,7 +173,7 @@ def _guard(state: _State) -> Callable[[_F], _F]:
                 except BrainError as exc:
                     message = exc.message
                     if exc.code == "not_configured":
-                        message += " (the brain-setup skill walks the user through setup)"
+                        message = f"no brain is configured; {AGENT_SETUP_HINT}"
                     raise ToolError(f"{exc.code}: {message}") from exc
                 except Exception as exc:
                     log.exception("tool %s failed", fn.__name__)

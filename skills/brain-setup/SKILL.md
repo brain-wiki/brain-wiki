@@ -4,8 +4,8 @@ description: Set up, connect, or reconfigure brain-wiki. Install the CLI, create
 ---
 # Set up brain-wiki
 
-Guide the user from "plugin installed" to a working brain connected to their
-agents, in one conversation. Setup can be re-run at any time: it reads the
+Guide the user to a working brain connected to their agents, in one
+conversation. Setup can be re-run at any time: it reads the
 current state and offers only what is missing.
 
 ## Rules
@@ -83,8 +83,10 @@ makes a first commit, so a clone is a working brain.
 ### 4. Connect
 
 1. From `doctor`, list the agent apps that are installed and not connected.
-   Skip the agent you are running in if brain-wiki's tools already work
-   here; connecting it again would add a second copy.
+   If brain-wiki's tools already work in the app you are running in, skip
+   it; connecting it again would add a second copy. If they do not (you
+   started from `brain setup`), include it, and tell the user its tools and
+   skills load in a new session.
 2. Ask which ones to connect.
 3. For each: run `brain connect HOST --dry-run`, show the change, and after
    a yes run `brain connect HOST`.
@@ -157,7 +159,8 @@ later, or never.
   the user config, `~/.config/brain-wiki/config.toml`, and `harvest` to that
   app's `write` list in `brain.toml` (diff first).
 - Backfill now: run the harvest recipe in the `brain-maintain` skill in this
-  session, or `brain harvest --from HOST --apply` for large backfills.
+  session if you have it, or `brain harvest --from HOST --apply` (also for
+  large backfills).
 
 ### 7. Verify
 
