@@ -235,7 +235,7 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
     span = f" ({info['span'][0]} to {info['span'][1]})" if info["span"] else ""
     header = (
         f"# Brain: {name} · {today} · {info['notes']} notes{span} · "
-        f"{inbox['pending']} pending episodes"
+        f"{inbox['pending']} pending {'episode' if inbox['pending'] == 1 else 'episodes'}"
     )
     rule_lines = ["## Rules"] + ([f"- {r.text}" for r in rules] or ["(none)"])
     content_lines = ["## What's in this brain"]
@@ -264,7 +264,7 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         content_lines.append("(empty so far)")
     inbox_lines = [
         "## Inbox",
-        f"{inbox['pending']} pending episodes"
+        f"{inbox['pending']} pending {'episode' if inbox['pending'] == 1 else 'episodes'}"
         + (f", oldest {inbox['oldest_days']} days" if inbox["pending"] else ""),
     ]
     if inbox["proposals"]:

@@ -256,7 +256,9 @@ def _row_result(
         "snippet": snippet,
         "via": via,
         "taint": row["taint"] if row["kind"] in ("episode", "archived_episode") else None,
-        "agent": row["agent"] if row["kind"] in ("episode", "archived_episode") else None,
+        "agent": (row["agent"] or ("owner" if row["origin"] == "owner" else None))
+        if row["kind"] in ("episode", "archived_episode")
+        else None,
     }
 
 

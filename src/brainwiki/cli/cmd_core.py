@@ -64,7 +64,7 @@ def brains(args: Any) -> int:
         return list_(args)
     if action == "add":
         if len(rest) != 2:
-            raise UsageError("usage: brain brains add NAME PATH")
+            raise UsageError("brain brains add NAME PATH")
         brain = open_brain(Path(rest[1]))
         register_brain(rest[0], brain.root, make_default=None)
         emit(
@@ -75,7 +75,7 @@ def brains(args: Any) -> int:
         return 0
     if action == "remove":
         if len(rest) != 1:
-            raise UsageError("usage: brain brains remove NAME")
+            raise UsageError("brain brains remove NAME")
         path = user.brains.get(rest[0])
         if not unregister_brain(rest[0]):
             raise NotFound(f"no brain named {rest[0]!r}")
@@ -93,7 +93,7 @@ def brains(args: Any) -> int:
         return 0
     if action == "rename":
         if len(rest) != 2 or rest[0] not in user.brains:
-            raise UsageError("usage: brain brains rename OLD NEW")
+            raise UsageError("brain brains rename OLD NEW")
         path = user.brains[rest[0]]
         was_default = user.default == rest[0]
         unregister_brain(rest[0])
@@ -102,7 +102,7 @@ def brains(args: Any) -> int:
         return 0
     if action == "default":
         if len(rest) != 1 or rest[0] not in user.brains:
-            raise UsageError("usage: brain brains default NAME (a registered brain)")
+            raise UsageError("brain brains default NAME (a registered brain)")
         set_value("default", rest[0])
         emit(args, {"default": rest[0]}, f"Default brain is now {rest[0]!r}")
         return 0

@@ -66,6 +66,13 @@ def _common(*, suppress: bool) -> argparse.ArgumentParser:
     return common
 
 
+def _positive(text: str) -> int:
+    value = int(text)
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be 1 or more, not {value}")
+    return value
+
+
 def _build_parser() -> argparse.ArgumentParser:
     common = _common(suppress=True)
     parser = argparse.ArgumentParser(
@@ -113,7 +120,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "query", nargs="?", default="", help="keywords; empty to browse within the filters"
     )
-    p.add_argument("--limit", type=int, default=8, help="results per page (1-50)")
+    p.add_argument("--limit", type=_positive, default=8, help="results per page (1-50)")
     p.add_argument(
         "--topic", action="append", help="only this topic and its sub-topics (repeatable)"
     )
@@ -186,12 +193,12 @@ def _build_parser() -> argparse.ArgumentParser:
         default="both",
         help="out: what it points to; in: what points to it",
     )
-    p.add_argument("--depth", type=int, default=1, help="hops to follow (1-3)")
-    p.add_argument("--limit", type=int, default=30, help="most neighbors to return (1-100)")
+    p.add_argument("--depth", type=_positive, default=1, help="hops to follow (1-3)")
+    p.add_argument("--limit", type=_positive, default=30, help="most neighbors to return (1-100)")
     p.add_argument("--paths", action="store_true", help="one path per line")
 
     def listing(p: argparse.ArgumentParser, limit: int | None = None) -> None:
-        p.add_argument("--limit", type=int, default=limit, help="items per page")
+        p.add_argument("--limit", type=_positive, default=limit, help="items per page")
         p.add_argument("--cursor", help="continue from this offset (printed after a page)")
         p.add_argument("--count", action="store_true", help="print only the total")
         p.add_argument("--paths", action="store_true", help="one path per line")
