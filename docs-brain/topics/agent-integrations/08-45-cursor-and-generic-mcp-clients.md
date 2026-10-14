@@ -14,8 +14,5 @@ bw-part_of:
   repo's root `plugin.json`, `mcp.json`, and `skills/` work there. Cursor
   does not expand the standard's `${PLUGIN_ROOT}` variables (it has its own),
   which does not matter because brain-wiki's MCP entry uses none.
-- Cursor's own hook events (`sessionStart`, `beforeSubmitPrompt`, `stop`,
-  `preCompact`, `sessionEnd`) need a `.cursor-plugin/` manifest; they are
-  planned after v0.1.
 - `brain connect generic --print` prints a stdio server entry (`command`,
   `args`, `env`) to paste into any client's MCP configuration.

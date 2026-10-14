@@ -4,17 +4,11 @@ import json
 import sqlite3
 from pathlib import Path
 
-import pytest
-from tests.conftest import write
-
-from brainwiki.config.user import set_value
-from brainwiki.format.frontmatter import split
-from brainwiki.hosts import session_state
 from brainwiki.hosts.antigravity import AntigravityReader
 from brainwiki.hosts.claude_code import ClaudeCodeReader
 from brainwiki.hosts.codex import CodexReader
 from brainwiki.hosts.detect import detect_host
-from brainwiki.hosts.hooks import handle
+from brainwiki.hosts.sessions import is_untrusted, normalize_call, summarize_args
 
 
 def jsonl(path: Path, entries: list[dict]) -> Path:
@@ -226,106 +220,22 @@ def test_antigravity_reader(tmp_path: Path):
 
 
 def test_detect_host():
-    assert (
-        detect_host("auto", {"transcript_path": "/home/u/.claude/projects/x/s.jsonl"}, env={})
-        == "claude-code"
-    )
-    assert detect_host("auto", {"session_id": "thr_1"}, env={}) == "codex"
-    assert detect_host("auto", {}, env={"PLUGIN_ROOT": "x", "CLAUDE_PLUGIN_ROOT": "x"}) == "codex"
-    assert detect_host("auto", {}, env={"BRAIN_WIKI_HOST": "antigravity"}) == "antigravity"
-    assert detect_host("auto", {}, env={}) == "generic"
+    assert detect_host("auto", env={"CLAUDE_PLUGIN_ROOT": "x"}) == "claude-code"
+    assert detect_host("auto", env={"PLUGIN_ROOT": "x", "CLAUDE_PLUGIN_ROOT": "x"}) == "codex"
+    assert detect_host("auto", env={"BRAIN_WIKI_HOST": "antigravity"}) == "antigravity"
+    assert detect_host("codex", env={"BRAIN_WIKI_HOST": "antigravity"}) == "codex"
+    assert detect_host("auto", env={}) == "generic"
 
 
-def test_session_start_outputs(brain_dir: Path, monkeypatch: pytest.MonkeyPatch):
-    payload = json.dumps({"session_id": "s", "cwd": str(brain_dir)})
-    out = json.loads(handle("claude-code", "SessionStart", payload))
-    context = out["hookSpecificOutput"]["additionalContext"]
-    assert context.startswith("<brain-wiki-context>") and "# Brain: test" in context
-    first = json.loads(handle("antigravity", "PreInvocation", json.dumps({"invocationNum": 0})))
-    assert first["injectSteps"][0]["ephemeralMessage"].startswith("<brain-wiki-context>")
-    assert handle("antigravity", "PreInvocation", json.dumps({"invocationNum": 2})) == "{}"
-    assert handle("claude-code", "SessionStart", "not json") != "x"  # never raises
-    monkeypatch.setenv("BRAIN_WIKI_INTERNAL", "1")
-    assert handle("claude-code", "SessionStart", payload) == ""
-
-
-def test_antigravity_routes_by_workspace_paths(
-    brain_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
-    from brainwiki.config.user import register_brain
-    from brainwiki.lifecycle import init_brain
-
-    register_brain("work", init_brain(tmp_path / "brains" / "work", "work"))
-    project = tmp_path / "lumen"
-    write(project, ".brain-wiki.toml", 'brain = "work"\n')
-    monkeypatch.chdir(tmp_path)  # Antigravity runs hooks from the plugin folder, not the project
-
-    def orientation(payload: dict) -> str:
-        out = json.loads(handle("antigravity", "PreInvocation", json.dumps(payload)))
-        return out["injectSteps"][0]["ephemeralMessage"]
-
-    assert "# Brain: work" in orientation({"invocationNum": 0, "workspacePaths": [str(project)]})
-    assert "# Brain: test" in orientation({"invocationNum": 0})
-
-
-def test_antigravity_tool_calls_taint(brain_dir: Path):
-    def used(session: str, name: str, args: dict) -> str:
-        payload = {"conversationId": session, "toolCall": {"name": name, "args": args}}
-        handle("antigravity", "PostToolUse", json.dumps(payload))
-        return session_state.session_taint("antigravity", session)
+def test_antigravity_tool_calls_taint():
+    def untrusted(name: str, args: dict) -> bool:
+        tool, normalized = normalize_call("antigravity", name, args)
+        return is_untrusted("antigravity", tool, summarize_args(normalized))
 
     own = {"ServerName": "brain-wiki_brain-wiki", "ToolName": "brain_search", "Arguments": {}}
-    assert used("c-own", "call_mcp_tool", own) == "unknown"
-    assert used("c-ls", "run_command", {"CommandLine": "ls -la"}) == "unknown"
-    assert used("c-curl", "run_command", {"CommandLine": "curl https://example.com"}) == "true"
+    assert not untrusted("call_mcp_tool", own)
+    assert not untrusted("run_command", {"CommandLine": "ls -la"})
+    assert untrusted("run_command", {"CommandLine": "curl https://example.com"})
     other = {"ServerName": "github", "ToolName": "get_issue", "Arguments": {}}
-    assert used("c-mcp", "call_mcp_tool", other) == "true"
-    assert used("c-web", "read_url_content", {"Url": "https://example.com"}) == "true"
-
-
-def test_setup_hint_only_three_times(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.chdir(tmp_path)
-    outputs = [handle("claude-code", "SessionStart", "{}") for _ in range(4)]
-    assert all("not set up" in o for o in outputs[:3]) and outputs[3] == ""
-
-
-def test_taint_prompted_and_raw_capture(brain_dir: Path, tmp_path: Path):
-    transcript = claude_session(tmp_path / "projects", session="s-9", cwd=str(brain_dir))
-    set_value("capture.enabled", True)
-    set_value("capture.hosts", ["claude-code"])
-    set_value("capture.mode", "both")
-    set_value("capture.min_turns", 2)
-    base = {"session_id": "s-9", "cwd": str(brain_dir), "transcript_path": str(transcript)}
-    handle(
-        "claude-code",
-        "PostToolUse",
-        json.dumps({**base, "tool_name": "WebFetch", "tool_input": {"url": "https://x"}}),
-    )
-    assert session_state.session_taint("claude-code", "s-9") == "true"
-    handle(
-        "claude-code",
-        "PostToolUse",
-        json.dumps({**base, "tool_name": "mcp__brain-wiki__brain_search"}),
-    )
-    stop = json.loads(handle("claude-code", "Stop", json.dumps(base)))
-    assert stop["decision"] == "block" and "brain_log_episode" in stop["reason"]
-    assert handle("claude-code", "Stop", json.dumps(base)) == ""
-    assert handle("claude-code", "Stop", json.dumps({**base, "stop_hook_active": True})) == ""
-    handle("claude-code", "SessionEnd", json.dumps(base))
-    episodes = list((brain_dir / "inbox" / "episodes").rglob("*.md"))
-    assert len(episodes) == 1
-    text = episodes[0].read_text()
-    fm = split(text).data
-    assert (fm["captured"], fm["taint"], fm["origin_turns"]) == ("hook", "true", "1-6")
-    assert "orientation" not in text and "subagent" not in text
-    handle("claude-code", "SessionEnd", json.dumps(base))
-    assert len(list((brain_dir / "inbox" / "episodes").rglob("*.md"))) == 1
-
-
-def test_capture_off_by_default(brain_dir: Path, tmp_path: Path):
-    transcript = claude_session(tmp_path / "projects", session="s-0", cwd=str(brain_dir))
-    base = {"session_id": "s-0", "cwd": str(brain_dir), "transcript_path": str(transcript)}
-    assert handle("claude-code", "Stop", json.dumps(base)) == ""
-    handle("claude-code", "SessionEnd", json.dumps(base))
-    assert not list((brain_dir / "inbox" / "episodes").rglob("*.md"))
-    write(brain_dir, "x.md", "unused")
+    assert untrusted("call_mcp_tool", other)
+    assert untrusted("read_url_content", {"Url": "https://example.com"})

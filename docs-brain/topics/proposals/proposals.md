@@ -23,6 +23,15 @@ Generated from `docs/proposals/`.
   - [[proposal-consolidation-bench-7-generator-domains]]: Generator domains
   - [[proposal-consolidation-bench-8-retrieval-queries]]: Retrieval queries
   - [[proposal-consolidation-bench-9-the-agent-suite]]: The `agent` suite
+- [[proposal-hooks]]: Host hooks: briefing, capture, and recall
+  - [[proposal-hooks-1-what-was-built]]: What was built (Host hooks: briefing, capture, and recall)
+    - [[proposal-hooks-11-events]]: Events
+    - [[proposal-hooks-12-outputs]]: Outputs
+    - [[proposal-hooks-13-capture]]: Capture
+    - [[proposal-hooks-14-taint-from-hooks]]: Taint from hooks
+    - [[proposal-hooks-15-rules-for-every-hook]]: Rules for every hook
+  - [[proposal-hooks-2-why-it-was-removed]]: Why it was removed (Host hooks: briefing, capture, and recall)
+  - [[proposal-hooks-3-before-bringing-it-back]]: Before bringing it back
 - [[proposal-privacy]]: Privacy
   - [[proposal-privacy-1-why-the-old-model-was-removed]]: Why the old model was removed
   - [[proposal-privacy-2-where-content-goes]]: Where content goes
@@ -50,8 +59,8 @@ Generated from `docs/proposals/`.
   - [[proposal-remote-sync-5-what-leaves-the-machine]]: What leaves the machine
   - [[proposal-remote-sync-6-alternatives-considered]]: Alternatives considered (Remote sync and object storage)
 - [[proposal-scheduled-maintenance]]: Scheduled maintenance
-  - [[proposal-scheduled-maintenance-1-what-was-built]]: What was built
+  - [[proposal-scheduled-maintenance-1-what-was-built]]: What was built (Scheduled maintenance)
     - [[proposal-scheduled-maintenance-11-routine-templates]]: Routine templates
     - [[proposal-scheduled-maintenance-12-headless-consolidation]]: Headless consolidation
-  - [[proposal-scheduled-maintenance-2-why-it-was-removed]]: Why it was removed
+  - [[proposal-scheduled-maintenance-2-why-it-was-removed]]: Why it was removed (Scheduled maintenance)
   - [[proposal-scheduled-maintenance-3-open-questions]]: Open questions (Scheduled maintenance)

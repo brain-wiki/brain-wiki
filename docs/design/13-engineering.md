@@ -61,8 +61,8 @@ src/brainwiki/
 ├── consolidate/    selection, packets, ops schema and validator, applier, backends, prompts
 ├── runs/           run records, pre-images, undo, locks, git integration
 ├── importer/       overlay, into, to-episodes, from-host presets
-├── mcp/            MCP server (imports the SDK; never imported by hooks)
-├── hosts/          per-host knowledge: hook payload parsing, transcript readers, connect writers, headless presets
+├── mcp/            MCP server (the only package that imports the SDK)
+├── hosts/          per-host knowledge: transcript readers, host detection, connect writers, instruction blocks
 ├── viz/            graph export, level-of-detail API, local server; app/ is the built front end (committed)
 ├── bench/          generator, suites with their graders and scenarios, report
 └── assets/         templates (brain.toml, AGENTS.md, hub), prompts, plugin files (copied at build time)
@@ -133,20 +133,18 @@ with FTS5; trigram (3.34+) is used when present.
 
 | Operation | Budget | Measured by |
 |---|---|---|
-| `brain hook <host> SessionStart` end to end (process start → output) | < 300 ms at 10k notes | bench `perf` suite |
 | Freshness check, no changes, 10k notes | < 150 ms | bench `perf` |
 | Search p95, 10k notes | < 50 ms | bench `perf` |
 | Lint, whole brain, warm, 10k notes | < 1 s | bench `perf` |
 | Full index rebuild, 10k notes | < 30 s | bench `perf` |
-| `brain hook … Stop` (capture) | < 500 ms, excluding transcript size beyond 5 MB | not measured yet |
 
 The perf suite also checks read, orientation, and one-file update
 ([04 §10](04-index-and-retrieval.md#10-performance-budgets)). Below 10k
 notes its thresholds are relaxed 2×. It is not part of `scripts/check.py`;
 run `brain bench perf --sizes 10k` for performance work and before a
-release. `brain hook` stays fast by importing subcommand modules lazily and
-never the MCP SDK ([07 §2.4](07-interfaces.md#24-startup-cost)); no check
-measures its import time.
+release. CLI start-up stays fast by importing subcommand modules lazily
+([07 §2.4](07-interfaces.md#24-startup-cost)); no check measures its import
+time.
 
 ## 6. Testing
 
@@ -157,7 +155,7 @@ measures its import time.
 | Index | Schema, freshness (edits, renames, deletes), guard queries in both directions and through chains | pytest on temp brains |
 | CLI | Every command end to end on temp brains with `BRAIN_WIKI_*_DIR` overrides | pytest + subprocess |
 | MCP | Every tool via the SDK's in-memory client; error codes; schema conformance | `mcp.Client(server)` |
-| Hooks | Recorded payload fixtures per host and event → expected output | pytest |
+| Session readers | Synthetic sessions per host → normalized turns, routing, taint | pytest |
 | Plugin | Manifests parse and agree, skills follow the Agent Skills rules | pytest (`tests/test_plugin.py`) |
 | Hosts | Plugin loads and smoke flows in real hosts | by hand before releases; no automated host tests |
 | Bench | [11](11-eval-bench.md) `retrieval` and `lint` suites on a small brain | `brain bench`, from `scripts/check.py` |

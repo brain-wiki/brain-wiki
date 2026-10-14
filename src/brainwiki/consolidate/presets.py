@@ -1,14 +1,12 @@
-"""Headless presets for the command backend (design doc 08 §7).
+"""Headless presets for harvest distillation and the bench (design doc 08 §7).
 
-Each preset runs a host CLI once, prompt on stdin, in an empty temporary directory, with
-`BRAIN_WIKI_INTERNAL=1` so brain-wiki's own hooks ignore the session. Exact flags live here,
-not in the docs, because CLIs change faster than documents.
+Each preset runs a host CLI once, prompt on stdin, in an empty temporary directory. Exact flags
+live here, not in the docs, because CLIs change faster than documents.
 """
 
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import subprocess
 import tempfile
@@ -192,7 +190,6 @@ def run_command(
             stdin = preset.stdin(prompt)
         if shutil.which(binary) is None:
             raise NotAvailable(f"preset {name!r} needs `{binary}` on PATH")
-        env = {**os.environ, "BRAIN_WIKI_INTERNAL": "1"}
         try:
             done = subprocess.run(
                 argv,
@@ -200,7 +197,6 @@ def run_command(
                 capture_output=True,
                 text=True,
                 cwd=tmp,
-                env=env,
                 timeout=timeout,
                 check=False,
             )

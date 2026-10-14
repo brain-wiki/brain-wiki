@@ -12,19 +12,19 @@ when higher ones are missing.
 | 0 · Files | The brain's own `AGENTS.md` ([02 §11](02-brain-format.md#11-agentsmd)) | Any file-reading agent opened in the brain folder can read and log episodes. |
 | 1 · Skills | `skills/brain`, `skills/brain-setup`, `skills/brain-maintain` in the plugin | Knows when and how to use, set up, and maintain the brain, through the CLI or MCP ([15](15-skills-and-onboarding.md)). |
 | 2 · MCP | `brain mcp --host <id>` (stdio) | Orient, search with guards, read, log, propose rules, consolidate. |
-| 3 · Hooks | `brain hook <host> <event>` | Orientation injected at session start; optional capture at stop or compaction; recall per prompt where the user wires it by hand (§5.2). |
+| 3 · Hooks | Host lifecycle hooks | Not in v0.1: built and removed before release ([proposal](../proposals/hooks.md)). |
 | 4 · Native memory | Host-specific memory APIs | Not built ([backlog](../proposals/README.md#backlog)). |
 
 v0.1 coverage:
 
-| Host | Install | Skill | MCP | Hooks | Harvest |
-|---|---|---|---|---|---|
-| Claude Code | Plugin marketplace (this repo) or `brain connect claude-code` | yes | yes | session start, stop, pre-compact, session end; prompt recall by hand only | yes |
-| Codex CLI and Codex in the ChatGPT desktop app | Plugin marketplace or `brain connect codex` | yes | yes | same event names as Claude Code (desktop: manual installs only) | yes |
-| Antigravity (desktop, IDE, CLI) | `agy plugin install <repo URL>`, global plugin folder, or `brain connect antigravity` | yes | yes | first model call (as session start), post-tool (taint), stop | yes |
-| OpenClaw | `openclaw plugins install brain-wiki --marketplace <repo>` (bundle mode) | yes | yes | none (bundle mode does not execute Claude-format hooks; a hook pack is in the [backlog](../proposals/README.md#backlog)) | after v0.1 |
-| Cursor | Loads the repo's Agent Plugins bundle (`plugin.json` + `mcp.json`), or `brain connect cursor` | yes | yes | not in v0.1 (Cursor has its own hook events; planned) | after v0.1 |
-| Other MCP clients | `brain connect generic --print` gives a config snippet | — | yes | — | — |
+| Host | Install | Skill | MCP | Harvest |
+|---|---|---|---|---|
+| Claude Code | Plugin marketplace (this repo) or `brain connect claude-code` | yes | yes | yes |
+| Codex CLI and Codex in the ChatGPT desktop app | Plugin marketplace or `brain connect codex` | yes | yes | yes |
+| Antigravity (desktop, IDE, CLI) | `agy plugin install <repo URL>`, global plugin folder, or `brain connect antigravity` | yes | yes | yes |
+| OpenClaw | `openclaw plugins install brain-wiki --marketplace <repo>` (bundle mode) | yes | yes | after v0.1 |
+| Cursor | Loads the repo's Agent Plugins bundle (`plugin.json` + `mcp.json`), or `brain connect cursor` | yes | yes | after v0.1 |
+| Other MCP clients | `brain connect generic --print` gives a config snippet | — | yes | — |
 
 ## 2. Host ids
 
@@ -33,15 +33,14 @@ provenance, and `--host` flags:
 
 `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`, `generic`.
 
-When a hook or server is started without an explicit host (a shared hooks
-file read by two hosts), the host is detected in this order:
+When the MCP server is started with `--host auto` (the plugin's `.mcp.json`
+is read by Claude Code and, as a Claude-format bundle, by OpenClaw), the
+host is detected in this order:
 
-1. the `BRAIN_WIKI_HOST` environment variable;
-2. the payload's `transcript_path`: under `.claude/` is Claude Code, under
-   `.codex/` is Codex (Codex session ids also start with `thr_`);
-3. `PLUGIN_ROOT` without `.claude/` paths suggests an Agent Plugins host;
-   `CLAUDE_PLUGIN_ROOT` alone suggests Claude Code. Codex sets both
-   variables for compatibility, which is why the payload check comes first.
+1. the MCP client's self-reported name, once the client connects;
+2. the `BRAIN_WIKI_HOST` environment variable;
+3. `PLUGIN_ROOT` together with `CLAUDE_PLUGIN_ROOT` is Codex, which sets
+   both for compatibility; `CLAUDE_PLUGIN_ROOT` alone is Claude Code.
 
 An undetectable host is `generic`.
 
@@ -52,7 +51,7 @@ One skill and one MCP server are described once per host format:
 
 | File | Read by | Content |
 |---|---|---|
-| `plugin.json` | Codex / ChatGPT, OpenClaw (Agent Plugins format); Antigravity | `$schema` (Agent Plugins 1.0), `name: brain-wiki`, `version`, `description`, `license`, `repository`, and `extensions["com.openai"]` (display name, category, hooks path). Antigravity's published schema lists only `name` and `description`, but `agy` accepts the full Agent Plugins manifest and loads the plugin's skills, MCP server, rules, and hooks (T-1). |
+| `plugin.json` | Codex / ChatGPT, OpenClaw (Agent Plugins format); Antigravity | `$schema` (Agent Plugins 1.0), `name: brain-wiki`, `version`, `description`, `license`, `repository`, and `extensions["com.openai"]` (display name, category). Antigravity's published schema lists only `name` and `description`, but `agy` accepts the full Agent Plugins manifest and loads the plugin's skills, MCP server, and rules (T-1). |
 | `mcp.json` | Agent Plugins hosts | `$schema` (Agent Plugins MCP 1.0), server `brain-wiki`: `type: stdio`, `command: uvx`, `args: [--from, brain-wiki==<version>, brain, mcp, --host, auto]` |
 | `.mcp.json` | Claude Code; OpenClaw (which reads the repo as a Claude-format bundle) | Same server, `--host auto`; the server prefers the MCP client's self-reported name over environment guesses |
 | `mcp_config.json` | Antigravity | Same server, `--host antigravity` (no `type` field in this format) |
@@ -60,17 +59,10 @@ One skill and one MCP server are described once per host format:
 | `rules/brain-wiki.md` | Antigravity | `trigger: always_on` rule carrying the static instruction block (§3.2) |
 | `skills/` (`brain`, `brain-setup`, `brain-maintain`) | All plugin hosts | The skills (§3.1) |
 
-**No hooks by default.** Agents learn about the brains from the static
-instruction block (§3.2) and the `brain_list` and `brain_orient` tools, which
-work on every host, so the marketplace bundle ships no hooks. Hosts with a
-session-start event can still inject the briefing: `brain connect <host>
---briefing-hook` adds `SessionStart` (Claude Code, Codex) or `PreInvocation`
-(Antigravity) to the materialized copy. `brain connect <host> --capture` adds
-`PostToolUse` (taint), `Stop` (prompted capture), and `PreCompact` /
-`SessionEnd` (raw capture, async), using the absolute path of the installed
-`brain`. For Codex that copy also points `extensions["com.openai"].hooks`
-at its own hooks file, because that field replaces Codex's default hook
-discovery.
+**No hooks.** Agents learn about the brains from the static instruction
+block (§3.2) and the `brain_list` and `brain_orient` tools, which work on
+every host. Neither the bundle nor `brain connect` installs host lifecycle
+hooks (§5).
 
 **Why `uvx` in plugin files.** A plugin installed from a marketplace cannot
 assume `brain` is on the user's `PATH`, and some formats have no
@@ -81,17 +73,11 @@ writes the absolute path of the installed `brain`, which starts faster
 `scripts/sync_versions.py`, so the plugin and the package can never
 disagree.
 
-**Hooks come only from `brain connect`.** It writes them with the absolute
-path of the installed `brain`, which answers in about 0.1 s. Marketplace
-copies cannot do that, and online `uvx` re-resolves against the package
-index on every call (23 seconds per call behind a slow package index, T-10),
-which a hook that runs before every model call cannot afford; that is one
-more reason the bundle ships none.
-
 The MCP server, which starts once per session, keeps plain online `uvx`:
 MCP configs take a command and arguments, and wrapping it in `sh -c` would
-break the server on Windows (D23). Behind a slow index its start can take a minute or
-more; `brain connect` avoids the wait.
+break the server on Windows (D23). Online `uvx` re-resolves against the
+package index on every start (23 seconds behind a slow index, T-10), so the
+server can take a minute or more to appear; `brain connect` avoids the wait.
 
 ### 3.1 The skills
 
@@ -190,7 +176,7 @@ skill offers to run `brain connect` with the user's approval.
 
 - Install from this repository as a marketplace, or with
   `brain connect claude-code`. The plugin contributes the skills and the
-  MCP server; hooks come only from `brain connect` (§3).
+  MCP server.
 - MCP tool names appear as `mcp__plugin_brain-wiki_brain-wiki__brain_search`
   (well within limits). Tool descriptions and server instructions are
   truncated past 2,048 characters, so the important sentence comes first.
@@ -199,13 +185,7 @@ skill offers to run `brain connect` with the user's approval.
   `_meta["anthropic/maxResultSizeChars"]` and is budgeted at 15k tokens.
 - `brain_propose_rule` carries `_meta["anthropic/requiresUserInteraction"]`
   so the user approves each call.
-- Instructions: `~/.claude/rules/brain-wiki.md` (§3.2). Optional hooks: §5.
-  Claude Code caps each `additionalContext` string at 10,000 characters; the
-  briefing stays under 6,000. All `SessionEnd`
-  hooks share a 1.5-second budget, so capture hooks run with `async: true`.
-  The `Stop` payload includes `stop_hook_active` and
-  `last_assistant_message`; its "block with reason" output is how prompted
-  capture asks the agent to log an episode (§6.2).
+- Instructions: `~/.claude/rules/brain-wiki.md` (§3.2).
 - The headless preset uses `claude -p` with JSON output (§7).
 
 ### 4.2 Codex (CLI and ChatGPT desktop)
@@ -213,20 +193,8 @@ skill offers to run `brain connect` with the user's approval.
 - Install by adding this repository as a marketplace, or with
   `brain connect codex`. Codex reads the portable `plugin.json` and
   `mcp.json`; `extensions["com.openai"]` supplies display metadata.
-- Hooks (only from `brain connect --briefing-hook` or `--capture`) use the
-  same event schema as Claude Code, from `hooks/hooks.json`, which the
-  materialized `plugin.json` names in `extensions["com.openai"].hooks`.
-  In the ChatGPT desktop app they run only for manually installed plugins
-  and must be trusted by the user; plugins with hooks are not eligible for
-  the public plugin directory, which is acceptable for v0.1.
 - Codex rewrites tool names to `[A-Za-z0-9_]`, so names are snake case
   already.
-- `SessionEnd` hooks get 1 second by default (3 at most), so capture hooks
-  run with `async: true`. Codex saves `additionalContext` above a
-  configurable limit to disk and sends a preview, so orientation stays
-  compact.
-- Hook payloads carry `session_id` (`thr_…`) and a `transcript_path` to the
-  session's rollout file.
 
 ### 4.3 Antigravity (desktop, IDE, CLI)
 
@@ -234,22 +202,11 @@ skill offers to run `brain connect` with the user's approval.
   (repository root only), by placing the plugin in
   `~/.gemini/config/plugins/brain-wiki/` (desktop and IDE), or with
   `brain connect antigravity`.
-- There is no session-start event. The `PreInvocation` hook returns
-  orientation as an ephemeral message only when `invocationNum == 0`, and
-  returns `{}` on later calls. It still runs before every model call (24
-  times in one observed turn), and hooks run one after another, so a slow
-  or hung hook delays each call by up to its timeout; ephemeral messages
-  are cut at about 49 KB.
-- Hooks run through a shell with the plugin folder as working directory,
-  stdin closed after the payload, the host's environment inherited, and
-  `ANTIGRAVITY_CONVERSATION_ID` set; no plugin-root variable is set (T-2).
-  The payload's `workspacePaths[0]` is the project, used to choose the
-  brain.
-- `PostToolUse` records taint for the conversation when an untrusted tool
-  ran (§6.3); its payload carries `toolCall {name, args}`. Every MCP call
-  arrives as `call_mcp_tool` with `ServerName`, which readers and hooks
-  rename to `mcp_<server>_<tool>` before the taint rules. `Stop` performs
-  capture (§6).
+- No plugin-root variable is set for plugin commands (T-2), so the MCP
+  entry in `mcp_config.json` uses none.
+- Every MCP call appears in transcripts as `call_mcp_tool` with
+  `ServerName`, which the session reader renames to `mcp_<server>_<tool>`
+  before the taint rules (§6.3).
 - Plugin rules load: an `always_on` plugin rule reached the model. The
   plugin-root `AGENTS.md` does not (T-4). The rule file carries the static
   instruction block (§3.2) with `trigger: always_on`.
@@ -267,12 +224,7 @@ skill offers to run `brain connect` with the user's approval.
 
 ### 4.4 OpenClaw
 
-- Bundle mode: OpenClaw maps the plugin's skills and MCP servers. It
-  detects but does not execute Claude-format `hooks/hooks.json`.
-- No hooks. `brain hook` already accepts OpenClaw's `agent:bootstrap`,
-  `session:compact:before`, and `command:reset` events, but nothing
-  installs a hook pack that sends them; one is in the
-  [backlog](../proposals/README.md#backlog).
+- Bundle mode: OpenClaw maps the plugin's skills and MCP servers.
 - MCP tools are registered as `brain-wiki__brain_search` (server prefix and
   64-character cap respected).
 - A native memory-provider plugin (taking OpenClaw's memory slot) is future
@@ -284,97 +236,32 @@ skill offers to run `brain connect` with the user's approval.
   repo's root `plugin.json`, `mcp.json`, and `skills/` work there. Cursor
   does not expand the standard's `${PLUGIN_ROOT}` variables (it has its own),
   which does not matter because brain-wiki's MCP entry uses none.
-- Cursor's own hook events (`sessionStart`, `beforeSubmitPrompt`, `stop`,
-  `preCompact`, `sessionEnd`) need a `.cursor-plugin/` manifest; they are
-  planned after v0.1.
 - `brain connect generic --print` prints a stdio server entry (`command`,
   `args`, `env`) to paste into any client's MCP configuration.
 
 ## 5. Hooks
 
-One entry point: `brain hook <host|auto> <event>`, reading the host's JSON
-payload on stdin and writing the host's expected JSON on stdout. Every hook
-is opt-in: `session_start` with `brain connect --briefing-hook`, and
-`tool_used`, `stop`, `pre_compact`, and `session_end` with `--capture`.
-`brain connect` never installs `prompt`; a user who wants per-prompt recall
-adds a `UserPromptSubmit` hook running `brain hook <host> UserPromptSubmit`
-to the host's hook settings by hand and sets `[recall] on_prompt = true`.
-Without hooks, agents rely on the static instruction block (§3.2).
+None in v0.1. A session-start briefing, capture at stop and compaction,
+taint from tool hooks, and per-prompt recall were built and removed before
+release: the instruction block and `brain_orient` deliver the briefing, and
+harvest recovers sessions afterwards
+([proposal](../proposals/hooks.md)).
 
-### 5.1 Normalized events
+## 6. Harvest
 
-| Normalized | Claude Code | Codex | Antigravity | OpenClaw (accepted; nothing installs it) |
-|---|---|---|---|---|
-| `session_start` | `SessionStart` | `SessionStart` | `PreInvocation` with `invocationNum == 0` | `agent:bootstrap` |
-| `prompt` (recall; wired by hand) | `UserPromptSubmit` | `UserPromptSubmit` | — (no prompt text exposed) | — |
-| `tool_used` (taint) | `PostToolUse` | `PostToolUse` | `PostToolUse` | — |
-| `stop` | `Stop` | `Stop` | `Stop` | — |
-| `pre_compact` | `PreCompact` | `PreCompact` | — | `session:compact:before` |
-| `session_end` | `SessionEnd` | `SessionEnd` | — | `command:reset` |
-
-Event names for Codex are taken from its documentation's statement that
-plugin hooks share Claude Code's event schema; confirmed by host fixtures
-in M7.
-
-### 5.2 Outputs
-
-| Event | Claude Code / Codex | Antigravity |
-|---|---|---|
-| `session_start` | `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "<orientation>"}}` | `{"injectSteps": [{"ephemeralMessage": "<orientation>"}]}` |
-| `prompt` | With `[recall] on_prompt = true` and a prompt of at least three words: `additionalContext` listing up to 3 notes scoring at least `[recall] min_score` (default 0.3), each with up to 3 guards, cut to 2,400 characters; otherwise nothing | — |
-| `tool_used` | nothing (records session taint in state) | `{}` |
-| `stop` | prompted capture: `{"decision": "block", "reason": "<capture instruction>"}` at most once per session; otherwise nothing | `{"decision": "continue", "reason": "…"}` likewise |
-| `pre_compact`, `session_end` | nothing; raw capture runs as an async hook so it never eats the host's short session-end budget | — |
-
-Injected text is wrapped in markers
-(`<brain-wiki-context>` … `</brain-wiki-context>`) so capture can strip it
-([05 §3.3](05-write-path-and-consolidation.md#33-invariants)).
-
-### 5.3 Rules for every hook
-
-- **Never break the host.** Any internal error is logged to the state log
-  and the hook exits 0 with an empty, valid output. A hook never blocks a
-  tool call.
-- **Fast.** Budgets in [13 §5](13-engineering.md#5-performance-budgets); no
-  network; no model calls; heavy work (raw capture of a large transcript) is
-  bounded by size and time and abandoned rather than delaying the host.
-- **Quiet.** Only protocol JSON on stdout; diagnostics on stderr.
-- **No shell interpolation.** Payload content never reaches a command line.
-- **Self-exclusion.** If `BRAIN_WIKI_INTERNAL=1` is set (brain-wiki sets it
-  for every subprocess it starts, such as headless harvest), hooks exit
-  immediately. This prevents a harvest run from capturing itself.
-
-## 6. Capture and harvest
-
-Capture turns sessions into episodes as they happen, through hooks.
-Harvest turns them into episodes afterwards, by reading the host's own
+Harvest turns finished sessions into episodes by reading the host's own
 session store ([05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions)).
-Harvest's distillation can run inside the host itself (the `/brain:harvest`
-recipe over MCP), headless from the CLI, or not at all (`raw`). Both
-capture and harvest are **off by default** and enabled per host, and both
-use the same session readers (§6.4), skip rules, taint detection, and
-dedupe keys, so a session is never captured twice.
+It is **off by default** and enabled per host.
 
 ```toml
 # user config.toml
-[capture]
-enabled = true
-hosts   = ["claude-code", "antigravity"]
-mode    = "prompted"            # prompted | raw | both
-min_turns = 5                   # prompted: only ask after this many turns
-untrusted_tools = []            # extra tool-name patterns that taint a session
-trusted_mcp_servers = ["brain-wiki"]
-
-[recall]                        # only used by a UserPromptSubmit hook wired by hand (§5)
-on_prompt = false               # inject top matches on every prompt (costs tokens)
-min_score = 0.3
-
 [harvest]
 enabled = false
 hosts   = ["claude-code", "codex", "antigravity"]
 since   = "30d"                 # how far back the first run looks
 min_idle_minutes = 60           # skip sessions still in progress
 min_user_turns   = 3
+include_headless = false        # also harvest non-interactive sessions
 distill = "claude-code"         # preset for CLI harvest; "raw" for no model (the in-agent recipe needs neither)
 [harvest.routes]                # optional: working-directory globs → brain
 "~/work/**" = "work"
@@ -382,55 +269,52 @@ distill = "claude-code"         # preset for CLI harvest; "raw" for no model (th
 
 ### 6.1 What gets skipped
 
-- Sessions with `BRAIN_WIKI_INTERNAL=1` (brain-wiki's own runs). Harvest
-  also skips sessions whose working directory is under brain-wiki's state
-  directory, which is where headless harvest runs.
+- Sessions whose working directory is under brain-wiki's state directory,
+  which is where headless harvest runs.
 - Subagent sessions, where the host distinguishes them.
-- Non-interactive (headless) sessions, unless `capture_headless = true`.
-- Sessions shorter than `min_turns` for prompted mode, or with fewer than
-  `min_user_turns` user messages for harvest.
-- For harvest: sessions still in progress, and sessions whose working
-  directory routes to no brain.
+- Non-interactive (headless) sessions, unless `include_headless = true`.
+- Sessions with fewer than `min_user_turns` user messages.
+- Sessions still in progress, and sessions whose working directory routes
+  to no brain.
 
 ### 6.2 Modes
 
-| Mode | How | Quality | Cost |
-|---|---|---|---|
-| `prompted` (default where supported) | At the first `stop` after `min_turns`, the hook asks the agent once, via the host's "continue with reason" output, to call `brain_log_episode` with durable learnings, or to do nothing if there are none. | The agent's own distilled summary; provenance is set by the server. | One short extra turn per session. |
-| `raw` | At `pre_compact` and `session_end` (and `stop` for hosts without those), the hook reads the transcript since the last capture point, keeps user and assistant text (no tool output bodies), strips injected markers, scrubs secrets, and writes one episode. | Verbose; consolidation does the distilling. | No model call. |
+| Mode | How | Cost |
+|---|---|---|
+| In the agent | The user asks their agent to harvest; the `brain-maintain` skill drives `brain_harvest_prepare` and `brain_harvest_apply` over MCP, and the agent distills | The session's context window |
+| Headless | `brain harvest --apply` runs a model preset (§7) once per chunk | One CLI model call per chunk |
+| `raw` | `brain harvest --apply --raw` keeps user and assistant text (no tool output bodies), strips injected markers, scrubs secrets, and writes one episode per chunk | No model call; consolidation distills |
 
-Capture points are tracked per session in `<state>/sessions/<host>/<id>.json`
-(last captured transcript offset, whether prompted capture already ran,
-taint), and episode `dedupe` keys make retries harmless. Transcript
-readers are per host and defensive: an unreadable or unknown format yields
-a `raw` episode with `bw-taint: unknown`, or no episode, never an error.
+A per-session watermark in brain-wiki's state records the last harvested
+turn, and episode `dedupe` keys make retries harmless.
 
 ### 6.3 Taint detection
 
 A session is tainted from the first time an untrusted tool runs. Default
 untrusted tools per host are web fetch and search tools, browser tools,
-MCP tools from servers not in `trusted_mcp_servers`, and shell commands
-that fetch from the network (`curl`, `wget`, URLs in arguments). The
-`tool_used` hook records it immediately; raw capture also scans the
-transcript. Episodes from tainted sessions get `bw-taint: true`; sessions
-whose tool use cannot be observed get `unknown`.
+MCP tools from servers other than brain-wiki, and shell commands that fetch
+from the network (`curl`, `wget`, URLs in arguments). Harvest scans the
+transcript: episodes from tainted sessions get `bw-taint: true`, others
+`false`. Episodes written over MCP get `unknown`, because the server cannot
+see the rest of the session.
 
 ### 6.4 Session readers
 
 One reader per host lists sessions and yields normalized turns
 (`index`, `role`, `text`, `tool_name`, `tool_args_summary`, `timestamp`).
-Raw capture, harvest, origin lookup, and taint detection all use it.
+Harvest, origin lookup, and taint detection all use it.
 
 | Host | Where sessions live (defaults) | Notes |
 |---|---|---|
 | Claude Code | `~/.claude/projects/<working-dir slug>/<session-id>.jsonl` (moves with `CLAUDE_CONFIG_DIR`) | The format is documented as internal and changes between versions. Entries carry `cwd`, `gitBranch`, `sessionId`, and `isSidechain` (subagents). Transcripts are deleted after 30 days by default (`cleanupPeriodDays`), so harvest should run at least weekly or the user should raise that setting. |
-| Codex | `$CODEX_HOME/sessions/` (default `~/.codex/sessions/`) and `archived_sessions/` | JSONL rollout files; the hook payload's `transcript_path` points at the same files. Schema to confirm (T-6). |
-| Antigravity | `<app dir>/brain/<conversation-id>/.system_generated/logs/`, where the app dir is the desktop, IDE, or CLI data folder under `~/.gemini/` | Holds `transcript.jsonl`, which cuts long steps to about 4 KB, and `transcript_full.jsonl` (the hook's `transcriptPath`), which keeps them; the full one is read when present. Line schema undocumented (T-3). The working directory comes from the app's `conversation_summaries.db`, which the CLI writes too since 1.3. |
+| Codex | `$CODEX_HOME/sessions/` (default `~/.codex/sessions/`) and `archived_sessions/` | JSONL rollout files. Schema to confirm (T-6). |
+| Antigravity | `<app dir>/brain/<conversation-id>/.system_generated/logs/`, where the app dir is the desktop, IDE, or CLI data folder under `~/.gemini/` | Holds `transcript.jsonl`, which cuts long steps to about 4 KB, and `transcript_full.jsonl`, which keeps them; the full one is read when present. Line schema undocumented (T-3). The working directory comes from the app's `conversation_summaries.db`, which the CLI writes too since 1.3. |
 | OpenClaw | The agent's session transcripts | After v0.1; location to confirm. |
 | Cursor | Its own local state | After v0.1. |
 
-Readers are versioned and tested against recorded fixtures from several
-host versions. A line they cannot parse is skipped and counted; a session
+Readers are tested against synthetic sessions in each host's format;
+fixtures recorded from real host versions are open items (T-6, T-11). A
+line they cannot parse is skipped and counted; a session
 with too many unparseable lines is reported as unreadable rather than
 half-read. Readers never write to a host's files.
 
@@ -438,7 +322,7 @@ half-read. Readers never write to a host's files.
 
 Headless harvest (`brain harvest --apply`, [05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions))
 and the bench's model runs ([11](11-eval-bench.md)) run a host CLI once per packet, prompt on stdin, in an empty temporary
-directory, with `BRAIN_WIKI_INTERNAL=1`.
+directory.
 
 | Preset | Command (sketch) | Final text | Isolation |
 |---|---|---|---|
@@ -467,7 +351,7 @@ because CLIs change faster than this document.
 `brain connect <host>` wires a host to the locally installed brain-wiki.
 
 1. Materialize a host-specific copy of the plugin under
-   `<data dir>/brain-wiki/plugin/<host>/`, with MCP and hook commands set to
+   `<data dir>/brain-wiki/plugin/<host>/`, with the MCP command set to
    the absolute path of the installed `brain`, `--host <id>`, and (if given)
    `--brain <name>`.
 2. Register it the way the host expects, preferring the host's own CLI when
@@ -484,10 +368,8 @@ because CLIs change faster than this document.
 
 3. Write the static instruction block (§3.2) into the host's instruction
    file.
-4. Options: `--scope user|project`, `--brain`, `--briefing-hook` (adds the
-   session-start briefing hook where the host has one), `--capture` (adds
-   stop, pre-compact, and session-end hooks), `--print` (print the block and
-   MCP entry instead of writing), `--force` (replace an edited block),
+4. Options: `--scope user|project`, `--brain`, `--print` (print the block
+   and MCP entry instead of writing), `--force` (replace an edited block),
    `--dry-run` (print every file change as a diff), `--uninstall`.
 5. Every change is recorded in `<state>/connect/<host>.json` with backups of
    modified files, so `--uninstall` restores exactly what was there.
@@ -501,14 +383,12 @@ because CLIs change faster than this document.
 |---|---|---|---|---|
 | Plugin validates and loads | `claude plugin validate`, install | marketplace add, install | `agy plugin install ./` | `plugins install --link`, `inspect` |
 | MCP tools listed and callable | ✓ | ✓ | ✓ | ✓ |
-| Orientation injected at start | ✓ | ✓ | ✓ (first call only) | — (no hooks) |
-| Prompted capture asks once | ✓ | ✓ | ✓ | — |
-| Raw capture produces one episode per compaction | ✓ | ✓ | stop only | — |
-| Self-exclusion during headless harvest | ✓ | ✓ | ✓ | — |
-| Session reader parses recorded fixtures; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
+| Instruction block reaches the model | ✓ | ✓ | ✓ (T-4) | ✓ |
+| Harvest skips brain-wiki's own headless runs | ✓ | ✓ | ✓ | — |
+| Session reader parses real sessions; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
 | Origin lookup returns the right window, and `not_available` when deleted | ✓ | ✓ | ✓ | — |
 | `brain connect` and `--uninstall` round trip | ✓ | ✓ | ✓ | ✓ |
 
-Recorded hook payloads for each host and event are kept as test fixtures,
-so the adapters are tested on every change even where the host is not
-installed.
+Session readers and `brain connect` are tested on every change with
+synthetic host files; the host columns are checks to run by hand on each
+host before a release.

@@ -40,11 +40,11 @@ recorded version:
 (§7.3): the last recorded version is the pre-image, so `brain undo` restores
 it; `log.md` gains a line; the brain's git repo, if any, gets a commit;
 author `agent:<host>`. Claims the edit added get `origin: agent` and
-`taint: unknown` (hosts without hooks cannot report taint), so they show as
-unverified until consolidation or the user confirms them. A failed check
-records nothing and returns every problem with its line; the agent fixes
-the file and checks again, or `brain restore <path>` puts back the last
-recorded version.
+`taint: unknown` (an edit cannot show what else happened in the session),
+so they show as unverified until consolidation or the user confirms them. A
+failed check records nothing and returns every problem with its line; the
+agent fixes the file and checks again, or `brain restore <path>` puts back
+the last recorded version.
 
 **The last recorded version.** The index keeps, for each note, the content
 it had when a run last wrote it, when `brain check` last recorded it, or

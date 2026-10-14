@@ -1,17 +1,17 @@
 ---
 id: 01M3250V00BH7PC91942XS1XF6
 type: threat
-title: "T10: Hook command injection"
+title: "T10: Command injection"
 aliases: ["threat T10"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 bw-part_of:
   - "[[10-3-threats-and-mitigations]]"
 ---
-# T10: Hook command injection
+# T10: Command injection
 
-**Hook command injection.** Transcript content reaches a shell.
+**Command injection.** Transcript or note content reaches a shell.
 
-**Mitigations:** Hooks are invoked as `brain hook <host> <event>` with JSON on stdin; nothing from the payload is ever interpolated into a command line; no `shell=True` anywhere.
+**Mitigations:** Nothing read from a brain or a session is ever interpolated into a command line; headless presets pass the prompt on stdin; no `shell=True` anywhere.
 
 **Residual risk:** —

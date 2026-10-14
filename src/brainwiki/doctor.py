@@ -187,7 +187,8 @@ def run_doctor() -> dict[str, Any]:
             "connected": connection is not None,
         }
         if connection:
-            entry.update({k: connection.get(k) for k in ("plugin", "capture") if k in connection})
+            if "plugin" in connection:
+                entry["plugin"] = connection["plugin"]
             missing = _missing_instructions(connection)
             entry["instructions"] = not missing
             for path in missing:
@@ -202,7 +203,6 @@ def run_doctor() -> dict[str, Any]:
                     }
                 )
         entry["harvest"] = user.harvest_enabled(host)
-        entry["capture"] = user.capture_enabled(host)
         report["hosts"].append(entry)
         if installed and not connection and user.brains:
             report["problems"].append(

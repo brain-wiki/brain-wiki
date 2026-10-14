@@ -43,10 +43,6 @@ brains = ["work", "personal"]        # brains this host may select (default: all
 [hosts.openclaw]
 brains = ["personal"]
 
-[capture]                            # opt-in session capture (08 §6)
-enabled = false
-hosts   = ["claude-code"]
-
 [harvest]                            # opt-in reading of host session stores (08 §6)
 enabled = false
 hosts   = ["claude-code"]
@@ -62,7 +58,7 @@ hosts   = ["claude-code"]
 
 ## 3. Choosing a brain
 
-Every CLI command, MCP call, and hook resolves exactly one brain. First
+Every CLI command and MCP call resolves exactly one brain. First
 match wins:
 
 | # | Source | Example |
@@ -70,7 +66,7 @@ match wins:
 | 1 | Explicit argument | `brain search --brain work …`, MCP tool argument `brain: "work"` |
 | 2 | Environment variable | `BRAIN_WIKI_BRAIN=work` (a name or a path) |
 | 3 | Project file, nearest ancestor of the working directory | `.brain-wiki.toml` containing `brain = "work"` |
-| 4 | Host default | `[hosts.claude-code] brain = "work"` (MCP server and hooks know their host id) |
+| 4 | Host default | `[hosts.claude-code] brain = "work"` (the MCP server knows its host id) |
 | 5 | User default | `default = "personal"` |
 | 6 | Current directory is inside a brain | Walking up finds `brain.toml` |
 
@@ -98,7 +94,7 @@ all of it; finer-grained privacy inside a brain is being redesigned
 | Kind | Linux / macOS default | Windows | Contents | If deleted |
 |---|---|---|---|---|
 | config | `~/.config/brain-wiki/` | `%APPDATA%\brain-wiki\` | `config.toml` | Brains must be re-registered |
-| state | `$XDG_STATE_HOME/brain-wiki/`, default `~/.local/state/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\state\` | run records and pre-images (undo), open consolidation packets, session capture and taint markers, harvest watermarks, locks | Undo history is lost; harvest may re-read sessions (dedupe keys prevent duplicate episodes); nothing in any brain is lost |
+| state | `$XDG_STATE_HOME/brain-wiki/`, default `~/.local/state/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\state\` | run records and pre-images (undo), open consolidation packets, episode markers, harvest watermarks, locks | Undo history is lost; harvest may re-read sessions (dedupe keys prevent duplicate episodes); nothing in any brain is lost |
 | cache | `$XDG_CACHE_HOME/brain-wiki/`, default `~/.cache/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\cache\` | `brains/<brain-id>/index.sqlite` | Rebuilt on next use |
 
 `BRAIN_WIKI_STATE_DIR` and `BRAIN_WIKI_CACHE_DIR` override them (tests use
@@ -226,6 +222,6 @@ ordinary files and do not carry the lock across machines.
 | Brains inside the source repo | Mixes user data with code; impossible to open-source cleanly. |
 | A single brain per user | Forces work and personal knowledge together, or one tool install per sphere. |
 | Index and run state inside the brain (`.brain/`) | Sync tools corrupt SQLite; device-specific state conflicts across machines. |
-| The engine reading object storage directly on every call | Hosts and editors need local files; latency on every hook; offline breaks. |
+| The engine reading object storage directly on every call | Hosts and editors need local files; latency on every call; offline breaks. |
 | Requiring git | Many users sync with cloud drives; git stays optional. |
 | A git library (GitPython, dulwich) instead of the CLI | GitPython is in maintenance mode and leaks resources in long-running processes; dulwich lacks some porcelain; the CLI honors user hooks and credentials. dulwich remains an option where no git binary exists. |

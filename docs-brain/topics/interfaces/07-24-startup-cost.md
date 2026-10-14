@@ -10,7 +10,8 @@ bw-part_of:
 ---
 # Startup cost
 
-`brain hook` runs inside agent turns and must finish in well under a
-second ([[13-5-performance-budgets|13]]). The CLI uses `argparse`
-and imports subcommand modules lazily, so `brain hook` never imports the
-MCP SDK, the visualizer, or the bench.
+Agents run CLI commands inside their turns, so the CLI starts fast
+([[13-5-performance-budgets|13]]): it uses `argparse` and
+imports subcommand modules lazily, so no command but `brain mcp` imports the
+MCP SDK, and none but `brain viz` and `brain bench` load the visualizer or
+the bench.

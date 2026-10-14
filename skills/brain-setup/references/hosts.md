@@ -9,22 +9,20 @@ it with `--dry-run` first. Every change is recorded with backups, so
 from shared instruction files.
 
 Options: `--brain NAME` (pin this app to one brain), `--scope user|project`,
-`--briefing-hook` (inject the briefing at session start, where the app has
-such an event), `--capture` (also save sessions at their end), `--print`
-(show the MCP entry and the instruction block without changing anything),
-`--force` (replace an instruction block the user edited).
+`--print` (show the MCP entry and the instruction block without changing
+anything), `--force` (replace an instruction block the user edited).
 
 Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 `generic`.
 
-| App | Tools | Instructions | Briefing hook | Capture | Harvest |
-|---|---|---|---|---|---|
-| Claude Code | yes | `~/.claude/rules/brain-wiki.md` | yes | yes | yes |
-| Codex / ChatGPT desktop | yes | block in `~/.codex/AGENTS.md` (or a non-empty `AGENTS.override.md`) | yes | yes | yes |
-| Antigravity | yes | always-on plugin rule | yes | yes | yes |
-| OpenClaw | yes | block in the workspace `AGENTS.md` | no | not yet | not yet |
-| Cursor | yes | printed for Settings → Rules; `.cursor/rules/` with `--scope project` | not yet | not yet | not yet |
-| Other MCP apps | yes | printed by `--print` | no | no | no |
+| App | Tools | Instructions | Harvest |
+|---|---|---|---|
+| Claude Code | yes | `~/.claude/rules/brain-wiki.md` | yes |
+| Codex / ChatGPT desktop | yes | block in `~/.codex/AGENTS.md` (or a non-empty `AGENTS.override.md`) | yes |
+| Antigravity | yes | always-on plugin rule | yes |
+| OpenClaw | yes | block in the workspace `AGENTS.md` | not yet |
+| Cursor | yes | printed for Settings → Rules; `.cursor/rules/` with `--scope project` | not yet |
+| Other MCP apps | yes | printed by `--print` | no |
 
 ## Claude Code
 
@@ -47,9 +45,6 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 - **Connect:** add the brain-wiki repository as a plugin marketplace and
   install the plugin, or `brain connect codex`, which runs
   `codex plugin marketplace add` on the local copy.
-- **Hooks** (`--briefing-hook`, `--capture`) run only after the user reviews
-  and trusts them (in `/hooks`). In the desktop app, hooks run only for
-  manually installed plugins.
 - **Permissions:** approval per tool is set in `~/.codex/config.toml` under
   `[plugins."brain-wiki".mcp_servers.brain-wiki.tools.<tool>]` with
   `approval_mode = "approve"`. Offer this for the read tools only.
@@ -59,9 +54,6 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 - **Connect:** `agy plugin install <brain-wiki repository URL>`, or
   `brain connect antigravity`, which links the plugin into
   `~/.gemini/config/plugins/brain-wiki/`.
-- **Briefing hook:** with `--briefing-hook`, the briefing is added on the
-  first model call of each conversation. The hook runs before every model
-  call, so it stays off by default.
 - **Permissions:** MCP tools ask by default. A plugin's server is named
   `<plugin>_<server>`, so allow the read tools with
   `mcp(brain-wiki_brain-wiki/brain_search)`,
@@ -81,8 +73,7 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 
 - **Connect:** `openclaw plugins install brain-wiki --marketplace <repository>`,
   or `brain connect openclaw`, which runs `openclaw plugins install --link`
-  on the local copy. Skills and tools work; capture and harvest are not
-  available yet.
+  on the local copy. Skills and tools work; harvest is not available yet.
 
 ## Cursor
 

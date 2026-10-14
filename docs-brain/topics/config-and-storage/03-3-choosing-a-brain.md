@@ -10,7 +10,7 @@ bw-part_of:
 ---
 # Choosing a brain
 
-Every CLI command, MCP call, and hook resolves exactly one brain. First
+Every CLI command and MCP call resolves exactly one brain. First
 match wins:
 
 | # | Source | Example |
@@ -18,7 +18,7 @@ match wins:
 | 1 | Explicit argument | `brain search --brain work …`, MCP tool argument `brain: "work"` |
 | 2 | Environment variable | `BRAIN_WIKI_BRAIN=work` (a name or a path) |
 | 3 | Project file, nearest ancestor of the working directory | `.brain-wiki.toml` containing `brain = "work"` |
-| 4 | Host default | `[hosts.claude-code] brain = "work"` (MCP server and hooks know their host id) |
+| 4 | Host default | `[hosts.claude-code] brain = "work"` (the MCP server knows its host id) |
 | 5 | User default | `default = "personal"` |
 | 6 | Current directory is inside a brain | Walking up finds `brain.toml` |
 

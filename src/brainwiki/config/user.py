@@ -28,9 +28,7 @@ class UserConfig:
     device: str | None = None
     brains: dict[str, Path] = field(default_factory=dict)
     hosts: dict[str, HostCfg] = field(default_factory=dict)
-    capture: dict[str, Any] = field(default_factory=dict)
     harvest: dict[str, Any] = field(default_factory=dict)
-    recall: dict[str, Any] = field(default_factory=dict)
 
     @property
     def device_name(self) -> str:
@@ -40,9 +38,6 @@ class UserConfig:
         if host_id is None:
             return HostCfg()
         return self.hosts.get(host_id, HostCfg())
-
-    def capture_enabled(self, host_id: str) -> bool:
-        return bool(self.capture.get("enabled")) and host_id in self.capture.get("hosts", [])
 
     def harvest_enabled(self, host_id: str) -> bool:
         return bool(self.harvest.get("enabled")) and host_id in self.harvest.get("hosts", [])
@@ -70,9 +65,7 @@ def load_user_config(path: Path | None = None) -> UserConfig:
         device=data.get("device"),
         brains=brains,
         hosts=hosts,
-        capture=dict(data.get("capture") or {}),
         harvest=dict(data.get("harvest") or {}),
-        recall=dict(data.get("recall") or {}),
     )
 
 

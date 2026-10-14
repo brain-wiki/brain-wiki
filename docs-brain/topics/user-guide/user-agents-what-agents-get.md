@@ -24,6 +24,4 @@ bw-part_of:
 | `brain_read_origin` | Show the conversation an episode came from |
 
 Agents fetch the briefing when they need it, guided by the instruction
-block. To inject it at the start of every session instead, connect with
-`--briefing-hook` (Claude Code, Codex, Antigravity). The plugin also ships
-three skills: `brain` (everyday use), `brain-setup`, and `brain-maintain`.
+block. The plugin also ships three skills: `brain` (everyday use), `brain-setup`, and `brain-maintain`.

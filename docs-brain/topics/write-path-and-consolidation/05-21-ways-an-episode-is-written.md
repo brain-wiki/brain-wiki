@@ -14,8 +14,7 @@ bw-part_of:
 |---|---|---|---|---|
 | `brain log` (CLI, interactive) | `owner` | `false` | `cli` | A person typed it. |
 | `brain log --agent <id>` (scripts) | `agent` | `unknown` unless `--taint` given | `cli` | |
-| MCP `brain_log_episode` | `agent` | from session state if known (§3.2), else `unknown` | `mcp` | |
-| Hook capture at stop/compaction (opt-in) | `agent` | computed from the transcript (§3.2) | `hook` | |
+| MCP `brain_log_episode` | `agent` | `unknown` (§3.2) | `mcp` | |
 | `brain harvest` from host session stores (opt-in) | `agent` | computed from the session's tool calls (§3.2) | `harvest` | §2.2 |
 | File created directly under `inbox/episodes/` | as written if valid, else `agent`; `owner` becomes `agent` | `unknown` (forced) | `file` | Self-declared provenance is not trusted. |
 | File in `inbox/agents/<agent>/` | `agent` | `unknown` | `file` | No frontmatter needed. |
@@ -37,8 +36,8 @@ All writers go through one function, `write_episode()`, which:
    blocks; [[security-and-privacy|10]]), replacing them with
    `[REDACTED:<kind>]`.
 4. Enforces a size cap (default 64 KiB; the excess is cut and noted).
-5. Applies an idempotency key if given (`bw-dedupe` in frontmatter; hook
-   capture uses `<host>:<session>:<turn range>`), so retries do not
+5. Applies an idempotency key if given (`bw-dedupe` in frontmatter; harvest
+   uses `<host>:<session>:<turn range>`), so retries do not
    duplicate. A marker created with `O_EXCL` in the state dir makes the
    check atomic across processes on one device; the index catches keys
    from episodes that arrived by sync.

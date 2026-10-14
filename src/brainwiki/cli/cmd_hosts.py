@@ -12,18 +12,6 @@ def mcp(args: Any) -> int:
     return 0
 
 
-def hook(args: Any) -> int:
-    import sys
-
-    from brainwiki.hosts.hooks import handle
-
-    data = "" if sys.stdin is None or sys.stdin.isatty() else sys.stdin.read()
-    out = handle(args.host, args.event, data)
-    if out:
-        sys.stdout.write(out + "\n")
-    return 0
-
-
 def connect(args: Any) -> int:
     from brainwiki.cli.output import emit
     from brainwiki.errors import UsageError
@@ -39,18 +27,11 @@ def connect(args: Any) -> int:
         text = cn.print_text(args.host, args.brain)
         emit(args, {"text": text}, text)
         return 0
-    plan = cn.plan(
-        args.host,
-        scope=args.scope,
-        capture=args.capture,
-        brain_name=args.brain,
-        briefing_hook=args.briefing_hook,
-        force=args.force,
-    )
+    plan = cn.plan(args.host, scope=args.scope, brain_name=args.brain, force=args.force)
     if args.dry_run:
         emit(args, {"plan": plan.describe()}, plan.describe())
         return 0
-    record = cn.apply(plan, capture=args.capture, brain_name=args.brain, scope=args.scope)
+    record = cn.apply(plan, brain_name=args.brain, scope=args.scope)
     failed = [c for c in record["commands"] if not c["ok"]]
     lines = [f"Connected {args.host}: plugin at {record['plugin_dir']}"]
     lines += [

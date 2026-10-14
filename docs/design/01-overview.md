@@ -26,7 +26,7 @@ write to, stored as plain Markdown in a folder the user owns.
             │ Claude Code    Codex    Antigravity    OpenClaw    Cursor │
             │      any MCP client          a human in Obsidian / vim    │
             └───────┬──────────────┬──────────────────┬────────────────┘
-       plugin + hooks│        MCP (stdio)│        plain files│
+               plugin│        MCP (stdio)│        plain files│
             ┌───────▼──────────────▼──────────────────▼────────────────┐
             │                  brain-wiki engine (Python)              │
             │  config · parse · index · search · lint · consolidate    │
@@ -71,9 +71,9 @@ Agents interact through three surfaces, each optional:
    brain carries its own `AGENTS.md`.
 2. **MCP server.** Tools to orient, search, read, log an episode, propose a
    rule, and drive consolidation.
-3. **Plugin and hooks.** A plugin bundle for each supported host adds a
-   skill, the MCP server, and optional hooks that inject orientation at
-   session start and capture episodes at session end.
+3. **Plugin.** A plugin bundle for each supported host adds the skills and
+   the MCP server, and `brain connect` writes a short instruction block that
+   tells the agent when to consult the brain.
 
 Writes take one of three paths:
 
@@ -102,7 +102,7 @@ keys.
 | G4 | **Writes are safe.** Untrusted content cannot become a standing directive automatically; consolidation cannot silently drop information; every curated change is reversible. | Injection scenarios in the bench never reach `rules.md`; the loss checks catch planted regressions; `brain undo` restores the exact prior bytes. |
 | G5 | **Retrieval is correct about change.** When a note has been superseded or contradicted, retrieving it also retrieves the newer or conflicting note. | Guard recall is 100% on the bench retrieval suite. |
 | G6 | **No required services or keys.** Runs offline on a laptop with Python and SQLite. | Core features pass tests with no network access. |
-| G7 | **Fast enough to sit in a hook.** | At 10,000 notes: search p95 < 50 ms warm; unchanged-tree freshness check < 150 ms; hook commands < 300 ms end to end. See [13](13-engineering.md). |
+| G7 | **Fast enough to call on every turn.** | At 10,000 notes: search p95 < 50 ms warm; unchanged-tree freshness check < 150 ms. See [13](13-engineering.md). |
 | G8 | **Measurable.** Retrieval quality, write quality, and cross-model consistency are measured by a reproducible bench. | `brain bench` runs offline on synthetic data and produces a JSON and Markdown report. |
 
 ## 4. Non-goals for v0.1
@@ -143,7 +143,7 @@ keys.
 4. **Change is first-class.** Supersession and contradiction are typed
    relations with retrieval rules, not prose.
 5. **Small core, optional edges.** The core is format + index + CLI + MCP.
-   Plugins, hooks, the visualizer, the bench, and importers depend on the
+   Plugins, the visualizer, the bench, and importers depend on the
    core, never the other way round.
 6. **Boring technology.** Markdown, YAML frontmatter, TOML, SQLite, git,
    Python. Novelty needs a reason that the boring option failed.
@@ -161,12 +161,12 @@ agent-readable without restructuring it.
 
 | # | Scenario | Flow (details in) |
 |---|---|---|
-| S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, which brains each may use, and capture and harvest, with a dry run before every write. [15](15-skills-and-onboarding.md) |
+| S0 | **Onboarding.** The user installs the plugin and says "set up brain-wiki". | The setup skill walks through install, brain creation or vault import, connecting other agents, which brains each may use, and harvest, with a dry run before every write. [15](15-skills-and-onboarding.md) |
 | S1 | **Session start.** An agent starts in a project. | The static block `brain connect` wrote tells it to call `brain_list` and `brain_orient` when the task may depend on the user's knowledge; the briefing (what the brain holds, rules, topics, recent changes) fits a fixed budget. [04](04-index-and-retrieval.md), [08 §3.2](08-agent-integrations.md#32-the-static-instruction-block) |
 | S2 | **Recall during a task.** The agent asks about a past decision. | `search` returns the matching notes plus every note that supersedes or conflicts with them; the agent opens one with `read` and follows its relations with `neighbors`, or reads files directly when allowed. [04](04-index-and-retrieval.md) |
 | S2b | **An agent updates a note.** The user says "Maya moved to the platform team." | The agent edits the person's note and runs `brain check`, which validates and records the edit. [05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits) |
-| S3 | **Capture.** The agent learned something worth keeping. | It logs an episode (MCP or CLI), or the opt-in session-end hook writes one from the transcript. [05](05-write-path-and-consolidation.md) |
-| S3b | **Harvest and backfill.** Sessions happened without capture, or before brain-wiki existed. | `brain harvest` reads finished sessions from the hosts' own stores, routes each to a brain by project, and distills them into episodes, after a dry run. [05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions) |
+| S3 | **Record.** The agent learned something worth keeping. | It logs an episode (MCP or CLI). [05](05-write-path-and-consolidation.md) |
+| S3b | **Harvest and backfill.** The agent logged nothing in a session, or sessions happened before brain-wiki existed. | `brain harvest` reads finished sessions from the hosts' own stores, routes each to a brain by project, and distills them into episodes, after a dry run. [05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions) |
 | S4 | **Consolidation.** Pending episodes are folded into topic notes. | The user asks their agent to consolidate; it runs in the session, where the user can watch and steer. [05](05-write-path-and-consolidation.md) |
 | S5 | **Human editing.** The user edits notes in Obsidian. | Edits are picked up by the next freshness check; lint reports problems. [06](06-lint-and-reports.md) |
 | S6 | **Bring an existing vault.** | `brain import --overlay` adopts a folder in place, with a dry-run report before any change. [09](09-import.md) |

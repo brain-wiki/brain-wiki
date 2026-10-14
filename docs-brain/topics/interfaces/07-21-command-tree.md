@@ -57,8 +57,7 @@ brain import PATH --into BRAIN [--topic SLUG] [--dry-run | --apply]
 brain import PATH --to-episodes [--untrusted] [--agent HOST] [--dry-run | --apply]
 brain import [PATH] --from HOST [--dry-run | --apply]     # a host's memory files; PATH overrides where they are
 
-brain connect HOST [--brain NAME] [--scope user|project] [--briefing-hook] [--capture] [--print] [--force] [--dry-run] [--uninstall]
-brain hook HOST EVENT                                     # called by hosts; JSON on stdin
+brain connect HOST [--brain NAME] [--scope user|project] [--print] [--force] [--dry-run] [--uninstall]
 brain mcp [--host HOST]                                   # stdio MCP server
 
 brain viz [--topic T]... [--port P] [--no-open] [--export FILE.html]

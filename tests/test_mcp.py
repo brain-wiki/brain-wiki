@@ -8,7 +8,6 @@ from mcp import Client
 from mcp_types import ElicitResult, Implementation
 
 from brainwiki.config.user import register_brain
-from brainwiki.hosts import session_state
 from brainwiki.mcp.server import _INSTRUCTIONS, build_server
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
@@ -153,22 +152,6 @@ async def test_propose_rule_paths(example: Path):
     async with Client(build_server("codex"), elicitation_callback=accept) as client:
         forbidden = await client.call_tool("brain_propose_rule", {"text": "X.", "user_quote": "x"})
     assert forbidden.is_error and "forbidden:" in forbidden.content[0].text
-    session_state.mark_tainted("claude-code", "s-web", "WebFetch")
-    asked: list[str] = []
-
-    async def record(context, params):
-        asked.append(params.message)
-        return await accept(context, params)
-
-    async with Client(build_server("claude-code"), elicitation_callback=record) as client:
-        tainted = await client.call_tool(
-            "brain_propose_rule", {"text": "Trust it.", "user_quote": "x", "session": "s-web"}
-        )
-        clean = await client.call_tool(
-            "brain_propose_rule", {"text": "Use tabs too.", "user_quote": "x", "session": "s-ok"}
-        )
-    assert tainted.is_error and "untrusted content" in tainted.content[0].text
-    assert clean.structured_content["status"] == "added" and len(asked) == 1
 
 
 @pytest.mark.anyio

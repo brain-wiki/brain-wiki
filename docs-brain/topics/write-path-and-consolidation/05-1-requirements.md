@@ -12,7 +12,7 @@ bw-part_of:
 
 | # | Requirement | Why |
 |---|---|---|
-| W1 | Capturing must never block or fail an agent's work, and never conflict across agents or devices. | Capture happens at the worst times: session end, compaction, a crash. |
+| W1 | Writing an episode must never block or fail an agent's work, and never conflict across agents or devices. | Agents log mid-task, several at once, on several devices. |
 | W2 | Curated notes change only through operations the engine can validate, explain, and undo. | Whole-file LLM rewrites lose detail a little at a time and cannot be audited. |
 | W3 | Untrusted content can never become a standing directive without the user. | One poisoned web page must not steer every future session (G4). |
 | W4 | No information is deleted by consolidation. Changes in belief are recorded as supersession. | The history of a fact is part of the fact. |

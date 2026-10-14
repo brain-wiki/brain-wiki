@@ -12,7 +12,8 @@ user's brain, use the brain-wiki MCP tools or the `brain` skill.
   and delete the proposal.
 - Every curated change goes through `brainwiki.runs.Run`; writers change
   only the lines they must.
-- `brain hook` must stay fast and must never import the MCP SDK.
+- Only `brain mcp` may import the MCP SDK; the CLI imports subcommand
+  modules lazily so every command starts fast.
 - Fixtures are synthetic (the fictional notes app "Lumen"). Never add real
   personal data or credential-shaped strings.
 - After editing `src/brainwiki/assets/` or the version, run

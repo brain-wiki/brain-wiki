@@ -10,15 +10,13 @@ bw-part_of:
 ---
 # Harvesting sessions
 
-Hooks capture sessions as they happen, but only in hosts with hooks, only
-when capture was enabled beforehand, and not when a session crashes. Every
-supported host also keeps its own transcripts on disk. `brain harvest`
+Every supported host keeps its own transcripts on disk. `brain harvest`
 reads finished sessions from those stores and turns them into episodes,
-which gives three things hooks cannot:
+which gives:
 
-- capture for sessions that happened before brain-wiki was installed
+- episodes for sessions that happened before brain-wiki was installed
   (backfill, the fastest way to give a new brain real history);
-- capture for sessions whose hooks did not run;
+- episodes for sessions in which the agent logged nothing;
 - exact taint, because every tool call of the session is visible.
 
 ```
@@ -32,7 +30,7 @@ discover ─► filter ─► route ─► extract ─► distill (or raw) ─�
 | Route | Each session belongs to the brain its working directory resolves to, using the same project files and host defaults as brain selection ([[03-3-choosing-a-brain\|03 §3]]) plus optional path rules in `[harvest.routes]`. Sessions that resolve to no brain are skipped, never sent to the default brain. |
 | Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Injected brain-wiki context is stripped. Secrets are scrubbed. Taint is computed from the tool calls. |
 | Distill | One call to the configured headless preset ([[08-7-headless-presets\|08 §7]]) with the distill instructions (`prompts/distill.md`): the model returns `{skip, summary, claims[{text, turns}], negative_findings, open_questions, topics}`. Long sessions are split into chunks of at most 30k tokens, one episode per chunk. With `--raw`, no model is called and the episode holds a condensed transcript excerpt instead; consolidation distills it later. |
-| Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-taint`. The dedupe key `<host>:<session>:<turn range>` is shared with hook capture, so a session captured by a hook is not harvested again. |
+| Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-taint`. The dedupe key `<host>:<session>:<turn range>` makes a repeated harvest write nothing new. |
 | Watermark | `<state>/harvest/<host>/<session>.json` records the last harvested turn, so a long-running session is harvested in increments. |
 
 **Who distills.** The distill step reaches an LLM the same three ways as

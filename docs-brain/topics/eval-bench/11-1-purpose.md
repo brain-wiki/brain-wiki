@@ -19,7 +19,7 @@ tuned on evidence and regressions are caught:
 | Lint finds what it claims and fixes safely | `lint` |
 | Consolidation writes faithful, specific, well-placed claims, with any model (G4, G8) | `consolidation` |
 | Injected instructions never become rules or directives | `consolidation` (injection slice) |
-| Hooks and search are fast enough (G7) | `perf` |
+| Search, reads, and orientation are fast enough (G7) | `perf` |
 | A real agent with the plugin answers with current knowledge | `agent` (not built, §3.5) |
 
 Rule for the project: published numbers come only from this bench, with

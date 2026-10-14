@@ -18,7 +18,7 @@ write to, stored as plain Markdown in a folder the user owns.
             │ Claude Code    Codex    Antigravity    OpenClaw    Cursor │
             │      any MCP client          a human in Obsidian / vim    │
             └───────┬──────────────┬──────────────────┬────────────────┘
-       plugin + hooks│        MCP (stdio)│        plain files│
+               plugin│        MCP (stdio)│        plain files│
             ┌───────▼──────────────▼──────────────────▼────────────────┐
             │                  brain-wiki engine (Python)              │
             │  config · parse · index · search · lint · consolidate    │

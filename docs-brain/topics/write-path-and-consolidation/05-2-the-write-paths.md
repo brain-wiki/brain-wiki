@@ -12,7 +12,7 @@ bw-part_of:
 
 ```
                      PATH 1: inbox (append-only, any agent)
-  agent / hook / CLI ──► inbox/episodes/YYYY/MM/<ulid>.md     never edited again
+  agent / CLI ───────► inbox/episodes/YYYY/MM/<ulid>.md     never edited again
   host session stores ─► (brain harvest: read, filter, distill) ─► inbox/episodes/…
   host memory feature ─► inbox/agents/<agent>/…               treated as episodes
 

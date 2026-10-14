@@ -6,7 +6,7 @@ FORMAT_VERSION = 2
 
 
 def __getattr__(name: str) -> str:
-    # Resolved lazily: importlib.metadata costs ~50 ms, too much for `brain hook` on every turn.
+    # Resolved lazily: importlib.metadata costs ~50 ms, which every CLI start would pay.
     if name == "__version__":
         from importlib.metadata import PackageNotFoundError, version
 

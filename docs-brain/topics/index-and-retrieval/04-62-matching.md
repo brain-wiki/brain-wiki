@@ -15,8 +15,8 @@ bw-part_of:
 2. Drop filler words ("the", "did", "why", "what", "how", "we"…) when any
    content word remains, so a question phrased as a sentence matches by what
    it is about. Build `"tok1" "tok2" "tok3"*` from what is left (implicit
-   AND, prefix match on the last token, since queries are often typed
-   incrementally by hooks).
+   AND, prefix match on the last token, since queries are often partial
+   words).
 3. If fewer than `limit` nodes match, retry with OR between the same
    tokens.
 4. If the query contains CJK or other unsegmented script, or the token

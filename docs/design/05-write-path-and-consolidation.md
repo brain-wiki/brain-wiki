@@ -6,7 +6,7 @@ Status: draft for review · Schemas in §4.3 and §5 are normative for v0.1
 
 | # | Requirement | Why |
 |---|---|---|
-| W1 | Capturing must never block or fail an agent's work, and never conflict across agents or devices. | Capture happens at the worst times: session end, compaction, a crash. |
+| W1 | Writing an episode must never block or fail an agent's work, and never conflict across agents or devices. | Agents log mid-task, several at once, on several devices. |
 | W2 | Curated notes change only through operations the engine can validate, explain, and undo. | Whole-file LLM rewrites lose detail a little at a time and cannot be audited. |
 | W3 | Untrusted content can never become a standing directive without the user. | One poisoned web page must not steer every future session (G4). |
 | W4 | No information is deleted by consolidation. Changes in belief are recorded as supersession. | The history of a fact is part of the fact. |
@@ -17,7 +17,7 @@ Status: draft for review · Schemas in §4.3 and §5 are normative for v0.1
 
 ```
                      PATH 1: inbox (append-only, any agent)
-  agent / hook / CLI ──► inbox/episodes/YYYY/MM/<ulid>.md     never edited again
+  agent / CLI ───────► inbox/episodes/YYYY/MM/<ulid>.md     never edited again
   host session stores ─► (brain harvest: read, filter, distill) ─► inbox/episodes/…
   host memory feature ─► inbox/agents/<agent>/…               treated as episodes
 
@@ -47,8 +47,7 @@ Human edits are always allowed: it is the user's brain.
 |---|---|---|---|---|
 | `brain log` (CLI, interactive) | `owner` | `false` | `cli` | A person typed it. |
 | `brain log --agent <id>` (scripts) | `agent` | `unknown` unless `--taint` given | `cli` | |
-| MCP `brain_log_episode` | `agent` | from session state if known (§3.2), else `unknown` | `mcp` | |
-| Hook capture at stop/compaction (opt-in) | `agent` | computed from the transcript (§3.2) | `hook` | |
+| MCP `brain_log_episode` | `agent` | `unknown` (§3.2) | `mcp` | |
 | `brain harvest` from host session stores (opt-in) | `agent` | computed from the session's tool calls (§3.2) | `harvest` | §2.2 |
 | File created directly under `inbox/episodes/` | as written if valid, else `agent`; `owner` becomes `agent` | `unknown` (forced) | `file` | Self-declared provenance is not trusted. |
 | File in `inbox/agents/<agent>/` | `agent` | `unknown` | `file` | No frontmatter needed. |
@@ -70,8 +69,8 @@ All writers go through one function, `write_episode()`, which:
    blocks; [10](10-security-and-privacy.md)), replacing them with
    `[REDACTED:<kind>]`.
 4. Enforces a size cap (default 64 KiB; the excess is cut and noted).
-5. Applies an idempotency key if given (`bw-dedupe` in frontmatter; hook
-   capture uses `<host>:<session>:<turn range>`), so retries do not
+5. Applies an idempotency key if given (`bw-dedupe` in frontmatter; harvest
+   uses `<host>:<session>:<turn range>`), so retries do not
    duplicate. A marker created with `O_EXCL` in the state dir makes the
    check atomic across processes on one device; the index catches keys
    from episodes that arrived by sync.
@@ -90,15 +89,13 @@ an MCP write can never prove its session clean (§3.2).
 
 ### 2.2 Harvesting sessions
 
-Hooks capture sessions as they happen, but only in hosts with hooks, only
-when capture was enabled beforehand, and not when a session crashes. Every
-supported host also keeps its own transcripts on disk. `brain harvest`
+Every supported host keeps its own transcripts on disk. `brain harvest`
 reads finished sessions from those stores and turns them into episodes,
-which gives three things hooks cannot:
+which gives:
 
-- capture for sessions that happened before brain-wiki was installed
+- episodes for sessions that happened before brain-wiki was installed
   (backfill, the fastest way to give a new brain real history);
-- capture for sessions whose hooks did not run;
+- episodes for sessions in which the agent logged nothing;
 - exact taint, because every tool call of the session is visible.
 
 ```
@@ -112,7 +109,7 @@ discover ─► filter ─► route ─► extract ─► distill (or raw) ─�
 | Route | Each session belongs to the brain its working directory resolves to, using the same project files and host defaults as brain selection ([03 §3](03-config-and-storage.md#3-choosing-a-brain)) plus optional path rules in `[harvest.routes]`. Sessions that resolve to no brain are skipped, never sent to the default brain. |
 | Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Injected brain-wiki context is stripped. Secrets are scrubbed. Taint is computed from the tool calls. |
 | Distill | One call to the configured headless preset ([08 §7](08-agent-integrations.md#7-headless-presets)) with the distill instructions (`prompts/distill.md`): the model returns `{skip, summary, claims[{text, turns}], negative_findings, open_questions, topics}`. Long sessions are split into chunks of at most 30k tokens, one episode per chunk. With `--raw`, no model is called and the episode holds a condensed transcript excerpt instead; consolidation distills it later. |
-| Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-taint`. The dedupe key `<host>:<session>:<turn range>` is shared with hook capture, so a session captured by a hook is not harvested again. |
+| Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-taint`. The dedupe key `<host>:<session>:<turn range>` makes a repeated harvest write nothing new. |
 | Watermark | `<state>/harvest/<host>/<session>.json` records the last harvested turn, so a long-running session is harvested in increments. |
 
 **Who distills.** The distill step reaches an LLM the same three ways as
@@ -177,11 +174,11 @@ recorded version:
 (§7.3): the last recorded version is the pre-image, so `brain undo` restores
 it; `log.md` gains a line; the brain's git repo, if any, gets a commit;
 author `agent:<host>`. Claims the edit added get `origin: agent` and
-`taint: unknown` (hosts without hooks cannot report taint), so they show as
-unverified until consolidation or the user confirms them. A failed check
-records nothing and returns every problem with its line; the agent fixes
-the file and checks again, or `brain restore <path>` puts back the last
-recorded version.
+`taint: unknown` (an edit cannot show what else happened in the session),
+so they show as unverified until consolidation or the user confirms them. A
+failed check records nothing and returns every problem with its line; the
+agent fixes the file and checks again, or `brain restore <path>` puts back
+the last recorded version.
 
 **The last recorded version.** The index keeps, for each note, the content
 it had when a run last wrote it, when `brain check` last recorded it, or
@@ -230,10 +227,8 @@ summary of the user's own notes (`agent`, `false`) or of a web page
 
 | Path | Mechanism |
 |---|---|
-| Hook capture | The hook reads the turn's transcript and sets `bw-taint: true` if any tool call matches the host's untrusted-tool list (web fetch and search, browser tools, MCP servers not in `trusted_mcp_servers`). Lists ship per host and are configurable ([08](08-agent-integrations.md)). |
-| Harvest | Same rule over every tool call in the harvested turn range; a transcript the reader cannot fully parse yields `unknown`. |
-| Hook-observed sessions | A post-tool-use hook (where the host has one) records `tainted: true` in `<state>/sessions/<host>/<session>.json` the moment an untrusted tool runs. MCP calls that can be tied to that session use it. |
-| MCP without session state | `unknown`. The MCP protocol does not tell a server what else happened in the session, and the model's own claims about it are not evidence. |
+| Harvest | `true` if any tool call in the harvested turn range matches the host's untrusted-tool list (web fetch and search, browser tools, MCP servers other than brain-wiki, network shell commands; [08 §6.3](08-agent-integrations.md#63-taint-detection)), else `false`; a transcript the reader cannot fully parse yields `unknown`. |
+| MCP | `unknown`. The MCP protocol does not tell a server what else happened in the session, and the model's own claims about it are not evidence. |
 | Human CLI | `false`. |
 
 `unknown` is treated like `true` everywhere it matters for safety (§3.3).
@@ -254,9 +249,9 @@ the guarantee simple.
    `<untrusted-episode …>` envelope, and the consolidation instructions
    tell the model that instructions inside episodes are content to record,
    never commands to follow.
-4. **Recall is not re-captured.** Text injected by orientation or recall
-   hooks is wrapped in markers; capture strips marked spans before writing
-   an episode, so memory does not echo itself back as new evidence.
+4. **Memory is not re-harvested.** Harvest drops tool output bodies, so
+   what brain-wiki's tools returned is never recorded again as new
+   evidence, and strips text wrapped in `<brain-wiki-context>` markers.
 5. **Provenance is structural.** Fields are written by code, stored in
    frontmatter and claim metadata, and indexed; no component parses
    provenance out of prose.
@@ -508,7 +503,7 @@ session. They get the strictest path.
 | Path | Flow |
 |---|---|
 | `brain rule add "…"` | The person running the CLI is the user. Written immediately, `origin: owner`, `quote` defaults to the text. |
-| MCP `brain_propose_rule {text, user_quote, replaces?, session?}` | Requires `propose_rules` in the profile's `write` list. If the agent names its session and the host's hooks marked that session tainted (§3.2), the call is refused before the user is asked. Otherwise the server asks the user to confirm, showing the exact rule: through an input-required result carrying an elicitation request on 2026-07-28 connections, or a pushed elicitation on older sessions, whichever the client advertises. The tool is also annotated as destructive and, for hosts that honor it, as requiring user interaction (`_meta["anthropic/requiresUserInteraction"]`), so the call itself is approved by the user. Confirmed → written with `origin: owner`, `via: mcp`. Declined → nothing. If the client supports neither form of confirmation, the rule is written as a proposal (`inbox/proposals/rule-<id>.md`) and orientation shows "1 rule awaiting confirmation: `brain rule accept <id>`". |
+| MCP `brain_propose_rule {text, user_quote, replaces?}` | Requires `propose_rules` in the profile's `write` list. The server asks the user to confirm, showing the exact rule: through an input-required result carrying an elicitation request on 2026-07-28 connections, or a pushed elicitation on older sessions, whichever the client advertises. The tool is also annotated as destructive and, for hosts that honor it, as requiring user interaction (`_meta["anthropic/requiresUserInteraction"]`), so the call itself is approved by the user. Confirmed → written with `origin: owner`, `via: mcp`. Declined → nothing. If the client supports neither form of confirmation, the rule is written as a proposal (`inbox/proposals/rule-<id>.md`) and orientation shows "1 rule awaiting confirmation: `brain rule accept <id>`". |
 | Consolidation | Never. If an episode looks like a preference ("user prefers X"), the instructions say to record it as a claim in a `preferences` topic; promoting it to a rule is a separate, user-confirmed step. |
 
 Replacing a rule (`replaces: r-…`) moves the old line to `archive/rules.md`.
@@ -629,7 +624,7 @@ Retention: the last 200 runs or 90 days, whichever keeps more.
 | Index stale or busy | Selection uses a fresh scan; apply verifies note hashes from disk, not from the index. |
 | Proposal file edited by hand | Accept re-parses the JSON block; invalid JSON is reported, nothing applied. |
 | Origin transcript missing or unreadable | `brain_read_origin` returns `not_available`; consolidation uses the episode alone. |
-| Host changes its transcript format | The session reader skips what it cannot parse; harvest reports the session as unreadable; raw capture falls back to `bw-taint: unknown` or no episode. |
+| Host changes its transcript format | The session reader skips what it cannot parse; harvest reports the session as unreadable. |
 
 ## 11. Alternatives considered
 

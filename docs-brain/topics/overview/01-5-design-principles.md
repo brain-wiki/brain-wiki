@@ -24,7 +24,7 @@ bw-part_of:
 4. **Change is first-class.** Supersession and contradiction are typed
    relations with retrieval rules, not prose.
 5. **Small core, optional edges.** The core is format + index + CLI + MCP.
-   Plugins, hooks, the visualizer, the bench, and importers depend on the
+   Plugins, the visualizer, the bench, and importers depend on the
    core, never the other way round.
 6. **Boring technology.** Markdown, YAML frontmatter, TOML, SQLite, git,
    Python. Novelty needs a reason that the boring option failed.

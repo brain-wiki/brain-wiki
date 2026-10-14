@@ -18,5 +18,5 @@ bw-part_of:
 | G4 | **Writes are safe.** Untrusted content cannot become a standing directive automatically; consolidation cannot silently drop information; every curated change is reversible. | Injection scenarios in the bench never reach `rules.md`; the loss checks catch planted regressions; `brain undo` restores the exact prior bytes. |
 | G5 | **Retrieval is correct about change.** When a note has been superseded or contradicted, retrieving it also retrieves the newer or conflicting note. | Guard recall is 100% on the bench retrieval suite. |
 | G6 | **No required services or keys.** Runs offline on a laptop with Python and SQLite. | Core features pass tests with no network access. |
-| G7 | **Fast enough to sit in a hook.** | At 10,000 notes: search p95 < 50 ms warm; unchanged-tree freshness check < 150 ms; hook commands < 300 ms end to end. See [[engineering\|13]]. |
+| G7 | **Fast enough to call on every turn.** | At 10,000 notes: search p95 < 50 ms warm; unchanged-tree freshness check < 150 ms. See [[engineering\|13]]. |
 | G8 | **Measurable.** Retrieval quality, write quality, and cross-model consistency are measured by a reproducible bench. | `brain bench` runs offline on synthetic data and produces a JSON and Markdown report. |

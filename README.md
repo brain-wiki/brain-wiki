@@ -99,7 +99,7 @@ installed, `brain connect` starts it at once.
 ## How it works
 
 ```text
- agents ──log · capture · harvest──────────────► inbox/episodes/
+ agents ──log · harvest────────────────────────► inbox/episodes/
   │  ▲                                                │
   │  │                                                │ consolidate, when you ask:
   │  │                                                │ your agent proposes ops,
@@ -111,8 +111,8 @@ installed, `brain connect` starts it at once.
 ```
 
 - **Agents write in two ways.** They log what they learn as episodes in
-  `inbox/episodes/`, and capture hooks and `brain harvest` add more from
-  their sessions. To fix a note, such as a person's new role, an agent edits
+  `inbox/episodes/`, and `brain harvest` adds more from their past
+  sessions. To fix a note, such as a person's new role, an agent edits
   the file and runs `brain check`, which refuses deleted or reworded facts.
 - **Consolidation runs in your agent, when you ask.** brain-wiki packages
   the pending episodes, your agent proposes small operations (add a claim,
@@ -129,23 +129,24 @@ installed, `brain connect` starts it at once.
 - **The index** is a SQLite FTS5 database outside the brain, kept current
   as files change and rebuilt from the brain when it is missing.
 - **Agents** connect through an MCP server with thirteen tools, a plugin
-  with three skills, and optional hooks for a session briefing and capture.
+  with three skills, and an instruction block that tells them when to use
+  the brain.
 
-| Agent | Tools | Instructions | Briefing hook | Capture | Harvest |
-|---|---|---|---|---|---|
-| Claude Code | yes | yes | yes | yes | yes |
-| Codex / ChatGPT desktop | yes | yes | yes | yes | yes |
-| Antigravity | yes | yes | yes | yes | yes |
-| OpenClaw | yes | yes | no | no | no |
-| Cursor | yes | yes | no | no | no |
-| Any MCP client | yes | printed | no | no | no |
+| Agent | Tools | Instructions | Harvest |
+|---|---|---|---|
+| Claude Code | yes | yes | yes |
+| Codex / ChatGPT desktop | yes | yes | yes |
+| Antigravity | yes | yes | yes |
+| OpenClaw | yes | yes | no |
+| Cursor | yes | yes | no |
+| Any MCP client | yes | printed | no |
 
 ## Documentation
 
 | Goal | Start here |
 |---|---|
 | Install and create a brain | [Getting started](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/getting-started.md) |
-| Connect agents, capture, and harvest | [Agents](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/agents.md) |
+| Connect agents and harvest | [Agents](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/agents.md) |
 | Consolidate, review, lint, and undo | [Maintenance](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/maintenance.md) |
 | Bring an existing vault | [Import](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/import.md) |
 | What agents may read and change | [Privacy and safety](https://github.com/brain-wiki/brain-wiki/blob/main/docs/user/privacy.md) |

@@ -127,7 +127,7 @@ def test_dedupe_and_validation(brain_dir: Path):
             EpisodeContent(summary="once"),
             origin="agent",
             taint="unknown",
-            captured="hook",
+            captured="mcp",
             dedupe="claude-code:s1:1-5",
         )
         again = write_episode(
@@ -135,7 +135,7 @@ def test_dedupe_and_validation(brain_dir: Path):
             EpisodeContent(summary="once more"),
             origin="agent",
             taint="unknown",
-            captured="hook",
+            captured="mcp",
             dedupe="claude-code:s1:1-5",
         )
         assert again.deduped and again.path == first.path

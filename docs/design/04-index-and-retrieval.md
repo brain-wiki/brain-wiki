@@ -10,7 +10,7 @@ Status: draft for review
 | R2 | Results reflect edits made a moment ago by any tool (Obsidian, git pull, another agent). | Agents act on what they retrieve; stale results cause wrong actions. |
 | R3 | Filters (topic, type, tag, property, date) are applied before ranking, never after. | Filtering after top-k can starve results; filtering before is simpler to prove correct. |
 | R4 | Guard neighbors are always returned (02 §7). | Correctness about change is the core retrieval promise (G5). |
-| R5 | Fast enough for hooks: search p95 < 50 ms, freshness check < 150 ms at 10k notes. | Hooks run on every session start and, optionally, every prompt (G7). |
+| R5 | Fast enough to call on every turn: search p95 < 50 ms, freshness check < 150 ms at 10k notes. | Agents search and read many times in one task (G7). |
 | R6 | Lexical search works with zero models; embeddings are optional and later. | G6: no required services. |
 
 ## 2. Location and lifecycle
@@ -79,7 +79,7 @@ CREATE TABLE nodes (
   device       TEXT,
   origin       TEXT,                -- owner, agent, import, system
   taint        TEXT,                -- true, false, unknown
-  captured     TEXT                 -- hook, mcp, harvest, cli, import, file
+  captured     TEXT                 -- mcp, harvest, cli, import, file
 );
 CREATE INDEX nodes_topic   ON nodes(topic, kind, updated);
 CREATE INDEX nodes_kind    ON nodes(kind, status);
@@ -334,8 +334,8 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
 2. Drop filler words ("the", "did", "why", "what", "how", "we"…) when any
    content word remains, so a question phrased as a sentence matches by what
    it is about. Build `"tok1" "tok2" "tok3"*` from what is left (implicit
-   AND, prefix match on the last token, since queries are often typed
-   incrementally by hooks).
+   AND, prefix match on the last token, since queries are often partial
+   words).
 3. If fewer than `limit` nodes match, retry with OR between the same
    tokens.
 4. If the query contains CJK or other unsegmented script, or the token
@@ -482,8 +482,8 @@ Claims whose `taint` is `true` or `unknown` are shown with an
 
 `orient()` returns one brain's briefing. Agents fetch it with
 `brain_orient` when a task may depend on the user's knowledge (the static
-instruction block tells them to, [08 §3.2](08-agent-integrations.md#32-the-static-instruction-block));
-an optional session-start hook can inject it instead. It is assembled in
+instruction block tells them to, [08 §3.2](08-agent-integrations.md#32-the-static-instruction-block)).
+It is assembled in
 priority order and cut to `budgets.orient_max_tokens` (default 1,500,
 estimated as characters / 4, so about 6,000 characters), with rules always
 included in full:
@@ -601,5 +601,5 @@ SSD:
 | Vector database / embeddings only | Misses exact terms and identifiers, needs a model, is opaque, and still needs the graph for guards. Planned as an optional hybrid signal. |
 | Tantivy or Whoosh | An extra dependency for little gain over FTS5 at this scale. |
 | DuckDB | Strong for analytics, weaker and heavier for incremental full-text search. |
-| In-memory index per process | Parsing 10k notes on every hook call costs seconds. |
+| In-memory index per process | Parsing 10k notes on every CLI call costs seconds. |
 | Index inside the brain | Breaks under sync tools, is device-specific, and clutters git. |

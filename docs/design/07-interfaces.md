@@ -6,7 +6,7 @@ Three interfaces expose the same engine:
 
 | Interface | Audience | Identity |
 |---|---|---|
-| CLI `brain` (alias `brain-wiki`) | The user, scripts, hooks | The user (`owner` profile) unless `--as <host>` |
+| CLI `brain` (alias `brain-wiki`) | The user, scripts | The user (`owner` profile) unless `--as <host>` |
 | MCP server `brain mcp` (stdio) | Agent hosts | The host id it was started with (`--host`) |
 | Files ([02](02-brain-format.md)) | Any agent, any editor | Not authenticated; governed by lint ([06](06-lint-and-reports.md)) |
 
@@ -97,8 +97,7 @@ brain import PATH --into BRAIN [--topic SLUG] [--dry-run | --apply]
 brain import PATH --to-episodes [--untrusted] [--agent HOST] [--dry-run | --apply]
 brain import [PATH] --from HOST [--dry-run | --apply]     # a host's memory files; PATH overrides where they are
 
-brain connect HOST [--brain NAME] [--scope user|project] [--briefing-hook] [--capture] [--print] [--force] [--dry-run] [--uninstall]
-brain hook HOST EVENT                                     # called by hosts; JSON on stdin
+brain connect HOST [--brain NAME] [--scope user|project] [--print] [--force] [--dry-run] [--uninstall]
 brain mcp [--host HOST]                                   # stdio MCP server
 
 brain viz [--topic T]... [--port P] [--no-open] [--export FILE.html]
@@ -128,8 +127,7 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `-q` (quieter `brain
 - `--topic T` (and the MCP `topic` filter) includes T's sub-topics (02 §2).
 - `brain log -` reads the episode body from stdin, so other tools can pipe
   into the inbox.
-- `brain hook` and `brain mcp` never print anything to stdout except their
-  protocol output; diagnostics go to stderr and to
+- `brain mcp` never prints anything to stdout except its protocol output; diagnostics go to stderr and to
   `<state>/logs/brain-wiki.log`.
 
 ### 2.3 Exit codes
@@ -146,10 +144,11 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `-q` (quieter `brain
 
 ### 2.4 Startup cost
 
-`brain hook` runs inside agent turns and must finish in well under a
-second ([13](13-engineering.md#5-performance-budgets)). The CLI uses `argparse`
-and imports subcommand modules lazily, so `brain hook` never imports the
-MCP SDK, the visualizer, or the bench.
+Agents run CLI commands inside their turns, so the CLI starts fast
+([13](13-engineering.md#5-performance-budgets)): it uses `argparse` and
+imports subcommand modules lazily, so no command but `brain mcp` imports the
+MCP SDK, and none but `brain viz` and `brain bench` load the visualizer or
+the bench.
 
 ## 3. MCP server
 
@@ -285,8 +284,6 @@ in 04 and 05):
       "user_quote": {"type": "string", "minLength": 1, "maxLength": 500,
                      "description": "The user's exact words asking for this rule."},
       "replaces":   {"type": "string", "pattern": "^r-[0-9A-HJKMNP-TV-Z]{26}$"},
-      "session":    {"type": "string", "maxLength": 200,
-                     "description": "Host session id, if known; a session the host's hooks saw read untrusted content may not propose rules."},
       "brain":      {"type": "string"}}},
 
   "brain_consolidate_prepare": {"type": "object", "additionalProperties": false,

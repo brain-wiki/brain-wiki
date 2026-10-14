@@ -2,7 +2,7 @@
 
 1. Materialize a host-specific copy of the plugin under `<data dir>/plugin/<host>/`, with MCP
    commands pointing at the installed `brain` (faster than `uvx`), `--host <id>`, and an optional
-   `--brain`. Hooks only on request: `--briefing-hook` and `--capture`.
+   `--brain`.
 2. Register it the way the host expects, preferring the host's own CLI.
 3. Write the static instruction block into the file the host loads in every session (08 §3.2).
 4. Record every change (commands, files, backups, block hashes) in `<state>/connect/<host>.json`,
@@ -38,7 +38,6 @@ _PLUGIN_FILES = (
     "rules",
     "skills",
 )
-_UNTRUSTED_MATCHER = "WebFetch|WebSearch|mcp__.*"
 
 
 @dataclass
@@ -111,10 +110,6 @@ def _plugin_source() -> Path:
     raise NotAvailable("the plugin files are missing from this installation")
 
 
-def _command(brain: str, *args: str) -> str:
-    return shlex.join([brain, *args])
-
-
 def _mcp_entry(brain: str, host: str, brain_name: str | None, *, typed: bool) -> dict[str, Any]:
     args = ["mcp", "--host", host] + (["--brain", brain_name] if brain_name else [])
     entry: dict[str, Any] = {"type": "stdio"} if typed else {}
@@ -123,18 +118,9 @@ def _mcp_entry(brain: str, host: str, brain_name: str | None, *, typed: bool) ->
 
 
 def _materialize(
-    host: str,
-    *,
-    capture: bool,
-    brain_name: str | None,
-    briefing_hook: bool = False,
-    access: ins.Access | None = None,
+    host: str, *, brain_name: str | None, access: ins.Access | None = None
 ) -> dict[str, str]:
-    """The plugin files for this host, rewritten to use the installed `brain`.
-
-    No hooks unless asked for (08 §3): agents learn the brains from the instruction block and
-    `brain_list`; `briefing_hook` injects the briefing at session start, `capture` records.
-    """
+    """The plugin files for this host, rewritten to use the installed `brain`."""
     source = _plugin_source()
     brain = _brain_executable()
     files: dict[str, str] = {}
@@ -152,63 +138,6 @@ def _materialize(
             data["mcpServers"]["brain-wiki"] = _mcp_entry(brain, host, brain_name, typed=typed)
             files[name] = json.dumps(data, indent=2) + "\n"
     files["rules/brain-wiki.md"] = ins.antigravity_rule(access or ins.Access())
-    hook_host = host if host != "generic" else "auto"
-
-    def claude_hook(event: str, *, timeout: int = 10, matcher: str | None = None) -> dict[str, Any]:
-        hook: dict[str, Any] = {
-            "type": "command",
-            "command": _command(brain, "hook", hook_host, event),
-            "timeout": timeout,
-        }
-        if event in ("PreCompact", "SessionEnd"):
-            hook["async"] = True
-        entry: dict[str, Any] = {"hooks": [hook]}
-        if matcher:
-            entry = {"matcher": matcher, **entry}
-        return entry
-
-    claude_hooks: dict[str, Any] = {}
-    if briefing_hook:
-        claude_hooks["SessionStart"] = [claude_hook("SessionStart")]
-    if capture:
-        claude_hooks["PostToolUse"] = [claude_hook("PostToolUse", matcher=_UNTRUSTED_MATCHER)]
-        claude_hooks["Stop"] = [claude_hook("Stop")]
-        for event in ("PreCompact", "SessionEnd"):
-            claude_hooks[event] = [claude_hook(event, timeout=60)]
-    if claude_hooks:
-        what = [w for w, on in (("briefing", briefing_hook), ("capture", capture)) if on]
-        files["hooks/hooks.json"] = (
-            json.dumps(
-                {"description": "brain-wiki: " + " and ".join(what), "hooks": claude_hooks},
-                indent=2,
-            )
-            + "\n"
-        )
-        manifest = json.loads(files["plugin.json"])
-        manifest.setdefault("extensions", {}).setdefault("com.openai", {})["hooks"] = (
-            "./hooks/hooks.json"  # replaces Codex's default hook discovery, so name it
-        )
-        files["plugin.json"] = json.dumps(manifest, indent=2) + "\n"
-    antigravity: dict[str, Any] = {}
-    if briefing_hook:
-        antigravity["PreInvocation"] = [
-            {
-                "type": "command",
-                "command": _command(brain, "hook", "antigravity", "PreInvocation"),
-                "timeout": 10,
-            }
-        ]
-    if capture:
-        for event in ("PostToolUse", "Stop"):
-            antigravity[event] = [
-                {
-                    "type": "command",
-                    "command": _command(brain, "hook", "antigravity", event),
-                    "timeout": 30,
-                }
-            ]
-    if antigravity:
-        files["hooks.json"] = json.dumps({"brain-wiki": antigravity}, indent=2) + "\n"
     marketplace = json.loads(files[".claude-plugin/marketplace.json"])
     marketplace["name"] = _MARKETPLACE
     files[".claude-plugin/marketplace.json"] = json.dumps(marketplace, indent=2) + "\n"
@@ -274,29 +203,13 @@ def _plan_instructions(
 
 
 def plan(
-    host: str,
-    *,
-    scope: str = "user",
-    capture: bool = False,
-    brain_name: str | None = None,
-    briefing_hook: bool = False,
-    force: bool = False,
+    host: str, *, scope: str = "user", brain_name: str | None = None, force: bool = False
 ) -> Plan:
     if host not in HOSTS:
         raise UnsupportedHost(f"unknown host {host!r}; use one of {', '.join(HOSTS)}")
     plugin_dir = data_dir() / "plugin" / host
     access = ins.host_access(host)
-    result = Plan(
-        host,
-        plugin_dir,
-        _materialize(
-            host,
-            capture=capture,
-            brain_name=brain_name,
-            briefing_hook=briefing_hook,
-            access=access,
-        ),
-    )
+    result = Plan(host, plugin_dir, _materialize(host, brain_name=brain_name, access=access))
     result.instructions, notes = _plan_instructions(host, scope, access, force=force)
     result.notes += notes
     if host == "claude-code":
@@ -358,7 +271,7 @@ def print_text(host: str, brain_name: str | None, access: ins.Access | None = No
     )
 
 
-def apply(result: Plan, *, capture: bool, brain_name: str | None, scope: str) -> dict[str, Any]:
+def apply(result: Plan, *, brain_name: str | None, scope: str) -> dict[str, Any]:
     if result.plugin_dir.exists():
         shutil.rmtree(result.plugin_dir)
     for rel, content in result.files.items():
@@ -368,7 +281,6 @@ def apply(result: Plan, *, capture: bool, brain_name: str | None, scope: str) ->
     record: dict[str, Any] = {
         "host": result.host,
         "plugin_dir": str(result.plugin_dir),
-        "capture": capture,
         "brain": brain_name,
         "scope": scope,
         "commands": [],

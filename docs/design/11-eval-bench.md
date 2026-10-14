@@ -13,7 +13,7 @@ tuned on evidence and regressions are caught:
 | Lint finds what it claims and fixes safely | `lint` |
 | Consolidation writes faithful, specific, well-placed claims, with any model (G4, G8) | `consolidation` |
 | Injected instructions never become rules or directives | `consolidation` (injection slice) |
-| Hooks and search are fast enough (G7) | `perf` |
+| Search, reads, and orientation are fast enough (G7) | `perf` |
 | A real agent with the plugin answers with current knowledge | `agent` (not built, §3.5) |
 
 Rule for the project: published numbers come only from this bench, with
@@ -99,8 +99,8 @@ Generated brains of the sizes given by `--sizes` (default `1k`; budgets
 apply at 10k and are relaxed 2× below it); measures the budgets in
 [13 §5](13-engineering.md#5-performance-budgets): freshness check,
 one-file update, full rebuild, search and read latency percentiles,
-orientation, warm lint, and the `SessionStart` hook end to end (process
-start to output). Each budget is a pass or fail line in the report.
+orientation, and warm lint. Each budget is a pass or fail line in the
+report.
 
 ### 3.5 `agent`
 

@@ -497,7 +497,7 @@ bw-turns: 12-48                  # turns of that session this episode covers, if
 bw-device: laptop                # device the session ran on (user config name)
 bw-origin: agent                 # owner | agent | import | system
 bw-taint: unknown                # true | false | unknown
-bw-captured: mcp                 # hook | mcp | harvest | cli | import | file
+bw-captured: mcp                 # mcp | harvest | cli | import | file
 bw-topics: [search]              # hints only
 bw-dedupe: claude-code:5f2c9a1e-…:12-48   # idempotency key, if the writer gave one
 ---
@@ -519,7 +519,7 @@ Rules:
 - Episodes are **immutable**. After creation no tool edits them. Lint
   records each episode's hash in the index and reports changes.
 - `bw-origin`, `bw-taint`, `bw-captured`, and `bw-agent` are set by the
-  code path that writes the episode (hook, MCP server, harvest, CLI), never
+  code path that writes the episode (MCP server, harvest, CLI, import), never
   taken from model-written text. See [05 §3](05-write-path-and-consolidation.md#3-provenance-and-taint).
   Episodes written before format 2 use the names without `bw-` (and
   `origin_turns` for `bw-turns`); they are never rewritten, and readers

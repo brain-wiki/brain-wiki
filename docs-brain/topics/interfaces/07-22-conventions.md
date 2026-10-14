@@ -27,6 +27,5 @@ bw-part_of:
 - `--topic T` (and the MCP `topic` filter) includes T's sub-topics (02 §2).
 - `brain log -` reads the episode body from stdin, so other tools can pipe
   into the inbox.
-- `brain hook` and `brain mcp` never print anything to stdout except their
-  protocol output; diagnostics go to stderr and to
+- `brain mcp` never prints anything to stdout except its protocol output; diagnostics go to stderr and to
   `<state>/logs/brain-wiki.log`.

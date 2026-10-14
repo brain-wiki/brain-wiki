@@ -96,10 +96,9 @@ def test_missing_model_backend_is_skipped(tmp_path: Path, monkeypatch: pytest.Mo
     assert result.status == "pass"
 
 
-def test_perf_suite_runs_hook_end_to_end(tmp_path: Path):
+def test_perf_suite_measures_every_budget(tmp_path: Path):
     result = suites.perf(tmp_path, 100)
     m = _metrics(result)
-    assert m[("100", "hook_session_start_output")].passed
     assert {"rebuild_s", "freshness_ms", "search_p95_ms", "orient_p95_ms", "lint_warm_s"} <= {
         metric for _, metric in m
     }

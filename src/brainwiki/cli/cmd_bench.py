@@ -33,12 +33,11 @@ def _parse_sizes(raw: str) -> list[int]:
 @contextmanager
 def _isolated_state(base: Path) -> Iterator[None]:
     """Keep bench indexes, runs, and user config away from the user's own brain-wiki state."""
-    saved = {k: os.environ.get(k) for k in (*_ENV, "BRAIN_WIKI_BRAIN", "BRAIN_WIKI_INTERNAL")}
+    saved = {k: os.environ.get(k) for k in (*_ENV, "BRAIN_WIKI_BRAIN")}
     os.environ["BRAIN_WIKI_CONFIG"] = str(base / "config.toml")
     for key, sub in zip(_ENV[1:], ("state", "cache", "data"), strict=True):
         os.environ[key] = str(base / sub)
     os.environ.pop("BRAIN_WIKI_BRAIN", None)
-    os.environ.pop("BRAIN_WIKI_INTERNAL", None)
     try:
         yield
     finally:

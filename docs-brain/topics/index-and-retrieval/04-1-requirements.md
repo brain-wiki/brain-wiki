@@ -16,5 +16,5 @@ bw-part_of:
 | R2 | Results reflect edits made a moment ago by any tool (Obsidian, git pull, another agent). | Agents act on what they retrieve; stale results cause wrong actions. |
 | R3 | Filters (topic, type, tag, property, date) are applied before ranking, never after. | Filtering after top-k can starve results; filtering before is simpler to prove correct. |
 | R4 | Guard neighbors are always returned (02 §7). | Correctness about change is the core retrieval promise (G5). |
-| R5 | Fast enough for hooks: search p95 < 50 ms, freshness check < 150 ms at 10k notes. | Hooks run on every session start and, optionally, every prompt (G7). |
+| R5 | Fast enough to call on every turn: search p95 < 50 ms, freshness check < 150 ms at 10k notes. | Agents search and read many times in one task (G7). |
 | R6 | Lexical search works with zero models; embeddings are optional and later. | G6: no required services. |

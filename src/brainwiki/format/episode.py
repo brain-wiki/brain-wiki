@@ -27,7 +27,7 @@ _FIELD_ORDER = (
 )
 ORIGINS = ("owner", "agent", "import", "system")
 TAINTS = ("true", "false", "unknown")
-CAPTURED = ("hook", "mcp", "harvest", "cli", "import", "file")
+CAPTURED = ("mcp", "harvest", "cli", "import", "file")
 
 
 @dataclass

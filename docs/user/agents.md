@@ -72,9 +72,7 @@ starts it at once.
 | `brain_read_origin` | Show the conversation an episode came from |
 
 Agents fetch the briefing when they need it, guided by the instruction
-block. To inject it at the start of every session instead, connect with
-`--briefing-hook` (Claude Code, Codex, Antigravity). The plugin also ships
-three skills: `brain` (everyday use), `brain-setup`, and `brain-maintain`.
+block. The plugin also ships three skills: `brain` (everyday use), `brain-setup`, and `brain-maintain`.
 
 ## Direct edits
 
@@ -105,21 +103,6 @@ read_origin = true
 ```
 
 See [Privacy and safety](privacy.md).
-
-## Capture (off by default)
-
-Capture saves what you learn in a session as it ends.
-
-```toml
-# ~/.config/brain-wiki/config.toml
-[capture]
-enabled = true
-hosts = ["claude-code"]
-mode = "prompted"   # prompted: the agent is asked once to log an episode; raw: a transcript excerpt
-min_turns = 5
-```
-
-Then reconnect with capture hooks: `brain connect claude-code --capture`.
 
 ## Harvest (off by default)
 

@@ -33,11 +33,11 @@ lists each command's options.
 | `brain mv SRC DST [--dry-run]` | Move a note and rewrite links |
 | `brain harvest [--from HOST] [--since 30d] [--project P] [--raw \| --distill PRESET] [--apply] [--status]` | Harvest sessions |
 | `brain origin EPISODE [--turns A-B]` | Show an episode's original conversation |
-| `brain connect HOST [--scope user\|project] [--briefing-hook] [--capture] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent |
+| `brain connect HOST [--scope user\|project] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent |
 | `brain import PATH (--overlay [--phase N] \| --into BRAIN \| --to-episodes) [--apply]`, `brain import --from HOST` | Import |
 | `brain viz [--topic T] [--port P] [--no-open] [--export FILE.html\|.json\|.graphml]` | The brain map |
 | `brain bench [SUITE…] [--sizes 1k,10k] [--backends …] [--out DIR] [--compare A B]` | Evaluation bench |
-| `brain hook HOST EVENT`, `brain mcp [--host HOST]` | Used by agent hosts |
+| `brain mcp [--host HOST]` | The MCP server, started by agent hosts |
 
 ## MCP tools
 
@@ -68,7 +68,7 @@ lock); 5 forbidden by a profile.
 | Where | What |
 |---|---|
 | `<brain>/brain.toml` | Settings that travel with the brain: topics, agent profiles, lint, consolidation, budgets |
-| `~/.config/brain-wiki/config.toml` | Per machine: registered brains, default brain, per-host brain choice, capture, harvest, recall |
+| `~/.config/brain-wiki/config.toml` | Per machine: registered brains, default brain, per-host brain choice, harvest |
 | `~/.local/state/brain-wiki/` | Run records and pre-images (undo), locks, markers for episodes brain-wiki wrote, session and harvest state, connect records, logs |
 | `~/.cache/brain-wiki/` | The search index (rebuilt automatically when missing) |
 | `~/.local/share/brain-wiki/plugin/<host>/` | Plugin copies written by `brain connect` |
@@ -85,4 +85,3 @@ of them with `BRAIN_WIKI_CONFIG`, `BRAIN_WIKI_STATE_DIR`,
 | Search misses a note you just edited | Wait a second (freshness checks run at most once per second), or `brain index --rebuild` |
 | A run was interrupted | `brain doctor` rolls it back |
 | A git commit failed after a run | The files changed anyway; `brain doctor` lists the run; commit by hand |
-| Hooks do nothing | Hooks are off by default: `brain connect HOST --briefing-hook` for the session briefing, `--capture` for saving sessions |

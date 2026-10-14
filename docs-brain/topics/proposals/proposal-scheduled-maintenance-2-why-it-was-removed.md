@@ -1,13 +1,13 @@
 ---
 id: 01M3250V00X7X59QWFVF93S5J9
 type: proposal
-title: "Why it was removed"
+title: "Why it was removed (Scheduled maintenance)"
 tags: [proposals]
 source: "docs/proposals/scheduled-maintenance.md#2-why-it-was-removed"
 bw-part_of:
   - "[[proposal-scheduled-maintenance]]"
 ---
-# Why it was removed
+# Why it was removed (Scheduled maintenance)
 
 - **It failed silently by default.** A new brain lets agents only log
   episodes, so the nightly `brain consolidate --backend command` was refused

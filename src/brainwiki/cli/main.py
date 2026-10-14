@@ -42,7 +42,6 @@ _HANDLERS: dict[str, str] = {
     "harvest": "brainwiki.cli.cmd_harvest:harvest",
     "origin": "brainwiki.cli.cmd_harvest:origin",
     "connect": "brainwiki.cli.cmd_hosts:connect",
-    "hook": "brainwiki.cli.cmd_hosts:hook",
     "mcp": "brainwiki.cli.cmd_hosts:mcp",
     "import": "brainwiki.cli.cmd_import:import_",
     "viz": "brainwiki.cli.cmd_viz:viz",
@@ -395,12 +394,6 @@ def _build_parser() -> argparse.ArgumentParser:
         default="user",
         help="install for your user, or for the current project",
     )
-    p.add_argument(
-        "--briefing-hook", action="store_true", help="inject the briefing at session start"
-    )
-    p.add_argument(
-        "--capture", action="store_true", help="install hooks that capture sessions as episodes"
-    )
     p.add_argument("--force", action="store_true", help="replace an edited instruction block")
     p.add_argument("--dry-run", action="store_true", help="show the plan without changing anything")
     p.add_argument("--uninstall", action="store_true", help="remove what connect installed")
@@ -410,10 +403,6 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="print the MCP entry and instructions to add by hand",
     )
-
-    p = cmd("hook", "handle a host hook event (reads JSON on stdin)")
-    p.add_argument("host", help="host id, or auto to detect it")
-    p.add_argument("event", help="the host's hook event name")
 
     p = cmd("mcp", "run the stdio MCP server")
     p.add_argument("--host", default="auto", help="host id for profiles (default: auto-detect)")

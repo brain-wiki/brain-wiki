@@ -18,4 +18,4 @@ bw-part_of:
 | Index stale or busy | Selection uses a fresh scan; apply verifies note hashes from disk, not from the index. |
 | Proposal file edited by hand | Accept re-parses the JSON block; invalid JSON is reported, nothing applied. |
 | Origin transcript missing or unreadable | `brain_read_origin` returns `not_available`; consolidation uses the episode alone. |
-| Host changes its transcript format | The session reader skips what it cannot parse; harvest reports the session as unreadable; raw capture falls back to `bw-taint: unknown` or no episode. |
+| Host changes its transcript format | The session reader skips what it cannot parse; harvest reports the session as unreadable. |

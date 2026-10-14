@@ -13,7 +13,7 @@ bw-part_of:
 ```
  trusted ─────────────────────────────────────────────────────────────── untrusted
   the user      brain-wiki code   local brain files   agents/hosts    consolidator   external content
-  (CLI, editor) (engine, hooks)   (user-owned)        (capable, can   LLM (sees      (web, email, issues,
+  (CLI, editor) (engine, server)  (user-owned)        (capable, can   LLM (sees      (web, email, issues,
                                                        be manipulated) packets)       others' documents)
 ```
 

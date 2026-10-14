@@ -12,8 +12,8 @@ bw-part_of:
 
 `orient()` returns one brain's briefing. Agents fetch it with
 `brain_orient` when a task may depend on the user's knowledge (the static
-instruction block tells them to, [[08-32-the-static-instruction-block|08 §3.2]]);
-an optional session-start hook can inject it instead. It is assembled in
+instruction block tells them to, [[08-32-the-static-instruction-block|08 §3.2]]).
+It is assembled in
 priority order and cut to `budgets.orient_max_tokens` (default 1,500,
 estimated as characters / 4, so about 6,000 characters), with rules always
 included in full:

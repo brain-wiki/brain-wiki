@@ -1,13 +1,13 @@
 ---
 id: 01M3250V001C023SWH157JJF5D
 type: proposal
-title: "What was built"
+title: "What was built (Scheduled maintenance)"
 tags: [proposals]
 source: "docs/proposals/scheduled-maintenance.md#1-what-was-built"
 bw-part_of:
   - "[[proposal-scheduled-maintenance]]"
 ---
-# What was built
+# What was built (Scheduled maintenance)
 
 
 ## Subsections

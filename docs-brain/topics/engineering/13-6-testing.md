@@ -17,7 +17,7 @@ bw-part_of:
 | Index | Schema, freshness (edits, renames, deletes), guard queries in both directions and through chains | pytest on temp brains |
 | CLI | Every command end to end on temp brains with `BRAIN_WIKI_*_DIR` overrides | pytest + subprocess |
 | MCP | Every tool via the SDK's in-memory client; error codes; schema conformance | `mcp.Client(server)` |
-| Hooks | Recorded payload fixtures per host and event → expected output | pytest |
+| Session readers | Synthetic sessions per host → normalized turns, routing, taint | pytest |
 | Plugin | Manifests parse and agree, skills follow the Agent Skills rules | pytest (`tests/test_plugin.py`) |
 | Hosts | Plugin loads and smoke flows in real hosts | by hand before releases; no automated host tests |
 | Bench | [[eval-bench\|11]] `retrieval` and `lint` suites on a small brain | `brain bench`, from `scripts/check.py` |

@@ -12,7 +12,7 @@ bw-part_of:
 
 Headless harvest (`brain harvest --apply`, [[05-22-harvesting-sessions|05 §2.2]])
 and the bench's model runs ([[eval-bench|11]]) run a host CLI once per packet, prompt on stdin, in an empty temporary
-directory, with `BRAIN_WIKI_INTERNAL=1`.
+directory.
 
 | Preset | Command (sketch) | Final text | Isolation |
 |---|---|---|---|

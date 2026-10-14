@@ -21,7 +21,7 @@ Of particular interest:
 - secrets that reach a brain despite redaction;
 - path traversal from any input that becomes a file path;
 - the local visualizer server being reachable or writable from elsewhere;
-- hooks that can break, block, or inject commands into an agent host.
+- content from a brain or a session that reaches a shell command.
 
 The threat model is in
 [`docs/design/10-security-and-privacy.md`](docs/design/10-security-and-privacy.md).

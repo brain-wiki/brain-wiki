@@ -23,8 +23,8 @@ Generated from `docs/design/10-security-and-privacy.md`.
   - [[threat-t7]]: T7: Hostile files attack the tools
   - [[threat-t8]]: T8: XSS in the visualizer
   - [[threat-t9]]: T9: Local server exposure
-  - [[threat-t10]]: T10: Hook command injection
-  - [[threat-t11]]: T11: Recall echo
+  - [[threat-t10]]: T10: Command injection
+  - [[threat-t11]]: T11: Memory echo
   - [[threat-t12]]: T12: Corruption or loss by a buggy run
   - [[threat-t13]]: T13: Sync-tool damage
   - [[threat-t14]]: T14: Supply chain

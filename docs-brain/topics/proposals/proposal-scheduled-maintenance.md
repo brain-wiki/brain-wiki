@@ -10,6 +10,6 @@ bw-part_of:
 # Scheduled maintenance
 
 ## Sections
-- [[proposal-scheduled-maintenance-1-what-was-built]]: What was built
-- [[proposal-scheduled-maintenance-2-why-it-was-removed]]: Why it was removed
+- [[proposal-scheduled-maintenance-1-what-was-built]]: What was built (Scheduled maintenance)
+- [[proposal-scheduled-maintenance-2-why-it-was-removed]]: Why it was removed (Scheduled maintenance)
 - [[proposal-scheduled-maintenance-3-open-questions]]: Open questions (Scheduled maintenance)

@@ -30,9 +30,9 @@ Agents interact through three surfaces, each optional:
    brain carries its own `AGENTS.md`.
 2. **MCP server.** Tools to orient, search, read, log an episode, propose a
    rule, and drive consolidation.
-3. **Plugin and hooks.** A plugin bundle for each supported host adds a
-   skill, the MCP server, and optional hooks that inject orientation at
-   session start and capture episodes at session end.
+3. **Plugin.** A plugin bundle for each supported host adds the skills and
+   the MCP server, and `brain connect` writes a short instruction block that
+   tells the agent when to consult the brain.
 
 Writes take one of three paths:
 

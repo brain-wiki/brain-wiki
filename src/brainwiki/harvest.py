@@ -128,7 +128,7 @@ def discover(
             cwd = str(Path(info.cwd).expanduser()) if info.cwd else ""
             if info.subagent:
                 candidate.skip = "subagent session"
-            elif info.headless and not user.capture.get("capture_headless"):
+            elif info.headless and not user.harvest.get("include_headless"):
                 candidate.skip = "headless session"
             elif cwd and cwd.startswith(own):
                 candidate.skip = "brain-wiki's own run"
@@ -252,6 +252,18 @@ def parse_distilled(data: Any, first: int, last: int) -> tuple[Distilled | None,
     return (result if not errors else None), errors
 
 
+def _render_turns(turns: list[Turn], per_turn: int = 1500) -> str:
+    lines = []
+    for turn in turns:
+        who = "User" if turn.role == "user" else "Assistant"
+        text = " ".join(turn.text.split())
+        if len(text) > per_turn:
+            text = text[: per_turn - 1] + "…"
+        tools = f" [tools: {'; '.join(turn.tools[:6])}]" if turn.tools else ""
+        lines.append(f"- **{who} (turn {turn.index})**: {text}{tools}")
+    return "\n".join(lines)
+
+
 def write_episode_for(
     candidate: Candidate,
     first: int,
@@ -262,7 +274,6 @@ def write_episode_for(
 ) -> str | None:
     """Write one harvested episode into the session's brain. Returns its path."""
     from brainwiki.engine import Engine
-    from brainwiki.hosts.hooks import render_turns
     from brainwiki.write.episode import write_episode
 
     assert candidate.brain is not None and candidate.transcript is not None
@@ -270,7 +281,7 @@ def write_episode_for(
     if distilled is None:
         content = EpisodeContent(
             summary=f"Raw harvest of a {host} session (turns {first}-{last}); not yet distilled.\n\n"
-            + render_turns(raw_turns or [])
+            + _render_turns(raw_turns or [])
         )
         topics: list[str] = []
     else:

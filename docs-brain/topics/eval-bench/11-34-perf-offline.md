@@ -14,5 +14,5 @@ Generated brains of the sizes given by `--sizes` (default `1k`; budgets
 apply at 10k and are relaxed 2× below it); measures the budgets in
 [[13-5-performance-budgets|13 §5]]: freshness check,
 one-file update, full rebuild, search and read latency percentiles,
-orientation, warm lint, and the `SessionStart` hook end to end (process
-start to output). Each budget is a pass or fail line in the report.
+orientation, and warm lint. Each budget is a pass or fail line in the
+report.

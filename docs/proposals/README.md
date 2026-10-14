@@ -15,6 +15,7 @@ changes, in the same change as the code, and the proposal is deleted.
 | [Consolidation bench, full design](consolidation-bench.md) | Designed, partly built (doc 11 has the built part) | About 20 scenarios in files, harvest-distillation slice, more graders, an optional LLM judge, multi-model agreement metrics, `brain bench capture`, the `agent` suite |
 | [Public memory benchmarks](public-benchmarks.md) | Designed, not scheduled | Bench adapters for LongMemEval and similar; probe coverage as a consolidation metric |
 | [Scheduled maintenance](scheduled-maintenance.md) | Built, then removed before 0.1; needs rethinking | Routine templates for hosts' schedulers and OS schedulers; a headless consolidation backend; one consolidation device |
+| [Host hooks](hooks.md) | Built, then removed before 0.1; needs real-host verification | `brain hook`: the briefing injected at session start, capture at stop and compaction, taint from tool hooks, per-prompt recall |
 
 ## Backlog
 
@@ -26,7 +27,7 @@ Ideas without a design yet.
 | Consolidation | Direct-API backend behind the same packet → ops interface; clustering as a selection heuristic; MCP review tools (list, show, accept with user confirmation, reject) so an agent can walk the user through proposals | [05 §4.4](../design/05-write-path-and-consolidation.md#44-backends) |
 | Checked edits | One tool that edits and checks in a single call | [05 §2.3](../design/05-write-path-and-consolidation.md#23-checked-agent-edits) |
 | Provenance | `brain forget --session <id>`: retract every claim whose only sources come from one session, with a dry run; per-claim source kinds (stated by user, observed in code, read in a document, inferred) | — |
-| Hosts | OpenClaw hook pack (`HOOK.md` plus a small `handler.js` running `brain hook openclaw <event>`) for `agent:bootstrap` orientation and `session:compact:before` capture; a `brain connect` option that installs the per-prompt recall hook (`UserPromptSubmit`); native OpenClaw memory provider (memory slot); Claude API memory-tool handler; Cursor plugin with its own hooks; session readers for OpenClaw and Cursor; MCP resources | [08](../design/08-agent-integrations.md) |
+| Hosts | Native OpenClaw memory provider (memory slot); Claude API memory-tool handler; Cursor plugin; session readers for OpenClaw and Cursor; MCP resources | [08](../design/08-agent-integrations.md) |
 | Harvest | Orientation shows how many of the calling host's sessions are not yet harvested, from a cached count refreshed at most hourly, as a nudge to run the recipe | [05 §2.2](../design/05-write-path-and-consolidation.md#22-harvesting-sessions) |
 | Importers | Chat exports, email, documents; authority ordering (specs over notes over chat) when sources disagree | [09](../design/09-import.md) |
 | Domain plugins | Signed influence propagation over weighted `depends_on`; domain layouts in the visualizer (dependency DAG, rule/exception tree, claim/evidence matrix); external state providers keyed by qualifiers | — |

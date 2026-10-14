@@ -40,8 +40,8 @@ lists each command's options.
 | `brain mv SRC DST [--dry-run]` | Move a note and rewrite links |
 | `brain harvest [--from HOST] [--since 30d] [--project P] [--raw \| --distill PRESET] [--apply] [--status]` | Harvest sessions |
 | `brain origin EPISODE [--turns A-B]` | Show an episode's original conversation |
-| `brain connect HOST [--scope user\|project] [--briefing-hook] [--capture] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent |
+| `brain connect HOST [--scope user\|project] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent |
 | `brain import PATH (--overlay [--phase N] \| --into BRAIN \| --to-episodes) [--apply]`, `brain import --from HOST` | Import |
 | `brain viz [--topic T] [--port P] [--no-open] [--export FILE.html\|.json\|.graphml]` | The brain map |
 | `brain bench [SUITE…] [--sizes 1k,10k] [--backends …] [--out DIR] [--compare A B]` | Evaluation bench |
-| `brain hook HOST EVENT`, `brain mcp [--host HOST]` | Used by agent hosts |
+| `brain mcp [--host HOST]` | The MCP server, started by agent hosts |

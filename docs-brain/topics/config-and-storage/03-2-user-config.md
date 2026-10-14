@@ -38,10 +38,6 @@ brains = ["work", "personal"]        # brains this host may select (default: all
 [hosts.openclaw]
 brains = ["personal"]
 
-[capture]                            # opt-in session capture (08 §6)
-enabled = false
-hosts   = ["claude-code"]
-
 [harvest]                            # opt-in reading of host session stores (08 §6)
 enabled = false
 hosts   = ["claude-code"]

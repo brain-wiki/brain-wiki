@@ -31,8 +31,7 @@ First release.
   lint and a pre-commit hook, and browsable reports.
 - **Agents**: a stdio MCP server with thirteen tools and three prompts;
   `brain connect` for Claude Code, Codex, Antigravity, OpenClaw, and
-  Cursor, with an instruction block per host; opt-in hooks for the
-  session briefing, taint tracking, and capture; session readers and
+  Cursor, with an instruction block per host; session readers and
   harvest for Claude Code, Codex, and Antigravity, with headless presets
   for large backfills; origin lookup; a plugin bundle with three skills;
   `brain setup` and `brain doctor`.

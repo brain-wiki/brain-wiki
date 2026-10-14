@@ -18,7 +18,7 @@ demand, no host-specific frontmatter keys).
 | Skill | Purpose | Loaded when |
 |---|---|---|
 | `brain` | Everyday use: recall, read warnings, record, propose rules only on request | Questions about past work, preferences, decisions; "remember…"; end of meaningful work |
-| `brain-setup` | Onboarding and reconfiguration: install, create or adopt a brain, connect agents, privacy, capture and harvest | "Set up / install / connect / import brain-wiki"; or brain-wiki reports it is not configured |
+| `brain-setup` | Onboarding and reconfiguration: install, create or adopt a brain, connect agents, privacy, harvest | "Set up / install / connect / import brain-wiki"; or brain-wiki reports it is not configured |
 | `brain-maintain` | Upkeep: harvest, consolidate, review proposals, health check, undo | "Consolidate / harvest / clean up / review / check my brain" |
 
 **Why three skills, not one.** Hosts load every skill's name and
@@ -45,8 +45,7 @@ and when):
 > **brain-setup**: Set up, connect, or reconfigure brain-wiki: install the
 > CLI, create a brain or adopt an existing Obsidian or Markdown vault,
 > connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor),
-> choose which agents see which brain, and turn on session capture or
-> harvest. Use when the user asks to install, set up, onboard, connect, or
+> choose which agents see which brain, and turn on harvest. Use when the user asks to install, set up, onboard, connect, or
 > import brain-wiki, or when brain-wiki says it is not configured.
 
 > **brain-maintain**: Maintain a brain-wiki brain: harvest recent agent

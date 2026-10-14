@@ -3,14 +3,10 @@
 from __future__ import annotations
 
 import difflib
-import json
 import math
-import os
 import random
 import shutil
 import statistics
-import subprocess
-import sys
 import time
 from collections import Counter
 from collections.abc import Callable
@@ -894,7 +890,6 @@ _BUDGETS = {  # doc 13 §5 and doc 04 §10, at 10k notes
     "orient_p95_ms": 30,
     "rebuild_s": 30,
     "lint_warm_s": 1,
-    "hook_session_start_ms": 300,
 }
 
 
@@ -933,7 +928,7 @@ def perf(work: Path, size: int, seed: int = 0) -> SuiteResult:
             edits += _timed(lambda node=node: engine.scan(paths=[node.path]), 1)  # write-through
         values["incremental_ms"] = _pct(edits, 0.95)
         texts = [q.text for q in rng.sample(truth.queries, min(200, len(truth.queries)))]
-        texts += [" ".join(rng.choices(WORDS[:600], k=3)) for _ in range(50)]  # hook-like prompts
+        texts += [" ".join(rng.choices(WORDS[:600], k=3)) for _ in range(50)]  # short prompts
         for text in texts[:10]:
             search(engine, text)
         latencies = []
@@ -948,11 +943,6 @@ def perf(work: Path, size: int, seed: int = 0) -> SuiteResult:
         values["orient_p95_ms"] = _pct(_timed(lambda: orient(engine), 50), 0.95)
         values["lint_cold_s"] = _timed(lambda: lint(engine), 1)[0] / 1000
         values["lint_warm_s"] = _timed(lambda: lint(engine), 1)[0] / 1000
-    hook, output = _hook_times(truth.root, 6)
-    values["hook_session_start_ms"] = statistics.median(hook)
-    res.details[f"hook_ms@{size}"] = [round(h, 1) for h in hook]
-    hook_ok = "additionalContext" in output and "# Brain: bench" in output
-    res.add(case, "hook_session_start_output", int(hook_ok), target="1", passed=hook_ok)
     relax = 1 if size >= 10_000 else 2  # CI relaxes thresholds 2x below 10k notes (doc 13 §5)
     for metric, value in values.items():
         budget = _BUDGETS.get(metric)
@@ -964,25 +954,6 @@ def perf(work: Path, size: int, seed: int = 0) -> SuiteResult:
         passed = None if budget is None else value <= budget * relax
         res.add(case, metric, round(value, 3), target=target, passed=passed)
     return res
-
-
-def _hook_times(root: Path, runs: int) -> tuple[list[float], str]:
-    payload = json.dumps(
-        {"session_id": "bench", "cwd": str(root), "hook_event_name": "SessionStart"}
-    )
-    env = {
-        k: v for k, v in os.environ.items() if k not in ("BRAIN_WIKI_INTERNAL", "BRAIN_WIKI_BRAIN")
-    }
-    argv = [sys.executable, "-m", "brainwiki", "hook", "claude-code", "SessionStart"]
-    times, output = [], ""
-    for _ in range(runs):
-        start = time.perf_counter()
-        done = subprocess.run(
-            argv, input=payload, capture_output=True, text=True, env=env, cwd=root, check=False
-        )
-        times.append((time.perf_counter() - start) * 1000)
-        output = done.stdout
-    return times, output
 
 
 # -- agent ----------------------------------------------------------------------------

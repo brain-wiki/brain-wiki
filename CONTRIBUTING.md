@@ -92,8 +92,8 @@ repository settings); private vulnerability reporting turned on (see
   lines it must; add a test that untouched lines survive byte for byte.
 - **Every curated change goes through `runs.Run`** so it is recorded,
   locked, gated by lint, and undoable.
-- **Hooks must stay fast** (see `docs/design/13-engineering.md` §5) and must
-  never import the MCP SDK.
+- **The CLI starts fast**: subcommand modules are imported lazily, and only
+  `brain mcp` imports the MCP SDK (`docs/design/07-interfaces.md` §2.4).
 - One version number, in `pyproject.toml`; run `scripts/sync_versions.py`
   after changing it or any file under `src/brainwiki/assets/`.
 

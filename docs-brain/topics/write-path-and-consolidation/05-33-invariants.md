@@ -21,9 +21,9 @@ bw-part_of:
    `<untrusted-episode …>` envelope, and the consolidation instructions
    tell the model that instructions inside episodes are content to record,
    never commands to follow.
-4. **Recall is not re-captured.** Text injected by orientation or recall
-   hooks is wrapped in markers; capture strips marked spans before writing
-   an episode, so memory does not echo itself back as new evidence.
+4. **Memory is not re-harvested.** Harvest drops tool output bodies, so
+   what brain-wiki's tools returned is never recorded again as new
+   evidence, and strips text wrapped in `<brain-wiki-context>` markers.
 5. **Provenance is structural.** Fields are written by code, stored in
    frontmatter and claim metadata, and indexed; no component parses
    provenance out of prose.

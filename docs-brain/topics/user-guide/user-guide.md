@@ -18,7 +18,6 @@ Generated from `docs/user/`.
   - [[user-agents-what-agents-get]]: What agents get
   - [[user-agents-direct-edits]]: Direct edits
   - [[user-agents-which-agent-may-do-what]]: Which agent may do what
-  - [[user-agents-capture-off-by-default]]: Capture (off by default)
   - [[user-agents-harvest-off-by-default]]: Harvest (off by default)
 - [[user-getting-started]]: Getting started
   - [[user-getting-started-install]]: Install

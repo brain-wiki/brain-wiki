@@ -6,7 +6,7 @@ source: "docs/design/08-agent-integrations.md"
 ---
 # Agent integrations
 
-Plugin bundle, per-host details, hooks, `brain connect`, capture and harvest
+Plugin bundle, per-host details, `brain connect`, harvest
 
 Generated from `docs/design/08-agent-integrations.md`.
 
@@ -23,10 +23,7 @@ Generated from `docs/design/08-agent-integrations.md`.
   - [[08-44-openclaw]]: OpenClaw
   - [[08-45-cursor-and-generic-mcp-clients]]: Cursor and generic MCP clients
 - [[08-5-hooks]]: Hooks
-  - [[08-51-normalized-events]]: Normalized events
-  - [[08-52-outputs]]: Outputs
-  - [[08-53-rules-for-every-hook]]: Rules for every hook
-- [[08-6-capture-and-harvest]]: Capture and harvest
+- [[08-6-harvest]]: Harvest
   - [[08-61-what-gets-skipped]]: What gets skipped
   - [[08-62-modes]]: Modes (Agent integrations)
   - [[08-63-taint-detection]]: Taint detection

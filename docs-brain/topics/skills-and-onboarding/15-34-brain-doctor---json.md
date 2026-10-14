@@ -24,7 +24,7 @@ The contract the setup skill reads. Stable within a minor version.
   ],
   "hosts": [
     {"id": "claude-code", "installed": true, "connected": true, "plugin": "0.1.0",
-     "mcp_ok": true, "capture": false, "harvest": true},
+     "mcp_ok": true, "harvest": true},
     {"id": "codex", "installed": true, "connected": false}
   ],
   "sqlite": {"version": "3.53.4", "fts5": true, "trigram": true},

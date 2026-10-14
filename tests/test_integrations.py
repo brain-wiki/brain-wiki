@@ -20,7 +20,7 @@ from brainwiki.setup_wizard import run_wizard
 
 
 def test_connect_materializes_with_installed_brain(brain_dir: Path):
-    files = cn._materialize("claude-code", capture=True, brain_name="test")
+    files = cn._materialize("claude-code", brain_name="test")
     server = json.loads(files[".mcp.json"])["mcpServers"]["brain-wiki"]
     assert Path(server["command"]).name == "brain" and server["args"] == [
         "mcp",
@@ -29,22 +29,12 @@ def test_connect_materializes_with_installed_brain(brain_dir: Path):
         "--brain",
         "test",
     ]
-    hooks = json.loads(files["hooks/hooks.json"])["hooks"]
-    assert set(hooks) == {"PostToolUse", "Stop", "PreCompact", "SessionEnd"}
-    assert hooks["SessionEnd"][0]["hooks"][0]["async"] is True
-    assert (
-        "uvx" not in files["hooks.json"]
-        and "PostToolUse" in json.loads(files["hooks.json"])["brain-wiki"]
-    )
     assert json.loads(files[".claude-plugin/marketplace.json"])["name"] == cn._MARKETPLACE
     assert "skills/brain/SKILL.md" in files
-    plain = cn._materialize("codex", capture=False, brain_name=None)
-    assert "hooks/hooks.json" not in plain and "hooks.json" not in plain
-    assert "hooks" not in json.loads(plain["plugin.json"])["extensions"]["com.openai"]
-    briefing = cn._materialize("codex", capture=False, brain_name=None, briefing_hook=True)
-    assert list(json.loads(briefing["hooks/hooks.json"])["hooks"]) == ["SessionStart"]
-    assert json.loads(briefing["plugin.json"])["extensions"]["com.openai"]["hooks"]
-    assert list(json.loads(briefing["hooks.json"])["brain-wiki"]) == ["PreInvocation"]
+    for host in cn.HOSTS:
+        copy = cn._materialize(host, brain_name=None)
+        assert "hooks/hooks.json" not in copy and "hooks.json" not in copy, host
+        assert "hooks" not in json.loads(copy["plugin.json"])["extensions"]["com.openai"], host
 
 
 @pytest.fixture

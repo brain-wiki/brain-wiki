@@ -15,4 +15,3 @@ bw-part_of:
 | Search misses a note you just edited | Wait a second (freshness checks run at most once per second), or `brain index --rebuild` |
 | A run was interrupted | `brain doctor` rolls it back |
 | A git commit failed after a run | The files changed anyway; `brain doctor` lists the run; commit by hand |
-| Hooks do nothing | Hooks are off by default: `brain connect HOST --briefing-hook` for the session briefing, `--capture` for saving sessions |

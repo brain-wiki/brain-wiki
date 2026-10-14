@@ -22,8 +22,8 @@ src/brainwiki/
 ├── consolidate/    selection, packets, ops schema and validator, applier, backends, prompts
 ├── runs/           run records, pre-images, undo, locks, git integration
 ├── importer/       overlay, into, to-episodes, from-host presets
-├── mcp/            MCP server (imports the SDK; never imported by hooks)
-├── hosts/          per-host knowledge: hook payload parsing, transcript readers, connect writers, headless presets
+├── mcp/            MCP server (the only package that imports the SDK)
+├── hosts/          per-host knowledge: transcript readers, host detection, connect writers, instruction blocks
 ├── viz/            graph export, level-of-detail API, local server; app/ is the built front end (committed)
 ├── bench/          generator, suites with their graders and scenarios, report
 └── assets/         templates (brain.toml, AGENTS.md, hub), prompts, plugin files (copied at build time)

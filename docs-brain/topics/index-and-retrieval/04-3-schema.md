@@ -56,7 +56,7 @@ CREATE TABLE nodes (
   device       TEXT,
   origin       TEXT,                -- owner, agent, import, system
   taint        TEXT,                -- true, false, unknown
-  captured     TEXT                 -- hook, mcp, harvest, cli, import, file
+  captured     TEXT                 -- mcp, harvest, cli, import, file
 );
 CREATE INDEX nodes_topic   ON nodes(topic, kind, updated);
 CREATE INDEX nodes_kind    ON nodes(kind, status);

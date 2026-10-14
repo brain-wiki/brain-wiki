@@ -13,7 +13,7 @@ bw-part_of:
 `brain connect <host>` wires a host to the locally installed brain-wiki.
 
 1. Materialize a host-specific copy of the plugin under
-   `<data dir>/brain-wiki/plugin/<host>/`, with MCP and hook commands set to
+   `<data dir>/brain-wiki/plugin/<host>/`, with the MCP command set to
    the absolute path of the installed `brain`, `--host <id>`, and (if given)
    `--brain <name>`.
 2. Register it the way the host expects, preferring the host's own CLI when
@@ -30,10 +30,8 @@ bw-part_of:
 
 3. Write the static instruction block (§3.2) into the host's instruction
    file.
-4. Options: `--scope user|project`, `--brain`, `--briefing-hook` (adds the
-   session-start briefing hook where the host has one), `--capture` (adds
-   stop, pre-compact, and session-end hooks), `--print` (print the block and
-   MCP entry instead of writing), `--force` (replace an edited block),
+4. Options: `--scope user|project`, `--brain`, `--print` (print the block
+   and MCP entry instead of writing), `--force` (replace an edited block),
    `--dry-run` (print every file change as a diff), `--uninstall`.
 5. Every change is recorded in `<state>/connect/<host>.json` with backups of
    modified files, so `--uninstall` restores exactly what was there.

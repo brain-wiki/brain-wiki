@@ -37,7 +37,7 @@ description = "CLI commands, MCP tools and schemas, agent profiles, error model"
 
 [topics.agent-integrations]
 title = "Agent integrations"
-description = "Plugin bundle, per-host details, hooks, brain connect, capture and harvest"
+description = "Plugin bundle, per-host details, brain connect, harvest"
 
 [topics.import]
 title = "Import"

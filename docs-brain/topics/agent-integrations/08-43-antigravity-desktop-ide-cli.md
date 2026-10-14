@@ -14,22 +14,11 @@ bw-part_of:
   (repository root only), by placing the plugin in
   `~/.gemini/config/plugins/brain-wiki/` (desktop and IDE), or with
   `brain connect antigravity`.
-- There is no session-start event. The `PreInvocation` hook returns
-  orientation as an ephemeral message only when `invocationNum == 0`, and
-  returns `{}` on later calls. It still runs before every model call (24
-  times in one observed turn), and hooks run one after another, so a slow
-  or hung hook delays each call by up to its timeout; ephemeral messages
-  are cut at about 49 KB.
-- Hooks run through a shell with the plugin folder as working directory,
-  stdin closed after the payload, the host's environment inherited, and
-  `ANTIGRAVITY_CONVERSATION_ID` set; no plugin-root variable is set (T-2).
-  The payload's `workspacePaths[0]` is the project, used to choose the
-  brain.
-- `PostToolUse` records taint for the conversation when an untrusted tool
-  ran (§6.3); its payload carries `toolCall {name, args}`. Every MCP call
-  arrives as `call_mcp_tool` with `ServerName`, which readers and hooks
-  rename to `mcp_<server>_<tool>` before the taint rules. `Stop` performs
-  capture (§6).
+- No plugin-root variable is set for plugin commands (T-2), so the MCP
+  entry in `mcp_config.json` uses none.
+- Every MCP call appears in transcripts as `call_mcp_tool` with
+  `ServerName`, which the session reader renames to `mcp_<server>_<tool>`
+  before the taint rules (§6.3).
 - Plugin rules load: an `always_on` plugin rule reached the model. The
   plugin-root `AGENTS.md` does not (T-4). The rule file carries the static
   instruction block (§3.2) with `trigger: always_on`.

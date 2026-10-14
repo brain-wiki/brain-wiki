@@ -1,6 +1,6 @@
 ---
 name: brain-setup
-description: Set up, connect, or reconfigure brain-wiki. Install the CLI, create a brain or adopt an existing Obsidian or Markdown vault, connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor), choose which agents see which brain, and turn on session capture or harvest. Use when the user asks to install, set up, onboard, connect, or import brain-wiki, or when brain-wiki says it is not configured.
+description: Set up, connect, or reconfigure brain-wiki. Install the CLI, create a brain or adopt an existing Obsidian or Markdown vault, connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor), choose which agents see which brain, and turn on harvest. Use when the user asks to install, set up, onboard, connect, or import brain-wiki, or when brain-wiki says it is not configured.
 ---
 # Set up brain-wiki
 
@@ -25,7 +25,7 @@ current state and offers only what is missing.
 ## Steps
 
 ```
-1 Check ─► 2 Install ─► 3 Brain ─► 4 Connect ─► 5 Privacy ─► 6 Capture/harvest ─► 7 Verify ─► 8 Summary
+1 Check ─► 2 Install ─► 3 Brain ─► 4 Connect ─► 5 Privacy ─► 6 Harvest ─► 7 Verify ─► 8 Summary
 ```
 
 ### 1. Check
@@ -36,7 +36,7 @@ Read from the result:
 
 - `brains`: existing brains, which is the default, pending episodes;
 - `hosts`: agent apps found on this machine, which are `connected`, and
-  their `capture` and `harvest`;
+  whether `harvest` is on;
 - `problems` and `next_steps`: what is missing, with the fixing command.
 
 If everything is set up, show a short summary and offer only the
@@ -99,26 +99,21 @@ brain, or limit which brains an agent may use. Details and the exact settings:
 [references/privacy.md](references/privacy.md). Show any config change as a
 diff before writing it.
 
-### 6. Capture and harvest
+### 6. Harvest
 
-Explain both before asking anything:
-
-- **Capture**: at the end of a session in a connected agent app, the agent
-  is asked once to save what it learned. Nothing is read afterwards.
-- **Harvest**: brain-wiki reads the agent app's saved session history on
-  this machine, removes tool output and secrets, and has a model summarize
-  each session into an episode. The model is either the agent you are
-  talking to or one you configure for the command line, so the condensed
-  text goes to that model's provider.
+Explain it before asking anything: brain-wiki reads the agent app's saved
+session history on this machine, removes tool output and secrets, and has a
+model summarize each session into an episode. The model is either the agent
+you are talking to or one you configure for the command line, so the
+condensed text goes to that model's provider. Harvest works for Claude
+Code, Codex, and Antigravity.
 
 For harvest, first run `brain harvest --from HOST --since 30d --dry-run`
 and show how many past sessions it found and the estimated tokens.
 
-Then ask, per agent app: capture on or off; harvest on or off; for harvest,
-backfill past sessions now, later, or never.
+Then ask, per agent app: harvest on or off, and backfill past sessions now,
+later, or never.
 
-- Capture on: `brain connect HOST --capture --dry-run`, then without
-  `--dry-run`.
 - Harvest on: add the app under `[harvest] hosts` in the user config and
   `harvest` to that app's `write` list in `brain.toml` (diff first).
 - Backfill now: run the harvest recipe in the `brain-maintain` skill in this
@@ -144,5 +139,4 @@ List what was set up, where it lives, and how to undo each part:
 |---|---|
 | Brain created or imported | `brain brains remove NAME` (keeps the files); an import is undone with `brain undo RUN` |
 | Agent app connected | `brain connect HOST --uninstall` (restores the previous config) |
-| Capture | run `brain connect HOST` again without `--capture` |
 | Harvest | remove the app from `[harvest] hosts` in the user config |

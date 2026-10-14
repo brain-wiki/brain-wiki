@@ -1,7 +1,6 @@
 """`brain setup`: the onboarding flow as a terminal wizard (design doc 15 §3).
 
-Same steps as the brain-setup skill: detect, brain, connect, capture and harvest, verify,
-summary. Every write outside the brain is shown as a dry run first, and nothing that
+Same steps as the brain-setup skill: detect, brain, connect, harvest, verify, summary. Every write outside the brain is shown as a dry run first, and nothing that
 reads sessions is turned on without an explicit yes.
 """
 
@@ -25,6 +24,7 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
     from brainwiki.config.user import load_user_config, register_brain, set_value
     from brainwiki.doctor import run_doctor
     from brainwiki.hosts import connect as cn
+    from brainwiki.hosts.sessions import reader_for
 
     if ask is input and not sys.stdin.isatty():
         out(
@@ -81,25 +81,20 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
         plan = cn.plan(host["id"])
         out(plan.describe())
         if _yes(ask, "Apply these changes?", True):
-            cn.apply(plan, capture=False, brain_name=None, scope="user")
+            cn.apply(plan, brain_name=None, scope="user")
             summary.append(f"Connected {host['id']} (undo: brain connect {host['id']} --uninstall)")
 
-    # Capture and harvest
-    connected = [h["id"] for h in run_doctor()["hosts"] if h.get("connected")]
+    # Harvest
+    connected = [
+        h["id"] for h in run_doctor()["hosts"] if h.get("connected") and reader_for(h["id"])
+    ]
     if connected:
         out(
-            "\nCapture saves what you learn in each session as it ends. Harvest reads past sessions from "
-            "your agents' own history. Both read session content; distilling may send it to the model "
-            "your agent already uses. Both are off until you say yes."
+            "\nHarvest reads past sessions from your agents' own history and turns them into "
+            "episodes. It reads session content; distilling may send it to the model your agent "
+            "already uses. It is off until you say yes."
         )
-        capture = [h for h in connected if _yes(ask, f"Turn on capture for {h}?")]
         harvest = [h for h in connected if _yes(ask, f"Turn on harvest for {h}?")]
-        if capture:
-            set_value("capture.enabled", True)
-            set_value("capture.hosts", capture)
-            summary.append(
-                f"Capture on for {', '.join(capture)} (re-run `brain connect HOST --capture`)"
-            )
         if harvest:
             set_value("harvest.enabled", True)
             set_value("harvest.hosts", harvest)
