@@ -50,7 +50,8 @@ decoration for its own sake.
   camera is; labels appear the same way, by priority (hubs, then flagged,
   then high-degree notes and the stars biggest on screen), with collision
   culling. Every star in view competes, so zooming into a crowd of short
-  notes labels them as they grow. At most 12 topics are
+  notes labels them as they grow. Map labels name their units ("82 notes",
+  "82 notes · 3 with issues", "5 session captures"). At most 12 topics are
   revealed at once (nearest first); others fade back to nebulae.
 - **Zooming changes the level, like a map.** Scrolling in on a
   constellation enters it once it fills about a quarter of the screen;
@@ -107,6 +108,12 @@ decoration for its own sake.
 - **No WebGL2** (hardware acceleration off, a remote desktop or VM without
   a GPU): the stage says why the map could not start and how to check, and
   the topic list, search, and details panel keep working without the scene.
+- **Server errors.** A note or topic that is gone or fails to load says so
+  in its panel instead of loading forever. When `brain viz` stops, the map
+  backs off from topics it could not fetch (up to a minute) and a toast
+  says the connection was lost; a start-up failure says whether the server
+  is unreachable or the link's token is wrong. A mangled link opens the
+  overview.
 - **Layout is deterministic and local.** Constellations sit on a galactic
   disk (golden-angle spiral, collision-relaxed); topics sit on a spiral
   inside their constellation, a parent topic at the center of the
@@ -328,7 +335,9 @@ at most 200 per flag.
   complete and stamped with a clean commit, and matches a rebuild of it.
 - Browser: headless Chrome screenshots of each level on the fixture and a
   generated 10k brain, interaction scripts (search, fly to a topic, select a
-  note, `Esc`), and frame time.
+  note, `Esc`), and frame time. Scripts drive the app through
+  `window.__brainViz` (the controller, the scene, and a `ready` flag), and
+  wait for `body[data-ready]`.
 
 ## 10. Alternatives considered
 

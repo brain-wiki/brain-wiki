@@ -29,7 +29,8 @@ bw-part_of:
   camera is; labels appear the same way, by priority (hubs, then flagged,
   then high-degree notes and the stars biggest on screen), with collision
   culling. Every star in view competes, so zooming into a crowd of short
-  notes labels them as they grow. At most 12 topics are
+  notes labels them as they grow. Map labels name their units ("82 notes",
+  "82 notes · 3 with issues", "5 session captures"). At most 12 topics are
   revealed at once (nearest first); others fade back to nebulae.
 - **Zooming changes the level, like a map.** Scrolling in on a
   constellation enters it once it fills about a quarter of the screen;

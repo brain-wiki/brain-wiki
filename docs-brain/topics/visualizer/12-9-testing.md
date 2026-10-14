@@ -20,4 +20,6 @@ bw-part_of:
   complete and stamped with a clean commit, and matches a rebuild of it.
 - Browser: headless Chrome screenshots of each level on the fixture and a
   generated 10k brain, interaction scripts (search, fly to a topic, select a
-  note, `Esc`), and frame time.
+  note, `Esc`), and frame time. Scripts drive the app through
+  `window.__brainViz` (the controller, the scene, and a `ready` flag), and
+  wait for `body[data-ready]`.
