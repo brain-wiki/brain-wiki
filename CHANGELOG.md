@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.0.dev1 (unreleased)
+
 ## 0.1.0.dev0 (2026-10-14)
 
 First release.
