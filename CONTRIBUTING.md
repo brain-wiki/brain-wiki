@@ -52,14 +52,18 @@ the changelog, runs the checks, builds, publishes to PyPI with trusted
 publishing, publishes `server.json` to the MCP Registry, and creates the
 GitHub release from the changelog entry.
 
-1. Set `version` in `pyproject.toml` to `X.Y.Z` and date its changelog entry:
-   `## X.Y.Z (YYYY-MM-DD)`.
+1. Set `version` in `pyproject.toml` to `X.Y.Z`, or a development release
+   such as `X.Y.Z.devN`, and date its changelog entry: `## X.Y.Z (YYYY-MM-DD)`.
+   A development release is published like any other; pip and uv install it
+   while no final release exists, and the GitHub release is marked a
+   pre-release.
 2. `uv run scripts/sync_versions.py`, then commit.
 3. `git tag vX.Y.Z && git push origin main vX.Y.Z`.
-4. Move `main` to the next development version (`X.Y.(Z+1).dev0`) with a new
-   `## X.Y.(Z+1) (unreleased)` entry, run `sync_versions.py`, commit, and push. The
-   plugin files keep pointing at `X.Y.Z`, the newest dated release, because
-   marketplaces install the plugin from `main`.
+4. Move `main` to the next development version (`X.Y.(Z+1).dev0` after
+   `X.Y.Z`, `X.Y.Z.dev(N+1)` after `X.Y.Z.devN`) with a new `(unreleased)`
+   entry, run `sync_versions.py`, commit, and push. The plugin files keep
+   pointing at the newest dated release, because marketplaces install the
+   plugin from `main`.
 
 One-time setup: a trusted publisher on PyPI for this repository, workflow
 `release.yml`, environment `pypi` (and that environment in the GitHub

@@ -117,6 +117,21 @@ def test_plugin_files_point_at_the_last_release_while_main_is_a_dev_version(tmp_
     assert plugin_version(tmp_path) == "0.2.0"
 
 
+def test_a_dated_dev_version_is_a_release(tmp_path):
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "brain-wiki"\nversion = "0.1.0.dev0"\n'
+    )
+    (tmp_path / "CHANGELOG.md").write_text("# Changelog\n\n## 0.1.0.dev0 (2026-10-20)\n")
+    assert plugin_version(tmp_path) == "0.1.0.dev0"
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "brain-wiki"\nversion = "0.1.0.dev1"\n'
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        "# Changelog\n\n## 0.1.0.dev1 (unreleased)\n\n## 0.1.0.dev0 (2026-10-20)\n"
+    )
+    assert plugin_version(tmp_path) == "0.1.0.dev0"
+
+
 def test_sync_check_reports_drift(tmp_path):
     for rel in [
         "pyproject.toml",

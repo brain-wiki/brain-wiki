@@ -2,11 +2,12 @@
 
 The version in pyproject.toml is the only one maintained by hand. Marketplaces serve the plugin
 from the default branch, which carries a .dev version between releases, so the plugin files point
-at a release that exists on PyPI: the pyproject version when it is a release, else the newest
-dated release in CHANGELOG.md. This script copies that version into every plugin manifest and
-every `brain-wiki==<version>` pin, regenerates the skill references
-that mirror src/brainwiki/assets/, and writes Antigravity's always-on rule from the static
-instruction block in src/brainwiki/hosts/_instructions.py (design docs 08 §3.2, 13 §4, 15 §2).
+at a release that exists on PyPI: the pyproject version when it is a final release or a dated
+pre-release (such as 0.1.0.dev0), else the newest dated release in CHANGELOG.md. This script
+copies that version into every plugin manifest and every `brain-wiki==<version>` pin,
+regenerates the skill references that mirror src/brainwiki/assets/, and writes Antigravity's
+always-on rule from the static instruction block in src/brainwiki/hosts/_instructions.py
+(design docs 08 §3.2, 13 §4, 15 §2).
 
     python scripts/sync_versions.py           # write changes
     python scripts/sync_versions.py --check   # change nothing; exit 1 on drift (for CI)
@@ -47,7 +48,7 @@ def read_version(root: Path) -> str:
 
 
 _PRERELEASE = re.compile(r"(\.dev\d*|a\d+|b\d+|rc\d+)$")
-_RELEASED = re.compile(r"^## (\d+\.\d+\.\d+) \(\d{4}-\d{2}-\d{2}\)", re.MULTILINE)
+_RELEASED = re.compile(r"^## (\S+) \(\d{4}-\d{2}-\d{2}\)", re.MULTILINE)
 
 
 def plugin_version(root: Path) -> str:
@@ -56,8 +57,9 @@ def plugin_version(root: Path) -> str:
     if not _PRERELEASE.search(version):
         return version
     changelog = root / "CHANGELOG.md"
-    found = _RELEASED.search(changelog.read_text(encoding="utf-8")) if changelog.is_file() else None
-    return found.group(1) if found else version
+    text = changelog.read_text(encoding="utf-8") if changelog.is_file() else ""
+    released = _RELEASED.findall(text)
+    return version if version in released or not released else released[0]
 
 
 def _set_path(data: Any, path: tuple[str | int, ...], value: str) -> None:
