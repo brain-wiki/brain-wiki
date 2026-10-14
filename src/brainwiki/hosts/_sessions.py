@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
-_MARKER_RE = re.compile(r"<brain-wiki-context>.*?</brain-wiki-context>", re.S)
 _HOST_INJECTED = re.compile(
     r"<(system-reminder|command-name|command-message|local-command-stdout)>.*?</\1>", re.S
 )
@@ -93,8 +92,8 @@ class Reader(Protocol):
 
 
 def strip_injected(text: str) -> str:
-    """Remove brain-wiki's own injected context and host-injected wrappers before capture."""
-    return _HOST_INJECTED.sub("", _MARKER_RE.sub("", text)).strip()
+    """Remove what the host injected into a turn (reminders, command echoes) before harvest."""
+    return _HOST_INJECTED.sub("", text).strip()
 
 
 def normalize_call(host: str, name: str, args: Any) -> tuple[str, Any]:

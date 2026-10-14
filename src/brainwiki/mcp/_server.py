@@ -483,7 +483,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         session: Annotated[
             str | None,
             Field(
-                max_length=200,
+                pattern=r"^[A-Za-z0-9._:-]{1,200}$",
                 description="Host session id this episode summarizes, if known (recorded as a hint).",
             ),
         ] = None,
@@ -848,6 +848,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         )
 
     mcp._brainwiki_state = state  # type: ignore[attr-defined]  # for tests
+    _forbid_unknown_arguments(mcp)
     return mcp
 
 
@@ -868,6 +869,16 @@ def _engine_for_run(state: _State, run: str, brain: str | None) -> Engine:
         if (brain_state_dir(engine.brain.key) / "runs" / run / "packet.json").is_file():
             return engine
     raise NotFound(f"no prepared run {run}; call brain_consolidate_prepare")
+
+
+def _forbid_unknown_arguments(server: MCPServer) -> None:
+    """Reject arguments a tool does not declare (07 §3.4): a stale or misspelled argument fails
+    with an error naming it instead of being dropped. The SDK has no option for this."""
+    for tool in server._tool_manager.list_tools():  # noqa: SLF001
+        model = tool.fn_metadata.arg_model
+        model.model_config["extra"] = "forbid"
+        model.model_rebuild(force=True)
+        tool.parameters["additionalProperties"] = False
 
 
 def serve(host: str | None = None, brain: str | None = None) -> None:

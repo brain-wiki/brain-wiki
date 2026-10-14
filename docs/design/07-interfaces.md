@@ -275,7 +275,7 @@ in 04 and 05):
       "open_questions": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
       "topics":         {"type": "array", "maxItems": 5, "items": {"type": "string"}},
       "dedupe_key":     {"type": "string", "maxLength": 200},
-      "session":        {"type": "string", "maxLength": 200,
+      "session":        {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,200}$",
                          "description": "Host session id this episode summarizes, if known (recorded as a hint)."},
       "origin_turns":   {"type": "string", "pattern": "^[0-9]+-[0-9]+$"},
       "brain":          {"type": "string"}}},

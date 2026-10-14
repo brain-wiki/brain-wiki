@@ -85,9 +85,7 @@ def review(args: Any) -> int:
 
         if edits.is_edit_proposal(engine, args.run):
             if args.action == "show":
-                text = engine.store.read_text(
-                    f"{engine.manifest.layout.proposals_dir}/{args.run}.md"
-                )
+                text = edits.show_proposal(engine, args.run)
                 emit(args, {"run": args.run, "type": "edit-proposal"}, text)
                 return 0
             if args.action == "accept":

@@ -28,7 +28,7 @@ key        = "id" | "status" | "by" | "reason" | "src" | "origin" | "inputs" | "
 | `reason` | Why the claim was superseded or retracted. |
 | `src` | One or more comma-separated sources: `<brain path>#L<start>-L<end>` for episode spans, `<host>:<session>#T<start>-T<end>` for turns of an agent conversation, or a URL. |
 | `origin` | `owner`, `agent`, `import`, or `system`, from the source episodes. |
-| `inputs` | `external` or `unknown` when any source episode had external or unknown inputs. Omitted when `local`. |
+| `inputs` | `external` or `unknown` when any source episode had external or unknown inputs. Omitted when `local`. Any other value reads as `unknown` (lint BW201). |
 | `at` | Date or date-time the claim was last asserted. |
 
 Choices behind the form:

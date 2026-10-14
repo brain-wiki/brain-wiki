@@ -536,7 +536,7 @@ def _index_file(
                 claim.status,
                 claim.meta.get("by"),
                 claim.meta.get("origin"),
-                claim.meta.get("inputs"),
+                None if claim.inputs == "local" else claim.inputs,
                 claim.meta.get("at"),
                 json.dumps(claim.sources),
             ),

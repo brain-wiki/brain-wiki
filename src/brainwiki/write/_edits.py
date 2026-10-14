@@ -201,8 +201,17 @@ def _claims(data: bytes | None) -> list[Claim]:
 _SUPERSEDE = "move it to bw-claims-superseded with `by: <new claim id>`, then add the new claim"
 
 
-def _check_claims(change: _Change) -> list[Claim]:
-    """Problems for deleted or reworded claims; returns the claims the edit added."""
+_PROVENANCE = ("origin", "inputs", "src")
+
+
+def _provenance(claim: Claim) -> tuple[str, str, str]:
+    meta = claim.meta
+    return (str(meta.get("origin", "")), str(meta.get("inputs", "local")), str(meta.get("src", "")))
+
+
+def _check_claims(change: _Change, *, agent: bool) -> list[Claim]:
+    """Problems for deleted or reworded claims, and for agents changing a claim's provenance;
+    returns the claims the edit added."""
     before, after = _claims(change.base), _claims(change.current)
     after_ids = {c.id: c for c in after if c.id}
     after_texts = {clean_claim_text(c.text) for c in after}
@@ -233,6 +242,16 @@ def _check_claims(change: _Change) -> list[Claim]:
                         line=now.line,
                     )
                 )
+            elif agent and _provenance(now) != _provenance(claim):
+                change.problems.append(
+                    _Problem(
+                        change.path,
+                        "claim_provenance_changed",
+                        f'the provenance of claim "{_short(text)}" ({", ".join(_PROVENANCE)}) '
+                        "changed; only brain-wiki and the user set it, so put it back",
+                        line=now.line,
+                    )
+                )
         elif claim.status == "active" and text not in after_texts:
             change.problems.append(
                 _Problem(
@@ -257,7 +276,7 @@ def _short(text: str, width: int = 60) -> str:
 
 
 def _stamp_claims(data: bytes, claims: list[Claim]) -> bytes:
-    """Mark claims an agent added as its own and unverified (05 §3)."""
+    """Mark claims an agent added as its own and unverified, whatever it wrote (05 §3)."""
     from brainwiki.format import claim_value, replace_item
 
     text = data.decode("utf-8")
@@ -265,8 +284,8 @@ def _stamp_claims(data: bytes, claims: list[Claim]) -> bytes:
     for claim in claims:
         meta = dict(claim.meta)
         meta.setdefault("id", claim_id())
-        meta.setdefault("origin", "agent")
-        meta.setdefault("inputs", "unknown")
+        meta["origin"] = "agent"
+        meta["inputs"] = "unknown"
         meta.setdefault("at", today)
         if claim.key is not None:
             text = replace_item(text, claim.key, claim.index, [claim_value(claim.text, meta)])
@@ -365,7 +384,7 @@ def _validate(engine: Engine, change: _Change, *, allow_shrink: bool) -> list[Cl
                 rel, "sync_debris", "this looks like a sync-conflict copy; merge it and delete it"
             )
         )
-    added = _check_claims(change)
+    added = _check_claims(change, agent=engine.profile.name != "owner")
     loss = _loss(change)
     if loss > _LOSS_ERROR and not allow_shrink:
         change.problems.append(
@@ -608,13 +627,47 @@ def _load(engine: Engine, run: str) -> tuple[str, dict[str, Any], str | None]:
     return rel, payload, str(agent) if agent else None
 
 
+def _proposal_files(
+    engine: Engine, run: str
+) -> tuple[str, list[tuple[str, str | None, str | None]], str | None]:
+    """The files a proposal changes, refusing any an edit may not touch: the proposal file is
+    in the inbox, where anything can write it, so its payload is checked like a new edit."""
+    from brainwiki.index import NOTE_KINDS, classify, discovered_topics
+
+    rel, payload, agent = _load(engine, run)
+    topics = discovered_topics(engine)
+    files = []
+    for item in payload["files"]:
+        path = _normalize_path(engine, str(item.get("path", "")))
+        reason = _protected_reason(engine, path)
+        if reason is None and classify(engine, path, topics) not in NOTE_KINDS:
+            reason = "it is not a note"
+        if reason:
+            raise Forbidden(
+                f"proposal {run} would change {path}, which an edit may not touch ({reason}); "
+                f"reject it with `brain review reject {run}`"
+            )
+        files.append((path, item.get("base"), item.get("content")))
+    return rel, files, agent
+
+
+def show_proposal(engine: Engine, run: str) -> str:
+    """What accepting the proposal would change, diffed from its payload, not its own text."""
+    _, files, agent = _proposal_files(engine, run)
+    parts = [f"Edit proposal {run} from {agent or 'an unknown agent'}. Accepting applies:"]
+    for path, _, content in files:
+        new = content.encode("utf-8") if content is not None else None
+        parts.append(_diff(_Change(path, _read(engine, path), new)).rstrip("\n"))
+    parts.append(f"Accept: brain review accept {run}   Reject: brain review reject {run}")
+    return "\n\n".join(parts)
+
+
 def accept_proposal(engine: Engine, run: str) -> Any:
     from brainwiki.runs import Run
 
-    rel, payload, agent = _load(engine, run)
+    rel, files, agent = _proposal_files(engine, run)
     record_run = Run(engine, "edit", agent=agent, backend="review", summary=f"accepted {run}")
-    for item in payload["files"]:
-        path, base, content = item["path"], item.get("base"), item.get("content")
+    for path, base, content in files:
         if engine.store.sha(path) != base:
             raise Conflict(f"{path} changed since the proposal; ask the agent to edit it again")
         if content is None:

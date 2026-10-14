@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 
 _MAX_EPISODE_BYTES = 64 * 1024
 _TURNS = re.compile(r"^[0-9]+-[0-9]+$")
+_SESSION = re.compile(r"^[A-Za-z0-9._:-]{1,200}$")  # host session ids; also glob-safe
 _PLAIN = re.compile(r"^[^\r\n\x00]{1,200}$")
 
 
@@ -53,7 +54,12 @@ class EpisodeResult:
 
 def _check(name: str, value: str | None, pattern: re.Pattern[str] = _PLAIN) -> None:
     if value is not None and not pattern.match(value):
-        raise UsageError(f"{name} must be a single line of at most 200 characters")
+        what = (
+            "letters, digits, and . _ : - (at most 200)"
+            if pattern is _SESSION
+            else "a single line of at most 200 characters"
+        )
+        raise UsageError(f"{name} must be {what}")
 
 
 def _cap(text: str, limit: int) -> tuple[str, bool]:
@@ -126,11 +132,11 @@ def write_episode(
         raise UsageError("invalid provenance values")
     for name, value in (
         ("agent", agent),
-        ("session", session),
         ("device", device),
         ("dedupe", dedupe),
     ):
         _check(name, value)
+    _check("session", session, _SESSION)
     _check("origin_turns", origin_turns, _TURNS)
     if not (content.summary.strip() or content.claims):
         raise UsageError("an episode needs a summary or at least one claim")

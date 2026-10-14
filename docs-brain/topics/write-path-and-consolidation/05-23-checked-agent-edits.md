@@ -32,6 +32,7 @@ recorded version:
 | Schema | Frontmatter is not valid YAML, a required key is missing, `status` has an unknown value, or an `id` was changed or duplicated (lint BW1xx) |
 | Links and relations | A relation does not parse or names an unknown `bw-` field (error), or a new link does not resolve (warning) |
 | Claims | Claim metadata is broken, or a claim was deleted or reworded in place. Claims change only by superseding (move the old claim to `bw-claims-superseded`, add the new one), so a fact's history is never lost |
+| Claim provenance | An agent changed an existing claim's `origin`, `inputs`, or `src`. Only brain-wiki and the user set provenance |
 | Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` |
 | Protected files | Any of the files above changed |
 | Sync debris | Merge-conflict markers or sync-conflict copies |
@@ -40,8 +41,9 @@ recorded version:
 (§7.3): the last recorded version is the pre-image, so `brain undo` restores
 it; `log.md` gains a line; the brain's git repo, if any, gets a commit;
 author `agent:<host>`. Claims the edit added get `origin: agent` and
-`inputs: unknown` (an edit cannot show what else happened in the session),
-so they show as unverified until consolidation or the user confirms them. A
+`inputs: unknown`, whatever the agent wrote (an edit cannot show what else
+happened in the session), so they show as unverified until the user edits
+them; consolidation keeps the worse value when it merges. A
 failed check records nothing and returns every problem with its line; the
 agent fixes the file and checks again, or `brain restore <path>` puts back
 the last recorded version.
@@ -62,8 +64,12 @@ over from the files as they are.
 
 **Review.** An edit to a topic with `agent_edits = "review"` becomes a
 proposal in `inbox/proposals/` holding the diff and the new content, and the
-file is put back. `brain review accept RUN` applies it as an `edit` run if
-the note has not changed since; `brain review reject RUN` drops it.
+file is put back. `brain review show RUN` prints the diff computed from the
+proposal's content, not the diff written in the file, and `brain review
+accept RUN` applies it as an `edit` run if the note has not changed since.
+Both refuse a proposal that would change a protected file or anything that
+is not a note, since anything can write into the inbox. `brain review
+reject RUN` drops it.
 
 **Recovery.** The run records each edited file's on-disk version as well as
 its pre-image. A crash or failed write rolls back only what the run itself

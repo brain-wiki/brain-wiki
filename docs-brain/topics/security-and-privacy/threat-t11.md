@@ -14,6 +14,6 @@ bw-related_to:
 
 **Memory echo.** What brain-wiki returned to an agent gets harvested back as new evidence and reinforced.
 
-**Mitigations:** Harvest drops tool output bodies and strips marked spans ([[05-33-invariants|05 §3.3]]). Consolidation sees provenance and does not count recalled content as a source.
+**Mitigations:** Harvest drops tool output bodies ([[05-33-invariants|05 §3.3]]). Consolidation sees provenance and does not count recalled content as a source.
 
 **Residual risk:** Agents that paraphrase recalled content into their own words can still echo it; provenance makes it visible.

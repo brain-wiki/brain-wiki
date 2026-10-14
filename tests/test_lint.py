@@ -289,3 +289,19 @@ def test_notes_nested_under_listed_notes_need_no_hub_line(brain_dir: Path):
     with eng(brain_dir) as e:
         found = codes(lint(e, select=["BW405"]))
     assert found["BW405"] == ["topics/a/stray.md"]
+
+
+def test_invalid_claim_inputs_read_as_unverified(brain_dir: Path):
+    from brainwiki.index import read
+
+    write(
+        brain_dir,
+        "topics/a/n.md",
+        "---\nid: 01M4KT3JPSB7BP2SNSCAVC2SFE\nbw-claims:\n"
+        '  - "Typo. {id: c-01M4KT3JPSB7BP2SNSCAVC2SFG; inputs: lcoal}"\n---\n# N\n',
+    )
+    with eng(brain_dir) as e:
+        assert "BW201" in {p.code for p in lint(e).problems}
+        outline = read(e, "topics/a/n.md", mode="outline")
+    assert outline["claims"][0]["inputs"] == "unknown"
+    assert "Typo. [unverified]" in outline["content"]

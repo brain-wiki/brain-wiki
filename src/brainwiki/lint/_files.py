@@ -281,7 +281,18 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                         fix=Fix("re-mint the claim id", edit),
                     )
                 )
-        if claim.meta.get("inputs") in ("external", "unknown") and _INJECTION.search(claim.text):
+        raw_inputs = claim.meta.get("inputs")
+        if raw_inputs is not None and raw_inputs not in INPUTS:
+            problems.append(
+                Problem(
+                    "BW201",
+                    rel,
+                    claim.line,
+                    f"claim inputs {raw_inputs!r} must be local, external, or unknown; "
+                    "it reads as unknown",
+                )
+            )
+        if claim.inputs != "local" and _INJECTION.search(claim.text):
             problems.append(
                 Problem(
                     "BW702",

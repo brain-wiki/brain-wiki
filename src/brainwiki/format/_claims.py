@@ -33,6 +33,12 @@ class Claim:
         return "superseded" if self.struck else "active"
 
     @property
+    def inputs(self) -> str:
+        """Failing closed: anything but absent or `local` reads as unverified (05 §3)."""
+        value = self.meta.get("inputs", "local")
+        return value if value in ("local", "external") else "unknown"
+
+    @property
     def sources(self) -> list[str]:
         raw = self.meta.get("src", "")
         return [s.strip() for s in raw.split(",") if s.strip()]

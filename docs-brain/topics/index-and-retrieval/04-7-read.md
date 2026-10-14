@@ -16,7 +16,7 @@ guessing.
 
 | Mode | Returns |
 |---|---|
-| `outline` (default for hubs) | Frontmatter summary, headings, active claims, relations with resolved titles |
+| `outline` (default for hubs) | Frontmatter summary, headings, active claims (each with its `inputs`, and `[unverified]` in the text when not `local`), relations with resolved titles |
 | `full` (default for notes) | The body, then the current claims (unverified ones marked) and a count of superseded ones; no metadata |
 | `section` | One heading's content; `claims` gives the claims block |
 | `raw` | The file exactly as on disk (for agents about to edit it, [[05-23-checked-agent-edits\|05 §2.3]]) |

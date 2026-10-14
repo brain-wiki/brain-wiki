@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import glob
 import json
 import os
 from pathlib import Path
@@ -106,7 +107,7 @@ class ClaudeCodeReader:
 
     def find(self, session_id: str) -> SessionInfo | None:
         for root in self.roots():
-            for path in root.glob(f"*/{session_id}.jsonl") if root.is_dir() else []:
+            for path in root.glob(f"*/{glob.escape(session_id)}.jsonl") if root.is_dir() else []:
                 st = path.stat()
                 meta = self._head(path)
                 return SessionInfo(

@@ -18,4 +18,5 @@ bw-part_of:
 | `pre_compact`, `session_end` | nothing; raw capture ran as an async hook so it never ate the host's short session-end budget (1 s in Codex, 1.5 s shared in Claude Code) | — |
 
 Injected text was wrapped in `<brain-wiki-context>` markers so capture and
-the session readers could strip it.
+the session readers could strip it; bringing hooks back means restoring that
+stripping in the session readers.

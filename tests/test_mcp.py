@@ -70,6 +70,9 @@ async def test_tool_list_contract(example: Path):
         assert by_name["brain_consolidate_prepare"].meta["anthropic/maxResultSizeChars"] > 0
         prompts = [p.name for p in (await client.list_prompts()).prompts]
         assert prompts == ["consolidate", "capture", "harvest"]
+        assert all(t.input_schema.get("additionalProperties") is False for t in tools)
+        stale = await client.call_tool("brain_orient", {"session": "s-1"})
+        assert stale.is_error and "session" in stale.content[0].text
 
 
 @pytest.mark.anyio

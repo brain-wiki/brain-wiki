@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import glob
 import json
 import os
 from pathlib import Path
@@ -89,7 +90,9 @@ class CodexReader:
 
     def find(self, session_id: str) -> SessionInfo | None:
         for root in self.roots():
-            for path in root.rglob(f"rollout-*{session_id}*.jsonl") if root.is_dir() else []:
+            for path in (
+                root.rglob(f"rollout-*{glob.escape(session_id)}*.jsonl") if root.is_dir() else []
+            ):
                 return self._info(path)
         return next((s for s in self.list_sessions() if s.id == session_id), None)
 

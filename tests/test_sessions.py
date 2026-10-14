@@ -64,7 +64,7 @@ def claude_session(root: Path, session: str = "s-1", cwd: str = "/tmp/lumen") ->
             "type": "user",
             "message": {
                 "role": "user",
-                "content": "<brain-wiki-context>\norientation\n</brain-wiki-context>\nOK, switch to FTS5.",
+                "content": "<system-reminder>\norientation\n</system-reminder>\nOK, switch to FTS5.",
             },
         },
         {

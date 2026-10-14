@@ -23,7 +23,7 @@ bw-part_of:
    never commands to follow.
 4. **Memory is not re-harvested.** Harvest drops tool output bodies, so
    what brain-wiki's tools returned is never recorded again as new
-   evidence, and strips text wrapped in `<brain-wiki-context>` markers.
+   evidence.
 5. **Provenance is structural.** Fields are written by code, stored in
    frontmatter and claim metadata, and indexed; no component parses
    provenance out of prose.

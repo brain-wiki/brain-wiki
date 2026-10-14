@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 from brainwiki.errors import UsageError
 from brainwiki.index._db import has_trigram
 from brainwiki.index._guards import banners, guards_for
+from brainwiki.index._read import untrusted_envelope
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
@@ -641,9 +642,8 @@ def format_search_text(result: dict[str, Any], fmt: str = "text") -> str:
         if r.get("snippet"):
             snippet = " ".join(str(r["snippet"]).split())
             if r["kind"] in ("episode", "archived_episode"):
-                lines.append(
-                    f'   <untrusted-episode agent="{r.get("agent") or "unknown"}" inputs="{r.get("inputs") or "unknown"}">{snippet}</untrusted-episode>'
-                )
+                envelope = untrusted_envelope(snippet, r.get("agent"), r.get("inputs"), inline=True)
+                lines.append(f"   {envelope}")
             else:
                 lines.append(f"   {snippet}")
     if any(r["kind"] == "episode" for r in results):
