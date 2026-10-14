@@ -13,10 +13,10 @@ bw-part_of:
 ```
  select ──► packet ──► propose ──► validate ──► apply ──► lint ──► record ──► commit
    │          │           │            │           │        │         │          │
- pending   filtered    backend     §7 checks   in-memory  strict   run JSON   git (if any)
- episodes  by backend  (agent or   (schema,    writer,    on all   + pre-     or proposal
- (inbox)   profile     command)    refs, loss, atomic     touched  images     file for
-                                    budgets)   rename     files               review
+ pending   filtered    your agent  §7 checks   in-memory  strict   run JSON   git (if any)
+ episodes  by the      (or ops     (schema,    writer,    on all   + pre-     or proposal
+ (inbox)   agent's     given to    refs, loss, atomic     touched  images     file for
+           profile     --apply)     budgets)   rename     files               review
 ```
 
 Each stage is deterministic except **propose**. A failure before **apply**

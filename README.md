@@ -99,21 +99,37 @@ installed, `brain connect` starts it at once.
 ## How it works
 
 ```text
- agents ──log──► inbox/episodes ──consolidate (validated ops)──► topics/<topic>/*.md
-   ▲  │                                                             ▲           │
-   │  └── edit + brain check (recorded, undoable) ──────────────────┘           │
-   └── list · orient · search · read · neighbors ───────────────────────────────┘
+ agents ──log · capture · harvest──────────────► inbox/episodes/
+  │  ▲                                                │
+  │  │                                                │ consolidate, when you ask:
+  │  │                                                │ your agent proposes ops,
+  │  │                                                │ brain-wiki validates them
+  │  │                                                ▼
+  │  └── orient · search · read · neighbors ─── topics/**/*.md ◄── you, in Obsidian
+  │      (with the notes that supersede or conflict)      ▲
+  └── edit, then brain check ─────────────────────────────┘
 ```
 
+- **Agents write in two ways.** They log what they learn as episodes in
+  `inbox/episodes/`, and capture hooks and `brain harvest` add more from
+  their sessions. To fix a note, such as a person's new role, an agent edits
+  the file and runs `brain check`, which refuses deleted or reworded facts.
+- **Consolidation runs in your agent, when you ask.** brain-wiki packages
+  the pending episodes, your agent proposes small operations (add a claim,
+  supersede one, link two notes, create a note), and brain-wiki validates
+  and applies them, then moves the episodes to `archive/episodes/`.
+  brain-wiki never consolidates on its own.
+- **Every change is a run.** Consolidation and checked edits are locked,
+  validated, logged in `log.md`, committed to git if the brain is a
+  repository, and reversible with `brain undo`.
 - **The brain** is a folder: `topics/` holds curated notes, one folder per
-  topic and nested to any depth, each with an index note; `inbox/` holds raw
-  observations; `rules.md` holds your standing rules; `AGENTS.md` tells
-  file-only agents how to use it.
-- **The index** is a SQLite FTS5 database outside the brain, rebuilt
-  whenever it is missing. The brain stays the only source of truth.
-- **Agents** reach the brain through an MCP server with thirteen tools, a
-  plugin with three skills, and optional hooks for a session briefing and
-  capture.
+  topic and nested to any depth, each with a hub (`index.md`); `rules.md`
+  holds standing rules that only you add; `AGENTS.md` tells agents that only
+  read files how to use the brain.
+- **The index** is a SQLite FTS5 database outside the brain, kept current
+  as files change and rebuilt from the brain when it is missing.
+- **Agents** connect through an MCP server with thirteen tools, a plugin
+  with three skills, and optional hooks for a session briefing and capture.
 
 | Agent | Tools | Instructions | Briefing hook | Capture | Harvest |
 |---|---|---|---|---|---|
