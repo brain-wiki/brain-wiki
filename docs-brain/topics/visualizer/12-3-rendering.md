@@ -30,7 +30,7 @@ bw-part_of:
   the constellation dust ease down at the topic and note levels, where the
   camera sits inside the glow and full strength would merge a cluster into
   one white blob.
-- **Highlight issues** (`H`, formerly health mode) recolors instead of only dimming: each topic nebula
+- **Highlight issues** (`I`, formerly health mode) recolors instead of only dimming: each topic nebula
   and constellation's dust takes a cool → amber → red tint by its flagged
   share, ranked against the other flagged topics so a brain where every
   topic has some flags still shows where the trouble concentrates. Unflagged

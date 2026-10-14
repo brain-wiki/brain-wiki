@@ -48,7 +48,9 @@ decoration for its own sake.
 - **Detail by screen size, like a map.** A topic's stars load and appear
   when its nebula grows past a size threshold on screen, wherever the
   camera is; labels appear the same way, by priority (hubs, then flagged,
-  then high-degree notes), with collision culling. At most 12 topics are
+  then high-degree notes and the stars biggest on screen), with collision
+  culling. Every star in view competes, so zooming into a crowd of short
+  notes labels them as they grow. At most 12 topics are
   revealed at once (nearest first); others fade back to nebulae.
 - **Zooming changes the level, like a map.** Scrolling in on a
   constellation enters it once it fills about a quarter of the screen;
@@ -89,7 +91,7 @@ decoration for its own sake.
   the constellation dust ease down at the topic and note levels, where the
   camera sits inside the glow and full strength would merge a cluster into
   one white blob.
-- **Highlight issues** (`H`, formerly health mode) recolors instead of only dimming: each topic nebula
+- **Highlight issues** (`I`, formerly health mode) recolors instead of only dimming: each topic nebula
   and constellation's dust takes a cool → amber → red tint by its flagged
   share, ranked against the other flagged topics so a brain where every
   topic has some flags still shows where the trouble concentrates. Unflagged
@@ -163,7 +165,7 @@ Glass panels over the scene, keyboard-first:
 | Right panel: details | Always shown, headed **Details**; with nothing selected it says how to fill it. A group: its topics. A topic: description, counts (notes, changed 7d, with issues, last change), issue breakdown, **Open the topic index**, **Sub-topics** and **Folders** (each with its note count, clickable), **Most connected** notes (with link counts; hidden for topics of five notes or fewer), **Linked topics**. A note: where it lives ("In Guide › Sync › …"), type, status and privacy chips, guard banners, **Facts** (superseded struck through, unverified marked), relations by family, **Linked from**, path with copy and an `obsidian://` link |
 | Right: note preview | Clicking a note (a star, a row, a search result, a wikilink) also opens its preview over the inspector: the note rendered like Obsidian's reading view, with properties from the frontmatter, then the body (headings, lists and tasks, tables, code, callouts, highlights, tags, footnotes). Wikilinks open the linked note and move the map with it, in the body and in property values alike (so `bw-part_of` and other relations are links); links the viewer may not see show as unresolved. A claim's `{id: …}` block shows as a tooltip. `Esc` closes it, `P` toggles it |
 | Bottom left | Minimap: top-down galaxy with the current view; click to fly. Beside it, the zoom ladder: Overview, Group, Topic, Note, with the current level and its place named, a marker that creeps toward the next level as you scroll, and earlier levels clickable |
-| Bottom center | Layer dock: one chip per relation family (the legend and the filter; a hidden family shows a hollow swatch and a struck label), health mode, a ⋯ menu (labels, Graphics: Auto, High, Low), and help. Going back to the overview is the breadcrumb's first crumb or `R` |
+| Bottom center | Layer dock: one chip per relation family (the legend and the filter; a hidden family shows a hollow swatch and a struck label), health mode, a ⋯ menu (labels, Graphics: Auto, High, Low), and help. Going back to the overview is the breadcrumb's first crumb or `O` |
 | Overlays | Hover card: for a star its title, topic, status, and flags; for a trail the two notes it connects, read as a sentence ("2026.9.9 supersedes 2026.9.8"), with the trail and both ends lit, and a click goes to the other end; for a flow the two topics and the link count by type. Command palette with server-side search results grouped by topic; `?` shows the shortcuts |
 
 Keys come from one table that drives both the handler and the shortcuts
@@ -172,7 +174,7 @@ Mac, Alt and Ctrl elsewhere):
 
 | Section | Keys | Does |
 |---|---|---|
-| Move | `Alt-↑` / `Alt-↓` (⌥ on a Mac) | Up or down one level along the breadcrumb: note, folder, topic, parent topic, group, overview. Down retraces the way up, else enters the biggest place inside |
+| Move | `Ctrl-↑` / `Ctrl-↓` (⌘ on a Mac) | Up or down one level along the breadcrumb: note, folder, topic, parent topic, group, overview. Down retraces the way up, else enters the biggest place inside |
 | Move | `[` / `]` | Previous or next place under the same parent, in the order down uses |
 | Move | `O` | Overview |
 | Move | `Alt-←` / `Alt-→` (⌘ on a Mac) | The browser's own back and forward |
@@ -181,7 +183,7 @@ Mac, Alt and Ctrl elsewhere):
 | Show | `1`–`6` | Show or hide a kind of line, in the order of the dock |
 | Find | `/` or `Ctrl-K` (⌘ on a Mac) | Search |
 
-Only `Esc` and `Ctrl/⌘-K` work while typing in a field. The sheet keeps
+Only `Esc` and `Ctrl/⌘-K` work while typing in a field, so `Ctrl/⌘-↑` and `-↓` still move the caret there. The sheet keeps
 mouse gestures and how to read the map (star size, brightness, rings,
 pulses) in sections of their own. The URL hash records the focus (`#/c/<id>`,
 `#/t/<slug>`, `#/t/<slug>/n/<id>`), so a view can be reopened. Every place

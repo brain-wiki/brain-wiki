@@ -27,7 +27,9 @@ bw-part_of:
 - **Detail by screen size, like a map.** A topic's stars load and appear
   when its nebula grows past a size threshold on screen, wherever the
   camera is; labels appear the same way, by priority (hubs, then flagged,
-  then high-degree notes), with collision culling. At most 12 topics are
+  then high-degree notes and the stars biggest on screen), with collision
+  culling. Every star in view competes, so zooming into a crowd of short
+  notes labels them as they grow. At most 12 topics are
   revealed at once (nearest first); others fade back to nebulae.
 - **Zooming changes the level, like a map.** Scrolling in on a
   constellation enters it once it fills about a quarter of the screen;
