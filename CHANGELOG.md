@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.0.dev2 (unreleased)
+
 ## 0.1.0.dev1 (2026-10-14)
 
 - `brain setup --guide` prints the setup steps for an AI agent, so any agent

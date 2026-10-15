@@ -1,6 +1,6 @@
 [project]
 name = "brain-wiki"
-version = "0.1.0.dev1"
+version = "0.1.0.dev2"
 description = "A local-first second brain for AI agents, kept as plain Markdown that you own."
 readme = "README.md"
 license = "Apache-2.0"
