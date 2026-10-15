@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.1 (unreleased)
+
 ## 0.1.0 (2026-10-14)
 
 The first release of the 0.1 line. brain-wiki is alpha: expect breaking
