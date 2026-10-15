@@ -1,4 +1,5 @@
-"""Loopback-only, token-guarded, read-only HTTP server for the visualizer (design doc 12 §5, §8)."""
+"""Token-guarded, read-only HTTP server for the visualizer, on loopback unless asked otherwise
+(design doc 12 §5, §8)."""
 
 from __future__ import annotations
 
@@ -6,7 +7,9 @@ import hmac
 import json
 import re
 import secrets
+import socket
 import socketserver
+import sys
 import threading
 import time
 import webbrowser
@@ -26,6 +29,9 @@ if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
 _HOST = "127.0.0.1"
+# Every-interface address -> the loopback address to open locally. Opt-in through --host.
+_WILDCARDS = {"0.0.0.0": "127.0.0.1", "::": "::1"}  # noqa: S104
+_LOOPBACK = ("127.0.0.1", "::1", "localhost")
 _IDLE_SECONDS = 30 * 60
 _MAX_MARKDOWN = 200_000
 # Read at request time, so tests can point the server at a stand-in build.
@@ -65,8 +71,13 @@ _NOTE_FIELDS = (
 class _VizServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, engine: Engine, port: int, topics: list[str] | None = None):
-        super().__init__((_HOST, port), _Handler)
+    def __init__(
+        self, engine: Engine, port: int, topics: list[str] | None = None, host: str = _HOST
+    ):
+        self.host = host
+        if ":" in host:
+            self.address_family = socket.AF_INET6
+        super().__init__((host, port), _Handler)
         self.engine = engine
         self.topics = topics
         self.token = secrets.token_urlsafe(24)
@@ -76,13 +87,25 @@ class _VizServer(ThreadingHTTPServer):
 
     def server_bind(self) -> None:
         # HTTPServer.server_bind names the server with socket.getfqdn, a reverse DNS lookup
-        # that can stall for seconds on macOS; a loopback server never uses the name.
+        # that can stall for seconds on macOS; the server never uses the name.
         socketserver.TCPServer.server_bind(self)
-        self.server_name, self.server_port = _HOST, self.server_address[1]
+        self.server_name, self.server_port = self.host, self.server_address[1]
+
+    def _url(self, host: str) -> str:
+        shown = f"[{host}]" if ":" in host else host
+        return f"http://{shown}:{self.server_address[1]}/?t={self.token}"
 
     @property
     def url(self) -> str:
-        return f"http://{_HOST}:{self.server_address[1]}/?t={self.token}"
+        """The address to open on this machine."""
+        return self._url(_WILDCARDS.get(self.host, self.host))
+
+    @property
+    def remote_url(self) -> str | None:
+        """The address for other machines, when the server listens beyond loopback."""
+        if self.host in _LOOPBACK:
+            return None
+        return self._url(socket.gethostname() if self.host in _WILDCARDS else self.host)
 
     @property
     def cookie_name(self) -> str:
@@ -304,16 +327,30 @@ def _app_dir() -> Path:
     return _APP_DIR
 
 
-def _make_server(engine: Engine, port: int = 0, topics: list[str] | None = None) -> _VizServer:
-    return _VizServer(engine, port, topics)
+def _make_server(
+    engine: Engine, port: int = 0, topics: list[str] | None = None, host: str = _HOST
+) -> _VizServer:
+    return _VizServer(engine, port, topics, host)
 
 
 def serve(
-    engine: Engine, port: int, open_browser: bool, *, topics: list[str] | None = None
+    engine: Engine,
+    port: int,
+    open_browser: bool,
+    *,
+    topics: list[str] | None = None,
+    host: str = _HOST,
 ) -> None:
-    server = _make_server(engine, port, topics)
+    server = _make_server(engine, port, topics, host)
     server.watch_idle()
     print(f"brain viz: {server.url}")
+    if server.remote_url:
+        print(f"From other machines: {server.remote_url}")
+        print(
+            "Anyone who can reach this address and has the link can read the brain, and the "
+            "traffic is not encrypted; on an untrusted network, use an SSH tunnel instead.",
+            file=sys.stderr,
+        )
     # Flush: through a pipe (an agent's shell tool, `| tee`) the token URL would otherwise
     # stay buffered until the server exits, and the map is unreachable without it.
     print("Press Ctrl-C to stop (stops by itself after 30 minutes idle).", flush=True)

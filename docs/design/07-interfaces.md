@@ -123,7 +123,7 @@ brain import [PATH] --from HOST [--dry-run | --apply]     # a host's memory file
 brain connect HOST [--brain NAME] [--scope user|project] [--print] [--force] [--dry-run] [--uninstall]
 brain mcp [--host HOST]                                   # stdio MCP server
 
-brain viz [BRAIN] [--topic T]... [--port P] [--no-open] [--export FILE.html|.json|.graphml]
+brain viz [BRAIN] [--topic T]... [--port P] [--host ADDRESS] [--no-open] [--export FILE.html|.json|.graphml]
 brain obsidian [BRAIN]                                   # open the brain's folder as a vault in Obsidian (12 §11)
 brain bench [SUITE]... [--backends PRESET,...] [--sizes 1k,10k] [--out DIR] [-q]
 brain bench --compare A.json B.json

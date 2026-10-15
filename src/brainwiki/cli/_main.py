@@ -1272,6 +1272,15 @@ def _viz(
     port: Annotated[
         int, typer.Option("--port", help="port to serve on (default: any free port)")
     ] = 0,
+    host: Annotated[
+        str,
+        typer.Option(
+            "--host",
+            metavar="ADDRESS",
+            help="address to listen on: 127.0.0.1 is this machine only, "
+            "0.0.0.0 lets other machines open the map",
+        ),
+    ] = "127.0.0.1",
     no_open: Annotated[
         bool, typer.Option("--no-open", help="print the URL; do not open a browser")
     ] = False,
@@ -1284,7 +1293,14 @@ def _viz(
     json: _Json = False,
 ) -> _Call:
     return _call(
-        ctx, "viz", which=which, topic=topic or None, port=port, no_open=no_open, export=export
+        ctx,
+        "viz",
+        which=which,
+        topic=topic or None,
+        port=port,
+        host=host,
+        no_open=no_open,
+        export=export,
     )
 
 

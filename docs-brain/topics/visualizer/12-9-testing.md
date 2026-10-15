@@ -10,8 +10,9 @@ bw-part_of:
 ---
 # Testing (Visualizer)
 
-- Server: token or cookie required on every route; loopback only; CSP;
-  every API shape on fixture brains.
+- Server: token or cookie required on every route; loopback by default,
+  and `--host` binds beyond it with the token still required; CSP; every
+  API shape on fixture brains.
 - Constellations: deterministic, size limits, single constellation for
   small brains.
 - Export: titles containing HTML and script are inert; CSP hashes match.

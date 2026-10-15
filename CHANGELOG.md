@@ -2,6 +2,11 @@
 
 ## 0.1.1 (unreleased)
 
+- `brain viz --host ADDRESS` serves the map beyond this machine, for example
+  `--host 0.0.0.0` to open it from a laptop while the brain lives on a remote
+  workstation. It prints a URL for other machines and warns that the
+  connection is not encrypted. The default stays 127.0.0.1.
+
 ## 0.1.0 (2026-10-14)
 
 The first release of the 0.1 line. brain-wiki is alpha: expect breaking

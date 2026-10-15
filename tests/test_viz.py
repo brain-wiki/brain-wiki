@@ -550,6 +550,58 @@ def test_server_starts_without_name_lookups(example: Path, monkeypatch: pytest.M
     finally:
         eng.close()
     assert srv.url.startswith("http://127.0.0.1:")
+    assert srv.remote_url is None
+
+
+def test_server_listens_beyond_loopback_on_request(example: Path, app_dir: Path):
+    import socket
+
+    eng = engine_for(example)
+    srv = _make_server(eng, 0, host="0.0.0.0")
+    thread = threading.Thread(target=srv.serve_forever, daemon=True)
+    thread.start()
+    try:
+        assert srv.server_address[0] == "0.0.0.0"
+        assert srv.url.startswith("http://127.0.0.1:")
+        assert srv.remote_url == srv.url.replace("127.0.0.1", socket.gethostname())
+        assert _get(srv, "/api/health")[0] == 403
+        assert _api(srv, "/api/health")
+    finally:
+        srv.shutdown()
+        srv.server_close()
+        thread.join(timeout=5)
+        eng.close()
+
+
+def test_serve_warns_beyond_loopback(
+    example: Path, app_dir: Path, monkeypatch: pytest.MonkeyPatch, capsys
+):
+    monkeypatch.setattr(_VizServer, "serve_forever", lambda self: None)
+    monkeypatch.setattr(_VizServer, "watch_idle", lambda self: None)
+    eng = engine_for(example)
+    try:
+        viz_server.serve(eng, 0, False, host="0.0.0.0")
+        out, err = capsys.readouterr()
+        assert "From other machines: http://" in out
+        assert "SSH tunnel" in err
+        viz_server.serve(eng, 0, False)
+        out, err = capsys.readouterr()
+        assert "From other machines" not in out
+        assert err == ""
+    finally:
+        eng.close()
+
+
+def test_cli_passes_host(example: Path, monkeypatch: pytest.MonkeyPatch):
+    import brainwiki.viz
+    from brainwiki.cli._main import main
+
+    seen: dict[str, object] = {}
+    monkeypatch.setattr(brainwiki.viz, "serve", lambda *args, **kw: seen.update(kw))
+    assert main(["viz", "--brain", str(example), "--no-open"]) == 0
+    assert seen["host"] == "127.0.0.1"
+    assert main(["viz", "--brain", str(example), "--host", "0.0.0.0", "--no-open"]) == 0
+    assert seen["host"] == "0.0.0.0"
 
 
 def _get(

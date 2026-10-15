@@ -24,7 +24,7 @@ def viz(args: Any) -> int:
             return _export(args, engine)
         from brainwiki.viz import serve
 
-        serve(engine, args.port, not args.no_open, topics=args.topic)
+        serve(engine, args.port, not args.no_open, topics=args.topic, host=args.host)
     return 0
 
 

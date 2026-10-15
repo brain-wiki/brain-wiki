@@ -11,7 +11,7 @@ bw-part_of:
 # Architecture
 
 ```
-brain viz ─► local HTTP server on 127.0.0.1:<port> (stdlib, read-only)
+brain viz ─► local HTTP server on 127.0.0.1:<port> (stdlib, read-only; --host to widen)
           ─► opens http://127.0.0.1:<port>/?t=<token>
 browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/<slug>,
              /api/note/<id>, /api/search?q=, /api/health
@@ -21,8 +21,11 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
   server answers with an `HttpOnly; SameSite=Strict` cookie holding it, so
   module chunks and API calls are authorized without putting the token in
   every URL. Every request needs the token (query) or the cookie, compared
-  in constant time. Loopback only; exits after 30 minutes idle or on
-  Ctrl-C.
+  in constant time. Exits after 30 minutes idle or on Ctrl-C.
+- **Address:** loopback by default. `--host ADDRESS` listens elsewhere, so
+  the map can be opened from another machine (`0.0.0.0` or `::` for every
+  interface); the server then prints a second URL with the machine's
+  hostname and warns on stderr (§8).
 - **Data:** the server builds the graph once (§6), caches it, and rebuilds
   it only when an index scan reports changes. World, health, and search
   requests check for changes; topic requests serve the cached graph, so a
