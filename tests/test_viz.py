@@ -867,9 +867,9 @@ def test_viz_takes_a_brain_by_name(brain_dir: Path, tmp_path: Path):
 
 
 def _vault_list(vaults: dict[str, Path]) -> None:
-    listing = Path.home() / ".config" / "obsidian" / "obsidian.json"
-    if sys.platform == "darwin":
-        listing = Path.home() / "Library" / "Application Support" / "obsidian" / "obsidian.json"
+    from brainwiki.obsidian import _vault_lists
+
+    listing = _vault_lists()[0]  # where the code reads it, whatever XDG_CONFIG_HOME says
     listing.parent.mkdir(parents=True, exist_ok=True)
     entries = {vid: {"path": str(path), "ts": 1} for vid, path in vaults.items()}
     listing.write_text(json.dumps({"vaults": entries}))
