@@ -9,22 +9,23 @@ bw-part_of:
 ---
 # Set up from your agent (recommended)
 
-Install the plugin in your agent (the README lists the command for each),
-then ask it:
+Install the command, then paste one sentence into your agent:
 
-> Set up brain-wiki.
+```sh
+uv tool install brain-wiki     # or: pipx install brain-wiki
+```
 
-The `brain-setup` skill installs the `brain` command if needed, then walks
-you through the choices below, explaining each and showing every change
-before it makes it. You can rerun it at any time; it offers only what is
-missing.
+> Set up brain-wiki by running `brain setup --guide` and following it.
 
-Without the plugin, any agent that can run commands can do the same:
+`brain setup --guide` prints the setup steps for the agent, which walks you
+through the choices below, explaining each and showing every change before
+it makes it. Connecting your agent gives it brain-wiki's tools, and its
+skills where the app takes plugins; they load in a new session (details per
+app in [[user-agents|Agents]]). You can rerun setup at any time; it offers only
+what is missing.
 
-> Install brain-wiki with `uv tool install brain-wiki`, then run
-> `brain setup --guide` and follow it.
-
-`brain setup --guide` prints the skill's steps for the agent to follow.
+If the plugin is already installed from your agent's marketplace
+([[user-agents|Agents]]), just ask: *Set up brain-wiki.*
 
 | Choice | What to know |
 |---|---|

@@ -29,20 +29,26 @@ server or API keys, and opens in Obsidian.
 
 Needs Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
-**1. Install and set up.** Pick the row for where you work:
+**1. Install.**
 
-| Where | Do this |
-|---|---|
-| Claude Code | `/plugin marketplace add brain-wiki/brain-wiki`, `/plugin install brain-wiki@brain-wiki`, then ask: *Set up brain-wiki.* |
-| Codex / ChatGPT desktop | `codex plugin marketplace add brain-wiki/brain-wiki`, enable brain-wiki, then ask: *Set up brain-wiki.* |
-| Antigravity | `agy plugin install https://github.com/brain-wiki/brain-wiki`, then ask: *Set up brain-wiki.* |
-| Any other agent | Ask: *Install brain-wiki with `uv tool install brain-wiki`, then run `brain setup --guide` and follow it.* |
-| Terminal | `uv tool install brain-wiki`, then `brain setup` |
+```sh
+uv tool install brain-wiki
+```
 
-Setup explains each choice (where the brain lives, which agents to connect,
-what each may do) and shows every change before making it.
+**2. Set it up.**
 
-**2. Use it.**
+- **Recommended:** paste this into your agent (Claude Code, Codex,
+  Antigravity, Cursor, OpenClaw, ...):
+
+  > Set up brain-wiki by running `brain setup --guide` and following it.
+
+- **Or, in a terminal:** run `brain setup`, which asks the same questions
+  step by step.
+
+Either way, setup explains each choice (where the brain lives, which agents to
+connect, what each may do) and shows every change before making it.
+
+**3. Use it.**
 
 > Remember that Lumen keeps attachments next to their notes.
 
@@ -66,7 +72,7 @@ writing, and `brain undo` reverses any change.
 
 ## Status
 
-Alpha: expect breaking changes before 0.1.0. Known limits:
+Alpha: expect breaking changes before 1.0. Known limits:
 
 - No access scopes inside a brain: every connected agent reads all of it. Keep work and personal notes in separate brains.
 - Maintenance runs when you ask; there is no scheduler.
