@@ -38,7 +38,8 @@ for your shell.
 | `brain origin EPISODE [--turns A-B]` | Show an episode's original conversation; EPISODE is an id or a path (in the brain, or absolute); A-B must lie within the session |
 | `brain connect HOST [--scope user\|project] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent; each scope is connected and uninstalled on its own |
 | `brain import PATH (--overlay [--phase N] \| --into BRAIN \| --to-episodes [--agent HOST] [--untrusted]) [--topic T] [--apply]`, `brain import --from HOST [PATH] [--topic T] [--apply]` | Import; without `--apply`, a dry run |
-| `brain viz [--topic T] [--port P] [--no-open] [--export FILE.html\|.json\|.graphml]` | The brain map |
+| `brain viz [BRAIN] [--topic T] [--port P] [--no-open] [--export FILE.html\|.json\|.graphml]` | The brain map: of BRAIN, the only brain, or the one you pick |
+| `brain obsidian [BRAIN]` | Open the brain's folder as a vault in Obsidian: BRAIN, the only brain, or the one you pick |
 | `brain bench [SUITE…] [--sizes 1k,10k] [--backends …] [--out DIR] [--compare A B] [-q]` | Evaluation bench (default suites: retrieval, lint, perf); `-q` prints a summary, failures, and regressions only |
 | `brain mcp [--host HOST]` | The MCP server, started by agent hosts |
 

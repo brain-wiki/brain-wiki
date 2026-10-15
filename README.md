@@ -48,15 +48,19 @@ uv tool install brain-wiki
 Either way, setup explains each choice (where the brain lives, which agents to
 connect, what each may do) and shows every change before making it.
 
-**3. Use it.**
+**3. Use it in your agent.**
 
-> Remember that Lumen keeps attachments next to their notes.
+> Remember that I prefer pnpm over npm, and that our team ships on Thursdays.
 
-> What did we decide about attachments?
+> What did we decide about the database migration last week?
+
+> Maya moved to the platform team. Update her note.
 
 > Consolidate my brain.
 
-In a terminal, `brain viz` opens a local 3D map of your notes.
+**4. See your brain.** `brain viz` opens a local 3D map of your notes, and
+`brain obsidian` opens the brain's folder as a vault in Obsidian. With several
+brains, both ask which one, or name it: `brain viz work`.
 
 ## How it works
 

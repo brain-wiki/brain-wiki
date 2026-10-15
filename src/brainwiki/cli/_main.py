@@ -50,6 +50,7 @@ _HANDLERS: dict[str, str] = {
     "mcp": "brainwiki.cli._cmd_hosts:mcp",
     "import": "brainwiki.cli._cmd_import:import_",
     "viz": "brainwiki.cli._cmd_viz:viz",
+    "obsidian": "brainwiki.cli._cmd_viz:obsidian",
     "bench": "brainwiki.cli._cmd_bench:bench",
 }
 
@@ -1255,9 +1256,16 @@ def _import(
     )
 
 
+_Which = Annotated[
+    str | None,
+    typer.Argument(metavar="BRAIN", help="the brain to open (default: the only one, or ask which)"),
+]
+
+
 @_app.command("viz", help="open the 3D brain map")
 def _viz(
     ctx: typer.Context,
+    which: _Which = None,
     topic: Annotated[
         list[str] | None, typer.Option("--topic", help="map only this topic (repeatable)")
     ] = None,
@@ -1275,7 +1283,20 @@ def _viz(
     as_host: _As = None,
     json: _Json = False,
 ) -> _Call:
-    return _call(ctx, "viz", topic=topic or None, port=port, no_open=no_open, export=export)
+    return _call(
+        ctx, "viz", which=which, topic=topic or None, port=port, no_open=no_open, export=export
+    )
+
+
+@_app.command("obsidian", help="open the brain's folder as a vault in Obsidian")
+def _obsidian(
+    ctx: typer.Context,
+    which: _Which = None,
+    brain: _Brain = None,
+    as_host: _As = None,
+    json: _Json = False,
+) -> _Call:
+    return _call(ctx, "obsidian", which=which)
 
 
 @_app.command("bench", help="run the evaluation bench")

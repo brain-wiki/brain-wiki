@@ -7,6 +7,7 @@ import importlib.util
 import json
 import re
 import shutil
+import sys
 import threading
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
@@ -805,3 +806,137 @@ def test_cli_export(
     assert html.read_text(encoding="utf-8").startswith("<!doctype html>")
     assert 'id="brain-data"' in html.read_text(encoding="utf-8")
     assert main(["viz", "--brain", str(example), "--export", str(tmp_path / "x.txt")]) == 2
+
+
+class _Terminal:
+    """stdin as a person at a terminal typing `answers`."""
+
+    def __init__(self, *answers: str) -> None:
+        self.lines = iter(answers)
+
+    def isatty(self) -> bool:
+        return True
+
+    def readline(self) -> str:
+        return next(self.lines) + "\n"
+
+
+def _two_brains(brain_dir: Path, tmp_path: Path) -> None:
+    from brainwiki.config._user import register_brain
+    from brainwiki.lifecycle import init_brain
+
+    register_brain("work", init_brain(tmp_path / "brains" / "work", "work"))
+
+
+@pytest.mark.parametrize(("typed", "picked"), [("2", "work"), ("work", "work"), ("", "test")])
+def test_viz_and_obsidian_ask_which_brain_when_there_are_several(
+    brain_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, typed: str, picked: str
+):
+    from types import SimpleNamespace
+
+    from brainwiki.cli._choose import chosen_brain
+
+    _two_brains(brain_dir, tmp_path)
+    monkeypatch.setattr(sys, "stdin", _Terminal(typed))
+    assert chosen_brain(SimpleNamespace(brain=None, json=False)) == picked
+
+
+def test_no_brain_question_without_a_terminal_or_with_brain(
+    brain_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    from types import SimpleNamespace
+
+    from brainwiki.cli._choose import chosen_brain
+
+    assert chosen_brain(SimpleNamespace(brain=None, json=False)) is None  # one brain: no question
+    _two_brains(brain_dir, tmp_path)
+    assert chosen_brain(SimpleNamespace(brain=None, json=False)) is None  # pytest's stdin
+    monkeypatch.setattr(sys, "stdin", _Terminal("1"))
+    assert chosen_brain(SimpleNamespace(which="work", brain=None, json=False)) == "work"
+    assert chosen_brain(SimpleNamespace(brain="work", json=False)) == "work"
+
+
+def test_viz_takes_a_brain_by_name(brain_dir: Path, tmp_path: Path):
+    from brainwiki.cli._main import main
+
+    _two_brains(brain_dir, tmp_path)
+    out = tmp_path / "map.json"
+    assert main(["viz", "work", "--export", str(out)]) == 0
+    assert json.loads(out.read_text())["brain"] == "work"
+    assert main(["viz", "work", "--brain", "test", "--export", str(out)]) == 2
+
+
+def _vault_list(vaults: dict[str, Path]) -> None:
+    listing = Path.home() / ".config" / "obsidian" / "obsidian.json"
+    if sys.platform == "darwin":
+        listing = Path.home() / "Library" / "Application Support" / "obsidian" / "obsidian.json"
+    listing.parent.mkdir(parents=True, exist_ok=True)
+    entries = {vid: {"path": str(path), "ts": 1} for vid, path in vaults.items()}
+    listing.write_text(json.dumps({"vaults": entries}))
+
+
+@pytest.fixture
+def fake_tools(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Fake `obsidian`, `xdg-open` and `open` on PATH that log their arguments."""
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    log = tmp_path / "calls.log"
+    for name in ("obsidian", "xdg-open", "open"):
+        tool = bindir / name
+        tool.write_text(f'#!/bin/sh\necho "{name} $*" >> "{log}"\n')
+        tool.chmod(0o755)
+    monkeypatch.setenv("PATH", str(bindir))
+    return log
+
+
+def _calls(log: Path) -> list[str]:
+    return log.read_text().splitlines() if log.exists() else []
+
+
+def test_obsidian_opens_a_brain_obsidian_knows(brain_dir: Path, tmp_path: Path, fake_tools: Path):
+    from brainwiki.cli._main import main
+
+    _two_brains(brain_dir, tmp_path)
+    _vault_list({"abc123": brain_dir, "w1": tmp_path / "brains" / "work"})
+    assert main(["obsidian", "test"]) == 0
+    assert main(["obsidian", "work"]) == 0
+    calls = _calls(fake_tools)
+    assert calls[0].endswith("obsidian://open?vault=abc123")
+    assert calls[1].endswith("obsidian://open?vault=w1")
+
+
+def test_obsidian_opens_an_unknown_brain_folder_as_a_new_vault(
+    brain_dir: Path, fake_tools: Path, capsys
+):
+    from brainwiki.cli._main import main
+
+    assert main(["obsidian"]) == 0
+    (call,) = _calls(fake_tools)
+    assert call.startswith("obsidian eval code=window.electron.ipcRenderer.sendSync('vault-open', ")
+    assert json.dumps(str(brain_dir.resolve())) in call
+    assert "as a vault" in capsys.readouterr().out
+
+
+def test_obsidian_without_its_cli_opens_the_vault_manager(
+    brain_dir: Path, fake_tools: Path, capsys
+):
+    from brainwiki.cli._main import main
+
+    (fake_tools.parent / "bin" / "obsidian").unlink()
+    assert main(["obsidian"]) == 0
+    assert _calls(fake_tools)[0].endswith("obsidian://choose-vault")
+    assert "Open folder as vault" in capsys.readouterr().out
+
+
+def test_obsidian_explains_when_nothing_can_open_it(
+    brain_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+):
+    from brainwiki.cli._main import main
+
+    monkeypatch.setenv("PATH", str(tmp_path / "empty"))
+    assert main(["obsidian"]) == 3  # unknown folder, no Obsidian CLI, no way to open a link
+    assert "Obsidian was not found" in capsys.readouterr().err
+    _vault_list({"abc123": brain_dir})
+    assert main(["obsidian"]) == 0  # a known vault: the link is printed instead
+    assert "obsidian://open?vault=abc123" in capsys.readouterr().out

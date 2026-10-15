@@ -2,6 +2,13 @@
 
 ## 0.1.0.dev2 (unreleased)
 
+- `brain obsidian [BRAIN]` opens the brain's folder as a vault in Obsidian,
+  adding it as a new vault the first time through the Obsidian CLI (or, without
+  the CLI, opening the vault manager with the step to take).
+- `brain viz [BRAIN]` and `brain obsidian [BRAIN]` open the named brain, the
+  only brain, or with several, the one you pick from a list (the usual brain is
+  the default).
+
 ## 0.1.0.dev1 (2026-10-14)
 
 - `brain setup --guide` prints the setup steps for an AI agent, so any agent

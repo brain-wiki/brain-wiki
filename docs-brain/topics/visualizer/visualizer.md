@@ -21,3 +21,4 @@ Generated from `docs/design/12-visualizer.md`.
 - [[12-8-safety]]: Safety (Visualizer)
 - [[12-9-testing]]: Testing (Visualizer)
 - [[12-10-alternatives-considered]]: Alternatives considered (Visualizer)
+- [[12-11-choosing-a-brain-and-opening-it-in-obsidian]]: Choosing a brain, and opening it in Obsidian

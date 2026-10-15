@@ -1,10 +1,11 @@
-"""viz: open the brain map, or export it."""
+"""viz and obsidian: look at a brain, as a map or in Obsidian."""
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
+from brainwiki.cli._choose import chosen_brain
 from brainwiki.cli._output import emit
 from brainwiki.engine import open_engine
 from brainwiki.errors import UsageError
@@ -13,7 +14,7 @@ _FORMATS = {".html": "html", ".htm": "html", ".json": "json", ".graphml": "graph
 
 
 def viz(args: Any) -> int:
-    with open_engine(args.brain, host=args.as_host) as engine:
+    with open_engine(chosen_brain(args), host=args.as_host) as engine:
         if args.topic:  # an unknown topic is an error, not an empty map
             from brainwiki.index import known_topics
 
@@ -59,4 +60,14 @@ def _export(args: Any, engine: Any) -> int:
         f"profile {graph['profile']})."
     )
     emit(args, data, text)
+    return 0
+
+
+def obsidian(args: Any) -> int:
+    from brainwiki.obsidian import open_in_obsidian
+
+    with open_engine(chosen_brain(args), host=args.as_host) as engine:
+        root, name = engine.brain.root, engine.brain.display_name
+    message = open_in_obsidian(root)
+    emit(args, {"brain": name, "path": str(root)}, message)
     return 0
