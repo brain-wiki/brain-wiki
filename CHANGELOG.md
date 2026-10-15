@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 (unreleased)
+## 0.1.1 (2026-10-14)
 
 - `brain viz --host ADDRESS` serves the map beyond this machine, for example
   `--host 0.0.0.0` to open it from a laptop while the brain lives on a remote
