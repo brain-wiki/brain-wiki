@@ -6,6 +6,12 @@
   that can run commands can set brain-wiki up from one prompt, without the
   plugin. Without a terminal, `brain setup` points to it, and an agent that
   finds no brain is told to use the `brain-setup` skill or the guide.
+- Every setup step is now a command, so the guide never edits config files:
+  `brain agents [list | grant | revoke]` changes what an app may do as an
+  undoable run, and `brain harvest enable | disable | route` configures
+  harvest. A refusal names the `brain agents grant` command that allows it.
+- `brain setup` also asks what each connected app may do, grants the
+  `harvest` ability with harvest, and ends with what to try next.
 
 ## 0.1.0.dev0 (2026-10-14)
 

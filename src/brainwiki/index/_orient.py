@@ -356,7 +356,9 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
     }
 
 
-def agents_block(engine: Engine, extra: list[dict[str, Any]] | None = None) -> str:
+def agents_block(
+    engine: Engine, extra: list[dict[str, Any]] | None = None, *, edit: bool | None = None
+) -> str:
     """The generated block of the brain's AGENTS.md.
 
     Topics are listed alphabetically so the block only changes when topics do; when the file
@@ -369,7 +371,7 @@ def agents_block(engine: Engine, extra: list[dict[str, Any]] | None = None) -> s
     known = {r["slug"] for r in rows}
     rows = [r for r in extra or [] if r["slug"] not in known and not r.get("parent")] + rows
     name = engine.brain.display_name
-    can_edit = engine.manifest.profile("default").can("edit")
+    can_edit = engine.manifest.profile("default").can("edit") if edit is None else edit
 
     def render(selected: list[dict[str, Any]], hidden: int) -> str:
         table = [

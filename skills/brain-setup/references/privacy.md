@@ -19,7 +19,8 @@ brain brains default personal
 ```
 
 Choose which agents may use which brain in the user config
-(`~/.config/brain-wiki/config.toml`):
+(`~/.config/brain-wiki/config.toml`). There is no command for this yet, so
+show the diff before writing the file:
 
 ```toml
 [hosts.claude-code]
@@ -38,7 +39,17 @@ To keep notes from an agent, put them in a brain that agent may not use.
 ## 2. What each agent may do (profiles)
 
 Profiles live in the brain's `brain.toml`, one table per agent app, plus a
-`default` table for any app without its own:
+`default` table for any app without its own. Change them with commands, which
+show the diff with `--dry-run` and record each change as a run that
+`brain undo` reverses:
+
+```bash
+brain agents                                        # what each app may do
+brain agents grant claude-code consolidate propose_rules
+brain agents revoke claude-code propose_rules
+```
+
+The result in `brain.toml`:
 
 ```toml
 [agents.default]

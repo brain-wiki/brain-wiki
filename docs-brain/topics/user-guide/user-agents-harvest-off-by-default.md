@@ -10,17 +10,10 @@ bw-part_of:
 # Harvest (off by default)
 
 Harvest reads your agents' own session history and turns finished sessions
-into episodes. It is the way to give a new brain real history. Turn it on in
-the user config, `~/.config/brain-wiki/config.toml`:
-
-```toml
-[harvest]
-enabled = true
-hosts = ["claude-code", "codex", "antigravity"]
-distill = "claude-code"          # or codex, antigravity, cursor, ollama, raw
-```
+into episodes. It is the way to give a new brain real history.
 
 ```sh
+brain harvest enable claude-code codex   # or disable; also: antigravity
 brain harvest --status           # per host: on or off, sessions not yet harvested
 brain harvest                    # dry run: sessions, target brain, token estimate
 brain harvest --apply            # distill with the preset above (--distill to override)
@@ -28,7 +21,10 @@ brain harvest --apply --raw      # no model: excerpts that consolidation distill
 ```
 
 Inside an agent, "harvest my recent sessions" runs the same steps with the
-agent itself doing the distilling (the host's profile needs `harvest`).
+agent itself doing the distilling (`brain agents grant claude-code harvest`
+first). The model the command line distills with is `distill` in
+`[harvest]` of the user config, `~/.config/brain-wiki/config.toml`
+(`claude-code`, `codex`, `antigravity`, `cursor`, `ollama`, or `raw`).
 
 Each session goes to the brain of the folder it ran in, checked in this
 order:
@@ -41,9 +37,9 @@ order:
 A session that matches none of these is skipped, never filed into your
 default brain. With one brain, route everything under your home folder to it:
 
-```toml
-[harvest.routes]
-"~/**" = "personal"
+```sh
+brain harvest route "~/**" personal
+brain harvest route "~/work/**" work     # more specific patterns are checked first
 ```
 
 Sessions brain-wiki ran itself, subagent sessions, and sessions still in

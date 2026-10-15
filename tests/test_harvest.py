@@ -172,3 +172,20 @@ def test_origin_window(setup: Path, brain_dir: Path):
     assert "p95 is 4 ms" in result["window"][1]["text"]
     with Engine(open_brain(brain_dir), host="codex") as engine, pytest.raises(Forbidden):
         origin_window(engine, rel)
+
+
+def test_harvest_is_configured_with_commands(brain_dir: Path):
+    from brainwiki.config._user import load_user_config
+
+    assert main(["harvest", "enable", "claude-code", "codex"]) == 0
+    assert main(["harvest", "enable", "cursor"]) == 2  # no session reader yet
+    assert main(["harvest", "disable", "codex"]) == 0
+    user = load_user_config()
+    assert user.harvest_enabled("claude-code") and not user.harvest_enabled("codex")
+    assert main(["harvest", "route", "~/**", "test"]) == 0
+    assert main(["harvest", "route", "~/work/**", "test"]) == 0
+    assert main(["harvest", "route", "~/x/**", "missing"]) == 3
+    # The first matching route wins, so the more specific pattern is kept first.
+    assert list(load_user_config().harvest["routes"]) == ["~/work/**", "~/**"]
+    assert main(["harvest", "disable", "claude-code"]) == 0
+    assert not load_user_config().harvest["enabled"]

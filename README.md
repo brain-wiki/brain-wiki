@@ -100,12 +100,11 @@ the agents on this machine), `brain init ~/brains/personal --name personal
 cursor; try `--dry-run` first).
 
 Keep brains outside your code repositories. Agents may log and correct
-notes by default; to let one consolidate or propose rules, give it a profile
-in the brain's `brain.toml`:
+notes by default; `brain setup` asks whether each app may also consolidate
+and propose rules, or grant it yourself:
 
-```toml
-[agents.claude-code]
-write = ["episodes", "edit", "consolidate", "propose_rules"]
+```sh
+brain agents grant claude-code consolidate propose_rules
 ```
 
 Marketplace installs start the server with `uvx`. With the command

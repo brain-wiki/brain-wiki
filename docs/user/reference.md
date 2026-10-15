@@ -11,6 +11,7 @@ lists each command's options.
 | `brain version` | Print the version |
 | `brain init [PATH] [--name N] [--git] [--no-register]` | Create a brain and register it |
 | `brain brains [list \| add NAME PATH \| remove NAME [--purge-state] \| rename OLD NEW \| default NAME]` | Manage registered brains |
+| `brain agents [list \| grant HOST CAP… \| revoke HOST CAP…] [--dry-run]` | What each agent app may do in a brain, and changing it (undoable) |
 | `brain doctor` | Check configuration, brains, SQLite, and agents |
 | `brain setup [--guide]` | Set up step by step in the terminal; `--guide` prints the steps for an AI agent to walk you through |
 | `brain list` | Brains you (or `--as HOST`) may use, with what each holds |
@@ -32,6 +33,7 @@ lists each command's options.
 | `brain report` | Regenerate `reports/` |
 | `brain mv SRC DST [--dry-run]` | Move a note, or a topic folder with its notes, and rewrite links |
 | `brain harvest [--from HOST] [--since 30d] [--project P] [--raw \| --distill PRESET] [--apply [--dry-run]] [--status]` | Harvest sessions; without `--apply`, list them |
+| `brain harvest enable HOST… \| disable HOST… \| route PATTERN BRAIN` | Turn harvest on or off per app; send sessions from matching folders to a brain |
 | `brain origin EPISODE [--turns A-B]` | Show an episode's original conversation |
 | `brain connect HOST [--scope user\|project] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent |
 | `brain import PATH (--overlay [--phase N] \| --into BRAIN \| --to-episodes [--agent HOST] [--untrusted]) [--topic T] [--apply]`, `brain import --from HOST [PATH] [--topic T] [--apply]` | Import; without `--apply`, a dry run |

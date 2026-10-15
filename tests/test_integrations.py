@@ -280,7 +280,7 @@ def test_setup_without_a_terminal_points_an_agent_to_the_guide(
     assert "brain setup --guide" in capsys.readouterr().out
 
 
-def test_setup_wizard_offers_a_harvest_route_for_a_single_brain(
+def test_setup_wizard_grants_permissions_and_harvest_through_the_shared_commands(
     brain_dir: Path, monkeypatch: pytest.MonkeyPatch
 ):
     import brainwiki.doctor
@@ -296,11 +296,50 @@ def test_setup_wizard_offers_a_harvest_route_for_a_single_brain(
             "hosts": [host],
         },
     )
-    answers = iter(["y", "y"])  # harvest claude-code; route ~ to the brain
-    assert run_wizard(None, ask=lambda _: next(answers, "n"), out=lambda _: None) == 0
+    # consolidate: yes; propose rules: no; apply: yes; harvest: yes; apply grant: yes; route: yes
+    answers = iter(["y", "n", "", "y", "", "y"])
+    output: list[str] = []
+    assert run_wizard(None, ask=lambda _: next(answers, "n"), out=output.append) == 0
     user = load_user_config()
     assert user.harvest_enabled("claude-code")
     assert user.harvest["routes"] == {"~/**": "test"}
+    profile = open_brain(brain_dir).manifest.profile("claude-code")
+    assert profile.write == ["episodes", "edit", "consolidate", "harvest"]
+    assert any('ask claude-code "Consolidate my brain."' in line for line in output)
+
+
+def test_agents_grant_and_revoke_are_undoable_runs(brain_dir: Path, capsys):
+    before = (brain_dir / "brain.toml").read_text()
+    assert main(["agents", "grant", "claude-code", "consolidate", "--dry-run"]) == 0
+    assert "+[agents.claude-code]" in capsys.readouterr().out
+    assert (brain_dir / "brain.toml").read_text() == before
+    assert main(["agents", "grant", "claude-code", "consolidate"]) == 0
+    assert main(["agents", "revoke", "claude-code", "edit"]) == 0
+    assert open_brain(brain_dir).manifest.profile("claude-code").write == [
+        "episodes",
+        "consolidate",
+    ]
+    assert open_brain(brain_dir).manifest.profile("codex").write == ["episodes", "edit"]
+    assert main(["undo"]) == 0
+    assert "edit" in open_brain(brain_dir).manifest.profile("claude-code").write
+    assert main(["agents", "grant", "claude-code", "fly"]) == 2
+    capsys.readouterr()
+    assert main(["agents"]) == 0
+    assert "claude-code" in capsys.readouterr().out
+
+
+def test_revoking_edit_from_default_rewrites_the_agents_md_block(brain_dir: Path):
+    assert "To correct a note" in (brain_dir / "AGENTS.md").read_text()
+    assert main(["agents", "revoke", "default", "edit"]) == 0
+    assert "To correct a note" not in (brain_dir / "AGENTS.md").read_text()
+    assert main(["lint"]) == 0
+
+
+def test_a_refusal_names_the_command_that_allows_it():
+    from brainwiki.config import Profile
+
+    text = Profile(name="default").refusal("claude-code", "consolidate", "consolidate")
+    assert "brain agents grant claude-code consolidate" in text
 
 
 def test_reconnecting_keeps_user_config_and_cleans_old_blocks(

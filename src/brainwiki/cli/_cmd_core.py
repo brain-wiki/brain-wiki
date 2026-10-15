@@ -1,4 +1,4 @@
-"""version, init, list, brains, doctor, setup."""
+"""version, init, list, brains, agents, doctor, setup."""
 
 from __future__ import annotations
 
@@ -124,6 +124,64 @@ def brains(args: Any) -> int:
         emit(args, {"default": rest[0]}, f"Default brain is now {rest[0]!r}")
         return 0
     raise UsageError(f"unknown action {action}")
+
+
+def agents(args: Any) -> int:
+    from brainwiki.engine import open_engine
+    from brainwiki.write import profile_run
+
+    with open_engine(args.brain) as engine:
+        name = engine.brain.display_name
+        manifest = engine.brain.manifest
+        if args.action == "list":
+            hosts = ["default", *[h for h in manifest.agents if h != "default"]]
+            rows = {
+                h: {
+                    "write": manifest.profile(h).write,
+                    "read_origin": manifest.profile(h).read_origin,
+                }
+                for h in hosts
+            }
+            width = max(len(h) for h in hosts)
+            lines = [
+                f"  {h:<{width}}  {', '.join(r['write'])}"
+                + ("; reads origins" if r["read_origin"] else "")
+                for h, r in rows.items()
+            ]
+            text = (
+                f"{name}:\n"
+                + "\n".join(lines)
+                + (
+                    "\nAgents without their own profile use default. "
+                    "Change one with `brain agents grant HOST CAPABILITY...`."
+                )
+            )
+            emit(args, {"brain": name, "profiles": rows}, text)
+            return 0
+        if len(args.args) < 2:
+            raise UsageError(f"brain agents {args.action} HOST CAPABILITY...")
+        host, caps = args.args[0], args.args[1:]
+        change = {host: caps}
+        run = profile_run(
+            engine,
+            grants=change if args.action == "grant" else None,
+            revokes=change if args.action == "revoke" else None,
+        )
+        if not run.entries:
+            already = "may already" if args.action == "grant" else "may not"
+            emit(args, {"changed": False}, f"No change: {host} {already} do that.")
+            return 0
+        if args.dry_run:
+            emit(args, {"changed": False, "diff": run.diff()}, run.diff())
+            return 0
+        record = run.commit(log_lines=[f"- {args.action} {host}: {', '.join(caps)}"])
+    now = open_brain(engine.brain.root).manifest.profile(host).write
+    emit(
+        args,
+        record.to_json() | {"host": host, "write": now},
+        f"{host} may now: {', '.join(now)} (undo: brain undo {record.run})",
+    )
+    return 0
 
 
 def doctor(args: Any) -> int:

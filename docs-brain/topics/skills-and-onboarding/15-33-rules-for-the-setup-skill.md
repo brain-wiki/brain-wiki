@@ -10,6 +10,13 @@ bw-part_of:
 ---
 # Rules for the setup skill
 
+- **Every step is a subcommand.** `brain setup` is only a convenience for
+  terminal users: each change it makes is a `brain` subcommand (`init`,
+  `import --overlay`, `connect`, `agents grant`, `harvest enable|route`),
+  calling the same code, so an agent following the guide can do all of it.
+  The guide changes settings only through those commands, never by editing
+  `brain.toml` or the user config. One gap remains: which brains a host may
+  use (`[hosts.<id>] brains`) has no command yet.
 - **One decision at a time, batched sensibly.** Ask the few questions a step
   needs together, then act; never a wall of questions up front.
 - **Dry run before any write outside the brain** (host configs), and show

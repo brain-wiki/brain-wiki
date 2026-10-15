@@ -13,6 +13,7 @@ bw-part_of:
 ```
 brain init [PATH] [--name NAME] [--git] [--no-register]
 brain brains [list | add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME]
+brain agents [list | grant HOST CAP... | revoke HOST CAP...] [--dry-run]   # profiles (§1)
 brain doctor [--json]
 brain setup [--guide]                                    # onboarding wizard; --guide: the steps for an agent (15 §3)
 
@@ -41,6 +42,7 @@ brain consolidate --prepare [--topic T] [--max-episodes N] [--out PACKET.json]
 brain consolidate --apply OPS.json --run RUN [--dry-run]
 brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--apply [--dry-run]]
 brain harvest --status                                   # per host: enabled, sessions left to harvest
+brain harvest enable HOST... | disable HOST... | route PATTERN BRAIN   # user config (05 §2.2)
 brain origin EPISODE [--turns A-B]
 brain review list | show RUN | accept RUN | reject RUN
 brain runs list | show RUN

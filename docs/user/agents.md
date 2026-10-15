@@ -97,31 +97,26 @@ Each agent acts with a **profile** in `brain.toml`. Every agent reads the
 whole brain; by default it may log episodes and correct notes it checks with
 `brain check`. Grant more per host:
 
-```toml
-[agents.claude-code]
-write = ["episodes", "edit", "propose_rules", "consolidate", "harvest"]
-read_origin = true
+```sh
+brain agents                                       # what each app may do
+brain agents grant claude-code consolidate propose_rules --dry-run
+brain agents grant claude-code consolidate propose_rules
+brain agents revoke claude-code propose_rules
 ```
 
-When an agent asks for something its profile does not allow, brain-wiki
-refuses and names the `[agents.<host>]` line to add. The capabilities, and
+Each change is a run that `brain undo` reverses. When an agent asks for
+something its profile does not allow, brain-wiki refuses and names the
+`brain agents grant` command that allows it. The capabilities, and
 how to limit which brains an agent may use, are in
 [Privacy and safety](privacy.md).
 
 ## Harvest (off by default)
 
 Harvest reads your agents' own session history and turns finished sessions
-into episodes. It is the way to give a new brain real history. Turn it on in
-the user config, `~/.config/brain-wiki/config.toml`:
-
-```toml
-[harvest]
-enabled = true
-hosts = ["claude-code", "codex", "antigravity"]
-distill = "claude-code"          # or codex, antigravity, cursor, ollama, raw
-```
+into episodes. It is the way to give a new brain real history.
 
 ```sh
+brain harvest enable claude-code codex   # or disable; also: antigravity
 brain harvest --status           # per host: on or off, sessions not yet harvested
 brain harvest                    # dry run: sessions, target brain, token estimate
 brain harvest --apply            # distill with the preset above (--distill to override)
@@ -129,7 +124,10 @@ brain harvest --apply --raw      # no model: excerpts that consolidation distill
 ```
 
 Inside an agent, "harvest my recent sessions" runs the same steps with the
-agent itself doing the distilling (the host's profile needs `harvest`).
+agent itself doing the distilling (`brain agents grant claude-code harvest`
+first). The model the command line distills with is `distill` in
+`[harvest]` of the user config, `~/.config/brain-wiki/config.toml`
+(`claude-code`, `codex`, `antigravity`, `cursor`, `ollama`, or `raw`).
 
 Each session goes to the brain of the folder it ran in, checked in this
 order:
@@ -142,9 +140,9 @@ order:
 A session that matches none of these is skipped, never filed into your
 default brain. With one brain, route everything under your home folder to it:
 
-```toml
-[harvest.routes]
-"~/**" = "personal"
+```sh
+brain harvest route "~/**" personal
+brain harvest route "~/work/**" work     # more specific patterns are checked first
 ```
 
 Sessions brain-wiki ran itself, subagent sessions, and sessions still in

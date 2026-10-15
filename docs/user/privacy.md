@@ -14,7 +14,9 @@ must never see belong outside its reach, not only outside its brain list.
 ## Agent profiles
 
 A profile says what an agent may change. Agents without their own profile
-may log episodes and correct notes they check with `brain check`:
+may log episodes and correct notes they check with `brain check`. Change
+profiles with `brain agents grant HOST CAPABILITY…` and `brain agents revoke`
+(each change can be undone); the result in `brain.toml` looks like this:
 
 ```toml
 [agents.default]          # any agent without its own profile

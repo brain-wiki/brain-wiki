@@ -35,16 +35,20 @@ brain setup
 ```
 
 `brain setup` goes step by step: create a brain (or adopt a vault) and choose
-git, connect the agent apps it finds, and turn on harvest. It shows every
-change outside the brain before making it. To let an app consolidate or
-propose rules, add its profile afterwards ([Agents](agents.md#which-agent-may-do-what)).
+git, connect the agent apps it finds, choose what each may do, and turn on
+harvest. It shows every change before making it, and ends with what to try
+next.
 
-The same steps by hand:
+Every step is also a command of its own, which is what an agent following
+`brain setup --guide` runs:
 
 ```sh
 brain doctor
 brain init ~/brains/personal --name personal --git
-brain connect claude-code      # try --dry-run first
+brain connect claude-code --dry-run            # then without --dry-run
+brain agents grant claude-code consolidate propose_rules
+brain harvest enable claude-code
+brain harvest route "~/**" personal
 ```
 
 `brain doctor` reports its version and SQLite, your brains, and which agents

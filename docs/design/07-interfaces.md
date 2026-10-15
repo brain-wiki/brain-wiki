@@ -30,6 +30,13 @@ write       = ["episodes", "propose_rules", "consolidate"]
 | `write` | Subset of `episodes`, `edit`, `propose_rules`, `consolidate`, `harvest`, `review`. `edit` allows checked direct edits of notes ([05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits)). | `["episodes", "edit"]`; the owner profile has everything |
 | `read_origin` | May read the original agent conversations behind episodes ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)). Transcripts hold much more than the episodes kept, so this is off by default. | `false` |
 
+`brain agents grant|revoke HOST CAPABILITY…` edits these tables as one undoable
+`config` run (comments kept; a new table starts from what the host may already
+do), and refreshes the `AGENTS.md` block when the default profile's `edit`
+changes, since that block tells file-reading agents whether they may edit.
+A refusal names the command that allows the action for that host alone, e.g.
+`brain agents grant claude-code consolidate`.
+
 Resolution: `--host <id>` → `[agents.<id>]` → `[agents.default]` →
 built-in default. The CLI acts as `owner` (everything allowed) because the
 person at the terminal owns the brain; `--as <host>` acts with a host's
@@ -53,6 +60,7 @@ could read and write the files anyway ([10](10-security-and-privacy.md)).
 ```
 brain init [PATH] [--name NAME] [--git] [--no-register]
 brain brains [list | add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME]
+brain agents [list | grant HOST CAP... | revoke HOST CAP...] [--dry-run]   # profiles (§1)
 brain doctor [--json]
 brain setup [--guide]                                    # onboarding wizard; --guide: the steps for an agent (15 §3)
 
@@ -81,6 +89,7 @@ brain consolidate --prepare [--topic T] [--max-episodes N] [--out PACKET.json]
 brain consolidate --apply OPS.json --run RUN [--dry-run]
 brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--apply [--dry-run]]
 brain harvest --status                                   # per host: enabled, sessions left to harvest
+brain harvest enable HOST... | disable HOST... | route PATTERN BRAIN   # user config (05 §2.2)
 brain origin EPISODE [--turns A-B]
 brain review list | show RUN | accept RUN | reject RUN
 brain runs list | show RUN

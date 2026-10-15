@@ -13,6 +13,7 @@ _HANDLERS: dict[str, str] = {
     "init": "brainwiki.cli._cmd_core:init",
     "list": "brainwiki.cli._cmd_core:list_",
     "brains": "brainwiki.cli._cmd_core:brains",
+    "agents": "brainwiki.cli._cmd_core:agents",
     "doctor": "brainwiki.cli._cmd_core:doctor",
     "setup": "brainwiki.cli._cmd_core:setup",
     "orient": "brainwiki.cli._cmd_read:orient",
@@ -121,6 +122,24 @@ def _build_parser() -> argparse.ArgumentParser:
         "--purge-state",
         action="store_true",
         help="with remove, also delete its index and run history here",
+    )
+
+    p = cmd("agents", "what each agent app may do in a brain")
+    p.add_argument(
+        "action",
+        nargs="?",
+        default="list",
+        choices=["list", "grant", "revoke"],
+        help="list; grant HOST CAPABILITY...; revoke HOST CAPABILITY...",
+    )
+    p.add_argument(
+        "args",
+        nargs="*",
+        help="a host id (or default), then capabilities: episodes, edit, propose_rules, "
+        "consolidate, harvest, review",
+    )
+    p.add_argument(
+        "--dry-run", action="store_true", help="with grant or revoke, show the diff without writing"
     )
 
     cmd("doctor", "check configuration, brains, index, and host wiring")
@@ -375,6 +394,14 @@ def _build_parser() -> argparse.ArgumentParser:
     cmd("report", "regenerate reports/")
 
     p = cmd("harvest", "turn host session transcripts into episodes")
+    p.add_argument(
+        "action",
+        nargs="?",
+        choices=["enable", "disable", "route"],
+        help="enable HOST...; disable HOST...; route PATTERN BRAIN (without one: list sessions, "
+        "or harvest them with --apply)",
+    )
+    p.add_argument("values", nargs="*", help="host ids, or a folder pattern and a brain name")
     p.add_argument(
         "--from",
         dest="hosts",

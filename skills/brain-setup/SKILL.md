@@ -21,6 +21,9 @@ current state and offers only what is missing.
   live in the references; use them when the user asks.
 - **Resumable.** If setup stopped halfway, start again from step 1; `doctor`
   shows what is already done.
+- **Change settings with `brain` commands** (`brain init`, `brain connect`,
+  `brain agents`, `brain harvest`), not by editing `brain.toml` or the user
+  config, so every change can be shown first and undone.
 
 ## Steps
 
@@ -117,13 +120,10 @@ Two more abilities are off until the user turns them on, per agent app:
 | `consolidate` | When the user asks ("consolidate my brain"), fold the inbox into notes through checked, undoable steps |
 | `propose_rules` | Suggest a standing rule when the user asks for one; the user confirms every rule |
 
-Ask which apps should have them. For each yes, add a profile for that app to
-the brain's `brain.toml`, showing the diff first:
-
-```toml
-[agents.claude-code]
-write = ["episodes", "edit", "consolidate", "propose_rules"]
-```
+Ask which apps should have them. For each yes, run
+`brain agents grant APP consolidate propose_rules --dry-run` (only the
+abilities they chose), show the diff, and after a yes run it again without
+`--dry-run`. `brain agents` shows what each app may do.
 
 Details and the exact settings: [references/privacy.md](references/privacy.md).
 Show every config change as a diff before writing it.
@@ -142,22 +142,18 @@ nothing without `--apply`) and show how many past sessions it found and the
 estimated tokens.
 
 Each session goes to the brain of the folder it ran in: a project with a
-`.brain-wiki.toml` (`brain = "NAME"`), or a folder mapped in
-`[harvest.routes]` in the user config. Sessions that match neither are
-skipped, never sent to a default brain. With a single brain, offer a route
-that sends every session under the home folder to it:
-
-```toml
-[harvest.routes]
-"~/**" = "personal"
-```
+`.brain-wiki.toml` (`brain = "NAME"`), or a folder pattern routed with
+`brain harvest route PATTERN BRAIN`. Sessions that match neither are skipped,
+never sent to a default brain. With a single brain, offer a route that sends
+every session under the home folder to it:
+`brain harvest route "~/**" personal`.
 
 Then ask, per agent app: harvest on or off, and backfill past sessions now,
 later, or never.
 
-- Harvest on: add the app under `[harvest] hosts` (with `enabled = true`) in
-  the user config, `~/.config/brain-wiki/config.toml`, and `harvest` to that
-  app's `write` list in `brain.toml` (diff first).
+- Harvest on: `brain harvest enable APP`. So the app can also harvest its
+  own sessions in a conversation, run `brain agents grant APP harvest`
+  (`--dry-run` first).
 - Backfill now: run the harvest recipe in the `brain-maintain` skill in this
   session if you have it, or `brain harvest --from HOST --apply` (also for
   large backfills).
@@ -182,6 +178,6 @@ List what was set up, where it lives, and how to undo each part:
 |---|---|
 | Brain created | `brain brains remove NAME` (keeps the files) |
 | Vault adopted (overlay import) | `brain brains remove NAME`, then delete the files it added (`brain.toml`, `AGENTS.md`, `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`); with git, revert its commit. Later phases are runs: `brain undo RUN` |
-| Agent permissions | remove the `[agents.APP]` table from `brain.toml` |
+| Agent permissions | `brain undo RUN`, or `brain agents revoke APP CAPABILITY` |
 | Agent app connected | `brain connect HOST --uninstall` (restores the previous config) |
-| Harvest | remove the app from `[harvest] hosts` in the user config |
+| Harvest | `brain harvest disable APP` |

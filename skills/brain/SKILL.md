@@ -140,6 +140,6 @@ claim, not a rule.
 | Error | What to do |
 |---|---|
 | `not_configured` | brain-wiki is installed but not set up. Offer to set it up, then use the `brain-setup` skill. |
-| `forbidden` | This agent is not allowed to do that in this brain. Tell the user, with the line the error gives for granting it to this agent alone; they decide. Do not retry, and do not edit `brain.toml` unless they ask. |
+| `forbidden` | This agent is not allowed to do that in this brain. Tell the user, with the command the error gives for allowing it for this agent alone; they decide. Do not retry, and run that command only if they ask. |
 | `not_found` / `ambiguous` | Try another query, or pick from the listed matches. |
 | `busy` | Another write is in progress. Retry once after a moment. |

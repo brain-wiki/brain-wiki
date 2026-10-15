@@ -175,6 +175,26 @@ def set_value(dotted: str, value: Any, *, path: Path | None = None) -> None:
     _save_doc(path, doc)
 
 
+def set_harvest(host: str, on: bool, *, path: Path | None = None) -> list[str]:
+    """Add or remove a host in `[harvest] hosts`, keeping `enabled` true while any is left.
+    Returns the hosts harvest is on for afterwards."""
+    user = load_user_config(path)
+    hosts = [h for h in user.harvest.get("hosts", []) if h != host] + ([host] if on else [])
+    set_value("harvest.hosts", hosts, path=path)
+    set_value("harvest.enabled", bool(hosts), path=path)
+    return hosts
+
+
+def add_harvest_route(pattern: str, brain: str, *, path: Path | None = None) -> dict[str, str]:
+    """Map sessions whose folder matches `pattern` to `brain`. The first matching route wins, so
+    routes are kept longest pattern first: `~/work/**` still matches after `~/**` exists."""
+    routes = dict(load_user_config(path).harvest.get("routes") or {})
+    routes[pattern] = brain
+    ordered = dict(sorted(routes.items(), key=lambda item: -len(item[0])))
+    set_value("harvest.routes", ordered, path=path)
+    return ordered
+
+
 def _display_path(p: Path) -> str:
     home = Path.home()
     try:

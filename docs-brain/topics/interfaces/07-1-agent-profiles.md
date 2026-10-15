@@ -28,6 +28,13 @@ write       = ["episodes", "propose_rules", "consolidate"]
 | `write` | Subset of `episodes`, `edit`, `propose_rules`, `consolidate`, `harvest`, `review`. `edit` allows checked direct edits of notes ([[05-23-checked-agent-edits\|05 §2.3]]). | `["episodes", "edit"]`; the owner profile has everything |
 | `read_origin` | May read the original agent conversations behind episodes ([[05-46-origin-context\|05 §4.6]]). Transcripts hold much more than the episodes kept, so this is off by default. | `false` |
 
+`brain agents grant|revoke HOST CAPABILITY…` edits these tables as one undoable
+`config` run (comments kept; a new table starts from what the host may already
+do), and refreshes the `AGENTS.md` block when the default profile's `edit`
+changes, since that block tells file-reading agents whether they may edit.
+A refusal names the command that allows the action for that host alone, e.g.
+`brain agents grant claude-code consolidate`.
+
 Resolution: `--host <id>` → `[agents.<id>]` → `[agents.default]` →
 built-in default. The CLI acts as `owner` (everything allowed) because the
 person at the terminal owns the brain; `--as <host>` acts with a host's

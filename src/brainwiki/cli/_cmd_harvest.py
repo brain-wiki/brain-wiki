@@ -7,13 +7,17 @@ from importlib import resources
 from typing import Any
 
 from brainwiki.cli._output import emit, warn
-from brainwiki.errors import UsageError
+from brainwiki.errors import NotFound, UsageError
+
+_READABLE = ("claude-code", "codex", "antigravity")
 
 
 def harvest(args: Any) -> int:
     from brainwiki import harvest as hv
     from brainwiki.config import load_user_config
 
+    if args.action:
+        return _configure(args)
     user = load_user_config()
     hosts = args.hosts or list(user.harvest.get("hosts") or ["claude-code", "codex", "antigravity"])
     candidates = hv.discover(user, hosts, since=args.since, project=args.project)
@@ -72,6 +76,50 @@ def harvest(args: Any) -> int:
     written = [p for r in results for p in r["episodes"]]
     emit(args, results, f"Wrote {len(written)} episodes from {len(eligible)} sessions.")
     return 0 if all(not r.get("error") for r in results) else 1
+
+
+def _configure(args: Any) -> int:
+    """`brain harvest enable|disable|route`: the user-config side of harvest (05 §2.2)."""
+    from brainwiki.config import add_harvest_route, config_file, load_user_config, set_harvest
+    from brainwiki.hosts import reader_for
+
+    if args.action == "route":
+        if len(args.values) != 2:
+            raise UsageError(
+                'brain harvest route PATTERN BRAIN, e.g. brain harvest route "~/**" personal'
+            )
+        pattern, brain = args.values
+        registered = load_user_config().brains
+        if brain not in registered:
+            raise NotFound(
+                f"no brain named {brain!r}; registered: {', '.join(registered) or 'none'}"
+            )
+        routes = add_harvest_route(pattern, brain)
+        emit(
+            args,
+            {"routes": routes},
+            f"Sessions in folders matching {pattern} go to {brain!r} (in {config_file()}).",
+        )
+        return 0
+    if not args.values:
+        raise UsageError(f"brain harvest {args.action} HOST...")
+    on = args.action == "enable"
+    unreadable = [h for h in args.values if on and reader_for(h) is None]
+    if unreadable:
+        raise UsageError(
+            f"harvest cannot read {', '.join(unreadable)} sessions yet; it reads {', '.join(_READABLE)}"
+        )
+    hosts: list[str] = []
+    for host in args.values:
+        hosts = set_harvest(host, on)
+    text = f"Harvest is on for {', '.join(hosts)}." if hosts else "Harvest is off."
+    if on:
+        text += (
+            " For an agent to harvest its own sessions in a conversation, also run "
+            f"`brain agents grant {args.values[0]} harvest`."
+        )
+    emit(args, {"hosts": hosts}, text)
+    return 0
 
 
 def _harvest_one(hv: Any, candidate: Any, preset: str | None, *, dry_run: bool) -> dict[str, Any]:

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from brainwiki import FORMAT_VERSION
-from brainwiki.errors import FormatError
+from brainwiki.errors import FormatError, UsageError
 
 MANIFEST = "brain.toml"
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
@@ -116,11 +116,11 @@ class Profile:
         return capability in self.write
 
     def refusal(self, host: str | None, capability: str, doing: str) -> str:
-        """Why this profile may not do something, and the exact grant for this agent alone."""
-        wanted = ", ".join(f'"{w}"' for w in dict.fromkeys([*self.write, capability]))
+        """Why this profile may not do something, and the command that allows it for this
+        agent alone."""
         return (
             f"the {self.name!r} profile may not {doing}; the user can allow it for this agent "
-            f"in brain.toml: [agents.{host or 'default'}] write = [{wanted}]"
+            f"with `brain agents grant {host or 'default'} {capability}`"
         )
 
 
@@ -293,6 +293,46 @@ def parse_manifest(text: str) -> Manifest:
         unknown_keys=unknown,
         **sections,
     )
+
+
+def grant(text: str, host: str, capabilities: list[str]) -> str:
+    """`brain.toml` text with `capabilities` added to `[agents.<host>]` write, comments kept.
+
+    A new table starts from what the host may already do (its default profile), so a grant
+    never takes anything away.
+    """
+    return _set_write(text, host, add=capabilities)
+
+
+def revoke(text: str, host: str, capabilities: list[str]) -> str:
+    """`brain.toml` text with `capabilities` removed from `[agents.<host>]` write; a host
+    without its own table gets one, so other agents keep the default profile."""
+    return _set_write(text, host, remove=capabilities)
+
+
+def _set_write(
+    text: str, host: str, *, add: list[str] | None = None, remove: list[str] | None = None
+) -> str:
+    import tomlkit
+
+    add, remove = add or [], remove or []
+    unknown = sorted(set(add + remove) - set(_WRITE_CAPABILITIES))
+    if unknown:
+        raise UsageError(
+            f"unknown capability {', '.join(unknown)}; use {', '.join(_WRITE_CAPABILITIES)}"
+        )
+    if not SLUG_RE.match(host):
+        raise UsageError(f"{host!r} is not a host id (e.g. claude-code, codex, default)")
+    wanted = (set(parse_manifest(text).profile(host).write) | set(add)) - set(remove)
+    doc = tomlkit.parse(text)
+    agents = doc.get("agents")
+    if agents is None:
+        agents = tomlkit.table(is_super_table=True)
+        doc["agents"] = agents
+    if host not in agents:
+        agents[host] = tomlkit.table()
+    agents[host]["write"] = [c for c in _WRITE_CAPABILITIES if c in wanted]
+    return tomlkit.dumps(doc)
 
 
 def load_manifest(root: Path) -> Manifest:
