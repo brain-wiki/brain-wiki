@@ -28,7 +28,7 @@ considered and rejected.
 - [[d13]]: D13: Pending vs consolidated episodes is encoded by location (inbox/ vs…
 - [[d14]]: D14: The repo root is also the plugin root for every host
 - [[d15]]: D15: Remote MCP for chat apps is designed but not built in v0.1
-- [[d16]]: D16: Python ≥ 3.11, stdlib-first, few runtime dependencies, argparse CLI for…
+- [[d16]]: D16: Python ≥ 3.11, stdlib-first, few runtime dependencies
 - [[d17]]: D17: The visualizer is a WebGL galaxy with semantic zoom (galaxy →…
 - [[d18]]: D18: The bench uses synthetic, seeded data and deterministic graders
 - [[d19]]: D19: License
@@ -43,3 +43,4 @@ considered and rejected.
 - [[d28]]: D28: Agents may edit notes directly when their profile has edit and the…
 - [[d29]]: D29: brain-wiki's own frontmatter fields carry a bw- prefix
 - [[d30]]: D30: Topics form a tree
+- [[d31]]: D31: The CLI is built on Typer (help in plain text, rich never imported)

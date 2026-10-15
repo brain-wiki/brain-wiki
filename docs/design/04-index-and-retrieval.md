@@ -505,7 +505,7 @@ included in full:
 5. Recent changes: the last 5 `log.md` entries, one line each, and the number
    of notes updated in the last 7 days.
 6. Inbox status: pending episode count, oldest pending age, rule proposals
-   awaiting `brain rule accept`, and a hint to consolidate when 20 or more
+   awaiting `brain rules accept`, and a hint to consolidate when 20 or more
    episodes are pending or the oldest is more than 7 days old.
 7. How to query: three example calls built from this brain's own topics and
    types (a keyword search, a typed "latest" lookup, and a `why` search).
@@ -516,6 +516,9 @@ The same function generates the managed block of `AGENTS.md`.
 
 | Query | Used by | Notes |
 |---|---|---|
+| Notes within filters, newest first | `brain_search("")`, `brain search ""` (e.g. `--since 7d`, `--topic T`) | The search path without text matching (§6.1); there is no separate listing command |
+| Headings, claims, and relations of a note | read (`outline`), `brain read TARGET --mode outline` | §7 |
+| Links as written in a file, and in other files | `brain links`, `brain backlinks` | Edges by the file that declares them (`declared_in`), resolved or not; `brain neighbors` follows them by meaning instead (§9.2) |
 | Backlinks of a node | read (`outline`), neighbors, lint orphans | All edges with `dst = node` |
 | Facet counts | orientation, search `facets`, `brain tags`, `brain types` | Counts by type, topic, tag, and property |
 | Orphans, dead ends, unresolved links | `brain orphans`, `brain unresolved`, reports | Nodes without incoming edges; nodes without outgoing edges; links that resolve to nothing |
@@ -526,7 +529,7 @@ The same function generates the managed block of `AGENTS.md`.
 
 ### 9.1 Brain list
 
-`brain_list` (CLI `brain list`) answers "which brains exist, and what is
+`brain_list` (CLI `brain brains`) answers "which brains exist, and what is
 each for?" for the calling host:
 
 | Field | Source |

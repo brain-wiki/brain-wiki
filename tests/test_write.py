@@ -207,7 +207,7 @@ def test_rule_proposals_accept_reject_and_orient(brain_dir: Path):
     with eng(brain_dir) as e:
         pid, rel = rules.propose_rule(e, "Write US English.", "US spelling please", agent="codex")
         assert (brain_dir / rel).exists()
-        assert f"brain rule accept {pid}" in orient(e)["text"]
+        assert f"brain rules accept {pid}" in orient(e)["text"]
         new_id, _ = rules.accept_rule(e, pid)
         assert not (brain_dir / rel).exists()
         assert rules.list_rules(e)[0]["id"] == new_id
@@ -283,8 +283,8 @@ def test_as_host_log_needs_episodes_and_records_the_agent(example: Path, capsys)
 
 def test_as_host_rules_become_proposals_and_decisions_stay_the_users(example: Path, capsys):
     root = _registered(example)
-    assert main(["--as", "codex", "rule", "add", "Be terse."]) == 5
-    assert main(["--as", "trusted", "rule", "add", "Be terse.", "--json"]) == 0
+    assert main(["--as", "codex", "rules", "add", "Be terse."]) == 5
+    assert main(["--as", "trusted", "rules", "add", "Be terse.", "--json"]) == 0
     with eng(root) as e:
         (proposal,) = rules.pending_rule_proposals(e)
         assert proposal["agent"] == "trusted"
@@ -293,8 +293,8 @@ def test_as_host_rules_become_proposals_and_decisions_stay_the_users(example: Pa
         ]
     capsys.readouterr()
     for argv in (
-        ["rule", "accept", proposal["id"]],
-        ["rule", "reject", proposal["id"]],
+        ["rules", "accept", proposal["id"]],
+        ["rules", "reject", proposal["id"]],
         ["agents", "grant", "codex", "consolidate"],
         ["undo"],
         ["mv", "topics/budget", "topics/money"],
@@ -310,24 +310,57 @@ def test_as_host_rules_become_proposals_and_decisions_stay_the_users(example: Pa
 def test_rule_messages_and_proposal_listing(example: Path, capsys):
     root = _registered(example)
     existing = "r-01M4KT3JPSB7BP2SNSCAVC2SFC"
-    assert main(["rule", "add", "x", "--replaces", "r-NOPE"]) == 3
+    assert main(["rules", "add", "x", "--replaces", "r-NOPE"]) == 3
     assert "no rule has the id r-NOPE" in capsys.readouterr().err
-    assert main(["rule", "add", "Prefer pytest over unittest for new tests."]) == 4
+    assert main(["rules", "add", "Prefer pytest over unittest for new tests."]) == 4
     assert f"rule {existing} already says that" in capsys.readouterr().err
-    assert main(["rule", "list", "extra"]) == 2
-    assert main(["rule", "list", "--quote", "q"]) == 2
+    assert main(["rules", "list", "extra"]) == 2
+    assert main(["rules", "list", "--quote", "q"]) == 2
     with eng(root) as e:
         pid, rel = rules.propose_rule(e, "Prefer pytest always.", "q", replaces=existing)
     renamed = root / rel.replace(pid, "renamed")
     (root / rel).rename(renamed)  # its frontmatter id now differs from its file name
     capsys.readouterr()
-    assert main(["rule", "list"]) == 0
+    assert main(["rules", "list"]) == 0
     out = capsys.readouterr().out
     assert f"renamed  Prefer pytest always.  (from an agent; replaces {existing})" in out
-    assert main(["rule", "accept", "renamed"]) == 0
+    assert main(["rules", "accept", "renamed"]) == 0
     assert not renamed.exists()
     with eng(root) as e:
         assert [r["text"] for r in rules.list_rules(e)] == ["Prefer pytest always."]
+
+
+def test_review_covers_rule_proposals(example: Path, capsys):
+    import json
+
+    root = _registered(example)
+    with eng(root) as e:
+        first, _ = rules.propose_rule(e, "Write US English.", "US spelling please", agent="codex")
+        second, _ = rules.propose_rule(e, "Be terse.", "Be terse.", agent="codex")
+    assert main(["review", "list", "--json"]) == 0
+    items = {p["id"]: p for p in json.loads(capsys.readouterr().out)}
+    assert items[first]["kind"] == "rule" and items[first]["quote"] == "US spelling please"
+    assert main(["review", "list"]) == 0
+    assert f"{first}  rule" in capsys.readouterr().out
+    assert main(["review", "show", first]) == 0
+    shown = capsys.readouterr().out
+    assert "text: Write US English." in shown and "quote: US spelling please" in shown
+    assert main(["review", "accept", first]) == 0
+    assert main(["review", "reject", second]) == 0
+    capsys.readouterr()
+    assert main(["review", "show", second]) == 3  # rejected: gone
+    with eng(root) as e:
+        assert "Write US English." in [r["text"] for r in rules.list_rules(e)]
+        assert rules.pending_rule_proposals(e) == []
+
+
+def test_rule_is_a_hidden_alias_of_rules(example: Path, capsys):
+    _registered(example)
+    assert main(["rule", "list"]) == 0
+    assert "Prefer pytest over unittest" in capsys.readouterr().out
+    assert main(["--help"]) == 0
+    listed = capsys.readouterr().out
+    assert "  rules " in listed and "  rule " not in listed
 
 
 def test_mv_topic_folder_renames_its_topic(example: Path):

@@ -50,7 +50,7 @@ If everything is set up, show a short summary and offer only the
 
 Ask: "Install the brain-wiki command?" Then run `uv tool install brain-wiki`
 (or `pipx install brain-wiki` if the user prefers pipx). Check with
-`brain version`.
+`brain --version`.
 
 If the user does not want to install it, every command also runs as
 `uvx --from brain-wiki brain …`, which is how the plugin's own MCP server
@@ -112,7 +112,7 @@ briefly, then ask.
 > it. For separate parts of life, like work and personal, use separate
 > brains, and choose which agents may use each.
 
-To limit an app: `brain brains limit APP BRAIN...` (`brain list --as APP`
+To limit an app: `brain brains limit APP BRAIN...` (`brain brains --as APP`
 shows the result).
 
 **What each agent may do.** By default every agent may log what it learns

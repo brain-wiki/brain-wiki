@@ -16,7 +16,7 @@ Generated from `docs/design/07-interfaces.md`.
   - [[07-21-command-tree]]: Command tree
   - [[07-22-conventions]]: Conventions
   - [[07-23-exit-codes]]: Exit codes
-  - [[07-24-startup-cost]]: Startup cost
+  - [[07-24-parser-and-startup-cost]]: Parser and startup cost
 - [[07-3-mcp-server]]: MCP server
   - [[07-31-protocol-target]]: Protocol target
   - [[07-32-naming-and-size-limits]]: Naming and size limits

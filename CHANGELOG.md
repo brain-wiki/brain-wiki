@@ -14,6 +14,21 @@
   app may use.
 - `brain setup` also asks what each connected app may do, grants the
   `harvest` ability with harvest, and ends with what to try next.
+- The CLI is built on Typer. Action commands are real subcommands with their
+  own help (`brain rules add --help`), and `brain --install-completion`
+  installs tab completion. `--brain`, `--as`, and `--json` still work before
+  or after the command. `brain --version` also prints the file format.
+- Removed commands, and what replaces them: `brain version` → `brain
+  --version`; `brain list` → `brain brains` (also with `--as HOST`); `brain
+  notes` and `brain recent` → `brain search ""` with filters (e.g. `brain
+  search "" --since 7d`; browsing sorts by `recent`); `brain outline TARGET` →
+  `brain read TARGET --mode outline`.
+- `brain rule` is now `brain rules`; `rule` still works as a hidden alias.
+- `brain review` also covers rule proposals: `review list` shows them with
+  consolidation and edit proposals, marking each one's kind, and `review
+  show`, `accept`, and `reject` take a rule proposal's id.
+- `brain import --phase` given with a mode other than `--overlay` is a usage
+  error even when it is `--phase 0`.
 
 ## 0.1.0.dev0 (2026-10-14)
 

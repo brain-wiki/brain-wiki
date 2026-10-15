@@ -197,7 +197,7 @@ def test_first_write_before_a_full_scan_keeps_existing_notes(example: Path, firs
                 inputs="local",
                 captured="cli",
             )
-        else:  # `brain rule add` as the first command
+        else:  # `brain rules add` as the first command
             run = Run(eng, "test")
             run.write("rules.md", (example / "rules.md").read_text() + "\n- Be brief.\n")
             run.commit()

@@ -48,8 +48,10 @@ def _check_flags(args: Any) -> str:
             if given:
                 hint = "; --from records the host itself" if mode == "--from" else ""
                 raise UsageError(f"{flag} works only with --to-episodes{hint}")
-    if mode != "--overlay" and args.phase:
+    if mode != "--overlay" and args.phase is not None:
         raise UsageError("--phase works only with --overlay")
+    if args.phase is None:
+        args.phase = 0
     if args.phase not in (0, 1, 2, 3):
         raise UsageError("--phase must be 0 (adopt), 1, 2, or 3")
     if mode == "--overlay" and args.topic:

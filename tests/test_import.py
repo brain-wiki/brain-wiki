@@ -87,6 +87,7 @@ def test_from_unknown_host_is_usage_error(brain_dir: Path, capsys: pytest.Captur
         (["--into", "test", "--agent", "codex"], "--agent works only with --to-episodes"),
         (["--overlay", "--untrusted"], "--untrusted works only with --to-episodes"),
         (["--into", "test", "--phase", "2"], "--phase works only with --overlay"),
+        (["--into", "test", "--phase", "0"], "--phase works only with --overlay"),
         (["--overlay", "--into", "test"], "--overlay and --into cannot be combined"),
         (["--overlay", "--topic", "work"], "--topic does not work with --overlay"),
         (["--overlay", "--phase", "7"], "--phase must be"),

@@ -78,6 +78,7 @@ def list_proposals(engine: Engine) -> list[dict[str, Any]]:
         out.append(
             {
                 "run": path.stem,
+                "kind": "edit" if fm.data.get("type") == "edit-proposal" else "consolidation",
                 "agent": fm.data.get("agent"),
                 "created": fm.data.get("created"),
                 "path": engine.store.rel(path),

@@ -12,6 +12,9 @@ bw-part_of:
 
 | Query | Used by | Notes |
 |---|---|---|
+| Notes within filters, newest first | `brain_search("")`, `brain search ""` (e.g. `--since 7d`, `--topic T`) | The search path without text matching (§6.1); there is no separate listing command |
+| Headings, claims, and relations of a note | read (`outline`), `brain read TARGET --mode outline` | §7 |
+| Links as written in a file, and in other files | `brain links`, `brain backlinks` | Edges by the file that declares them (`declared_in`), resolved or not; `brain neighbors` follows them by meaning instead (§9.2) |
 | Backlinks of a node | read (`outline`), neighbors, lint orphans | All edges with `dst = node` |
 | Facet counts | orientation, search `facets`, `brain tags`, `brain types` | Counts by type, topic, tag, and property |
 | Orphans, dead ends, unresolved links | `brain orphans`, `brain unresolved`, reports | Nodes without incoming edges; nodes without outgoing edges; links that resolve to nothing |

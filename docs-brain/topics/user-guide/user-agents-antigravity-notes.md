@@ -15,5 +15,5 @@ bw-part_of:
   `"mcp(brain-wiki_brain-wiki/brain_read)"`,
   `"mcp(brain-wiki_brain-wiki/brain_orient)"`.
 - Antigravity cannot show brain-wiki's confirmation form, so a rule an
-  agent proposes waits for you: `brain rule list`, then
-  `brain rule accept <id>`.
+  agent proposes waits for you: `brain review list`, then
+  `brain review accept <id>`.

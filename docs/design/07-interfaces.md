@@ -49,9 +49,9 @@ write does what that host could do through MCP, or is refused:
 | Command | Under `--as <host>` |
 |---|---|
 | `log` | Needs `episodes`; recorded as `origin: agent`, `inputs: unknown` (or `external`), with the host as agent, like `brain_log_episode` |
-| `rule add` | Needs `propose_rules`; saved as a proposal for `brain rule accept`, like `brain_propose_rule` without a way to ask |
+| `rules add` | Needs `propose_rules`; saved as a proposal for `brain rules accept` (or `brain review accept`), like `brain_propose_rule` without a way to ask |
 | `check`, `mv`, `lint --fix` | Need `edit`: they change notes directly (`--dry-run` previews need nothing) |
-| `rule accept`/`reject`, `agents grant`/`revoke`, `undo` | Refused: these are the user's decisions. An agent undoing runs could undo the user's own work, so no capability allows it |
+| `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `undo` | Refused: these are the user's decisions. An agent undoing runs could undo the user's own work, so no capability allows it |
 
 Enforcement points, all in the engine so every interface gets them:
 
@@ -73,12 +73,14 @@ could read and write the files anyway ([10](10-security-and-privacy.md)).
 
 ```
 brain init [PATH] [--name NAME] [--git] [--no-register]
-brain brains [list | add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME | limit HOST BRAIN... | unlimit HOST]
-brain agents [list | grant HOST CAP... | revoke HOST CAP...] [--dry-run]   # profiles (§1)
+brain brains [list]                                      # brains you (or --as HOST) may use (04 §9.1)
+brain brains add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME
+brain brains limit HOST BRAIN... | unlimit HOST          # which brains an agent app may use
+brain agents [list]                                      # profiles (§1)
+brain agents grant HOST CAP... [--dry-run] | revoke HOST CAP... [--dry-run]
 brain doctor [--json]
 brain setup [--guide]                                    # onboarding wizard; --guide: the steps for an agent (15 §3)
 
-brain list                                               # brains this host may use (04 §9.1)
 brain orient
 brain search [QUERY] [--limit N] [--topic T]... [--type T]... [--tag T]... [--where KEY=VALUE]...
              [--since D] [--until D] [--sort relevance|recent|title] [--cursor C] [--intent I]
@@ -87,26 +89,24 @@ brain read TARGET [--mode outline|full|section|raw] [--section HEADING]
 brain neighbors TARGET [--rel R]... [--direction out|in|both] [--depth N] [--limit N]
 
 brain topics [TOPIC]                                     # the topic tree with note counts
-brain notes [--topic T] [--type T] [--tag T] [--sort recent|title] [--facets]  # browse
-brain outline TARGET                                     # headings
-brain links TARGET | backlinks TARGET                    # one hop out / in
-brain tags [--counts] | types [--counts] | recent [--since D]
+brain links TARGET | backlinks TARGET                    # links as written: in its file / in others
+brain tags [--counts] | types [--counts]
 brain orphans | unresolved                               # notes nothing links to; dead links
 
 brain check [PATH]... [--adopt] [--allow-shrink]         # validate and record direct edits (05 §2.3)
 brain restore PATH                                       # put back the last recorded version
 
 brain log [TEXT | -] [--topic T]... [--claim C]... [--agent HOST] [--inputs local|external|unknown]
-brain rule add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
+brain rules add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID   # `rule` is a hidden alias
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--out PACKET.json]
 brain consolidate --apply OPS.json --run RUN [--dry-run]
-brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--apply [--dry-run]]
+brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--apply [--dry-run]]   # list, or harvest
 brain harvest --status                                   # per host: enabled, sessions left to harvest
 brain harvest enable HOST... | disable HOST... | route PATTERN BRAIN   # user config (05 §2.2)
 brain origin EPISODE [--turns A-B]
-brain review list | show RUN | accept RUN | reject RUN
-brain runs list | show RUN
+brain review list | show ID | accept ID | reject ID     # consolidation, edit, and rule proposals
+brain runs [list] | show [RUN]
 brain undo [RUN] [--force]
 
 brain lint [PATH]... [--fix] [--dry-run] [--profile strict|migrate] [--select CODES] [--ignore CODES] [--staged] [--changed]
@@ -126,10 +126,23 @@ brain mcp [--host HOST]                                   # stdio MCP server
 brain viz [--topic T]... [--port P] [--no-open] [--export FILE.html|.json|.graphml]
 brain bench [SUITE]... [--backends PRESET,...] [--sizes 1k,10k] [--out DIR] [-q]
 brain bench --compare A.json B.json
-brain version
 ```
 
-Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `--version`.
+Global options: `--brain NAME|PATH`, `--as HOST`, and `--json`, accepted
+before the command and after it; the one nearer the command wins. `brain
+--version` prints `brain-wiki X (format N)`. Every command and subcommand has
+its own `--help` (`-h`).
+
+Browsing has no commands of its own beyond the link and tag listings:
+`brain search ""` with filters lists notes (`brain search "" --since 7d` for
+recent ones; browsing sorts by `recent` unless `--sort` says otherwise), and
+`brain read TARGET --mode outline` shows a note's headings and claims.
+
+`brain review` is the one queue of proposals awaiting the user: consolidation
+and edit proposals (`run-…` ids) and rule proposals (`r-…` ids, also handled
+by `brain rules accept|reject`). `review list` marks each with its kind
+(`consolidation`, `edit`, or `rule`); rule proposals show their text, quote,
+and the rule they replace.
 
 ### 2.2 Conventions
 
@@ -138,7 +151,7 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `--version`.
 - Commands that change many files or files outside the brain support
   `--dry-run`, which prints what they would change: `lint --fix`, `mv`,
   `consolidate --apply`, `harvest`, `import`, and `connect`. Single-step
-  writes (`log`, `rule`, `check`, `restore`, `review accept`, `undo`) have
+  writes (`log`, `rules`, `check`, `restore`, `review accept`, `undo`) have
   none; every curated one is a run that `brain undo` reverses.
 - Paths printed are brain-relative; `--json` also includes absolute paths.
 - Targets follow the Obsidian CLI convention: a title, alias, or file name
@@ -146,7 +159,7 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `--version`.
   always print the exact path, the handle for the next command.
 - Listing commands share `--count` (print only the total), `--paths` (one
   path per line, for piping into file tools), `--limit`, and `--cursor`;
-  `search` and `notes` also take `--facets` (counts by type, topic, and tag).
+  `search` also takes `--facets` (counts by type, topic, and tag).
 - `brain init --git` runs `git init` and commits the new files. `init` and
   `brains add` refuse a name or folder already registered to another brain,
   so a typo never re-points a brain; a moved brain may take its name along
@@ -163,7 +176,7 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `--version`.
 |---|---|
 | 0 | Success |
 | 1 | The command ran and found problems (lint errors, invalid ops, review required), or a path could not be read or written (`os_error`) |
-| 2 | Usage error |
+| 2 | Usage error: an unknown command or option, a bad value, or a flag the command would ignore. Parse errors print the command's usage line, then `brain <command>: error: <message>`; `brain` alone prints the help |
 | 3 | Not found (brain, note, run) |
 | 4 | Conflict: `conflict` (a name or file already there, an edited block), `stale` (notes changed since prepare, files changed since a run), `expired`, or `busy` (lock timeout) |
 | 5 | Forbidden by profile or host limits |
@@ -172,13 +185,36 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `--version`.
 Errors print one line to stderr, `<code>: <message>`, with the codes of
 §3.6.
 
-### 2.4 Startup cost
+### 2.4 Parser and startup cost
 
-Agents run CLI commands inside their turns, so the CLI starts fast
-([13](13-engineering.md#5-performance-budgets)): it uses `argparse` and
-imports subcommand modules lazily, so no command but `brain mcp` imports the
-MCP SDK, and none but `brain viz` and `brain bench` load the visualizer or
-the bench.
+The CLI is built on Typer, for three things argparse made awkward: nested
+subcommands with their own arguments and help (`brain rules add --help`),
+validation from type annotations (choices, ranges, repeatable options), and
+shell completion (`brain --install-completion`). Help is plain text: rich
+markup is off, so rich, which Typer installs, is never imported.
+
+Typer only parses. Each command returns the handler to run and the namespace
+of arguments it reads; `main` runs the handler, so exit codes and error lines
+(§2.3) do not depend on Typer. Handler modules are imported only for the
+command run: no command but `brain mcp` imports the MCP SDK, none but `brain
+viz` and `brain bench` load the visualizer or the bench, and help imports
+none of them. A test checks that `brain --help` and `brain log --help` import
+neither the engine, the MCP SDK, the visualizer, the bench, nor rich.
+
+Typer costs startup time: importing it (it vendors Click) and building the
+command tree from annotations. Measured on a Linux workstation, Python 3.12,
+best of 7, on the example brain:
+
+| Command | argparse | Typer |
+|---|---|---|
+| `brain --help` | 52 ms | 103 ms |
+| `brain log --help` | 52 ms | 105 ms |
+| `brain search x` | 124 ms | 166 ms |
+
+The cost is accepted: with host lifecycle hooks removed (D14), no command
+runs on every agent turn, and 50 ms is small next to an agent's turn. To keep
+it down, `cli/_main.py` keeps real annotations (no `from __future__ import
+annotations`), which halves the time Typer spends reading them.
 
 ## 3. MCP server
 

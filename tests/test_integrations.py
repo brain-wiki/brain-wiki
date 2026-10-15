@@ -377,12 +377,12 @@ def test_an_unexpected_error_is_logged_and_exits_10(
     def boom(args: object) -> int:
         raise RuntimeError("synthetic failure")
 
-    monkeypatch.setattr(_cmd_core, "version", boom)
+    monkeypatch.setattr(_cmd_core, "doctor", boom)
     monkeypatch.setattr(logs, "_configured", False)
     logger = logging.getLogger("brainwiki")
     handlers = list(logger.handlers)
     try:
-        assert main(["version"]) == 10
+        assert main(["doctor"]) == 10
     finally:
         for handler in logger.handlers[len(handlers) :]:
             handler.close()
@@ -484,7 +484,7 @@ def test_brains_limit_sets_which_brains_an_app_may_use(brain_dir: Path, tmp_path
     register_brain("work", init_brain(tmp_path / "brains" / "work", "work"))
     assert main(["brains", "limit", "openclaw", "work"]) == 0
     capsys.readouterr()
-    assert main(["list", "--as", "openclaw", "--json"]) == 0
+    assert main(["brains", "--as", "openclaw", "--json"]) == 0
     assert [b["name"] for b in json.loads(capsys.readouterr().out)["brains"]] == ["work"]
     assert main(["brains", "limit", "openclaw", "nope"]) == 3
     assert main(["brains", "unlimit", "openclaw"]) == 0

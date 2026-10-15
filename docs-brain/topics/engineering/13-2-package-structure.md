@@ -12,7 +12,7 @@ bw-part_of:
 
 ```text
 src/brainwiki/
-├── cli/            argparse entry point; one module per command; lazy imports
+├── cli/            Typer entry point; one module per command; lazy imports
 ├── config/         user config, brain.toml, brain resolution, platform dirs
 ├── format/         parsers and writers: frontmatter, claims, relations, links, episodes, rules
 ├── store/          LocalStore (atomic writes, O_EXCL creates, expected-hash writes)

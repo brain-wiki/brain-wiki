@@ -348,7 +348,7 @@ def test_install_hook_is_idempotent_and_git_refusals_are_reported(
     hook.write_text("#!/bin/sh\necho 'lint says no' >&2\nexit 1\n")
     assert main(["lint", "--install-hook"]) == 4  # someone else's hook is never overwritten
     capsys.readouterr()
-    assert main(["rule", "add", "Write US English."]) == 0
+    assert main(["rules", "add", "Write US English."]) == 0
     captured = capsys.readouterr()
     assert captured.out.startswith("Added r-")
     assert "git refused the commit" in captured.err and "lint says no" in captured.err

@@ -102,7 +102,7 @@ def test_a_broken_brain_does_not_break_the_others(
     bad = init_brain(tmp_path / "brains" / "bad", "bad")
     (bad / "brain.toml").write_text((bad / "brain.toml").read_text() + "\n[git]\nmode = 1\n")
     register_brain("bad", bad)
-    assert main(["list"]) == 0
+    assert main(["brains"]) == 0
     out = capsys.readouterr().out
     assert "bad" in out and "unavailable: brain.toml: git.mode must be a string" in out
     assert "test" in out

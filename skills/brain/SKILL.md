@@ -19,10 +19,10 @@ brain-wiki MCP tools:
 | `brain_check` | Validate and record notes you edited directly. |
 | `brain_propose_rule` | Add a standing rule, only when the user asks. |
 
-Without the MCP tools, the `brain` command does the same: `brain list`,
-`brain orient`, `brain search`, `brain read`, `brain neighbors`, `brain log`,
-`brain check`, plus `brain notes`, `brain links`, `brain backlinks`,
-`brain tags`, and `brain recent` for quick browsing.
+Without the MCP tools, the `brain` command does the same: `brain brains`,
+`brain orient`, `brain search` (`brain search "" --since 7d` lists recent
+notes), `brain read`, `brain neighbors`, `brain log`, `brain check`, plus
+`brain links`, `brain backlinks`, and `brain tags` for quick browsing.
 
 ## Rules
 

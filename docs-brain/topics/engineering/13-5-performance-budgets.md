@@ -21,6 +21,6 @@ The perf suite also checks read, orientation, and one-file update
 ([[04-10-performance-budgets|04 §10]]). Below 10k
 notes its thresholds are relaxed 2×. It is not part of `scripts/check.py`;
 run `brain bench perf --sizes 10k` for performance work and before a
-release. CLI start-up stays fast by importing subcommand modules lazily
-([[07-24-startup-cost|07 §2.4]]); no check measures its import
-time.
+release. CLI start-up imports only the module of the command run, and help
+none of them ([[07-24-parser-and-startup-cost|07 §2.4]]); a
+test checks what `brain --help` imports, but no check measures time.

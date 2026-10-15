@@ -95,64 +95,6 @@ def topics(args: Any) -> int:
     return _listing(args, items, line, empty="(no topics)")
 
 
-def notes(args: Any) -> int:
-    from brainwiki.cli._cmd_read import check_range, print_results
-    from brainwiki.index import search
-
-    check_range("--limit", args.limit, 1, 50)
-    with _engine(args) as engine:
-        result = search(
-            engine,
-            "",
-            limit=args.limit,
-            topics=args.topic,
-            types=args.types,
-            tags=args.tags,
-            sort=args.sort,
-            cursor=args.cursor,
-            count_only=args.count,
-            facets=args.facets,
-            intent="none",
-        )
-    print_results(args, result)
-    return 0
-
-
-def recent(args: Any) -> int:
-    args.topic, args.types, args.tags, args.sort, args.facets = None, None, None, "recent", False
-    from brainwiki.cli._cmd_read import check_range, print_results
-    from brainwiki.index import search
-
-    check_range("--limit", args.limit, 1, 50)
-    with _engine(args) as engine:
-        result = search(
-            engine,
-            "",
-            limit=args.limit,
-            since=args.since,
-            cursor=args.cursor,
-            count_only=args.count,
-        )
-    print_results(args, result)
-    return 0
-
-
-def outline(args: Any) -> int:
-    from brainwiki.format import parse_document
-    from brainwiki.index import resolve_target
-
-    with _engine(args) as engine:
-        node = resolve_target(engine, args.target)
-        doc = parse_document(node["path"], engine.store.read_text(node["path"]))
-    headings = [{"line": line, "level": level, "text": text} for line, level, text in doc.headings]
-    text = "\n".join(
-        [f"{node['title']}  [{node['path']}]"]
-        + [f"{'  ' * (h['level'] - 1)}- {h['text']}  (line {h['line']})" for h in headings]
-    )
-    emit(args, {"path": node["path"], "headings": headings}, text)
-    return 0
-
-
 def links(args: Any) -> int:
     """Everything a note links to: typed relations and body links, resolved or not."""
     from brainwiki.index import resolve_target

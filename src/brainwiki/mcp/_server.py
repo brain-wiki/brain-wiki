@@ -534,7 +534,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         meta={"anthropic/requiresUserInteraction": True},
         description="Add or replace a standing rule in the user's brain, only when the user explicitly "
         "asked for one. Pass their exact words as user_quote. The user confirms before anything is "
-        "written; without a way to ask, the rule waits for `brain rule accept`.",
+        "written; without a way to ask, the rule waits for `brain rules accept`.",
     )
     @guard
     def brain_propose_rule(
@@ -581,7 +581,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
                 engine, text, user_quote, replaces=replaces, agent=state.host
             )
             return _result(
-                f"Saved as a proposal ({path}). Ask the user to run: brain rule accept {proposal_id}",
+                f"Saved as a proposal ({path}). Ask the user to run: brain rules accept {proposal_id}",
                 {"status": "proposed", "id": proposal_id, "path": path},
             )
         return _result("The user declined; nothing was written.", {"status": "declined"})

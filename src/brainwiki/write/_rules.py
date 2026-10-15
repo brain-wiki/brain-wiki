@@ -151,7 +151,7 @@ def _proposal_path(engine: Engine, proposal_id: str) -> str:
 def propose_rule(
     engine: Engine, text: str, quote: str, *, replaces: str | None = None, agent: str | None = None
 ) -> tuple[str, str]:
-    """Write a rule proposal for `brain rule accept`. Returns (proposal id, path)."""
+    """Write a rule proposal for `brain rules accept`. Returns (proposal id, path)."""
     text, quote = _validate(text, quote)
     _check_new(engine, text, replaces)
     proposal_id = rule_id()
@@ -170,7 +170,7 @@ def propose_rule(
         "",
         f"> {quote}",
         "",
-        f"Accept with `brain rule accept {proposal_id}`, or reject with `brain rule reject {proposal_id}`.",
+        f"Accept with `brain rules accept {proposal_id}`, or reject with `brain rules reject {proposal_id}`.",
         "",
     ]
     engine.store.write_text(rel, "\n".join(head + body))
@@ -198,7 +198,7 @@ def pending_rule_proposals(engine: Engine) -> list[dict[str, Any]]:
     return out
 
 
-def _proposal(engine: Engine, proposal_id: str) -> dict[str, Any]:
+def rule_proposal(engine: Engine, proposal_id: str) -> dict[str, Any]:
     for proposal in pending_rule_proposals(engine):
         if proposal["id"] == proposal_id:
             return proposal
@@ -207,7 +207,7 @@ def _proposal(engine: Engine, proposal_id: str) -> dict[str, Any]:
 
 def accept_rule(engine: Engine, proposal_id: str) -> tuple[str, RunRecord]:
     require_owner(engine, "accept a rule")
-    proposal = _proposal(engine, proposal_id)
+    proposal = rule_proposal(engine, proposal_id)
     text, quote = _validate(proposal["text"], str(proposal["quote"] or proposal["text"]))
     replaces = str(proposal["replaces"]) if proposal.get("replaces") else None
     _check_new(engine, text, replaces)
@@ -222,7 +222,7 @@ def accept_rule(engine: Engine, proposal_id: str) -> tuple[str, RunRecord]:
 
 def reject_rule(engine: Engine, proposal_id: str) -> RunRecord:
     require_owner(engine, "reject a rule proposal")
-    proposal = _proposal(engine, proposal_id)
+    proposal = rule_proposal(engine, proposal_id)
     run = Run(engine, "rule-reject", summary=f"rejected rule proposal {proposal_id}")
     run.delete(proposal["path"])
     return run.commit()

@@ -81,18 +81,24 @@ def consolidate(args: Any) -> int:
 
 
 def review(args: Any) -> int:
+    """Proposals awaiting the user: consolidations and edits (run-... ids), and rule
+    proposals (r-... ids, which `brain rules accept|reject` also take)."""
     from brainwiki.consolidate import list_proposals, pipeline
 
+    if args.action != "list" and not args.run:
+        raise UsageError(f"brain review {args.action} needs a proposal id")
+    if args.run and not args.run.startswith("run-"):  # rule proposals go by their file name
+        from brainwiki.cli._cmd_write import rule_proposal
+
+        return rule_proposal(args, args.action, args.run)
     with open_engine(args.brain, host=getattr(args, "as_host", None)) as engine:
         if args.action == "list":
-            items = list_proposals(engine)
-            text = "\n".join(
-                f"{p['run']}  {p.get('agent') or ''}  {p.get('created') or ''}" for p in items
-            )
-            emit(args, items, text or "No proposals.")
+            from brainwiki.write import rules
+
+            items = [{"id": p["run"], **p} for p in list_proposals(engine)]
+            items += [{"kind": "rule", **p} for p in rules.pending_rule_proposals(engine)]
+            emit(args, items, "\n".join(_review_line(p) for p in items) or "No proposals.")
             return 0
-        if not args.run:
-            raise UsageError(f"brain review {args.action} needs a run id")
         from brainwiki.write import edits
 
         if edits.is_edit_proposal(engine, args.run):
@@ -118,3 +124,15 @@ def review(args: Any) -> int:
         record = pipeline.reject_review(engine, args.run)
         emit(args, record.to_json(), f"Rejected {args.run}; its episodes stay pending.")
     return 0
+
+
+def _review_line(item: dict[str, Any]) -> str:
+    agent = item.get("agent") or "an agent"
+    if item["kind"] != "rule":
+        return f"{item['id']}  {item['kind']:<13}  {agent}  {item.get('created') or ''}".rstrip()
+    line = f"{item['id']}  rule           {agent}  {item['text']}"
+    if item.get("quote") and item["quote"] != item["text"]:
+        line += f"  [quote: {item['quote']}]"
+    if item.get("replaces"):
+        line += f"  (replaces {item['replaces']})"
+    return line

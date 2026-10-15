@@ -27,13 +27,13 @@ _INCLUDES = ("archived", "episodes", "archived_episodes")
 _SEARCH_LIMIT = 50
 
 
-def check_range(flag: str, value: int, low: int, high: int) -> None:
+def _check_range(flag: str, value: int, low: int, high: int) -> None:
     """Refuse an out-of-range number rather than quietly clamping it."""
     if not low <= value <= high:
         raise UsageError(f"{flag} takes {low}-{high}, not {value}")
 
 
-def print_results(args: Any, result: dict[str, Any]) -> None:
+def _print_results(args: Any, result: dict[str, Any]) -> None:
     """A search or browse result in the form the flags ask for. With --paths the next-page
     hint goes to stderr, so a pipe gets only paths but a person still sees rows were left."""
     from brainwiki.index import format_search_text
@@ -59,7 +59,7 @@ def search(args: Any) -> int:
         )
     if "episodes" in include and args.no_episodes:
         raise UsageError("--include episodes and --no-episodes contradict each other")
-    check_range("--limit", args.limit, 1, _SEARCH_LIMIT)
+    _check_range("--limit", args.limit, 1, _SEARCH_LIMIT)
     with _engine(args) as engine:
         result = run(
             engine,
@@ -82,7 +82,7 @@ def search(args: Any) -> int:
             include_archived="archived" in include,
             include_archived_episodes="archived_episodes" in include,
         )
-    print_results(args, result)
+    _print_results(args, result)
     return 0
 
 
@@ -113,8 +113,8 @@ def neighbors(args: Any) -> int:
     from brainwiki.index import format_neighbors_text
     from brainwiki.index import neighbors as run
 
-    check_range("--depth", args.depth, 1, 3)
-    check_range("--limit", args.limit, 1, 100)
+    _check_range("--depth", args.depth, 1, 3)
+    _check_range("--limit", args.limit, 1, 100)
     with _engine(args) as engine:
         result = run(
             engine,

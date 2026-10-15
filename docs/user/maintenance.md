@@ -28,7 +28,8 @@ brain review accept RUN     # re-validated against the notes as they are now
 brain review reject RUN     # its episodes stay in the inbox
 ```
 
-Agents can propose rules too; those wait for `brain rule accept ID`.
+Agents can propose rules too. Those wait in the same list, marked `rule`:
+`brain review accept ID` (or `brain rules accept ID`) adds the rule.
 
 ## Lint and reports
 

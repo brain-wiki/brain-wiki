@@ -15,8 +15,9 @@ summary, the rendered diff, warnings, and the ops as a fenced JSON block.
 Nothing else changes; the episodes stay pending (and are excluded from new
 packets while a proposal references them).
 
-- `brain review list | show <run> | accept <run> | reject <run>`. Review is
-  CLI-only: there are no MCP review tools, so an agent can point the user
+- `brain review list | show <id> | accept <id> | reject <id>`, the one queue
+  for consolidation and edit proposals (`run-…`) and rule proposals (§6);
+  `list` marks each proposal's kind. Review is CLI-only: there are no MCP review tools, so an agent can point the user
   at a proposal but cannot accept it (MCP review tools are in the
   [[proposal-readme-backlog|backlog]]).
 - Accept re-validates the stored ops against the current brain (notes may

@@ -22,7 +22,7 @@ Choose which agents may use which brain:
 
 ```bash
 brain brains limit openclaw personal     # openclaw never sees the work brain
-brain list --as openclaw                 # what it may use now
+brain brains --as openclaw               # what it may use now
 brain brains unlimit openclaw            # every brain again
 brain connect claude-code --brain work   # default brain for this agent
 ```

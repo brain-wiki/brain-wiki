@@ -15,7 +15,7 @@ bw-part_of:
 - Commands that change many files or files outside the brain support
   `--dry-run`, which prints what they would change: `lint --fix`, `mv`,
   `consolidate --apply`, `harvest`, `import`, and `connect`. Single-step
-  writes (`log`, `rule`, `check`, `restore`, `review accept`, `undo`) have
+  writes (`log`, `rules`, `check`, `restore`, `review accept`, `undo`) have
   none; every curated one is a run that `brain undo` reverses.
 - Paths printed are brain-relative; `--json` also includes absolute paths.
 - Targets follow the Obsidian CLI convention: a title, alias, or file name
@@ -23,7 +23,7 @@ bw-part_of:
   always print the exact path, the handle for the next command.
 - Listing commands share `--count` (print only the total), `--paths` (one
   path per line, for piping into file tools), `--limit`, and `--cursor`;
-  `search` and `notes` also take `--facets` (counts by type, topic, and tag).
+  `search` also takes `--facets` (counts by type, topic, and tag).
 - `brain init --git` runs `git init` and commits the new files. `init` and
   `brains add` refuse a name or folder already registered to another brain,
   so a typo never re-points a brain; a moved brain may take its name along

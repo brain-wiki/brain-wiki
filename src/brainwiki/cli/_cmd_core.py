@@ -1,4 +1,4 @@
-"""version, init, list, brains, agents, doctor, setup."""
+"""init, brains, agents, doctor, setup."""
 
 from __future__ import annotations
 
@@ -17,17 +17,6 @@ from brainwiki.config import (
     unregister_brain,
 )
 from brainwiki.errors import Conflict, NotFound, UsageError
-
-
-def version(args: Any) -> int:
-    from brainwiki import FORMAT_VERSION, __version__
-
-    emit(
-        args,
-        {"version": __version__, "format": FORMAT_VERSION},
-        f"brain-wiki {__version__} (format {FORMAT_VERSION})",
-    )
-    return 0
 
 
 def init(args: Any) -> int:
@@ -67,15 +56,6 @@ def init(args: Any) -> int:
     return 0
 
 
-def list_(args: Any) -> int:
-    from brainwiki.index import format_brain_list, list_brains
-
-    host = getattr(args, "as_host", None)
-    result = list_brains(host, explicit=args.brain)
-    emit(args, result, format_brain_list(result, owner=host is None))
-    return 0
-
-
 def brains(args: Any) -> int:
     user = load_user_config()
     action, rest = args.action, args.args
@@ -87,8 +67,13 @@ def brains(args: Any) -> int:
                 "(e.g. work, personal-notes)"
             )
 
-    if action == "list":
-        return list_(args)
+    if action == "list":  # what brain_list returns
+        from brainwiki.index import format_brain_list, list_brains
+
+        host = getattr(args, "as_host", None)
+        result = list_brains(host, explicit=args.brain)
+        emit(args, result, format_brain_list(result, owner=host is None))
+        return 0
     if action == "add":
         if len(rest) != 2:
             raise UsageError("brain brains add NAME PATH")

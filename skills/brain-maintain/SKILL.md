@@ -11,7 +11,7 @@ turns them into curated notes and keeps the brain healthy:
 |---|---|---|
 | Harvest | Turns this agent's past sessions into episodes | `brain_harvest_prepare` → `brain_harvest_apply` |
 | Consolidate | Folds pending episodes into notes | `brain_consolidate_prepare` → `brain_consolidate_apply` |
-| Review | Accepts or rejects runs held for the user | `brain review …` |
+| Review | Accepts or rejects runs held for the user, and agents' rule proposals | `brain review …` |
 | Health | Finds contradictions, stale notes, broken links | `brain lint`, `brain report` |
 | Undo | Reverts a run | `brain undo RUN` |
 
@@ -66,12 +66,14 @@ Handle the result:
 
 ## 3. Review proposals
 
-1. `brain review list` shows runs waiting for the user.
-2. `brain review show RUN` shows the summary, the diff, and why it was held.
-   Summarize it for the user in a few lines: what changes, and any warning.
-3. Only on the user's decision: `brain review accept RUN` or
-   `brain review reject RUN`. Accepting re-checks the changes against the
-   current notes before applying.
+1. `brain review list` shows what waits for the user: runs held for review
+   (`run-…`) and rules agents proposed (`r-…`), each marked with its kind.
+2. `brain review show ID` shows a run's summary, diff, and why it was held,
+   or a proposed rule's text and the user's words behind it. Summarize it
+   for the user in a few lines: what changes, and any warning.
+3. Only on the user's decision: `brain review accept ID` or
+   `brain review reject ID`. Accepting a run re-checks the changes against
+   the current notes before applying.
 
 ## 4. Health
 

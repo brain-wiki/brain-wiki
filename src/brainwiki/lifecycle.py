@@ -22,7 +22,7 @@ _BRAIN_TOML_TEMPLATE = """\
 format = {format}
 id = "{id}"
 name = "{name}"
-# description = "What this brain is for, in one line (shown by `brain list`)"
+# description = "What this brain is for, in one line (shown by `brain brains`)"
 
 [consolidate]
 review = "auto"            # auto | always: whether consolidation waits for your review

@@ -1,4 +1,4 @@
-"""Progressive discovery: brain list, search filters and browse, read handles, neighbors (04 §6-§9)."""
+"""Progressive discovery: brain brains, search filters and browse, read handles, neighbors (04 §6-§9)."""
 
 from __future__ import annotations
 
@@ -58,8 +58,8 @@ def test_list_reports_a_missing_brain(example: Path, tmp_path: Path):
     assert "missing" in format_brain_list({"brains": list(rows.values())}, owner=True)
 
 
-def test_cli_list_and_brains_list_agree(example: Path, capsys: pytest.CaptureFixture[str]):
-    assert main(["list"]) == 0
+def test_cli_brains_lists_brains(example: Path, capsys: pytest.CaptureFixture[str]):
+    assert main(["brains"]) == 0
     listed = capsys.readouterr().out
     assert main(["brains", "list"]) == 0
     assert capsys.readouterr().out == listed
@@ -320,11 +320,10 @@ def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
         assert main(list(argv)) == 0
         return capsys.readouterr().out
 
-    assert run("notes", "--topic", "search", "--type", "decision", "--paths").split() == [
+    assert run("search", "", "--topic", "search", "--type", "decision", "--paths").split() == [
         "topics/search/fts5.md",
         "topics/search/ripgrep.md",
     ]
-    assert "- Use SQLite FTS5 for local search  (line" in run("outline", "fts5")
     links = run("links", "fts5")
     assert '- depends_on "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in links
     assert run("backlinks", "fts5", "--paths").split() == [
@@ -333,7 +332,7 @@ def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
     ]
     assert "decision  3" in run("types", "--counts")
     assert run("tags", "--count").strip() == "2"
-    assert run("recent", "--limit", "1", "--paths").count("\n") == 1
+    assert run("search", "", "--sort", "recent", "--limit", "1", "--paths").count("\n") == 1
     assert run("unresolved").strip() == "Every link resolves."
     assert "topics/search/vector-only.md" not in run("orphans", "--paths")
     assert run("links", "fts5", "--limit", "1").rstrip().endswith("(--cursor 1)")
@@ -367,15 +366,14 @@ def test_listing_input_is_checked(example: Path, capsys: pytest.CaptureFixture[s
     assert code("search", "--include", "drafts") == 2
     assert code("search", "--include", "episodes", "--no-episodes") == 2
     assert code("search", "--limit", "51") == 2
-    assert code("notes", "--limit", "51") == 2
     assert code("neighbors", "fts5", "--depth", "4") == 2
     assert code("neighbors", "fts5", "--limit", "101") == 2
     assert code("index", "--rebuild", "--status") == 2
     assert code("search", "--topic", "nosuch") == 3
     assert code("topics", "SEARCH") == 0  # topic slugs match case-insensitively
-    assert main(["notes", "--topic", "SEARCH", "--count", "--facets"]) == 0
+    assert main(["search", "", "--topic", "SEARCH", "--count", "--facets"]) == 0
     count = capsys.readouterr().out.splitlines()
-    assert main(["notes", "--topic", "search", "--count"]) == 0
+    assert main(["search", "", "--topic", "search", "--count"]) == 0
     assert capsys.readouterr().out.splitlines() == count[:1] and count[1].startswith("type: ")
     assert main(["search", "--paths", "--limit", "1"]) == 0
     out = capsys.readouterr()
@@ -387,8 +385,10 @@ def test_listing_input_is_checked(example: Path, capsys: pytest.CaptureFixture[s
 
 
 def test_global_options_work_before_the_command(example: Path, capsys: pytest.CaptureFixture[str]):
-    assert main(["--json", "--brain", str(example), "list"]) == 0
+    assert main(["--json", "--brain", str(example), "brains"]) == 0
     assert '"brains"' in capsys.readouterr().out
+    assert main(["--brain", "nowhere", "--json", "search", "fts5", "--brain", str(example)]) == 0
+    assert '"results"' in capsys.readouterr().out  # the option after the command wins
 
 
 def test_a_declared_topic_owns_its_folder(brain_dir: Path):

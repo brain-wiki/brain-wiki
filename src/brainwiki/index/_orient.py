@@ -275,7 +275,7 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         count = len(inbox["rule_proposals"])
         inbox_lines.append(
             f"{count} rule{'s' if count != 1 else ''} awaiting the user's confirmation: "
-            + ", ".join(f"`brain rule accept {r}`" for r in inbox["rule_proposals"][:3])
+            + ", ".join(f"`brain rules accept {r}`" for r in inbox["rule_proposals"][:3])
         )
     if inbox["pending"] >= 20 or inbox["oldest_days"] > 7:
         inbox_lines.append(

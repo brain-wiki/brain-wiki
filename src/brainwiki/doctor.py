@@ -97,7 +97,7 @@ def _brain_summary(name: str, path: Path) -> dict[str, Any]:
 
 
 def _index_summary(brain: Any) -> dict[str, Any]:
-    """Roll back interrupted runs, then count notes from the index the way `brain list` and
+    """Roll back interrupted runs, then count notes from the index the way `brain brains` and
     the briefing do: a topic's hub is its index, not one of its notes (04 §8)."""
     from brainwiki.engine import Engine
     from brainwiki.runs import list_records, recover

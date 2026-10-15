@@ -11,7 +11,7 @@ ChatGPT desktop app. The cross-host mechanics are in
 | MCP server | The portable `plugin.json` and `mcp.json` (Agent Plugins 1.0); `extensions["com.openai"]` supplies display metadata |
 | Instructions | The MCP server's `instructions` field; no instruction file is written (§1) |
 | Skills | `brain`, `brain-setup`, `brain-maintain` from the plugin |
-| Rule confirmation | Elicitation support is not tested (T-8); without it, rules wait for `brain rule accept` |
+| Rule confirmation | Elicitation support is not tested (T-8); without it, rules wait for `brain rules accept` |
 | Harvest | JSONL rollout files in `$CODEX_HOME/sessions/` (default `~/.codex/sessions/`) and `archived_sessions/` |
 | Headless preset | `codex exec - --json --ephemeral --skip-git-repo-check --sandbox read-only -o <file>` ([08 §7](../08-agent-integrations.md#7-headless-presets)) |
 

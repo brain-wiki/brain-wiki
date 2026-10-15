@@ -12,7 +12,7 @@ the `agy` CLI. The cross-host mechanics are in
 | MCP server | `mcp_config.json` (no `type` field in this format), `--host antigravity` |
 | Instructions | The plugin's `rules/brain-wiki.md` with `trigger: always_on`; no user file is edited |
 | Skills | `brain`, `brain-setup`, `brain-maintain` from the plugin |
-| Rule confirmation | None: `brain_propose_rule` saves a proposal for `brain rule accept` |
+| Rule confirmation | None: `brain_propose_rule` saves a proposal for `brain rules accept` |
 | Harvest | `<app dir>/brain/<conversation-id>/.system_generated/logs/`, where the app dir is the desktop, IDE, or CLI data folder under `~/.gemini/` |
 | Headless preset | `agy --input-format stream-json --output-format stream-json --effort medium` ([08 §7](../08-agent-integrations.md#7-headless-presets)) |
 

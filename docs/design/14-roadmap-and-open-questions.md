@@ -9,7 +9,7 @@ self-contained commits. Later milestones depend only on earlier ones.
 
 | # | Milestone | Delivers | Exit criteria |
 |---|---|---|---|
-| M0 | Skeleton | `pyproject.toml`, package layout, `brain` entry point with lazy subcommands, platform dirs, user config, ULIDs, `LocalStore` (atomic writes, `O_EXCL`), `scripts/check.py` | `brain version`; `brain init` creates a valid brain and registers it; CI script green |
+| M0 | Skeleton | `pyproject.toml`, package layout, `brain` entry point with lazy subcommands, platform dirs, user config, ULIDs, `LocalStore` (atomic writes, `O_EXCL`), `scripts/check.py` | `brain --version`; `brain init` creates a valid brain and registers it; CI script green |
 | M1 | Format | Parsers and line-preserving writers: frontmatter, claims, relations (with aliases and inverses), links, episodes, rules, `AGENTS.md` block | Round-trip and locality property tests |
 | M2 | Index and retrieval | Schema, scanner with freshness and renames, link resolution, search (FTS5 + trigram + fallback), guards with chains and caps, read, orient; `brain search/read/orient/index` | Retrieval suite on generated brains: guard recall 100%; perf at 1k within budget |
 | M3 | Lint and reports | Rule catalog, profiles and overrides, fixes as runs, reports, pre-commit hook | Lint suite 100% on its corpus; fix idempotency |

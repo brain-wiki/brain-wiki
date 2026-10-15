@@ -13,7 +13,7 @@ bw-part_of:
 brain log "Lumen stores attachments next to notes; Obsidian expects relative paths."
 brain search "attachments"
 brain orient
-brain rule add "Prefer pytest for new tests." --quote "from now on use pytest"
+brain rules add "Prefer pytest for new tests." --quote "from now on use pytest"
 ```
 
 - `brain log` writes an **episode** to the inbox. Episodes are never edited

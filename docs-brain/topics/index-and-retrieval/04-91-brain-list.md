@@ -10,7 +10,7 @@ bw-part_of:
 ---
 # Brain list
 
-`brain_list` (CLI `brain list`) answers "which brains exist, and what is
+`brain_list` (CLI `brain brains`) answers "which brains exist, and what is
 each for?" for the calling host:
 
 | Field | Source |

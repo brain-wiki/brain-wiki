@@ -47,9 +47,9 @@ write does what that host could do through MCP, or is refused:
 | Command | Under `--as <host>` |
 |---|---|
 | `log` | Needs `episodes`; recorded as `origin: agent`, `inputs: unknown` (or `external`), with the host as agent, like `brain_log_episode` |
-| `rule add` | Needs `propose_rules`; saved as a proposal for `brain rule accept`, like `brain_propose_rule` without a way to ask |
+| `rules add` | Needs `propose_rules`; saved as a proposal for `brain rules accept` (or `brain review accept`), like `brain_propose_rule` without a way to ask |
 | `check`, `mv`, `lint --fix` | Need `edit`: they change notes directly (`--dry-run` previews need nothing) |
-| `rule accept`/`reject`, `agents grant`/`revoke`, `undo` | Refused: these are the user's decisions. An agent undoing runs could undo the user's own work, so no capability allows it |
+| `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `undo` | Refused: these are the user's decisions. An agent undoing runs could undo the user's own work, so no capability allows it |
 
 Enforcement points, all in the engine so every interface gets them:
 

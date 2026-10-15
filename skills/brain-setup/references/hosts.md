@@ -64,7 +64,7 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 - **Rules:** the Antigravity CLI declares MCP forms but declines them
   without showing the user, so `brain_propose_rule` saves a proposal in
   every Antigravity surface; the user accepts it with
-  `brain rule accept <id>`.
+  `brain review accept <id>`.
 - **MCP start-up:** the plugin starts the server through `uvx`, which checks
   the package index first and can take a minute on a slow network. If the
   tools are missing early in a session, install the command
