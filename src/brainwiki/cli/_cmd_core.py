@@ -8,6 +8,8 @@ from typing import Any
 
 from brainwiki.cli._output import emit
 from brainwiki.config import (
+    SLUG_RE,
+    limit_host,
     load_user_config,
     open_brain,
     register_brain,
@@ -122,6 +124,27 @@ def brains(args: Any) -> int:
             raise UsageError("brain brains default NAME (a registered brain)")
         set_value("default", rest[0])
         emit(args, {"default": rest[0]}, f"Default brain is now {rest[0]!r}")
+        return 0
+    if action in ("limit", "unlimit"):
+        if action == "limit" and len(rest) < 2 or action == "unlimit" and len(rest) != 1:
+            raise UsageError("brain brains limit HOST BRAIN... | brain brains unlimit HOST")
+        host, names = rest[0], rest[1:]
+        if not SLUG_RE.match(host):
+            raise UsageError(f"{host!r} is not a host id (e.g. claude-code, codex, openclaw)")
+        missing = [n for n in names if n not in user.brains]
+        if missing:
+            raise NotFound(
+                f"no brain named {', '.join(missing)}; registered: {', '.join(user.brains) or 'none'}"
+            )
+        pinned = limit_host(host, names if action == "limit" else None)
+        text = (
+            f"{host} may use only: {', '.join(names)}"
+            if action == "limit"
+            else f"{host} may use every brain"
+        )
+        if pinned:
+            text += f" (its default brain is {pinned!r})"
+        emit(args, {"host": host, "brains": names or None, "default": pinned}, text)
         return 0
     raise UsageError(f"unknown action {action}")
 

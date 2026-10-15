@@ -10,6 +10,8 @@
   `brain agents [list | grant | revoke]` changes what an app may do as an
   undoable run, and `brain harvest enable | disable | route` configures
   harvest. A refusal names the `brain agents grant` command that allows it.
+  `brain brains limit HOST BRAIN...` and `unlimit HOST` set which brains an
+  app may use.
 - `brain setup` also asks what each connected app may do, grants the
   `harvest` ability with harvest, and ends with what to try next.
 

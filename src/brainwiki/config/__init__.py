@@ -31,6 +31,7 @@ from brainwiki.config._resolve import (
 from brainwiki.config._user import (
     UserConfig,
     add_harvest_route,
+    limit_host,
     load_user_config,
     register_brain,
     registration_conflict,
@@ -56,6 +57,7 @@ __all__ = [
     "config_file",
     "data_dir",
     "grant",
+    "limit_host",
     "load_user_config",
     "open_brain",
     "parse_manifest",

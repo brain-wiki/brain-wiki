@@ -59,7 +59,7 @@ could read and write the files anyway ([10](10-security-and-privacy.md)).
 
 ```
 brain init [PATH] [--name NAME] [--git] [--no-register]
-brain brains [list | add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME]
+brain brains [list | add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME | limit HOST BRAIN... | unlimit HOST]
 brain agents [list | grant HOST CAP... | revoke HOST CAP...] [--dry-run]   # profiles (§1)
 brain doctor [--json]
 brain setup [--guide]                                    # onboarding wizard; --guide: the steps for an agent (15 §3)

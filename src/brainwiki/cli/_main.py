@@ -114,8 +114,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "action",
         nargs="?",
         default="list",
-        choices=["list", "add", "remove", "rename", "default"],
-        help="list; add NAME PATH; remove NAME; rename OLD NEW; default NAME",
+        choices=["list", "add", "remove", "rename", "default", "limit", "unlimit"],
+        help="list; add NAME PATH; remove NAME; rename OLD NEW; default NAME; "
+        "limit HOST BRAIN... (the only brains that agent app may use); unlimit HOST",
     )
     p.add_argument("args", nargs="*", help="the names and path the action takes")
     p.add_argument(

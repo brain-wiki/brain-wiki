@@ -10,7 +10,7 @@ lists each command's options.
 |---|---|
 | `brain version` | Print the version |
 | `brain init [PATH] [--name N] [--git] [--no-register]` | Create a brain and register it |
-| `brain brains [list \| add NAME PATH \| remove NAME [--purge-state] \| rename OLD NEW \| default NAME]` | Manage registered brains |
+| `brain brains [list \| add NAME PATH \| remove NAME [--purge-state] \| rename OLD NEW \| default NAME \| limit HOST BRAIN… \| unlimit HOST]` | Manage registered brains, and which ones each agent app may use |
 | `brain agents [list \| grant HOST CAP… \| revoke HOST CAP…] [--dry-run]` | What each agent app may do in a brain, and changing it (undoable) |
 | `brain doctor` | Check configuration, brains, SQLite, and agents |
 | `brain setup [--guide]` | Set up step by step in the terminal; `--guide` prints the steps for an AI agent to walk you through |

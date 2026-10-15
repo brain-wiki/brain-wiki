@@ -364,3 +364,17 @@ def test_reconnecting_keeps_user_config_and_cleans_old_blocks(
     assert main(["connect", "codex"]) == 0
     assert agents.read_text() == "# Mine\n"
     assert cn._load_record("codex")["instructions"] == []
+
+
+def test_brains_limit_sets_which_brains_an_app_may_use(brain_dir: Path, tmp_path: Path, capsys):
+    from brainwiki.config._user import register_brain
+    from brainwiki.lifecycle import init_brain
+
+    register_brain("work", init_brain(tmp_path / "brains" / "work", "work"))
+    assert main(["brains", "limit", "openclaw", "work"]) == 0
+    capsys.readouterr()
+    assert main(["list", "--as", "openclaw", "--json"]) == 0
+    assert [b["name"] for b in json.loads(capsys.readouterr().out)["brains"]] == ["work"]
+    assert main(["brains", "limit", "openclaw", "nope"]) == 3
+    assert main(["brains", "unlimit", "openclaw"]) == 0
+    assert load_user_config().host("openclaw").brains is None

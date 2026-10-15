@@ -22,8 +22,9 @@ current state and offers only what is missing.
 - **Resumable.** If setup stopped halfway, start again from step 1; `doctor`
   shows what is already done.
 - **Change settings with `brain` commands** (`brain init`, `brain connect`,
-  `brain agents`, `brain harvest`), not by editing `brain.toml` or the user
-  config, so every change can be shown first and undone.
+  `brain brains`, `brain agents`, `brain harvest`), not by editing
+  `brain.toml` or the user config, so every change can be shown first and
+  undone.
 
 ## Steps
 
@@ -110,6 +111,9 @@ briefly, then ask.
 > One brain is fine to start with. Every agent you connect can read all of
 > it. For separate parts of life, like work and personal, use separate
 > brains, and choose which agents may use each.
+
+To limit an app: `brain brains limit APP BRAIN...` (`brain list --as APP`
+shows the result).
 
 **What each agent may do.** By default every agent may log what it learns
 and correct notes directly (each correction is checked and can be undone).

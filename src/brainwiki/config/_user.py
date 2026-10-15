@@ -175,6 +175,29 @@ def set_value(dotted: str, value: Any, *, path: Path | None = None) -> None:
     _save_doc(path, doc)
 
 
+def limit_host(host: str, brains: list[str] | None, *, path: Path | None = None) -> str | None:
+    """Set the brains `host` may use, or with None let it use every brain again. A host default
+    (`[hosts.<id>] brain`) outside the new list moves to its first brain, since it would only
+    be refused. Returns the host default afterwards."""
+    path = path or config_file()
+    doc = _load_doc(path)
+    hosts = doc.setdefault("hosts", {})
+    table = hosts.setdefault(host, {})
+    pinned = table.get("brain")
+    if brains is None:
+        table.pop("brains", None)
+    else:
+        table["brains"] = brains
+        if pinned is not None and pinned not in brains:
+            table["brain"] = pinned = brains[0]
+    if not table:
+        del hosts[host]
+    if not hosts:
+        del doc["hosts"]
+    _save_doc(path, doc)
+    return None if pinned is None else str(pinned)
+
+
 def set_harvest(host: str, on: bool, *, path: Path | None = None) -> list[str]:
     """Add or remove a host in `[harvest] hosts`, keeping `enabled` true while any is left.
     Returns the hosts harvest is on for afterwards."""

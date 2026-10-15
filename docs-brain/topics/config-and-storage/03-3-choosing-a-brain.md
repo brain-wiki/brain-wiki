@@ -28,6 +28,9 @@ If nothing matches, the command fails with a message that suggests
 **Host limits.** When `[hosts.<id>] brains` is set, a selection outside
 that list is refused for that host, whichever source produced it. This is
 how a user keeps, say, a work brain away from a personal assistant.
+`brain brains limit HOST BRAIN...` sets the list and `unlimit HOST` clears
+it; a host default outside the new list moves to its first brain, since it
+would only be refused.
 
 **Project files** name a brain, not a path, so a repository can carry one
 without exposing anyone's directory layout. If the named brain does not

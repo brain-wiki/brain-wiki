@@ -18,18 +18,17 @@ brain init ~/brains/work --name work --git
 brain brains default personal
 ```
 
-Choose which agents may use which brain in the user config
-(`~/.config/brain-wiki/config.toml`). There is no command for this yet, so
-show the diff before writing the file:
+Choose which agents may use which brain:
 
-```toml
-[hosts.claude-code]
-brain  = "work"                 # default brain for this agent
-brains = ["work", "personal"]   # brains it may use (default: all)
-
-[hosts.openclaw]
-brains = ["personal"]           # never sees the work brain
+```bash
+brain brains limit openclaw personal     # openclaw never sees the work brain
+brain list --as openclaw                 # what it may use now
+brain brains unlimit openclaw            # every brain again
+brain connect claude-code --brain work   # default brain for this agent
 ```
+
+The limits are stored in the user config (`~/.config/brain-wiki/config.toml`)
+as `[hosts.<app>] brains`.
 
 A project can name its brain with a `.brain-wiki.toml` file containing
 `brain = "work"`; it names a brain, not a path.
