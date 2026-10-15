@@ -5,7 +5,7 @@
       "command": "uvx",
       "args": [
         "--from",
-        "brain-wiki==0.1.0.dev1",
+        "brain-wiki==0.1.0",
         "brain",
         "mcp",
         "--host",

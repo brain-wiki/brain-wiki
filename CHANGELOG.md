@@ -1,6 +1,9 @@
 # Changelog
 
-## 0.1.0.dev2 (unreleased)
+## 0.1.0 (2026-10-14)
+
+The first release of the 0.1 line. brain-wiki is alpha: expect breaking
+changes before 1.0. Changes since 0.1.0.dev1:
 
 - `brain obsidian [BRAIN]` opens the brain's folder as a vault in Obsidian,
   adding it as a new vault the first time through the Obsidian CLI (or, without
@@ -8,6 +11,9 @@
 - `brain viz [BRAIN]` and `brain obsidian [BRAIN]` open the named brain, the
   only brain, or with several, the one you pick from a list (the usual brain is
   the default).
+- `brain setup` asks first whether to create a new brain or adopt a folder you
+  have, names the brain after its folder, and shows the answer Enter picks
+  for every question.
 
 ## 0.1.0.dev1 (2026-10-14)
 
