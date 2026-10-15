@@ -8,6 +8,7 @@ and nothing that reads sessions is turned on without an explicit yes.
 
 from __future__ import annotations
 
+import re
 import sys
 from collections.abc import Callable
 from pathlib import Path
@@ -49,6 +50,40 @@ _ABILITIES = (
 )
 
 
+def _choose_adopt(ask: _Ask, out: Callable[[str], None]) -> bool:
+    """Whether to adopt an existing folder of notes rather than create a new brain."""
+    question = (
+        "Create a new brain, or adopt a folder of notes you already have "
+        "(such as an Obsidian vault)? (new/adopt) [new] "
+    )
+    for _ in range(3):
+        answer = ask(question).strip().lower()
+        if answer in ("", "n", "new"):
+            return False
+        if answer in ("a", "adopt"):
+            return True
+        out("Answer new or adopt.")
+    return False
+
+
+def _ask_name(ask: _Ask, out: Callable[[str], None], folder: Path) -> str:
+    """The brain's short name, defaulting to its folder's name made into a valid id."""
+    from brainwiki.config import SLUG_RE
+
+    default = re.sub(r"[^a-z0-9]+", "-", folder.name.lower()).strip("-")[:64] or "personal"
+    for _ in range(3):
+        name = (
+            ask(
+                f"Short name for this brain, used to pick it (`brain --brain NAME`) [{default}] "
+            ).strip()
+            or default
+        )
+        if SLUG_RE.match(name):
+            return name
+        out("Use lowercase letters, digits, and hyphens.")
+    return default
+
+
 def _yes(ask: _Ask, question: str, default: bool = False) -> bool:
     hint = "[Y/n]" if default else "[y/N]"
     answer = ask(f"{question} {hint} ").strip().lower()
@@ -79,17 +114,22 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
     # Brain
     if not report["brains"]:
         out("\nNo brain yet. A brain is a folder of Markdown notes your agents share.")
-        existing = ask(
-            "Path to an existing Markdown or Obsidian folder to adopt (empty to create a new brain): "
-        ).strip()
-        if existing:
+        if _choose_adopt(ask, out):
             from brainwiki.importer import overlay, survey
 
-            found = survey(Path(existing))
-            out(overlay.report(found, Path(existing).expanduser().resolve().name))
+            here = Path.cwd()
+            shown = (
+                f"~/{here.relative_to(Path.home())}"
+                if here.is_relative_to(Path.home())
+                else str(here)
+            )
+            existing = ask(f"Path to the folder to adopt [{shown}] ").strip()
+            folder = Path(existing).expanduser().resolve() if existing else here
+            name = _ask_name(ask, out, folder)
+            out(overlay.report(survey(folder), name))
             if not _yes(ask, "Adopt this folder? No note is changed.", True):
                 return 1
-            result = overlay.adopt(Path(existing))
+            result = overlay.adopt(folder, name=name)
             summary.append(
                 f"Adopted {result['root']} as brain {result['brain']!r} (undo: brain brains remove {result['brain']})"
             )
@@ -100,7 +140,7 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
                 ask("Where should the brain live? [~/brains/personal] ").strip()
                 or "~/brains/personal"
             )
-            name = ask("Name? [personal] ").strip() or "personal"
+            name = _ask_name(ask, out, Path(path).expanduser())
             root = init_brain(Path(path), name)
             register_brain(name, root)
             summary.append(f"Created brain {name!r} at {root}")

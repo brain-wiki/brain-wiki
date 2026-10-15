@@ -263,6 +263,63 @@ def test_setup_wizard_creates_brain(tmp_path: Path):
     assert not list((tmp_path / "brains" / "mine" / "inbox" / "episodes").rglob("*.md"))
 
 
+def test_every_setup_prompt_shows_a_default_that_enter_accepts(monkeypatch: pytest.MonkeyPatch):
+    import brainwiki.doctor
+
+    host = {"id": "claude-code", "installed": True, "connected": True}
+    monkeypatch.setattr(
+        brainwiki.doctor,
+        "run_doctor",
+        lambda: {"version": "0", "device": "d", "brains": [], "hosts": [host]},
+    )
+    questions: list[str] = []
+
+    def enter(question: str) -> str:
+        questions.append(question)
+        return ""
+
+    assert run_wizard(None, ask=enter, out=lambda _: None) == 0
+    assert len(questions) >= 6  # brain, name, git, permissions, harvest
+    for question in questions:
+        assert re.search(r"\[[^\]]+\] $", question), question
+    assert "personal" in load_user_config().brains
+
+
+def test_setup_wizard_adopts_the_current_folder_on_enter(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    vault = tmp_path / "notes"
+    write(vault, "Ideas/first.md", "# First\n")
+    monkeypatch.chdir(vault)
+    answers = iter(["adopt", "", "", ""])  # adopt; this folder; default name; confirm
+    assert run_wizard(None, ask=lambda _: next(answers, "n"), out=lambda _: None) == 0
+    assert load_user_config().brains["notes"].resolve() == vault.resolve()
+
+
+def test_setup_wizard_names_the_brain_after_its_folder(tmp_path: Path):
+    folder = tmp_path / "brains" / "Weisun Brain"
+    answers = iter(["", str(folder), "", "n"])  # new; folder; default name; no git
+    assert run_wizard(None, ask=lambda _: next(answers, "n"), out=lambda _: None) == 0
+    assert load_user_config().brains["weisun-brain"].resolve() == folder.resolve()
+
+
+def test_setup_wizard_asks_again_for_an_invalid_name(tmp_path: Path):
+    answers = iter(["new", str(tmp_path / "b"), "Bad Name!", "work-notes", "n"])
+    output: list[str] = []
+    assert run_wizard(None, ask=lambda _: next(answers, "n"), out=output.append) == 0
+    assert "work-notes" in load_user_config().brains
+    assert any("lowercase letters, digits, and hyphens" in line for line in output)
+
+
+def test_setup_wizard_adopts_a_folder_under_a_valid_name(tmp_path: Path):
+    vault = tmp_path / "My Vault"
+    write(vault, "Ideas/first.md", "# First\n")
+    answers = iter(["adopt", str(vault), "", ""])  # adopt; folder; default name; confirm
+    assert run_wizard(None, ask=lambda _: next(answers, "n"), out=lambda _: None) == 0
+    assert load_user_config().brains["my-vault"].resolve() == vault.resolve()
+    assert (vault / "brain.toml").is_file()
+
+
 def test_setup_guide_gives_an_agent_the_setup_skill(capsys):
     assert main(["setup", "--guide"]) == 0
     out = capsys.readouterr().out
