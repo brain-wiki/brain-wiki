@@ -35,20 +35,24 @@ def staged_files(root: Path) -> dict[str, bytes]:
     return out
 
 
-def install_hook(root: Path) -> Path:
+def install_hook(root: Path) -> tuple[Path, bool]:
+    """Install the pre-commit hook. Returns (hook path, whether it was installed already)."""
     if not is_work_tree(root):
         raise NotAvailable(f"{root} is not inside a git work tree")
     hooks = git_dir_path(root, "hooks")
     if hooks is None:
         raise NotAvailable("could not locate the git hooks directory")
     target = hooks / "pre-commit"
+    top = run_git(root, "rev-parse", "--show-toplevel").stdout.strip()
+    rel = os.path.relpath(root, top).replace(os.sep, "/") if top else "."
+    hook = _HOOK.format(rel="" if rel == "." else rel)
     if target.exists():
+        if target.read_text(encoding="utf-8", errors="replace") == hook:
+            return target, True
         raise Conflict(
             f"{target} already exists; add this line to it instead: brain lint --staged --brain {root}"
         )
-    top = run_git(root, "rev-parse", "--show-toplevel").stdout.strip()
-    rel = os.path.relpath(root, top).replace(os.sep, "/") if top else "."
     hooks.mkdir(parents=True, exist_ok=True)
-    target.write_text(_HOOK.format(rel="" if rel == "." else rel), encoding="utf-8")
+    target.write_text(hook, encoding="utf-8")
     target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    return target
+    return target, False

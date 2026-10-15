@@ -142,7 +142,23 @@ def lint(
             continue
         kept.append(problem)
     kept.sort(key=lambda p: (p.path, p.line or 0, p.code))
-    return LintResult(kept, files_checked=checked, seconds=time.monotonic() - started)
+    return LintResult(
+        kept, files_checked=checked, seconds=time.monotonic() - started, fix_info=bool(select)
+    )
+
+
+def lint_cross(engine: Engine, paths: list[str]) -> list[Problem]:
+    """Cross-file rules (strict) reported on `paths`, as the index has them now."""
+    ctx = FileContext.for_engine(engine)
+    wanted = set(paths)
+    out = []
+    for problem in cross_checks(engine, ctx):
+        if problem.path not in wanted:
+            continue
+        problem.severity = severity(problem.code, "strict")
+        if problem.severity != "off":
+            out.append(problem)
+    return out
 
 
 def lint_text(engine: Engine, path: str, text: str) -> list[Problem]:

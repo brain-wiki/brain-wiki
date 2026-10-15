@@ -35,6 +35,12 @@ Blocks in shared files sit between `<!-- brain-wiki:begin v1 -->` and
 `<!-- brain-wiki:end -->`; `--uninstall` removes only that block. If you edit
 the block, `brain connect` will not overwrite it without `--force`.
 
+`--scope project` (Claude Code and Cursor) is separate from the user-level
+connection: undo it with `brain connect <host> --scope project --uninstall`
+in that project. `--uninstall` puts a config file such as
+`~/.cursor/mcp.json` back exactly as it was, unless you changed it since;
+then it removes only brain-wiki's entry and keeps your changes.
+
 The plugin is registered this way:
 
 | Host | How it is registered |

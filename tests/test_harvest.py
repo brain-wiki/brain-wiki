@@ -174,6 +174,47 @@ def test_origin_window(setup: Path, brain_dir: Path):
         origin_window(engine, rel)
 
 
+def test_raw_dry_run_lists_chunks_and_writes_nothing(setup: Path, brain_dir: Path, capsys):
+    args = ["harvest", "--from", "claude-code", "--raw", "--apply", "--dry-run"]
+    assert main(args) == 0
+    out = capsys.readouterr().out
+    assert "claude-code s-good: would write turns 1-6" in out
+    assert "nothing was written" in out and "Wrote" not in out
+    assert not list((brain_dir / "inbox" / "episodes").rglob("*.md"))
+
+
+def test_harvest_refuses_hosts_it_cannot_read_and_points_to_commands(
+    setup: Path, tmp_path: Path, capsys
+):
+    assert main(["harvest", "--from", "nosuch"]) == 2
+    assert capsys.readouterr().err.startswith("usage: unknown host nosuch")
+    assert main(["harvest", "--from", "cursor"]) == 2
+    assert "harvest cannot read cursor sessions yet" in capsys.readouterr().err
+    assert main(["harvest", "--status", "--from", "claude-code", "--from", "codex"]) == 0
+    assert "brain harvest enable codex" in capsys.readouterr().out
+    assert main(["harvest", "disable", "codex"]) == 0
+    assert "already off for codex" in capsys.readouterr().out
+    assert main(["harvest", "--from", "claude-code"]) == 0
+    listing = capsys.readouterr().out  # the whole session id, and the folder it ran in
+    assert f"claude-code s-good  {tmp_path / 'code' / 'lumen'}  → test  turns 1-6" in listing
+
+
+def test_origin_validates_turns_and_takes_absolute_paths(setup: Path, brain_dir: Path):
+    from brainwiki.errors import UsageError
+
+    main(["harvest", "--from", "claude-code", "--raw", "--apply"])
+    (episode,) = list((brain_dir / "inbox" / "episodes").rglob("*.md"))
+    with Engine(open_brain(brain_dir), host="claude-code") as engine:
+        assert origin_window(engine, str(episode))["turns"] == "1-6"  # not past the last turn
+        assert [t["turn"] for t in origin_window(engine, str(episode), turns="2-3")["window"]] == [
+            2,
+            3,
+        ]
+        for bad in ("4-2", "9-12", "0-3", "5-7"):
+            with pytest.raises(UsageError):
+                origin_window(engine, str(episode), turns=bad)
+
+
 def test_harvest_is_configured_with_commands(brain_dir: Path):
     from brainwiki.config._user import load_user_config
 
@@ -189,3 +230,20 @@ def test_harvest_is_configured_with_commands(brain_dir: Path):
     assert list(load_user_config().harvest["routes"]) == ["~/work/**", "~/**"]
     assert main(["harvest", "disable", "claude-code"]) == 0
     assert not load_user_config().harvest["enabled"]
+
+
+def test_a_project_file_wins_over_a_catch_all_route(brain_dir: Path, tmp_path: Path):
+    from brainwiki.config import route_brain
+    from brainwiki.config._user import add_harvest_route, load_user_config, register_brain
+    from brainwiki.lifecycle import init_brain
+
+    register_brain("work", init_brain(tmp_path / "brains" / "work", "work"))
+    project = tmp_path / "code" / "lumen"
+    project.mkdir(parents=True)
+    (project / ".brain-wiki.toml").write_text('brain = "work"\n')
+    add_harvest_route(f"{tmp_path}/**", "test")
+    user = load_user_config()
+    brain = route_brain(str(project), "claude-code", user)
+    assert brain is not None and brain.name == "work"
+    fallback = route_brain(str(tmp_path / "elsewhere"), "claude-code", user)
+    assert fallback is not None and fallback.name == "test"

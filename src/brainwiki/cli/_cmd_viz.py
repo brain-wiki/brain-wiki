@@ -14,6 +14,11 @@ _FORMATS = {".html": "html", ".htm": "html", ".json": "json", ".graphml": "graph
 
 def viz(args: Any) -> int:
     with open_engine(args.brain, host=args.as_host) as engine:
+        if args.topic:  # an unknown topic is an error, not an empty map
+            from brainwiki.index import known_topics
+
+            engine.scan()
+            args.topic = known_topics(engine, args.topic)
         if args.export:
             return _export(args, engine)
         from brainwiki.viz import serve

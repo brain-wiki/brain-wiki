@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 
 from brainwiki.config import Profile, brain_state_dir
 from brainwiki.consolidate._schema import CLAIM_MAX_CHARS, MAX_OPS
-from brainwiki.errors import Expired, NotFound
+from brainwiki.errors import Expired, FormatError, NotFound, Stale
 from brainwiki.format import CANONICAL, parse_document
 from brainwiki.origin import available as origin_available
 from brainwiki.store import sha256_bytes
@@ -95,6 +95,7 @@ _STOP = frozenset(
     ]
 )
 _EPISODE_REF = re.compile(r"inbox/(?:episodes|agents)/[^\s)\"'`]+\.md")
+_PROTECTED_FILES = frozenset({"rules.md", "log.md", "brain.toml", "AGENTS.md"})
 
 
 @dataclass
@@ -293,6 +294,48 @@ def _archive_path(engine: Engine, rel: str) -> str:
     return f"{layout.archive_dir}/{rel[len(layout.inbox_dir) + 1 :]}"
 
 
+def _curated(engine: Engine, rel: str) -> bool:
+    """A file consolidation may edit: never the brain's own files, the inbox, the archive, or reports."""
+    layout = engine.manifest.layout
+    if rel in _PROTECTED_FILES:
+        return False
+    return not rel.startswith(
+        tuple(f"{d}/" for d in (layout.inbox_dir, layout.archive_dir, layout.reports_dir))
+    )
+
+
+def _note_ref(engine: Engine, row: Any, data: bytes, handle: str) -> NoteRef:
+    return NoteRef(
+        handle, row["path"], row["id"], "sha256:" + sha256_bytes(data), row["topic"], row["kind"]
+    )
+
+
+def _episode_span(engine: Engine, rel: str) -> tuple[Any, list[str], int, int] | None:
+    """The parsed episode, its lines, and the first and last body lines; None for an empty body."""
+    text = engine.store.read_bytes(rel).decode("utf-8", "replace")
+    doc = parse_document(rel, text)
+    all_lines = text.splitlines()
+    first = doc.frontmatter.body_start_line
+    last = len(all_lines)
+    while last >= first and not all_lines[last - 1].strip():
+        last -= 1
+    return None if last < first else (doc, all_lines, first, last)
+
+
+def _episode_ref(engine: Engine, row: Any, handle: str, first: int, last: int) -> EpisodeRef:
+    """Provenance and the archive target always come from the episode's own file (05 §3.3)."""
+    return EpisodeRef(
+        handle=handle,
+        path=row["path"],
+        id=row["fm_id"],
+        first_line=first,
+        last_line=last,
+        inputs=row["inputs"] or "unknown",
+        origin=row["origin"] or "agent",
+        archive_to=_archive_path(engine, row["path"]),
+    )
+
+
 def _summary(doc: Any) -> str:
     """The first prose paragraph after the title; stops at the first section heading."""
     lines = doc.text.splitlines()
@@ -324,7 +367,9 @@ def build_packet(
 ) -> Packet | None:
     engine.scan(force=True)
     manifest = engine.manifest
-    limit = max_episodes or manifest.consolidate.max_episodes_per_run
+    if topic and topic not in engine.topics.paths and topic not in manifest.topics:
+        raise NotFound(f"unknown topic {topic!r}; `brain topics` lists them")
+    limit = manifest.consolidate.max_episodes_per_run if max_episodes is None else max_episodes
     budget = (budget_tokens or _BUDGETS.get(backend, 15_000)) * 4  # characters
     episodes = _pending_episodes(engine, topic=topic)[: max(limit * 3, limit)]
     if not episodes:
@@ -349,7 +394,7 @@ def build_packet(
             "SELECT id, path, title, type, status, topic, kind FROM nodes WHERE id = ?",
             (node_id,),
         ).fetchone()
-        if row is None:
+        if row is None or not _curated(engine, row["path"]):
             return None
         data = engine.store.read_bytes(row["path"])
         doc = parse_document(row["path"], data.decode("utf-8", "replace"))
@@ -377,30 +422,17 @@ def build_packet(
             entry["claims_without_ids"] = unclaimed
         cost = len(json.dumps(entry, ensure_ascii=False))
         note_handles[node_id] = handle
-        packet.notes[handle] = NoteRef(
-            handle,
-            row["path"],
-            row["id"],
-            "sha256:" + sha256_bytes(data),
-            row["topic"],
-            row["kind"],
-        )
+        packet.notes[handle] = _note_ref(engine, row, data, handle)
         note_entries.append(entry)
         return handle, cost
 
     for row in episodes:
         if len(packet.episodes) >= limit:
             break
-        data = engine.store.read_bytes(row["path"])
-        text = data.decode("utf-8", "replace")
-        doc = parse_document(row["path"], text)
-        all_lines = text.splitlines()
-        first = doc.frontmatter.body_start_line
-        last = len(all_lines)
-        while last >= first and not all_lines[last - 1].strip():
-            last -= 1
-        if last < first:
+        span = _episode_span(engine, row["path"])
+        if span is None:
             continue
+        doc, all_lines, first, last = span
         lines = [f"{n}| {all_lines[n - 1]}" for n in range(first, last + 1)]
         cost = sum(len(line) + 4 for line in lines) + 200
         candidates_ids = _candidates(engine, doc.body_text, _hints(row["props"]))
@@ -414,16 +446,7 @@ def build_packet(
                 handles.append(added[0])
                 used += added[1]
         used += cost
-        packet.episodes[handle] = EpisodeRef(
-            handle=handle,
-            path=row["path"],
-            id=row["fm_id"],
-            first_line=first,
-            last_line=last,
-            inputs=row["inputs"] or "unknown",
-            origin=row["origin"] or "agent",
-            archive_to=_archive_path(engine, row["path"]),
-        )
+        packet.episodes[handle] = _episode_ref(engine, row, handle, first, last)
         entry = {
             "handle": handle,
             "agent": row["agent"],
@@ -486,4 +509,117 @@ def build_packet(
         "notes": note_entries,
         "episodes": episode_entries,
     }
+    return packet
+
+
+# -- review ----------------------------------------------------------------
+def _used_handles(ops: Any) -> set[str]:
+    """Note, claim, and episode handles the ops point at; the ops are not validated yet."""
+    used: set[str] = set()
+    for op in ops if isinstance(ops, list) else []:
+        if not isinstance(op, dict):
+            continue
+        used.update(
+            op[k] for k in ("note", "from", "to", "claim", "episode") if isinstance(op.get(k), str)
+        )
+        groups = [op.get("sources")] + [
+            c.get("sources") for c in op.get("claims") or [] if isinstance(c, dict)
+        ]
+        for sources in groups:
+            if isinstance(sources, list):
+                used.update(str(s).split("#", 1)[0] for s in sources)
+    return used
+
+
+def rebuild_packet(engine: Engine, claimed: Packet, ops: Any) -> Packet:
+    """The packet behind a stored proposal, rebuilt from the current brain (05 §7.2).
+
+    A proposal is a file anyone with access to the brain can write, so only its handles and the
+    identities behind them are kept: every note must be a note consolidation may change, every
+    episode a pending one whose archive target is where it archives. Hashes, line ranges,
+    provenance, and topic review policies come from the files, never from `claimed`. A note,
+    claim, or episode the ops use that has changed since makes the proposal stale.
+    """
+    engine.scan(force=True)
+    layout = engine.manifest.layout
+    used = _used_handles(ops)
+    packet = Packet(
+        run=claimed.run,
+        brain=engine.brain.display_name,
+        backend=claimed.backend,
+        profile=claimed.profile,
+        created=claimed.created,
+        data={},
+    )
+
+    def node(rel: str) -> Any:
+        return engine.db.execute(
+            "SELECT id, path, fm_id, topic, kind, origin, inputs FROM nodes WHERE path = ?",
+            (rel,),
+        ).fetchone()
+
+    def forged(rel: str) -> bool:
+        return ".." in rel.split("/") or rel.startswith("/")
+
+    for handle, ref in claimed.notes.items():
+        row = node(ref.path)
+        if (
+            forged(ref.path)
+            or not _curated(engine, ref.path)
+            or (row is not None and row["kind"] not in ("note", "hub"))
+        ):
+            raise FormatError(
+                f"{handle} names {ref.path}, which is not a note consolidation may change"
+            )
+        if row is None or row["id"] != ref.id:
+            if handle in used:
+                raise Stale(f"{ref.path} is no longer the note this proposal was made against")
+            continue
+        packet.notes[handle] = _note_ref(engine, row, engine.store.read_bytes(ref.path), handle)
+
+    docs: dict[str, Any] = {}
+    for handle, ref in claimed.claims.items():
+        note = packet.notes.get(ref.note)
+        found, active = None, []
+        if note is not None:
+            if note.path not in docs:
+                docs[note.path] = parse_document(note.path, engine.store.read_text(note.path))
+            active = [c for c in docs[note.path].claims if c.status == "active" and c.id]
+            found = next((c for c in active if str(c.id) == ref.claim_id), None)
+        if found is None:
+            if handle in used:
+                raise Stale(f"claim {ref.claim_id} is no longer active in {ref.note}'s note")
+            continue
+        packet.claims[handle] = ClaimRef(handle, ref.note, ref.claim_id, found.text, len(active))
+
+    inboxes = (f"{layout.episodes_dir}/", f"{layout.agents_inbox_dir}/")
+    for handle, ref in claimed.episodes.items():
+        if (
+            forged(ref.path)
+            or not ref.path.startswith(inboxes)
+            or ref.archive_to != _archive_path(engine, ref.path)
+        ):
+            raise FormatError(
+                f"{handle} names {ref.path} (archived to {ref.archive_to}), "
+                "which is not a pending episode and its archive location"
+            )
+        row = node(ref.path)
+        span = _episode_span(engine, ref.path) if row and row["kind"] == "episode" else None
+        if span is None:
+            if handle in used:
+                raise Stale(f"{ref.path} is no longer pending")
+            continue
+        packet.episodes[handle] = _episode_ref(engine, row, handle, span[2], span[3])
+
+    tree = engine.topics
+    hubs = {n.path: h for h, n in packet.notes.items()}
+    for slug, path in sorted(tree.paths.items()):
+        hub = engine.db.execute(
+            "SELECT path FROM nodes WHERE topic = ? AND kind = 'hub' ORDER BY path LIMIT 1",
+            (slug,),
+        ).fetchone()
+        hub_path = hub["path"] if hub else None
+        packet.topics[slug] = TopicRef(
+            slug, path, hubs.get(hub_path or ""), hub_path, tree.setting(slug, "review")
+        )
     return packet

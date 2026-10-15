@@ -20,6 +20,10 @@ topics/search/fts5.md
 2 problems (1 error, 1 warning), 1 fixable with --fix
 ```
 
+The "fixable with --fix" count is what `--fix` with the same options would
+repair. Fixable `info` problems are counted after it, with the selection
+that turns them on: `; 2 more with --fix --select BW205,BW405`.
+
 `--json` emits a list of `{code, severity, path, line, message, fixable}`.
 Exit codes: `0` no errors, `1` errors found, `2` usage error; the rest as in
 [[07-23-exit-codes|07 §2.3]].

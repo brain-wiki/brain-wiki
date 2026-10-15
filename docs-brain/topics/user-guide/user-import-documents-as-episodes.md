@@ -15,4 +15,6 @@ brain import clippings/ --to-episodes --untrusted --apply
 ```
 
 Documents are split on headings into episodes for consolidation to fold
-into notes. Use `--untrusted` for text you did not write.
+into notes; frontmatter is left out. Use `--untrusted` for text you did not
+write. Running the same import again skips what was already imported, and
+the output says how many episodes were written and how many skipped.

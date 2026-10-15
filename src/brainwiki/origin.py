@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from brainwiki.errors import Forbidden, NotAvailable, NotFound, UsageError
@@ -18,6 +19,11 @@ _RANGE = re.compile(r"^(\d+)-(\d+)$")
 
 
 def _episode(engine: Engine, target: str) -> Any:
+    if Path(target).expanduser().is_absolute():
+        try:
+            target = engine.store.rel(Path(target).expanduser())
+        except ValueError:
+            raise NotFound(f"{target} is not inside the brain at {engine.store.root}") from None
     engine.scan()
     row = engine.db.execute(
         """SELECT path, fm_id, agent, session, origin_turns, device FROM nodes
@@ -58,14 +64,21 @@ def origin_window(engine: Engine, target: str, *, turns: str | None = None) -> d
         raise NotAvailable("the transcript is gone (deleted by the host, or never on this device)")
     transcript = reader.read(info)
     start, end = (int(x) for x in _RANGE.match(str(row["origin_turns"])).groups())  # type: ignore[union-attr]
+    last = max((t.index for t in transcript.turns), default=0)
     if turns:
         match = _RANGE.match(turns)
         if not match:
             raise UsageError("turns must look like 12-40")
         start, end = int(match.group(1)), int(match.group(2))
+        if not 1 <= start <= end:
+            raise UsageError(
+                f"turns {turns}: the first turn must be 1 or more and not after the last"
+            )
+        if end > last:
+            raise UsageError(f"turns {turns}: the session has turns 1-{last}")
     else:
         pad = max(0, (_DEFAULT_CONTEXT - (end - start + 1)) // 2)
-        start, end = max(1, start - pad), end + pad
+        start, end = max(1, start - pad), min(end + pad, max(last, 1))
     if end - start + 1 > _MAX_TURNS:
         end = start + _MAX_TURNS - 1
     window = []

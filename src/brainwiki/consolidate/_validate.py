@@ -56,9 +56,12 @@ def validate(engine: Engine, packet: Packet, payload: Any) -> Validation:
     ops: list[dict[str, Any]] = payload["ops"]
     manifest = engine.manifest
     created_topics: dict[str, str] = {}  # slug -> folder; a sub-topic goes inside its parent
+    created_parents: dict[str, str] = {}  # slug -> parent slug, for topics created in this batch
     for op in ops:
         if op["op"] == "create_topic":
             parent = op.get("parent")
+            if parent:
+                created_parents[op["slug"]] = parent
             base = (
                 packet.topics[parent].path
                 if parent in packet.topics
@@ -107,13 +110,21 @@ def validate(engine: Engine, packet: Packet, payload: Any) -> Validation:
         if "<!--" in text or "-->" in text:
             err(index, f"{what} must not contain <!-- or -->")
 
+    def topic_review(topic: str | None) -> None:
+        """V10 for every topic an op writes into; a new topic inherits its parent's policy."""
+        seen: set[str] = set()
+        while topic and topic not in seen:
+            if packet.topics.get(topic) and packet.topics[topic].review == "always":
+                result.review.append(f"topic {topic} requires review")
+                return
+            seen.add(topic)
+            topic = created_parents.get(topic)
+
     def target_ok(index: int, ref: str) -> None:
         if not known(ref):
             err(index, f"{ref} is neither a note in the packet nor created in this batch")
             return
-        topic = packet.notes[ref].topic if ref in packet.notes else ref[4:].split("/", 1)[0]
-        if topic and packet.topics.get(topic) and packet.topics[topic].review == "always":
-            result.review.append(f"topic {topic} requires review")
+        topic_review(packet.notes[ref].topic if ref in packet.notes else ref[4:].split("/", 1)[0])
 
     created_earlier: set[str] = set()
     for index, op in enumerate(ops):
@@ -137,8 +148,10 @@ def validate(engine: Engine, packet: Packet, payload: Any) -> Validation:
             if not SLUG_RE.match(slug):
                 err(index, f"invalid slug {slug!r}")
             check_text(index, op["title"], "title")
+            topic_review(slug)
         elif kind == "create_note":
             topic, slug = op["ref"][4:].split("/", 1)
+            topic_review(topic)
             if topic not in packet.topics and topic not in created_topics:
                 err(
                     index,
@@ -190,6 +203,8 @@ def validate(engine: Engine, packet: Packet, payload: Any) -> Validation:
             target_ok(index, op["from"])
             if not known(op["to"]):
                 err(index, f"{op['to']} is neither a note in the packet nor created in this batch")
+            elif verb == "supersedes":  # also marks the target note superseded
+                target_ok(index, op["to"])
             for text in (op.get("qualifier") or "", op.get("comment") or ""):
                 check_text(index, text, "qualifier and comment")
             relations.append((op["from"], verb, op["to"]))

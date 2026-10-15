@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from brainwiki.bench._suites import SuiteResult
+from brainwiki.errors import FormatError
 
 _SCHEMA = 1
 
@@ -134,9 +135,30 @@ def write(out: Path, data: dict[str, Any]) -> tuple[Path, Path]:
     return results, report
 
 
-def compare(a: Path, b: Path) -> tuple[str, int]:
-    """Metric deltas from results file A to B, and the number of regressions (pass -> fail)."""
-    old, new = (json.loads(Path(p).read_text(encoding="utf-8")) for p in (a, b))
+_METRIC_KEYS = ("suite", "case", "backend", "metric", "value", "pass")
+
+
+def _load_results(path: Path) -> dict[str, Any]:
+    """A results.json from `brain bench`, checked enough that comparing it cannot crash."""
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise FormatError(f"{path} is not JSON ({exc.msg} at line {exc.lineno})") from None
+    metrics = data.get("metrics") if isinstance(data, dict) else None
+    if not isinstance(metrics, list) or not all(
+        isinstance(m, dict) and all(k in m for k in _METRIC_KEYS) for m in metrics
+    ):
+        raise FormatError(
+            f"{path} is not a bench results file: it needs a metrics list whose entries have "
+            f"{', '.join(_METRIC_KEYS)} (compare the results.json files `brain bench` writes)"
+        )
+    return data
+
+
+def compare(a: Path, b: Path, *, quiet: bool = False) -> tuple[str, int]:
+    """Metric deltas from results file A to B, and the number of regressions (pass -> fail).
+    `quiet` keeps only the regressions."""
+    old, new = _load_results(a), _load_results(b)
 
     def key(m: dict[str, Any]) -> tuple[str, str, str, str]:
         return (m["suite"], m["case"], m["backend"], m["metric"])
@@ -161,6 +183,9 @@ def compare(a: Path, b: Path) -> tuple[str, int]:
         if isinstance(x["value"], int | float) and isinstance(y["value"], int | float):
             delta = f" ({y['value'] - x['value']:+.4g})"
         lines.append(f"{mark} {name}: {_value(x['value'])} -> {_value(y['value'])}{delta}")
-    head = f"{a} ({old['version']}) -> {b} ({new['version']}): {regressions} regression(s)"
+    versions = (old.get("version", "?"), new.get("version", "?"))
+    head = f"{a} ({versions[0]}) -> {b} ({versions[1]}): {regressions} regression(s)"
+    if quiet:
+        return "\n".join([head, *(line for line in lines if line.startswith("!"))]), regressions
     legend = "! regression (pass -> fail)   * fixed (fail -> pass)   +/- metric added/removed"
     return "\n".join([head, legend, *(lines or ["no metric changed"])]), regressions

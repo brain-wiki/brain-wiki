@@ -33,7 +33,8 @@ recorded version:
 | Links and relations | A relation does not parse or names an unknown `bw-` field (error), or a new link does not resolve (warning) |
 | Claims | Claim metadata is broken, or a claim was deleted or reworded in place. Claims change only by superseding (move the old claim to `bw-claims-superseded`, add the new one), so a fact's history is never lost |
 | Claim provenance | An agent changed an existing claim's `origin`, `inputs`, or `src`. Only brain-wiki and the user set provenance |
-| Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` |
+| Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` (MCP `allow_shrink`) |
+| Lint | The edit introduces a strict lint error: file rules on the new content, and cross-file rules (a `by:` naming no claim, a supersession cycle) reported on lines the edit added or changed. Warnings and info are shown with their own severity and do not block |
 | Protected files | Any of the files above changed |
 | Sync debris | Merge-conflict markers or sync-conflict copies |
 
@@ -43,20 +44,23 @@ it; `log.md` gains a line; the brain's git repo, if any, gets a commit;
 author `agent:<host>`. Claims the edit added get `origin: agent` and
 `inputs: unknown`, whatever the agent wrote (an edit cannot show what else
 happened in the session), so they show as unverified until the user edits
-them; consolidation keeps the worse value when it merges. A
-failed check records nothing and returns every problem with its line; the
+them; consolidation keeps the worse value when it merges. Claims the user
+adds are left as written. A failed check records nothing and returns every problem with its line; the
 agent fixes the file and checks again, or `brain restore <path>` puts back
 the last recorded version.
 
 **The last recorded version.** The index keeps, for each note, the content
 it had when a run last wrote it, when `brain check` last recorded it, or
-when the index was first built. A note created outside brain-wiki after
-that is recorded as absent, so it shows as a pending creation. A note whose
+when the index was first built: every note found before the first full
+scan completes counts as the starting version, even when a write (a first
+`brain log` or rule change) indexed some files before that scan. A note
+created outside brain-wiki after that is recorded as absent, so it shows as a pending creation. A note whose
 file differs from its recorded version has a *pending edit*. `brain check`
 with no paths lists pending edits with their diffs; `brain check --adopt
 PATH` records a pending edit as the user's (author `owner`) even when checks
 report problems, which is how hand edits made outside brain-wiki can be
-given an undo point. Pending edits are not lint errors: humans edit their
+given an undo point. Adopting cannot record a protected file or a file that
+is not a note, so a failed check suggests `--adopt` only when it would help. Pending edits are not lint errors: humans edit their
 notes freely, and nothing nags them. A rename by hand carries the recorded
 version to the new path. The recorded versions survive index rebuilds,
 since they are the only record of unchecked edits; only a lost index starts

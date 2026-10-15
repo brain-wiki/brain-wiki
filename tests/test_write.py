@@ -254,3 +254,117 @@ def test_doctor_rolls_back_interrupted_run(brain_dir: Path, capsys):
     out = capsys.readouterr().out
     assert "run_rolled_back" in out
     assert (brain_dir / "topics/a/one.md").read_text() == "# One\n"
+
+
+# -- `--as HOST` acts with that host's profile (07 §1) -----------------------------------
+def _registered(example: Path, extra: str = "") -> Path:
+    from brainwiki.config._user import register_brain
+
+    toml = example / "brain.toml"
+    toml.write_text(toml.read_text() + "\n[agents.codex]\nwrite = []\n" + extra)
+    register_brain("example", example, make_default=True)
+    return example
+
+
+def test_as_host_log_needs_episodes_and_records_the_agent(example: Path, capsys):
+    root = _registered(example)
+    assert main(["--as", "codex", "log", "x"]) == 5
+    assert "brain agents grant codex episodes" in capsys.readouterr().err
+    assert main(["--as", "trusted", "log", "From trusted.", "--topic", "nosuch"]) == 0
+    assert "no topic 'nosuch'" in capsys.readouterr().err
+    assert main(["--as", "trusted", "log", "x", "--inputs", "local"]) == 2
+    with eng(root) as e:
+        e.scan(force=True)
+        row = e.db.execute(
+            "SELECT agent, origin, inputs FROM nodes WHERE kind='episode' AND agent='trusted'"
+        ).fetchone()
+    assert tuple(row) == ("trusted", "agent", "unknown")
+
+
+def test_as_host_rules_become_proposals_and_decisions_stay_the_users(example: Path, capsys):
+    root = _registered(example)
+    assert main(["--as", "codex", "rule", "add", "Be terse."]) == 5
+    assert main(["--as", "trusted", "rule", "add", "Be terse.", "--json"]) == 0
+    with eng(root) as e:
+        (proposal,) = rules.pending_rule_proposals(e)
+        assert proposal["agent"] == "trusted"
+        assert [r["text"] for r in rules.list_rules(e)] == [
+            "Prefer pytest over unittest for new tests."
+        ]
+    capsys.readouterr()
+    for argv in (
+        ["rule", "accept", proposal["id"]],
+        ["rule", "reject", proposal["id"]],
+        ["agents", "grant", "codex", "consolidate"],
+        ["undo"],
+        ["mv", "topics/budget", "topics/money"],
+        ["lint", "--fix"],
+    ):
+        assert main(["--as", "trusted", *argv]) == 5, argv
+        assert "forbidden" in capsys.readouterr().err
+    assert (root / "topics/budget").is_dir() and "consolidate" not in (
+        root / "brain.toml"
+    ).read_text().split("[agents.codex]")[1]
+
+
+def test_rule_messages_and_proposal_listing(example: Path, capsys):
+    root = _registered(example)
+    existing = "r-01M4KT3JPSB7BP2SNSCAVC2SFC"
+    assert main(["rule", "add", "x", "--replaces", "r-NOPE"]) == 3
+    assert "no rule has the id r-NOPE" in capsys.readouterr().err
+    assert main(["rule", "add", "Prefer pytest over unittest for new tests."]) == 4
+    assert f"rule {existing} already says that" in capsys.readouterr().err
+    assert main(["rule", "list", "extra"]) == 2
+    assert main(["rule", "list", "--quote", "q"]) == 2
+    with eng(root) as e:
+        pid, rel = rules.propose_rule(e, "Prefer pytest always.", "q", replaces=existing)
+    renamed = root / rel.replace(pid, "renamed")
+    (root / rel).rename(renamed)  # its frontmatter id now differs from its file name
+    capsys.readouterr()
+    assert main(["rule", "list"]) == 0
+    out = capsys.readouterr().out
+    assert f"renamed  Prefer pytest always.  (from an agent; replaces {existing})" in out
+    assert main(["rule", "accept", "renamed"]) == 0
+    assert not renamed.exists()
+    with eng(root) as e:
+        assert [r["text"] for r in rules.list_rules(e)] == ["Prefer pytest always."]
+
+
+def test_mv_topic_folder_renames_its_topic(example: Path):
+    root = _registered(example)
+    assert main(["lint", "--fix"]) == 0  # a current AGENTS.md block to begin with
+    assert main(["mv", "topics/storage", "topics/persistence"]) == 0
+    toml = (root / "brain.toml").read_text()
+    assert "[topics.persistence]" in toml and "[topics.storage]" not in toml
+    assert 'description = "Where data lives' in toml
+    agents = (root / "AGENTS.md").read_text()
+    assert "| persistence | topics/persistence/index.md |" in agents and "storage |" not in agents
+    with eng(root) as e:
+        assert "storage" not in e.topics.paths
+        assert not {"BW404", "BW408"} & {p.code for p in lint(e).problems}
+        undo(e)
+    assert "[topics.storage]" in (root / "brain.toml").read_text()
+
+
+def test_mv_topic_with_a_declared_path_and_folder_named_hubs(example: Path):
+    root = _registered(example, '\n[layout]\nhub_filename = "{folder}.md"\n')
+    (root / "topics/budget/index.md").rename(root / "topics/budget/budget.md")
+    toml = root / "brain.toml"
+    toml.write_text(
+        toml.read_text().replace('title = "Budget"', 'path = "topics/budget"\ntitle = "Budget"')
+    )
+    assert main(["mv", "topics/budget", "topics/money"]) == 0
+    assert (root / "topics/money/money.md").exists()
+    assert 'path = "topics/money"' in toml.read_text() and "[topics.budget]" in toml.read_text()
+
+
+def test_agents_warn_on_unknown_host_and_grant_read_origin(example: Path, capsys):
+    root = _registered(example)
+    assert main(["agents", "revoke", "nosuchhost", "edit"]) == 0
+    assert "'nosuchhost' is not a known host id" in capsys.readouterr().err
+    assert main(["agents", "grant", "claude-code", "read_origin", "edit"]) == 0
+    assert "not a known host" not in capsys.readouterr().err
+    profile = open_brain(root).manifest.profile("claude-code")
+    assert profile.read_origin and profile.write == ["episodes", "edit"]
+    assert main(["agents", "revoke", "claude-code", "read_origin"]) == 0
+    assert not open_brain(root).manifest.profile("claude-code").read_origin

@@ -2,7 +2,8 @@
 
 Links by file name keep working when only folders change; links that name a path, and relative
 Markdown links into or out of what moved, are rewritten. Topics are known by their slug, so
-moving a topic folder re-parents it without breaking topic policies (design doc 02 §2).
+moving a topic folder re-parents it without breaking topic policies (design doc 02 §2); renaming
+one renames its brain.toml entry in the same run.
 """
 
 from __future__ import annotations
@@ -11,12 +12,16 @@ import contextlib
 import os
 import posixpath
 import re
+import tomllib
 from typing import TYPE_CHECKING
 from urllib.parse import quote
 
+from brainwiki.config import MANIFEST
 from brainwiki.errors import Conflict, NotFound, UsageError
-from brainwiki.index import norm_key
+from brainwiki.format import extract_block, replace_block
+from brainwiki.index import norm_key, slugify
 from brainwiki.runs import Check, Run, RunRecord
+from brainwiki.write._profiles import require
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
@@ -72,10 +77,127 @@ def _plan_folder(engine: Engine, src: str, dst: str) -> Run:
         raise NotFound(f"{src} holds no files")
     run = Run(engine, "mv", summary=f"mv {src}/ → {dst}/")
     mapping = {path: dst + path[len(src) :] for path in files}
+    hub_filename = engine.manifest.layout.hub_filename
+    if "{folder}" in hub_filename:  # a hub named after its folder follows the folder's name
+        old_hub = f"{src}/{hub_filename.replace('{folder}', posixpath.basename(src))}"
+        new_hub = f"{dst}/{hub_filename.replace('{folder}', posixpath.basename(dst))}"
+        if old_hub in mapping and new_hub not in mapping.values():
+            mapping[old_hub] = new_hub
     for old, new in mapping.items():
         run.move(old, new)
     _rewrite_links(engine, run, mapping)
+    _move_topics(engine, run, src, dst, mapping)
     return run
+
+
+def _moved(path: str, src: str, dst: str) -> str:
+    return dst + path[len(src) :] if path == src or path.startswith(src + "/") else path
+
+
+def _move_topics(engine: Engine, run: Run, src: str, dst: str, mapping: dict[str, str]) -> None:
+    """Keep brain.toml's topic entries on the folders that moved, and the AGENTS.md topic table
+    current. A declared path follows its folder; a topic declared without one is found by its
+    folder's name, so renaming that folder renames the topic's table."""
+    declared = engine.manifest.topics
+    renames: dict[str, str] = {}
+    paths: dict[str, str] = {}
+    for slug, path in engine.topics.paths.items():
+        new_path = _moved(path, src, dst)
+        cfg = declared.get(slug)
+        if new_path == path or cfg is None:
+            continue
+        if cfg.path_declared:
+            paths[slug] = new_path
+        elif slugify(posixpath.basename(new_path)) != slug:
+            renames[slug] = slugify(posixpath.basename(new_path))
+    for old, new in renames.items():
+        if new in declared or new in engine.topics.paths:
+            raise Conflict(
+                f"moving {src} renames topic {old!r} to {new!r}, which already exists; "
+                "pick another folder name"
+            )
+    if renames or paths:
+        before = run.read(MANIFEST) or ""
+        run.write(MANIFEST, _retopic(before, renames, paths))
+    agents = run.read("AGENTS.md")
+    if agents is not None and extract_block(agents) is not None:
+        block = _agents_block_after(engine, agents, src, dst, mapping, renames)
+        if extract_block(agents) != block:
+            run.write("AGENTS.md", replace_block(agents, block))
+
+
+def _retopic(text: str, renames: dict[str, str], paths: dict[str, str]) -> str:
+    """brain.toml text with topic tables renamed and declared paths changed, comments kept."""
+    import tomlkit
+
+    out = text
+    for old, new in renames.items():  # rename the table headers in place when they are plain
+        out = re.sub(
+            r'(?m)^(\s*\[\s*topics\s*\.\s*)"?' + re.escape(old) + r'"?(\s*[\].])',
+            lambda m, new=new: m.group(1) + new + m.group(2),
+            out,
+        )
+    expected = tomllib.loads(text)
+    expected["topics"] = {renames.get(k, k): v for k, v in expected["topics"].items()}
+    if renames and tomllib.loads(out) != expected:
+        doc = tomlkit.parse(text)  # dotted keys or inline tables: rebuild the topics table
+        table = tomlkit.table(is_super_table=True)
+        for key, value in doc["topics"].items():
+            table.add(renames.get(key, key), value)
+        doc["topics"] = table
+        out = tomlkit.dumps(doc)
+    if paths:
+        doc = tomlkit.parse(out)
+        for slug, path in paths.items():
+            doc["topics"][slug]["path"] = path
+        out = tomlkit.dumps(doc)
+    return out
+
+
+def _agents_block_after(
+    engine: Engine,
+    agents: str,
+    src: str,
+    dst: str,
+    mapping: dict[str, str],
+    renames: dict[str, str],
+) -> str:
+    """The AGENTS.md block as `index.agents_block` will render it once the move is applied: the
+    index still describes the brain before it, so the move is applied to its topic rows."""
+    from brainwiki.index import topic_rows
+    from brainwiki.lifecycle import default_agents_block
+
+    declared = engine.manifest.topics
+    rows = []
+    for row in topic_rows(engine):
+        path = _moved(row["path"], src, dst)
+        slug = row["slug"]
+        if path != row["path"] and not (slug in declared and declared[slug].path_declared):
+            slug = renames.get(slug) or (
+                slug if slug in declared else slugify(posixpath.basename(path))
+            )
+        about = row["description"] or (slug if row["title"] == row["slug"] else row["title"])
+        rows.append((slug, path, mapping.get(row["hub"], row["hub"]) or path, about))
+    table = []
+    for slug, path, hub, about in rows:
+        if any(path.startswith(other + "/") for _, other, _, _ in rows):
+            continue  # a sub-topic now
+        below = sum(1 for _, other, _, _ in rows if other.startswith(path + "/"))
+        table.append((slug, hub, about + (f" ({below} sub-topics)" if below else "")))
+    name = engine.brain.display_name
+    edit = engine.manifest.profile("default").can("edit")
+    old_block = extract_block(agents) or ""
+    outside = len(agents.splitlines()) - (len(old_block.splitlines()) + 2 if old_block else 0)
+    budget = engine.manifest.budgets.agents_md_max_lines - max(outside, 0) - 2
+    keep = len(table)  # rows are most recently updated first, as agents_block trims them
+    while True:
+        shown = sorted(table[:keep])
+        if keep < len(table):
+            shown.append((f"… {len(table) - keep} more", "see the hubs under topics/", ""))
+        block = default_agents_block(name, shown, edit=edit)
+        if keep == 0 or len(block.splitlines()) <= budget:
+            return block
+        keep -= 1
 
 
 def _rewrite_links(engine: Engine, run: Run, mapping: dict[str, str]) -> None:
@@ -166,13 +288,16 @@ def _chunks(items: list[str], size: int = 500) -> list[list[str]]:
 
 
 def move_note(engine: Engine, src: str, dst: str, *, check: Check | None = None) -> RunRecord:
+    require(engine, "edit", "move notes")
     run = plan_move(engine, src, dst)
-    rewritten = [e.path for e in run.entries if e.moved_to is None]
+    edited = [e.path for e in run.entries if e.moved_to is None]
     moved = sum(1 for e in run.entries if e.moved_to is not None)
     head = f"- {src} → {dst}" + (f" ({moved} files)" if moved > 1 else "")
-    record = run.commit(
-        check=check, log_lines=[head] + [f"- rewrote links in {p}" for p in rewritten]
-    )
+    lines = [head] + [
+        f"- {'updated topics' if p in (MANIFEST, 'AGENTS.md') else 'rewrote links'} in {p}"
+        for p in edited
+    ]
+    record = run.commit(check=check, log_lines=lines)
     root = engine.store.abspath(src.rstrip("/"))
     if root.is_dir():  # a folder move leaves its emptied directories behind
         for folder, _, _ in os.walk(root, topdown=False):

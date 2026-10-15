@@ -83,3 +83,8 @@ def severity(code: str, profile: str) -> str:
 def fixable(code: str) -> bool:
     info = _RULES.get(code)
     return bool(info and info.fixable)
+
+
+def unknown_codes(patterns: list[str]) -> list[str]:
+    """The codes or prefixes (`BW3`, `BW405`) in `patterns` that match no rule."""
+    return [p for p in patterns if not any(code.startswith(p.upper()) for code in _RULES)]

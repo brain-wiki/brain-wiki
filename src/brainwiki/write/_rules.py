@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from brainwiki.errors import BudgetExceeded, NotFound, UsageError
+from brainwiki.errors import BudgetExceeded, Conflict, NotFound, UsageError
 from brainwiki.format import (
     RULES_HEADER,
     format_rule,
@@ -15,8 +15,9 @@ from brainwiki.format import (
     split,
     split_meta,
 )
-from brainwiki.ids import is_prefixed, rule_id
+from brainwiki.ids import rule_id
 from brainwiki.runs import Run, RunRecord
+from brainwiki.write._profiles import require_owner
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
@@ -53,6 +54,22 @@ def _validate(text: str, quote: str) -> tuple[str, str]:
     if not quote or len(quote) > _MAX_QUOTE_CHARS:
         raise UsageError(f"the quote must be 1 to {_MAX_QUOTE_CHARS} characters")
     return text, quote
+
+
+def _check_new(engine: Engine, text: str, replaces: str | None) -> None:
+    """Refuse a rule that replaces no rule, or that repeats one already in rules.md."""
+    current = list_rules(engine)
+    if replaces:
+        if not replaces.startswith("r-"):
+            raise UsageError("replaces must be a rule id (r-…)")
+        if not any(r["id"] == replaces for r in current):
+            raise NotFound(f"no rule has the id {replaces}")
+    same = next(
+        (r for r in current if r["text"].casefold() == text.casefold() and r["id"] != replaces),
+        None,
+    )
+    if same:
+        raise Conflict(f"rule {same['id']} already says that")
 
 
 def _stage_rule(run: Run, text: str, quote: str, replaces: str | None, via: str | None) -> str:
@@ -119,8 +136,7 @@ def add_rule(
 ) -> tuple[str, RunRecord]:
     """Add (or replace) a rule as the user. Callers are responsible for user confirmation."""
     text, quote = _validate(text, quote or text)
-    if replaces and not is_prefixed(replaces, "r-"):
-        raise UsageError("replaces must be a rule id (r-…)")
+    _check_new(engine, text, replaces)
     run = Run(engine, "rule", agent=agent, summary=f"rule: {text[:60]}")
     new_id = _stage_rule(run, text, quote, replaces, via)
     log = [f"- added {new_id}: {text}"] + ([f"- replaced {replaces}"] if replaces else [])
@@ -137,6 +153,7 @@ def propose_rule(
 ) -> tuple[str, str]:
     """Write a rule proposal for `brain rule accept`. Returns (proposal id, path)."""
     text, quote = _validate(text, quote)
+    _check_new(engine, text, replaces)
     proposal_id = rule_id()
     rel = _proposal_path(engine, proposal_id)
     fields = {
@@ -161,14 +178,17 @@ def propose_rule(
 
 
 def pending_rule_proposals(engine: Engine) -> list[dict[str, Any]]:
-    directory = engine.store.abspath(engine.manifest.layout.proposals_dir)
+    """Proposals, each known by its file name, which accepting and rejecting go by."""
+    proposals_dir = engine.manifest.layout.proposals_dir
+    directory = engine.store.abspath(proposals_dir)
     out = []
     for path in sorted(directory.glob("rule-*.md")) if directory.is_dir() else []:
         fm = split(path.read_text(encoding="utf-8"))
         title = next((ln for ln in fm.body.splitlines() if ln.startswith("# Proposed rule: ")), "")
         out.append(
             {
-                "id": fm.data.get("id") or path.stem[len("rule-") :],
+                "id": path.stem[len("rule-") :],
+                "path": f"{proposals_dir}/{path.name}",
                 "text": title[len("# Proposed rule: ") :],
                 "quote": fm.data.get("quote"),
                 "agent": fm.data.get("agent"),
@@ -186,11 +206,14 @@ def _proposal(engine: Engine, proposal_id: str) -> dict[str, Any]:
 
 
 def accept_rule(engine: Engine, proposal_id: str) -> tuple[str, RunRecord]:
+    require_owner(engine, "accept a rule")
     proposal = _proposal(engine, proposal_id)
     text, quote = _validate(proposal["text"], str(proposal["quote"] or proposal["text"]))
+    replaces = str(proposal["replaces"]) if proposal.get("replaces") else None
+    _check_new(engine, text, replaces)
     run = Run(engine, "rule", summary=f"rule: {text[:60]}")
-    new_id = _stage_rule(run, text, quote, proposal.get("replaces"), "proposal")
-    run.delete(_proposal_path(engine, proposal_id))
+    new_id = _stage_rule(run, text, quote, replaces, "proposal")
+    run.delete(proposal["path"])
     log = [
         f"- accepted proposal {proposal_id} from {proposal.get('agent') or 'an agent'} as {new_id}: {text}"
     ]
@@ -198,7 +221,8 @@ def accept_rule(engine: Engine, proposal_id: str) -> tuple[str, RunRecord]:
 
 
 def reject_rule(engine: Engine, proposal_id: str) -> RunRecord:
-    _proposal(engine, proposal_id)
+    require_owner(engine, "reject a rule proposal")
+    proposal = _proposal(engine, proposal_id)
     run = Run(engine, "rule-reject", summary=f"rejected rule proposal {proposal_id}")
-    run.delete(_proposal_path(engine, proposal_id))
+    run.delete(proposal["path"])
     return run.commit()

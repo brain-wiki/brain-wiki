@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from brainwiki.errors import Conflict, UsageError
+from brainwiki.errors import Conflict, Stale, UsageError
 
 _TMP_PREFIX = ".brain-tmp-"
 
@@ -92,7 +92,7 @@ class LocalStore:
         if expect_sha is not None:
             current = sha256_bytes(target.read_bytes()) if target.exists() else None
             if current != expect_sha:
-                raise Conflict(f"{rel} changed since it was read")
+                raise Stale(f"{rel} changed since it was read")
         target.parent.mkdir(parents=True, exist_ok=True)
         mode = target.stat().st_mode & 0o777 if target.exists() else None
         fd, tmp = tempfile.mkstemp(prefix=_TMP_PREFIX, dir=target.parent)

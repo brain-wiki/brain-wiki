@@ -54,7 +54,9 @@ hosts   = ["claude-code"]
 - No credentials are ever stored here. Proposed remote backends use the
   platform's own credential chains ([remote sync](../proposals/remote-sync.md)).
 - The file is created by `brain init` and edited by `brain brains add |
-  remove | default`, which preserve comments and formatting.
+  remove | rename | default | limit`, which preserve comments and formatting.
+  `add` and `rename` take names of lowercase letters, digits, and hyphens.
+  An edit that fails changes nothing.
 
 ## 3. Choosing a brain
 
@@ -119,9 +121,9 @@ reports the duplicate id.
 | Adopt an existing folder | `brain import --overlay <path>` | See [09](09-import.md). Adds `brain.toml` and the generated files without moving anything. |
 | Register on another device | `brain brains add <name> <path>` | For a brain that arrived by git clone or file sync. Validates `brain.toml`. |
 | Move | move the folder, then `brain brains add <name> <new path>` | Same id, so index and history carry over. The name may be re-pointed because its old folder is no longer a brain (or holds the same brain); otherwise the name is refused. |
-| Rename | `brain brains rename <old> <new>` | Config only; `brain.toml` `name` is cosmetic. |
+| Rename | `brain brains rename <old> <new>` | Config only; `brain.toml` `name` is cosmetic. Refused when `<new>` is already registered; otherwise the entry and every reference to `<old>` (`default`, `[hosts.*] brain` and `brains`, harvest routes) change in one write. |
 | Forget | `brain brains remove <name>` | Config only. The folder, index, and state stay until `--purge-state` deletes the last two. The brain folder is never deleted by brain-wiki. |
-| Check | `brain doctor` | Config, brain, index, SQLite features (trigram), git status, host wiring, pending crashed runs. |
+| Check | `brain doctor` | Config (including brains registered with no default), brain, index (note counts as in `brain list`), SQLite features (trigram), git status, host wiring, pending crashed runs. |
 
 ## 6. Storage and sync
 

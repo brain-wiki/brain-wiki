@@ -107,7 +107,9 @@ def format_brain_list(result: dict[str, Any], *, owner: bool = False) -> str:
                 f"{mark} {r['name']:<{width}}  (unavailable: {r.get('error', 'unreadable')})"
             )
             continue
-        description = (r["description"] or "")[:desc_width]
+        description = r["description"] or ""
+        if len(description) > desc_width:
+            description = description[: desc_width - 1].rstrip() + "…"
         stats = [
             f"{r['topics']} topics",
             f"{r['notes']:,} notes",

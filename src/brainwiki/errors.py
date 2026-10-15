@@ -42,8 +42,16 @@ class Forbidden(BrainError):
 
 
 class Conflict(BrainError):
-    code = "stale"
+    """The change collides with something already there: a name, a file, an edited block."""
+
+    code = "conflict"
     exit_code = 4
+
+
+class Stale(Conflict):
+    """What the change was based on moved since: notes edited since prepare, files since a run."""
+
+    code = "stale"
 
 
 class Busy(BrainError):

@@ -219,6 +219,9 @@ def scan(
         return stats
 
     fresh = not known_any
+    # Until the first full scan finishes, every note found is the version the brain started
+    # from, not an edit: a write-through scan (a first `brain log`) may have run before it.
+    adopt_all = conn.execute("SELECT value FROM meta WHERE key='last_scan_ns'").fetchone()[0] == "0"
     if fresh:
         # Filling an empty index deletes nothing, so cascades have nothing to do; enforcing
         # foreign keys here cost about a third of a 10k-note rebuild.
@@ -258,7 +261,7 @@ def scan(
                 engine, conn, rel, data, st.mtime_ns, st.size, kind, tree, sanctioned, orphaned
             )
             if kind in NOTE_KINDS:
-                if sanctioned or fresh:
+                if sanctioned or adopt_all:
                     _set_baseline(conn, rel, data, keep=not sanctioned)
                 else:  # changed outside a run: keep the recorded version; a new file was absent
                     _set_baseline(conn, rel, None, keep=True)

@@ -21,7 +21,12 @@ Status: draft for review
 | **To episodes** | `brain import <path> --to-episodes` | Documents are split into episodes in the inbox, for consolidation to fold into notes. |
 | **From an agent** | `brain import --from <host>` | The host's own memory files become episodes attributed to that host (§6). |
 
-All modes default to `--dry-run`; `--apply` executes.
+All modes default to `--dry-run`; `--apply` executes, and `--dry-run` wins
+when both are given. Exactly one mode per command. A flag the chosen mode
+does not use is a usage error (exit 2), never silently dropped: `--agent`
+and `--untrusted` need `--to-episodes`, `--phase` needs `--overlay`, and
+`--topic` does not apply to `--overlay` (top-level folders are the topics).
+A source path that does not exist is `not_found` (exit 3) in every mode.
 
 ## 3. Overlay
 
@@ -62,7 +67,7 @@ plus terminal output) shows:
 
 | Phase | Changes | Touches existing notes? |
 |---|---|---|
-| 0 · Adopt | Adds `brain.toml`, `AGENTS.md` (or a managed block in an existing one, with the topic table filled in from the folders found), `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain; in a git repository, commits the added files. Not a run: it is undone by removing the brain and the added files, or by reverting its commit. | **No** |
+| 0 · Adopt | Adds `brain.toml`, `AGENTS.md` (or a managed block in an existing one, with the topic table filled in from the folders found), `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain; in a git repository, commits every file it added (including `reports/import-plan.md`), so the tree is clean for phases 1–3. Not a run: it is undone by removing the brain and the added files, or by reverting its commit. | **No** |
 | 1 · Relations | Converts relation-like frontmatter into `bw-<verb>` relations (§4.2) and keeps the original properties. | Yes, frontmatter lines only |
 | 2 · Identity and status | Mints `id:` for notes without one; maps non-standard `status` values into `status` + `bw-stage` (§4.1). | Yes, frontmatter lines only |
 | 3 · Structure | Creates missing hubs, adds missing notes to hub `## Notes` lists. | Hubs only |
@@ -72,6 +77,13 @@ indexed under `path:` ids, `migrate` lint keeps legacy issues at `info`,
 and agents can start logging episodes immediately. Phases 1–3 are each a
 separate `--apply --phase N` run, so the user can stop at any point and
 review each diff on its own.
+
+The diff a dry run shows is the diff the apply makes. Phase 2 ids are
+therefore not random: each is a ULID whose time part is the brain id's
+(the adoption time, as a freshly minted id would have) and whose random
+part is a hash of the brain id, the note's path, and its text. A note
+edited between the dry run and the apply gets a different id, as its diff
+differs anyway.
 
 ### 3.3 Safety
 
@@ -146,12 +158,16 @@ apart from a name.
 curated notes. It suits note dumps, exported chats, meeting transcripts, and
 clippings.
 
+- Frontmatter is metadata, not content: it is dropped, and only the body is
+  split.
 - Documents are split on headings into chunks of at most 8 KiB; each chunk
   becomes one episode with `bw-captured: import`, `bw-origin: import`, and a
   `bw-source` property naming the original file and heading.
 - `inputs` is `local` for the user's own files, or `external` with `--untrusted`
   (clippings, documents written by others).
 - The original files are not modified or moved.
+- Each chunk carries a dedupe key (source and text), so a rerun skips what
+  was already imported; the output counts episodes written and skipped.
 
 `--from <host>` knows where hosts keep their own memory and imports those
 files as episodes attributed to the host (`bw-origin: agent`, `bw-inputs:
@@ -179,7 +195,8 @@ still requires the user ([05 §6](05-write-path-and-consolidation.md#6-rules)).
 
 | Failure | Behavior |
 |---|---|
-| Folder already contains `brain.toml` | Overlay refuses; suggests `brain brains add`. |
+| Folder already contains `brain.toml` | Overlay phase 0 (dry run or apply) refuses: if the folder is registered, it names the registration and points at phases 1–3; otherwise it suggests `brain brains add`. |
+| `--from` names a host with no known locations and no `PATH` | Usage error listing the known hosts; a `PATH` imports from there under that host name. |
 | A top-level folder name slugifies to an invalid or duplicate slug | The plan shows the clash and appends a numeric suffix; the user can edit `brain.toml` before phase 0. |
 | Thousands of unresolved links | Reported in aggregate with the top offenders; phase 0 still proceeds (links are not modified). |
 | Huge files (exports, logs) | Indexed by name only above the size cap; listed in the report. |

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from brainwiki.consolidate._packet import Packet
@@ -85,7 +86,18 @@ def list_proposals(engine: Engine) -> list[dict[str, Any]]:
     return out
 
 
-def load_proposal(engine: Engine, run: str) -> tuple[Packet, list[dict[str, Any]], str | None, str]:
+@dataclass
+class Proposal:
+    """A proposal file as written. `claimed` is untrusted: rebuild it before use (05 §7.2)."""
+
+    run: str
+    path: str
+    claimed: Packet
+    ops: list[dict[str, Any]]
+    agent: str | None
+
+
+def load_proposal(engine: Engine, run: str) -> Proposal:
     if not is_prefixed(run, "run-"):
         raise NotFound(f"{run!r} is not a run id")
     rel = proposal_path(engine, run)
@@ -97,8 +109,53 @@ def load_proposal(engine: Engine, run: str) -> tuple[Packet, list[dict[str, Any]
         raise FormatError(f"{rel} has no ops block")
     try:
         payload = json.loads(blocks[-1].group("body"))
-        packet = Packet.from_json({**payload["packet"], "data": {}})
+        claimed = Packet.from_json({**payload["packet"], "data": {}})
         ops = payload["ops"]
-    except (ValueError, KeyError, TypeError) as exc:
+        if claimed.run != run or not isinstance(ops, list):
+            raise ValueError("the run id or the ops list does not match")
+    except (ValueError, KeyError, TypeError, AttributeError) as exc:
         raise FormatError(f"{rel}: the ops block is not valid ({exc}); nothing applied") from exc
-    return packet, ops, split(text).data.get("agent"), text
+    agent = split(text).data.get("agent")
+    return Proposal(run, rel, claimed, ops, str(agent) if agent else None)
+
+
+def describe_ops(packet: Packet, ops: list[dict[str, Any]]) -> list[str]:
+    """One line per op, with handles resolved to paths, for people reviewing a proposal."""
+
+    def note(ref: str) -> str:
+        return packet.notes[ref].path if ref in packet.notes else ref
+
+    def claim(handle: str) -> str:
+        ref = packet.claims.get(handle)
+        return f'"{ref.text}" in {note(ref.note)}' if ref else handle
+
+    def episode(handle: str) -> str:
+        ref = packet.episodes.get(handle)
+        return ref.path if ref else handle
+
+    def cites(srcs: list[str]) -> str:
+        return ", ".join(episode(s.partition("#")[0]) + "#" + s.partition("#")[2] for s in srcs)
+
+    lines = []
+    for op in ops:
+        kind = op.get("op")
+        if kind == "add_claim":
+            line = f'add claim to {note(op["note"])}: "{op["text"]}" ({cites(op["sources"])})'
+        elif kind == "merge_claim":
+            line = f"add sources to {claim(op['claim'])} ({cites(op['sources'])})"
+        elif kind == "supersede_claim":
+            line = f'supersede {claim(op["claim"])} with "{op["text"]}" ({op["reason"]})'
+        elif kind == "retract_claim":
+            line = f"retract {claim(op['claim'])} ({op['reason']})"
+        elif kind == "add_relation":
+            line = f"relate {note(op['from'])} {op['verb']} {note(op['to'])}"
+        elif kind == "create_note":
+            line = f'create note {op["ref"][4:]}: "{op["title"]}" with {len(op["claims"])} claims'
+        elif kind == "create_topic":
+            line = f'create topic {op["slug"]}: "{op["title"]}"'
+        elif kind == "skip_episode":
+            line = f"skip {episode(op['episode'])} ({op['reason']})"
+        else:
+            line = json.dumps(op, ensure_ascii=False)
+        lines.append(f"- {line}")
+    return lines

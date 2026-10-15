@@ -311,11 +311,11 @@ JOIN nodes n ON n.id = CASE WHEN e.src = h.id THEN e.dst ELSE e.src END;
 | Parameter | Default | Meaning |
 |---|---|---|
 | `query` | `""` | Free text. **Empty means browse**: no text matching, results ordered by `sort` (default `recent`) within the filters. |
-| `limit` | 8 | Primary results, before expansion and guards. Max 50. |
-| `topic` | all | Restrict to one or more topics, each with its sub-topics. |
+| `limit` | 8 | Primary results, before expansion and guards. Max 50 (the CLI refuses more rather than clamping). |
+| `topic` | all | Restrict to one or more topics, each with its sub-topics. Slugs match case-insensitively; an unknown slug is `not_found`, not an empty result. |
 | `type` | any | Restrict to note types (`decision`, `release`, `person`…), as in frontmatter. |
 | `tag` | any | Restrict to notes carrying all of these tags. |
-| `where` | none | Frontmatter property equality, e.g. `{"stage": "open"}`; values compare as strings, lists match any item. |
+| `where` | none | Frontmatter property equality, e.g. `{"stage": "open"}`; values compare as strings, case-insensitively, lists match any item. Keys the index keeps as columns match too: `tags` and `aliases` (any item), `title`, `id` (as written), `type`, `status` (or a custom `stage`), `topic`, `created`, `updated`. |
 | `include_episodes` | on for a query, off when browsing | Pending episodes are searchable; a browse lists curated notes unless episodes are asked for. |
 | `include_archived` | false | Also return notes with `status: archived`. |
 | `include_archived_episodes` | false | Also return consolidated episodes (CLI `--include archived_episodes` only). |
@@ -443,8 +443,8 @@ guessing.
 |---|---|
 | `outline` (default for hubs) | Frontmatter summary, headings, active claims (each with its `inputs`, and `[unverified]` in the text when not `local`), relations with resolved titles |
 | `full` (default for notes) | The body, then the current claims (unverified ones marked) and a count of superseded ones; no metadata |
-| `section` | One heading's content; `claims` gives the claims block |
-| `raw` | The file exactly as on disk (for agents about to edit it, [05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits)) |
+| `section` | One heading's content; `claims` gives the claims block. Asking for a `section` implies this mode; the mode without a section, or a section with another mode, is a usage error |
+| `raw` | The file exactly as on disk (for agents about to edit it, [05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits)); an episode stays in its untrusted envelope |
 
 Every relation and backlink in the result carries its handle: `id` and
 `path` in the structured result, and the path after the title in the text,
@@ -468,7 +468,8 @@ Guard banners show at most three in full, then a count with a pointer to
 `brain_neighbors` for the rest, so a note with many conflicts does not bury
 its own content. Search results render their banners the same way.
 
-Every mode except `raw` starts with banners computed by §5:
+Every mode except `raw` starts with banners computed by §5 (a `raw` read
+still carries them in the structured result, but its text is the file alone):
 
 ```
 ⚠ SUPERSEDED by "Use SQLite FTS5 for local search" (topics/search/fts5.md), 2026-10-09

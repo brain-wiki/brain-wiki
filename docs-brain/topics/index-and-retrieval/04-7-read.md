@@ -18,8 +18,8 @@ guessing.
 |---|---|
 | `outline` (default for hubs) | Frontmatter summary, headings, active claims (each with its `inputs`, and `[unverified]` in the text when not `local`), relations with resolved titles |
 | `full` (default for notes) | The body, then the current claims (unverified ones marked) and a count of superseded ones; no metadata |
-| `section` | One heading's content; `claims` gives the claims block |
-| `raw` | The file exactly as on disk (for agents about to edit it, [[05-23-checked-agent-edits\|05 §2.3]]) |
+| `section` | One heading's content; `claims` gives the claims block. Asking for a `section` implies this mode; the mode without a section, or a section with another mode, is a usage error |
+| `raw` | The file exactly as on disk (for agents about to edit it, [[05-23-checked-agent-edits\|05 §2.3]]); an episode stays in its untrusted envelope |
 
 Every relation and backlink in the result carries its handle: `id` and
 `path` in the structured result, and the path after the title in the text,
@@ -43,7 +43,8 @@ Guard banners show at most three in full, then a count with a pointer to
 `brain_neighbors` for the rest, so a note with many conflicts does not bury
 its own content. Search results render their banners the same way.
 
-Every mode except `raw` starts with banners computed by §5:
+Every mode except `raw` starts with banners computed by §5 (a `raw` read
+still carries them in the structured result, but its text is the file alone):
 
 ```
 ⚠ SUPERSEDED by "Use SQLite FTS5 for local search" (topics/search/fts5.md), 2026-10-09

@@ -13,11 +13,11 @@ bw-part_of:
 | Parameter | Default | Meaning |
 |---|---|---|
 | `query` | `""` | Free text. **Empty means browse**: no text matching, results ordered by `sort` (default `recent`) within the filters. |
-| `limit` | 8 | Primary results, before expansion and guards. Max 50. |
-| `topic` | all | Restrict to one or more topics, each with its sub-topics. |
+| `limit` | 8 | Primary results, before expansion and guards. Max 50 (the CLI refuses more rather than clamping). |
+| `topic` | all | Restrict to one or more topics, each with its sub-topics. Slugs match case-insensitively; an unknown slug is `not_found`, not an empty result. |
 | `type` | any | Restrict to note types (`decision`, `release`, `person`…), as in frontmatter. |
 | `tag` | any | Restrict to notes carrying all of these tags. |
-| `where` | none | Frontmatter property equality, e.g. `{"stage": "open"}`; values compare as strings, lists match any item. |
+| `where` | none | Frontmatter property equality, e.g. `{"stage": "open"}`; values compare as strings, case-insensitively, lists match any item. Keys the index keeps as columns match too: `tags` and `aliases` (any item), `title`, `id` (as written), `type`, `status` (or a custom `stage`), `topic`, `created`, `updated`. |
 | `include_episodes` | on for a query, off when browsing | Pending episodes are searchable; a browse lists curated notes unless episodes are asked for. |
 | `include_archived` | false | Also return notes with `status: archived`. |
 | `include_archived_episodes` | false | Also return consolidated episodes (CLI `--include archived_episodes` only). |

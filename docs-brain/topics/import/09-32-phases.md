@@ -12,7 +12,7 @@ bw-part_of:
 
 | Phase | Changes | Touches existing notes? |
 |---|---|---|
-| 0 · Adopt | Adds `brain.toml`, `AGENTS.md` (or a managed block in an existing one, with the topic table filled in from the folders found), `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain; in a git repository, commits the added files. Not a run: it is undone by removing the brain and the added files, or by reverting its commit. | **No** |
+| 0 · Adopt | Adds `brain.toml`, `AGENTS.md` (or a managed block in an existing one, with the topic table filled in from the folders found), `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain; in a git repository, commits every file it added (including `reports/import-plan.md`), so the tree is clean for phases 1–3. Not a run: it is undone by removing the brain and the added files, or by reverting its commit. | **No** |
 | 1 · Relations | Converts relation-like frontmatter into `bw-<verb>` relations (§4.2) and keeps the original properties. | Yes, frontmatter lines only |
 | 2 · Identity and status | Mints `id:` for notes without one; maps non-standard `status` values into `status` + `bw-stage` (§4.1). | Yes, frontmatter lines only |
 | 3 · Structure | Creates missing hubs, adds missing notes to hub `## Notes` lists. | Hubs only |
@@ -22,3 +22,10 @@ indexed under `path:` ids, `migrate` lint keeps legacy issues at `info`,
 and agents can start logging episodes immediately. Phases 1–3 are each a
 separate `--apply --phase N` run, so the user can stop at any point and
 review each diff on its own.
+
+The diff a dry run shows is the diff the apply makes. Phase 2 ids are
+therefore not random: each is a ULID whose time part is the brain id's
+(the adoption time, as a freshly minted id would have) and whose random
+part is a hash of the brain id, the note's path, and its text. A note
+edited between the dry run and the apply gets a different id, as its diff
+differs anyway.

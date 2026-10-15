@@ -8,13 +8,14 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from brainwiki.errors import UnsupportedHost
-from brainwiki.format import EpisodeContent
+from brainwiki.errors import NotFound, UnsupportedHost
+from brainwiki.format import EpisodeContent, split
 from brainwiki.write import write_episode
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
+_MEMORY_HOSTS = ("claude-code", "codex", "antigravity", "openclaw")
 _CHUNK_BYTES = 8 * 1024
 _HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$")
 
@@ -23,6 +24,8 @@ def memory_files(host: str, override: Path | None = None) -> list[Path]:
     """Where each host keeps its own memory (09 §6; locations change, so they live in code)."""
     home = Path.home()
     if override:
+        if not override.exists():
+            raise NotFound(f"no such file or folder: {override}")
         return sorted(p for p in ([override] if override.is_file() else override.rglob("*.md")))
     if host == "claude-code":
         base = Path(os.environ.get("CLAUDE_CONFIG_DIR") or home / ".claude").expanduser()
@@ -45,13 +48,17 @@ def memory_files(host: str, override: Path | None = None) -> list[Path]:
         base = home / ".openclaw" / "workspace"
         candidates = [base / "MEMORY.md", base / "USER.md", *sorted((base / "memory").glob("*.md"))]
         return [p for p in candidates if p.is_file()]
-    raise UnsupportedHost(f"no known memory files for {host!r}; pass --path")
+    raise UnsupportedHost(
+        f"no known memory files for {host!r} (known: {', '.join(_MEMORY_HOSTS)}); "
+        "give their location as PATH"
+    )
 
 
 def _split_document(text: str) -> list[tuple[str | None, str]]:
-    """Split on headings into chunks of at most CHUNK_BYTES: [(heading, text)]."""
+    """Split the body (frontmatter is metadata, not content) on headings into chunks of at most
+    CHUNK_BYTES: [(heading, text)]."""
     sections: list[tuple[str | None, list[str]]] = [(None, [])]
-    for line in text.splitlines():
+    for line in split(text).body.splitlines():
         match = _HEADING.match(line)
         if match:
             sections.append((match.group(1), [line]))

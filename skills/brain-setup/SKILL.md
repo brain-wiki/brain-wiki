@@ -148,8 +148,9 @@ estimated tokens.
 Each session goes to the brain of the folder it ran in: a project with a
 `.brain-wiki.toml` (`brain = "NAME"`), or a folder pattern routed with
 `brain harvest route PATTERN BRAIN`. Sessions that match neither are skipped,
-never sent to a default brain. With a single brain, offer a route that sends
-every session under the home folder to it:
+never sent to a default brain. Routes are a fallback: a project's own file
+still wins. With a single brain, offer a route that sends every session under
+the home folder to it:
 `brain harvest route "~/**" personal`.
 
 Then ask, per agent app: harvest on or off, and backfill past sessions now,

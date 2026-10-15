@@ -32,13 +32,18 @@ Pre-images are stored next to it (`preimages/<sha256>`, gzip).
 
 `brain undo [<run>]` (default: the latest applied run on this device):
 
-- **Git brains:** if the run's commit exists, `git revert --no-edit <commit>`.
-  Revert merges with later edits; a conflict aborts the revert and reports
-  the files, leaving the tree as it was.
-- **Other brains:** for each file, if its current hash equals `after`,
-  restore the pre-image (or delete it if `before` is null) and move episodes
-  back. If any file changed since the run, refuse and list them. `--force`
-  saves the current versions under `<state>/runs/<run>/conflicts/` first.
-- Undo is itself recorded (`kind: undo`) and logged in `log.md`.
+- For each file, if its current hash equals `after`, restore the pre-image
+  (or delete it if `before` is null) and move episodes back. `log.md` is
+  append-only and not restored. If any file changed since the run, refuse
+  and list them; files no later run touched do not block, so an older run
+  can be undone. `--force` saves the current versions under
+  `<state>/runs/<run>/conflicts/` first.
+- Undo is itself a run (`kind: undo`, §7.3): logged in `log.md` and, in a
+  git brain, committed with exactly the restored files, deletions included.
+- Git is never the source of what to restore, the pre-images are: a run can
+  touch files git never saw (an uncommitted episode, a proposal), and a
+  `git revert` of an older run conflicts on `log.md`.
 
-Retention: the last 200 runs or 90 days, whichever keeps more.
+Retention: the last 200 runs or 90 days, whichever keeps more. Older runs can no
+longer be undone by `brain undo`; in a git brain, their commits can still be reverted
+with git.

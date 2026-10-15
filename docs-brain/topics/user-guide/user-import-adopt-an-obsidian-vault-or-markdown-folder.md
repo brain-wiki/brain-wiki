@@ -18,7 +18,9 @@ Phase 0 adds `brain.toml`, an `AGENTS.md` block, `rules.md`, `log.md`, and
 the `inbox/`, `archive/`, and `reports/` folders. **No note is moved or
 changed.** Top-level folders become topics; templates and attachment
 folders are ignored; lint starts in the lenient `migrate` profile. The
-brain is searchable right away.
+brain is searchable right away. In a git repository, phase 0 commits
+everything it added, including the plan in `reports/import-plan.md`.
+Running phase 0 again on an adopted folder tells you it is already a brain.
 
 Later phases are optional, each one a separate undoable run:
 
@@ -32,6 +34,8 @@ Later phases are optional, each one a separate undoable run:
 brain import ~/notes --overlay --phase 2            # see the diff
 brain import ~/notes --overlay --phase 2 --apply
 ```
+
+The ids a phase 2 dry run shows are the ids the apply writes.
 
 If the folder is a git repository with uncommitted changes, apply stops so
 the import diff stays clean.

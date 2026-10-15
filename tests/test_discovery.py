@@ -339,6 +339,53 @@ def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
     assert run("links", "fts5", "--limit", "1").rstrip().endswith("(--cursor 1)")
 
 
+def test_index_listings_scan_first(example: Path, capsys: pytest.CaptureFixture[str]):
+    from tests.conftest import write
+
+    def run(*argv: str) -> str:
+        assert main(list(argv)) == 0
+        return capsys.readouterr().out
+
+    write(example, "topics/budget/lone.md", "---\ntype: memo\ntags: [fresh]\n---\n# Lone\n")
+    assert "topics/budget/lone.md" in run("orphans", "--paths")  # first command on a fresh copy
+    write(
+        example, "topics/budget/later.md", "---\ntype: idea\ntags: [later]\n---\n# L\n[[nowhere]]\n"
+    )
+    assert "later" in run("tags").split()
+    assert "idea" in run("types").split()
+    assert "[[nowhere]]  topics/budget/later.md" in run("unresolved")
+
+
+def test_listing_input_is_checked(example: Path, capsys: pytest.CaptureFixture[str]):
+    from brainwiki.doctor import run_doctor
+
+    def code(*argv: str) -> int:
+        result = main(list(argv))
+        capsys.readouterr()
+        return result
+
+    assert code("search", "--include", "drafts") == 2
+    assert code("search", "--include", "episodes", "--no-episodes") == 2
+    assert code("search", "--limit", "51") == 2
+    assert code("notes", "--limit", "51") == 2
+    assert code("neighbors", "fts5", "--depth", "4") == 2
+    assert code("neighbors", "fts5", "--limit", "101") == 2
+    assert code("index", "--rebuild", "--status") == 2
+    assert code("search", "--topic", "nosuch") == 3
+    assert code("topics", "SEARCH") == 0  # topic slugs match case-insensitively
+    assert main(["notes", "--topic", "SEARCH", "--count", "--facets"]) == 0
+    count = capsys.readouterr().out.splitlines()
+    assert main(["notes", "--topic", "search", "--count"]) == 0
+    assert capsys.readouterr().out.splitlines() == count[:1] and count[1].startswith("type: ")
+    assert main(["search", "--paths", "--limit", "1"]) == 0
+    out = capsys.readouterr()
+    assert len(out.out.split()) == 1 and "(--cursor 1)" in out.err  # the hint survives a pipe
+    assert main(["links", "fts5", "--paths", "--limit", "1"]) == 0
+    assert "(--cursor 1)" in capsys.readouterr().err
+    listed = list_brains(None)["brains"][0]["notes"]
+    assert run_doctor()["brains"][0]["notes"] == listed  # hubs are not notes (04 §8)
+
+
 def test_global_options_work_before_the_command(example: Path, capsys: pytest.CaptureFixture[str]):
     assert main(["--json", "--brain", str(example), "list"]) == 0
     assert '"brains"' in capsys.readouterr().out

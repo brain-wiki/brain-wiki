@@ -425,13 +425,18 @@ def _build_parser() -> argparse.ArgumentParser:
         help="write episodes (without it, list sessions and token estimates)",
     )
     p.add_argument(
-        "--dry-run", action="store_true", help="with --apply, list chunks without writing"
+        "--dry-run",
+        action="store_true",
+        help="with --apply, list the turn ranges it would write as episodes; writes nothing",
     )
     p.add_argument("--status", action="store_true", help="per host: on or off, sessions left")
 
     p = cmd("origin", "show the conversation an episode came from")
-    p.add_argument("episode", help="episode id or path")
-    p.add_argument("--turns", help="turn range A-B (default: the episode's turns plus context)")
+    p.add_argument("episode", help="episode id, or its path (in the brain, or absolute)")
+    p.add_argument(
+        "--turns",
+        help="turn range A-B within the session (default: the episode's turns plus context)",
+    )
 
     p = cmd("connect", "wire an agent host to brain-wiki")
     p.add_argument("host", help="claude-code, codex, antigravity, openclaw, cursor, or generic")
@@ -439,7 +444,8 @@ def _build_parser() -> argparse.ArgumentParser:
         "--scope",
         choices=["user", "project"],
         default="user",
-        help="install for your user, or for the current project",
+        help="install for your user, or for the current project (claude-code and cursor); "
+        "each scope is connected and uninstalled on its own",
     )
     p.add_argument("--force", action="store_true", help="replace an edited instruction block")
     p.add_argument("--dry-run", action="store_true", help="show the plan without changing anything")
@@ -452,7 +458,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     p = cmd("mcp", "run the stdio MCP server")
-    p.add_argument("--host", default="auto", help="host id for profiles (default: auto-detect)")
+    p.add_argument(
+        "--host", default="auto", help="host id for profiles, e.g. claude-code (default: auto)"
+    )
 
     p = cmd("import", "adopt or import existing Markdown")
     p.add_argument(
@@ -491,11 +499,16 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--export", help="write the map to FILE (.html, .json, .graphml) and exit")
 
     p = cmd("bench", "run the evaluation bench")
-    p.add_argument("-q", "--quiet", action="store_true", help="print less")
+    p.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="print only a summary, the failures, and the regressions instead of every metric",
+    )
     p.add_argument(
         "suites",
         nargs="*",
-        help="retrieval, lint, perf (the default), consolidation, agent",
+        help="retrieval, lint, perf, consolidation, agent (default: retrieval lint perf)",
     )
     p.add_argument(
         "--backends", default="", help="comma list of model presets for consolidation and agent"
@@ -538,6 +551,23 @@ def main(argv: list[str] | None = None) -> int:
     except (KeyboardInterrupt, EOFError):  # Ctrl-C, or Ctrl-D at a prompt
         print(file=sys.stderr)
         return 130
+    except Exception:  # a bug: keep the trace in the log, not on the user's screen (07 §2.3)
+        return _internal_error(args.command)
+
+
+def _internal_error(command: str) -> int:
+    try:
+        from brainwiki.logs import log_path, setup_logging
+
+        setup_logging().exception("brain %s failed", command)
+        where = f"details are in {log_path()}"
+    except Exception:  # the log itself is unwritable: fall back to the trace on stderr
+        import traceback
+
+        traceback.print_exc()
+        where = "the trace is above"
+    print(f"internal: unexpected error; {where}", file=sys.stderr)
+    return 10
 
 
 if __name__ == "__main__":

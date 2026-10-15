@@ -14,12 +14,16 @@ bw-part_of:
 curated notes. It suits note dumps, exported chats, meeting transcripts, and
 clippings.
 
+- Frontmatter is metadata, not content: it is dropped, and only the body is
+  split.
 - Documents are split on headings into chunks of at most 8 KiB; each chunk
   becomes one episode with `bw-captured: import`, `bw-origin: import`, and a
   `bw-source` property naming the original file and heading.
 - `inputs` is `local` for the user's own files, or `external` with `--untrusted`
   (clippings, documents written by others).
 - The original files are not modified or moved.
+- Each chunk carries a dedupe key (source and text), so a rerun skips what
+  was already imported; the output counts episodes written and skipped.
 
 `--from <host>` knows where hosts keep their own memory and imports those
 files as episodes attributed to the host (`bw-origin: agent`, `bw-inputs:

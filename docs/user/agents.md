@@ -28,6 +28,12 @@ Blocks in shared files sit between `<!-- brain-wiki:begin v1 -->` and
 `<!-- brain-wiki:end -->`; `--uninstall` removes only that block. If you edit
 the block, `brain connect` will not overwrite it without `--force`.
 
+`--scope project` (Claude Code and Cursor) is separate from the user-level
+connection: undo it with `brain connect <host> --scope project --uninstall`
+in that project. `--uninstall` puts a config file such as
+`~/.cursor/mcp.json` back exactly as it was, unless you changed it since;
+then it removes only brain-wiki's entry and keeps your changes.
+
 The plugin is registered this way:
 
 | Host | How it is registered |
@@ -132,9 +138,9 @@ first). The model the command line distills with is `distill` in
 Each session goes to the brain of the folder it ran in, checked in this
 order:
 
-1. a pattern in `[harvest.routes]` that matches the folder;
-2. a `.brain-wiki.toml` with `brain = "NAME"` in the folder or above it;
-3. the brain the folder is inside;
+1. a `.brain-wiki.toml` with `brain = "NAME"` in the folder or above it;
+2. the brain the folder is inside;
+3. a pattern in `[harvest.routes]` that matches the folder;
 4. the host's `brain` in `[hosts.<host>]`.
 
 A session that matches none of these is skipped, never filed into your
@@ -144,6 +150,9 @@ default brain. With one brain, route everything under your home folder to it:
 brain harvest route "~/**" personal
 brain harvest route "~/work/**" work     # more specific patterns are checked first
 ```
+
+Routes are the fallback: a project's own `.brain-wiki.toml` still wins over
+a catch-all such as `~/**`.
 
 Sessions brain-wiki ran itself, subagent sessions, and sessions still in
 progress are skipped too. Claude Code deletes transcripts after 30 days by

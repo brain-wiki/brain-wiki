@@ -20,6 +20,24 @@ packets while a proposal references them).
   at a proposal but cannot accept it (MCP review tools are in the
   [[proposal-readme-backlog|backlog]]).
 - Accept re-validates the stored ops against the current brain (notes may
-  have changed) and applies them as a normal run.
+  have changed) and applies them as a normal run. The proposal is a file
+  anything with access to the brain can write, so the packet embedded in it
+  is never trusted: accept rebuilds the packet from the current brain with
+  the code `prepare` uses, keeping only which handle names which note,
+  claim, and episode (from the packet saved in `<state>/runs/<run>/` when
+  this device prepared the run, else from the proposal). Every note must be
+  a note or hub outside `rules.md`, `log.md`, `brain.toml`, `AGENTS.md`,
+  `inbox/`, `archive/`, and `reports/`, at the path and id the proposal
+  names; every episode a pending one whose archive target is its computed
+  archive location. A proposal that names anything else is refused with a
+  `format` error (exit 1) and nothing is written. Hashes, line ranges,
+  provenance (`origin`, `inputs`), and topic review policies come from the
+  files. A note, claim, or episode the ops use that has changed or gone
+  makes the accept stale (exit 4): reject the proposal and consolidate
+  again.
+- `show` prints what accepting would do, computed the same way: the review
+  reasons, one line per op with handles resolved to paths, and the diff
+  against the brain as it is now (or why accepting would fail). It never
+  prints the packet.
 - Proposals are files in the brain, so they sync to the user's other
   devices and can be reviewed in Obsidian.

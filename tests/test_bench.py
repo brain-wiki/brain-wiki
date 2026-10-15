@@ -121,3 +121,25 @@ def test_cli_writes_results_and_compares(tmp_path: Path, capsys: pytest.CaptureF
     capsys.readouterr()
     assert main(["bench", "--compare", results, results]) == 0
     assert "0 regression(s)" in capsys.readouterr().out
+
+
+def test_quiet_bench_prints_a_summary_not_the_table(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    out = tmp_path / "out"
+    main(["bench", "-q", "lint", "--out", str(out)])
+    printed = capsys.readouterr().out
+    assert printed.startswith("bench: 1 suite(s), ") and "suite  case" not in printed
+    assert (out / "results.json").is_file()
+
+
+def test_compare_refuses_files_that_are_not_results(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    empty, broken = tmp_path / "empty.json", tmp_path / "broken.json"
+    empty.write_text("{}")
+    broken.write_text("{nope")
+    assert main(["bench", "--compare", str(empty), str(empty)]) == 1
+    assert capsys.readouterr().err.startswith(f"format: {empty} is not a bench results file")
+    assert main(["bench", "--compare", str(broken), str(empty)]) == 1
+    assert capsys.readouterr().err.startswith(f"format: {broken} is not JSON")

@@ -6,10 +6,11 @@ command. Listings share --count, --paths, --limit, and --cursor.
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Callable
 from typing import Any
 
-from brainwiki.cli._output import emit
+from brainwiki.cli._output import emit, warn
 from brainwiki.engine import Engine, open_engine
 from brainwiki.index import node_filters, parse_cursor
 
@@ -22,6 +23,8 @@ def _engine(args: Any) -> Engine:
 
 
 def _note_where(engine: Engine) -> tuple[str, list[Any]]:
+    """Bring the index up to date, then filter to curated notes, for a query over the index."""
+    engine.scan()
     return node_filters(engine, _NOTE_KINDS, _STATUSES, None)
 
 
@@ -43,12 +46,17 @@ def _listing(
     if getattr(args, "count", False):
         emit(args, data, str(total))
         return 0
+    hint = f"… {total - offset - len(page)} more (--cursor {offset + len(page)})"
     if getattr(args, "paths", False):
         text = "\n".join(dict.fromkeys(str(r[path_key]) for r in page if r.get(path_key)))
-    else:
-        text = "\n".join(line(r) for r in page) or empty
-        if more:
-            text += f"\n… {total - offset - len(page)} more (--cursor {offset + len(page)})"
+        emit(args, data, text)
+        if more and not getattr(args, "json", False):
+            sys.stdout.flush()
+            warn(hint)  # stderr, so a pipe gets only paths
+        return 0
+    text = "\n".join(line(r) for r in page) or empty
+    if more:
+        text += "\n" + hint
     emit(args, data, text)
     return 0
 
@@ -61,11 +69,13 @@ def topics(args: Any) -> int:
     with _engine(args) as engine:
         engine.scan()
         rows = {r["slug"]: r for r in topic_rows(engine)}
-    if args.topic and args.topic not in rows:
-        raise NotFound(f"no topic {args.topic!r}")
-    starts = (
-        [args.topic] if args.topic else sorted(s for s, r in rows.items() if r["parent"] is None)
-    )
+    if args.topic:
+        slug = {s.lower(): s for s in rows}.get(args.topic.lower())
+        if slug is None:
+            raise NotFound(f"no topic {args.topic!r}; `brain topics` lists them")
+        starts = [slug]
+    else:
+        starts = sorted(s for s, r in rows.items() if r["parent"] is None)
     items: list[dict[str, Any]] = []
 
     def walk(slug: str, depth: int) -> None:
@@ -86,8 +96,10 @@ def topics(args: Any) -> int:
 
 
 def notes(args: Any) -> int:
-    from brainwiki.index import format_search_text, search
+    from brainwiki.cli._cmd_read import check_range, print_results
+    from brainwiki.index import search
 
+    check_range("--limit", args.limit, 1, 50)
     with _engine(args) as engine:
         result = search(
             engine,
@@ -102,17 +114,16 @@ def notes(args: Any) -> int:
             facets=args.facets,
             intent="none",
         )
-    if args.count and not args.json and not args.facets:
-        print(result["total"])
-        return 0
-    emit(args, result, format_search_text(result, "paths" if args.paths else "text"))
+    print_results(args, result)
     return 0
 
 
 def recent(args: Any) -> int:
     args.topic, args.types, args.tags, args.sort, args.facets = None, None, None, "recent", False
-    from brainwiki.index import format_search_text, search
+    from brainwiki.cli._cmd_read import check_range, print_results
+    from brainwiki.index import search
 
+    check_range("--limit", args.limit, 1, 50)
     with _engine(args) as engine:
         result = search(
             engine,
@@ -122,10 +133,7 @@ def recent(args: Any) -> int:
             cursor=args.cursor,
             count_only=args.count,
         )
-    if args.count and not args.json:
-        print(result["total"])
-        return 0
-    emit(args, result, format_search_text(result, "paths" if args.paths else "text"))
+    print_results(args, result)
     return 0
 
 

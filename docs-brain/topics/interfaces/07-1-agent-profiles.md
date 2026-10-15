@@ -30,7 +30,10 @@ write       = ["episodes", "propose_rules", "consolidate"]
 
 `brain agents grant|revoke HOST CAPABILITY…` edits these tables as one undoable
 `config` run (comments kept; a new table starts from what the host may already
-do), and refreshes the `AGENTS.md` block when the default profile's `edit`
+do). `read_origin` is granted and revoked the same way, as a flag. A host id
+that is not a known host (`claude-code`, `codex`, `antigravity`, `openclaw`,
+`cursor`, `generic`, `default`) and has no table yet gets a warning, since it
+is most likely a typo, but the change is made. The command also refreshes the `AGENTS.md` block when the default profile's `edit`
 changes, since that block tells file-reading agents whether they may edit.
 A refusal names the command that allows the action for that host alone, e.g.
 `brain agents grant claude-code consolidate`.
@@ -38,11 +41,22 @@ A refusal names the command that allows the action for that host alone, e.g.
 Resolution: `--host <id>` → `[agents.<id>]` → `[agents.default]` →
 built-in default. The CLI acts as `owner` (everything allowed) because the
 person at the terminal owns the brain; `--as <host>` acts with a host's
-profile, which is how users check what it may do.
+profile, which is how users check what it may do. Under `--as`, every CLI
+write does what that host could do through MCP, or is refused:
+
+| Command | Under `--as <host>` |
+|---|---|
+| `log` | Needs `episodes`; recorded as `origin: agent`, `inputs: unknown` (or `external`), with the host as agent, like `brain_log_episode` |
+| `rule add` | Needs `propose_rules`; saved as a proposal for `brain rule accept`, like `brain_propose_rule` without a way to ask |
+| `check`, `mv`, `lint --fix` | Need `edit`: they change notes directly (`--dry-run` previews need nothing) |
+| `rule accept`/`reject`, `agents grant`/`revoke`, `undo` | Refused: these are the user's decisions. An agent undoing runs could undo the user's own work, so no capability allows it |
 
 Enforcement points, all in the engine so every interface gets them:
 
-- Writes: tools absent from `write` are refused with `forbidden`.
+- Writes: tools absent from `write` are refused with `forbidden`. Write
+  functions check the profile themselves (`move_note`, `lint.fix`,
+  `accept_rule`, `reject_rule`, `profile_run`), so a new interface inherits
+  the checks.
 - Host brain limits from the user config ([[03-3-choosing-a-brain|03 §3]]).
 
 Profiles are not authentication. A local stdio server trusts the `--host`

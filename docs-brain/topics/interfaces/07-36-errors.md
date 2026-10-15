@@ -20,7 +20,8 @@ starts with a stable code:
 | `ambiguous` | Target matches several notes; the message lists them |
 | `forbidden` | Not allowed by the profile or host limits |
 | `invalid_ops` | Validation failed; a list of `{op_index, check, message}` follows |
-| `stale` | Notes changed since the packet was prepared; prepare again |
+| `stale` | Notes changed since the packet was prepared, or files since the run read them; prepare again |
+| `conflict` | The change collides with something already there (a registered name, an existing file) |
 | `budget_exceeded` | `rules.md` would exceed its budget |
 | `expired` | The run handle is older than its expiry |
 | `busy` | The brain's write lock could not be taken in time |

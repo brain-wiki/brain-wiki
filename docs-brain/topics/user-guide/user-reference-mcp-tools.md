@@ -27,6 +27,13 @@ the agent's profile, and `brain_read_origin` needs `read_origin = true`
 | `brain_read_origin` | Read the conversation behind an episode | `read_origin = true` |
 | `brain_harvest_prepare`, `brain_harvest_apply` | Turn this agent's past sessions into episodes | `harvest` |
 
-Exit codes: 0 success; 1 problems found (lint errors, invalid ops) or a path
-that cannot be read or written; 2 usage; 3 not found; 4 conflict (stale,
-lock); 5 forbidden by a profile; 10 internal error.
+Exit codes: 0 success; 1 problems found (lint errors, invalid ops), a path
+that cannot be read or written, or an ambiguous target (the candidates are
+printed); 2 usage; 3 not found; 4 conflict (`conflict`: a name or file
+already there; `stale`: changed since it was read; `busy`: lock); 5 forbidden
+by a profile; 10 internal error (one line on stderr; the trace is in the log
+file).
+
+With `--paths`, a listing prints only paths on stdout; when more rows follow,
+the `--cursor` hint goes to stderr. `--count` prints the bare number, then the
+facet lines with `--facets`.

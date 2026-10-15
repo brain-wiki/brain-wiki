@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -9,7 +11,7 @@ from brainwiki import FORMAT_VERSION
 from brainwiki.config import MANIFEST, parse_manifest
 from brainwiki.errors import Conflict, UsageError
 from brainwiki.format import RULES_HEADER, replace_block
-from brainwiki.ids import new_ulid
+from brainwiki.ids import is_ulid, new_ulid
 from brainwiki.importer._normalize import convert_relations, identity_and_status
 from brainwiki.importer._survey import Survey, survey
 from brainwiki.runs import Run, RunRecord, is_work_tree, run_git
@@ -18,6 +20,7 @@ if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
 _INBOX = "inbox"
+_CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
 
 def _toml_string(value: str) -> str:
@@ -49,6 +52,12 @@ def _manifest_text(found: Survey, name: str) -> str:
     return text
 
 
+def _tally(counts: Mapping[str, int]) -> str:
+    """`{'related': 2, 'up': 1}` as `related (2), up (1)`, most frequent first."""
+    ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    return ", ".join(f"{key} ({n})" for key, n in ranked) or "none"
+
+
 def report(found: Survey, name: str) -> str:
     counts = found.counts
     lines = [
@@ -59,8 +68,8 @@ def report(found: Survey, name: str) -> str:
         f"- Topics ({len(found.topics)}): "
         + ", ".join(f"{s} ← {f}/" for s, f in found.topics.items()),
         f"- Ignored folders: {', '.join(found.ignore) or 'none'}",
-        f"- Non-standard status values: {dict(found.statuses) or 'none'}",
-        f"- Relation-like properties: {dict(found.relation_props) or 'none'}",
+        f"- Non-standard status values: {_tally(found.statuses)}",
+        f"- Relation-like properties: {_tally(found.relation_props)}",
         f"- Unresolved links: {sum(found.unresolved.values())}"
         + (
             f" (top: {', '.join(t for t, _ in found.unresolved.most_common(5))})"
@@ -99,6 +108,23 @@ def _check_clean_git(root: Path) -> None:
             )
 
 
+def already_brain(root: Path) -> str | None:
+    """Why phase 0 cannot adopt `root`: it already holds a brain. Names its registration, or
+    the command that registers it."""
+    from brainwiki.config import load_user_config
+
+    root = root.expanduser().resolve()
+    if not (root / MANIFEST).exists():
+        return None
+    names = [n for n, p in load_user_config().brains.items() if p.expanduser().resolve() == root]
+    if names:
+        return (
+            f"{root} is already a brain, registered as {names[0]!r}; for phases 1-3 run "
+            f"`brain import {root} --overlay --phase N`"
+        )
+    return f"{root} is already a brain but not registered; use `brain brains add NAME {root}`"
+
+
 def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict[str, Any]:
     """Phase 0: add brain-wiki's own files; no existing note is touched."""
     from brainwiki.config import open_brain, register_brain, registration_conflict
@@ -107,8 +133,8 @@ def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict
     from brainwiki.lifecycle import LOG_HEADER, commit_files, default_agents_block
 
     root = root.expanduser().resolve()
-    if (root / MANIFEST).exists():
-        raise Conflict(f"{root} is already a brain; use `brain brains add NAME {root}`")
+    if problem := already_brain(root):
+        raise Conflict(problem)
     if not root.is_dir():
         raise UsageError(f"{root} is not a folder")
     _check_clean_git(root)
@@ -134,6 +160,7 @@ def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict
     for sub in (f"{_INBOX}/episodes", f"{_INBOX}/agents", "archive/episodes", "reports"):
         (root / sub).mkdir(parents=True, exist_ok=True)
     (root / "reports" / "import-plan.md").write_text(report(found, name), encoding="utf-8")
+    created.append("reports/import-plan.md")
     with Engine(open_brain(root, name)) as engine:  # the topic table the folder already has
         engine.scan(force=True)
         agents.write_text(
@@ -153,6 +180,18 @@ def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict
         "git": git,
         "survey": found.to_json(),
     }
+
+
+def _stable_id(brain_id: str, path: str, text: str) -> Callable[[], str]:
+    """Phase 2 ids derive from the brain, the path, and the text, so the dry run shows the ids
+    the apply writes. The time part is the brain's own (adoption time) when its id is a ULID."""
+    if not is_ulid(brain_id):
+        return new_ulid
+    digest = hashlib.sha256(f"{brain_id}\n{path}\n{text}".encode()).digest()
+    # A ULID is 26 Crockford base32 digits: 10 of milliseconds, 16 of randomness (80 bits).
+    random = int.from_bytes(digest[:10], "big")
+    tail = "".join(_CROCKFORD[(random >> (5 * i)) & 31] for i in reversed(range(16)))
+    return lambda: brain_id[:10] + tail
 
 
 def apply_phase(
@@ -177,11 +216,6 @@ def apply_phase(
             "import",
             summary=f"import phase {phase}: {'relations' if phase == 1 else 'ids and status'}",
         )
-        transform = (
-            (lambda t: convert_relations(t, drop=drop_converted))
-            if phase == 1
-            else identity_and_status
-        )
         rows = engine.db.execute(
             "SELECT f.path FROM files f JOIN nodes n ON n.id = f.node_id WHERE n.kind IN ('note', 'hub') AND f.parse_errors = 0"
         ).fetchall()
@@ -189,7 +223,12 @@ def apply_phase(
             text = run.read(row["path"])
             if text is None:
                 continue
-            new = transform(text)
+            if phase == 1:
+                new = convert_relations(text, drop=drop_converted)
+            else:
+                new = identity_and_status(
+                    text, mint=_stable_id(engine.manifest.id, row["path"], text)
+                )
             if new != text:
                 run.write(row["path"], new)
     if not run.entries:

@@ -8,7 +8,7 @@ import sqlite3
 from datetime import UTC, date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-from brainwiki.errors import UsageError
+from brainwiki.errors import NotFound, UsageError
 from brainwiki.index._db import has_trigram
 from brainwiki.index._guards import banners, guards_for
 from brainwiki.index._read import untrusted_envelope
@@ -123,7 +123,8 @@ _FILLER = frozenset(
     }
 )
 # Frontmatter keys indexed as columns rather than in `props`; `status` also matches a custom stage.
-_COLUMNS = {"type", "status", "stage", "topic", "created", "updated"}
+_COLUMNS = {"type", "status", "stage", "topic", "created", "updated", "title"}
+_LIST_COLUMNS = {"tags", "aliases"}  # JSON arrays: a value matches any item
 _FACET_LIMIT = 10
 
 
@@ -216,6 +217,14 @@ def node_filters(
         elif key in _COLUMNS:
             clauses.append(f"lower(CAST(n.{key} AS TEXT)) = ?")
             params.append(wanted)
+        elif key in _LIST_COLUMNS:
+            clauses.append(
+                f"EXISTS (SELECT 1 FROM json_each(n.{key}) t WHERE lower(CAST(t.value AS TEXT)) = ?)"  # noqa: S608 - key is from _LIST_COLUMNS
+            )
+            params.append(wanted)
+        elif key == "id":  # the frontmatter id as written, whether or not it is the node id
+            clauses.append("lower(n.fm_id) = ?")
+            params.append(wanted)
         else:
             clauses.append(
                 "EXISTS (SELECT 1 FROM json_each(n.props, ?) p WHERE lower(CASE p.type "
@@ -229,6 +238,20 @@ def node_filters(
         clauses.append("substr(n.updated, 1, 10) <= ?")
         params.append(until)
     return " AND ".join(clauses), params
+
+
+def known_topics(engine: Engine, topics: list[str] | None) -> list[str] | None:
+    """Topic slugs as the tree spells them, matched case-insensitively. An unknown slug is an
+    error rather than a filter that silently matches nothing."""
+    if not topics:
+        return topics
+    slugs = {slug.lower(): slug for slug in engine.topics.paths}
+    missing = [t for t in topics if t.lower() not in slugs]
+    if missing:
+        known = sorted(slugs.values())
+        listed = ", ".join(known[:20]) + (f", … {len(known) - 20} more" if len(known) > 20 else "")
+        raise NotFound(f"no topic {', '.join(map(repr, missing))}; topics: {listed or 'none'}")
+    return [slugs[t.lower()] for t in topics]
 
 
 def _score(engine: Engine, row: Any, lexical: float) -> float:
@@ -319,7 +342,7 @@ def search(
         engine,
         kinds,
         statuses,
-        topics,
+        known_topics(engine, topics),
         types=types,
         tags=tags,
         where=where,
@@ -619,6 +642,13 @@ def format_search_text(result: dict[str, Any], fmt: str = "text") -> str:
     browsing = not _content_tokens(result["query"]) and not _CJK_RE.search(result["query"])
     if fmt == "paths":
         return "\n".join(dict.fromkeys(r["path"] for r in results))
+    facet_lines = [
+        f"{name}: " + ", ".join(f"{k} {v}" for k, v in counts.items())
+        for name, counts in (result.get("facets") or {}).items()
+        if counts
+    ]
+    if fmt == "count":  # the bare number first, so `--count` output is the same with --facets
+        return "\n".join([str(total), *facet_lines])
     lines: list[str] = []
     if not results:
         if total:  # count_only
@@ -653,7 +683,4 @@ def format_search_text(result: dict[str, Any], fmt: str = "text") -> str:
         lines.append(
             f"Showing {offset + 1}–{shown} of {total}; next page: cursor={result['next_cursor']}"
         )
-    for name, counts in (result.get("facets") or {}).items():
-        if counts:
-            lines.append(f"{name}: " + ", ".join(f"{k} {v}" for k, v in counts.items()))
-    return "\n".join(lines)
+    return "\n".join(lines + facet_lines)

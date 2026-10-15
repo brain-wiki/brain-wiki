@@ -56,6 +56,7 @@ class LintResult:
     problems: list[Problem] = field(default_factory=list)
     files_checked: int = 0
     seconds: float = 0.0
+    fix_info: bool = False  # --fix would apply info-level fixes too (their codes were selected)
 
     def count(self, severity: str) -> int:
         return sum(1 for p in self.problems if p.severity == severity)
@@ -67,6 +68,14 @@ class LintResult:
     @property
     def fixable(self) -> int:
         return sum(1 for p in self.problems if p.fixable)
+
+    def _fixed(self, problem: Problem) -> bool:
+        """Whether `--fix` repairs it: info-level ones only when their codes are selected."""
+        return problem.fixable and (self.fix_info or problem.severity != "info")
+
+    @property
+    def fixes(self) -> int:
+        return sum(1 for p in self.problems if self._fixed(p))
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -97,7 +106,12 @@ class LintResult:
         if self.count("info"):
             parts.append(f"{self.count('info')} info")
         summary = f"{total} problem{'s' if total != 1 else ''} ({', '.join(parts)})"
-        if self.fixable:
-            summary += f", {self.fixable} fixable with --fix"
+        if self.fixes:
+            summary += f", {self.fixes} fixable with --fix"
+        suggested = sorted({p.code for p in self.problems if p.fixable and not self._fixed(p)})
+        if suggested:
+            summary += (
+                f"; {self.fixable - self.fixes} more with --fix --select {','.join(suggested)}"
+            )
         lines.append(summary)
         return "\n".join(lines)

@@ -17,6 +17,12 @@ brain lint --install-hook        # check staged files before each git commit
 brain report                     # regenerate reports/
 ```
 
+The summary counts only what `brain lint --fix` would repair. Info-level
+fixes are listed separately with the `--select` that turns them on. An
+unknown code or prefix in `--select` or `--ignore` is a usage error, and so
+is `--dry-run` without `--fix`. Running `--install-hook` again over its own
+hook does nothing; it never overwrites a hook someone else wrote.
+
 `reports/` holds pages you can browse in Obsidian: contradictions, stale
 dependencies, unverified claims, the inbox, duplicate claims, orphans, and
 the latest lint results.

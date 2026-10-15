@@ -366,6 +366,117 @@ def test_reconnecting_keeps_user_config_and_cleans_old_blocks(
     assert cn._load_record("codex")["instructions"] == []
 
 
+def test_an_unexpected_error_is_logged_and_exits_10(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+):
+    import logging
+
+    from brainwiki import logs
+    from brainwiki.cli import _cmd_core
+
+    def boom(args: object) -> int:
+        raise RuntimeError("synthetic failure")
+
+    monkeypatch.setattr(_cmd_core, "version", boom)
+    monkeypatch.setattr(logs, "_configured", False)
+    logger = logging.getLogger("brainwiki")
+    handlers = list(logger.handlers)
+    try:
+        assert main(["version"]) == 10
+    finally:
+        for handler in logger.handlers[len(handlers) :]:
+            handler.close()
+            logger.removeHandler(handler)
+    err = capsys.readouterr().err
+    assert err == f"internal: unexpected error; details are in {logs.log_path()}\n"
+    assert "RuntimeError: synthetic failure" in logs.log_path().read_text()
+
+
+def test_a_name_clash_is_a_conflict_not_stale(brain_dir: Path, capsys: pytest.CaptureFixture[str]):
+    from brainwiki.errors import Conflict, Stale
+    from brainwiki.lifecycle import init_brain
+
+    other = init_brain(brain_dir.parent / "other", "other")
+    assert main(["brains", "add", "test", str(other)]) == 4
+    assert capsys.readouterr().err.startswith("conflict: ")
+    assert issubclass(Stale, Conflict) and (Stale.code, Stale.exit_code) == ("stale", 4)
+
+
+def test_connect_cursor_refuses_a_config_that_is_not_plain_json(
+    brain_dir: Path, capsys: pytest.CaptureFixture[str]
+):
+    cursor = Path.home() / ".cursor" / "mcp.json"
+    cursor.parent.mkdir(parents=True)
+    jsonc = '{\n  // my servers\n  "mcpServers": {},\n}\n'
+    cursor.write_text(jsonc)
+    assert main(["connect", "cursor"]) == 1
+    err = capsys.readouterr().err
+    assert err.startswith(f"format: {cursor} is not plain JSON") and "--print" in err
+    cursor.write_text("{}")
+    assert main(["connect", "cursor"]) == 0
+    cursor.write_text(jsonc)
+    assert main(["connect", "cursor", "--uninstall"]) == 1
+    assert "remove the brain-wiki entry by hand" in capsys.readouterr().err
+    assert cursor.read_text() == jsonc
+
+
+def test_cursor_user_and_project_scopes_are_kept_apart(
+    brain_dir: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys
+):
+    project = tmp_path / "proj"
+    project.mkdir()
+    monkeypatch.chdir(project)
+    mdc = project / ".cursor" / "rules" / "brain-wiki.mdc"
+    assert main(["connect", "cursor", "--scope", "project"]) == 0
+    capsys.readouterr()
+    assert main(["connect", "cursor", "--dry-run"]) == 0
+    assert str(mdc) not in capsys.readouterr().out
+    assert main(["connect", "cursor"]) == 0
+    assert mdc.is_file() and cn._load_record("cursor", "project", project)
+    capsys.readouterr()
+    assert main(["connect", "cursor", "--uninstall"]) == 0
+    assert "Keep" in capsys.readouterr().out
+    assert mdc.is_file() and "brain-wiki" in (project / ".cursor" / "mcp.json").read_text()
+    assert not (Path.home() / ".cursor" / "mcp.json").exists()
+    assert main(["connect", "cursor", "--uninstall"]) == 0
+    assert f"connected for project {project.resolve()}" in capsys.readouterr().out
+    assert main(["connect", "cursor", "--scope", "project", "--uninstall"]) == 0
+    assert not mdc.exists() and not (project / ".cursor" / "mcp.json").exists()
+    assert not cn._host_records("cursor")
+
+
+def test_uninstall_restores_the_config_byte_for_byte_unless_edited(brain_dir: Path, capsys):
+    cursor = Path.home() / ".cursor" / "mcp.json"
+    cursor.parent.mkdir(parents=True)
+    original = b'{"mcpServers": {"mine": {"command": "x"}}}\r\n'
+    cursor.write_bytes(original)
+    assert main(["connect", "cursor"]) == 0
+    assert main(["connect", "cursor"]) == 0  # the backup still holds the original
+    assert main(["connect", "cursor", "--uninstall"]) == 0
+    assert cursor.read_bytes() == original
+
+    assert main(["connect", "cursor"]) == 0
+    data = json.loads(cursor.read_text())
+    data["mcpServers"]["added"] = {"command": "y"}
+    cursor.write_text(json.dumps(data))
+    capsys.readouterr()
+    assert main(["connect", "cursor", "--uninstall"]) == 0
+    assert "changed since connect" in capsys.readouterr().out
+    assert set(json.loads(cursor.read_text())["mcpServers"]) == {"mine", "added"}
+
+
+def test_connect_and_mcp_refuse_bad_arguments(brain_dir: Path, capsys: pytest.CaptureFixture[str]):
+    assert main(["connect", "cursor", "--brain", "nosuch", "--print"]) == 3
+    assert capsys.readouterr().err.startswith("not_found: no brain named 'nosuch'")
+    assert main(["connect", "cursor", "--brain", "test", "--print"]) == 0
+    assert main(["connect", "cursor", "--print", "--uninstall"]) == 2
+    for host in ("codex", "antigravity", "openclaw"):
+        assert main(["connect", host, "--scope", "project", "--dry-run"]) == 2
+        assert "has no project scope" in capsys.readouterr().err
+    assert main(["mcp", "--host", "No Such/Host"]) == 2
+    assert "is not a host id" in capsys.readouterr().err
+
+
 def test_brains_limit_sets_which_brains_an_app_may_use(brain_dir: Path, tmp_path: Path, capsys):
     from brainwiki.config._user import register_brain
     from brainwiki.lifecycle import init_brain

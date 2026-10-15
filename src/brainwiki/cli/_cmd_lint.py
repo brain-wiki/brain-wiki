@@ -8,15 +8,24 @@ from typing import Any
 
 from brainwiki.cli._output import emit
 from brainwiki.engine import Engine, open_engine
-from brainwiki.errors import NotFound
+from brainwiki.errors import NotFound, UsageError
 
 
 def _engine(args: Any) -> Engine:
     return open_engine(args.brain, host=getattr(args, "as_host", None))
 
 
-def _codes(raw: str | None) -> list[str] | None:
-    return [c.strip().upper() for c in raw.split(",") if c.strip()] if raw else None
+def _codes(raw: str | None, flag: str) -> list[str] | None:
+    from brainwiki.lint import unknown_codes
+
+    codes = [c.strip().upper() for c in raw.split(",") if c.strip()] if raw else None
+    unknown = unknown_codes(codes or [])
+    if unknown:
+        raise UsageError(
+            f"{flag}: no lint rule matches {', '.join(unknown)}; give codes or prefixes "
+            "such as BW3,BW405"
+        )
+    return codes
 
 
 def brain_paths(engine: Engine, raw: list[str]) -> list[str] | None:
@@ -51,18 +60,24 @@ def _mark_linted(engine: Engine) -> None:
 def lint(args: Any) -> int:
     from brainwiki.lint import lint as run_lint
 
+    if args.dry_run and not args.fix:
+        raise UsageError("--dry-run goes with --fix")
+    select, ignore = _codes(args.select, "--select"), _codes(args.ignore, "--ignore")
     with _engine(args) as engine:
         if args.install_hook:
             from brainwiki.lint import install_hook
 
-            target = install_hook(engine.brain.root)
-            emit(args, {"installed": str(target)}, f"Installed {target}")
+            target, already = install_hook(engine.brain.root)
+            emit(
+                args,
+                {"installed": str(target), "already": already},
+                f"{'Already installed' if already else 'Installed'} {target}",
+            )
             return 0
         paths = brain_paths(engine, args.paths)
         for raw, rel in zip(args.paths or [], paths or [], strict=True):
             if not (engine.brain.root / rel).exists():
                 raise NotFound(f"no such file or folder in the brain: {raw}")
-        select, ignore = _codes(args.select), _codes(args.ignore)
         if args.fix:
             from brainwiki.lint import fix
 
@@ -81,6 +96,9 @@ def lint(args: Any) -> int:
                     outcome.diff or "Nothing to fix.",
                 )
                 return 0
+            from brainwiki.cli._cmd_runs import warn_git
+
+            warn_git(outcome.record)
             data = outcome.remaining.to_json()
             data["fixed"] = [p.to_json() for p in outcome.applied]
             data["run"] = outcome.record.run if outcome.record else None

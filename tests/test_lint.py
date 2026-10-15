@@ -305,3 +305,50 @@ def test_invalid_claim_inputs_read_as_unverified(brain_dir: Path):
         outline = read(e, "topics/a/n.md", mode="outline")
     assert outline["claims"][0]["inputs"] == "unknown"
     assert "Typo. [unverified]" in outline["content"]
+
+
+def test_fixable_count_matches_what_fix_applies(brain_dir: Path, capsys):
+    write(brain_dir, "topics/a/index.md", "---\nid: 01M4KT3JPRY4W6766VT18CQS51\n---\n# A\n")
+    write(brain_dir, "topics/a/bad.md", "# Bad\n\n<<<<<<< HEAD\nx\n=======\ny\n>>>>>>> o\n")
+    assert main(["lint", "--fix"]) == 1  # BW103 and BW408 are fixed; the merge markers are not
+    assert "Fixed " in capsys.readouterr().out
+    assert main(["lint"]) == 1
+    out = capsys.readouterr().out
+    assert "fixable with --fix" not in out and "1 more with --fix --select BW405" in out
+    assert main(["lint", "--fix"]) == 1
+    assert "Nothing to fix" in capsys.readouterr().out
+    assert main(["lint", "--select", "BW405"]) == 0
+    assert "1 fixable with --fix" in capsys.readouterr().out
+
+
+def test_lint_usage_errors(brain_dir: Path, capsys):
+    for argv in (
+        ["--select", "foo"],
+        ["--select", "BW999"],
+        ["--ignore", "BW1,BW99"],
+        ["--dry-run"],
+    ):
+        assert main(["lint", *argv]) == 2, argv
+    assert "BW99" in capsys.readouterr().err
+    assert main(["lint", "--select", "BW1,bw405"]) == 0
+
+
+def test_install_hook_is_idempotent_and_git_refusals_are_reported(
+    brain_dir: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys
+):
+    empty = tmp_path / "gitconfig"
+    empty.write_text("[user]\n\tname = T\n\temail = t@example.com\n")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(empty))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    subprocess.run(["git", "-C", str(brain_dir), "init", "-q"], check=True)
+    assert main(["lint", "--install-hook"]) == 0
+    assert main(["lint", "--install-hook"]) == 0
+    assert "Already installed" in capsys.readouterr().out
+    hook = brain_dir / ".git/hooks/pre-commit"
+    hook.write_text("#!/bin/sh\necho 'lint says no' >&2\nexit 1\n")
+    assert main(["lint", "--install-hook"]) == 4  # someone else's hook is never overwritten
+    capsys.readouterr()
+    assert main(["rule", "add", "Write US English."]) == 0
+    captured = capsys.readouterr()
+    assert captured.out.startswith("Added r-")
+    assert "git refused the commit" in captured.err and "lint says no" in captured.err

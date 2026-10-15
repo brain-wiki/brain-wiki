@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -228,6 +229,219 @@ def test_review_flow(example: Path):
         assert accepted.status == "applied", accepted.errors
         assert not (example / result.proposal).exists() and not (example / path).exists()
         assert "FTS5 handles prefix queries." in (example / "topics/search/fts5.md").read_text()
+
+
+def review_always(example: Path) -> None:
+    toml = example / "brain.toml"
+    toml.write_text(
+        toml.read_text().replace("[topics.search]\n", '[topics.search]\nreview = "always"\n')
+    )
+
+
+def propose(e: Engine, text: str = "FTS5 handles prefix queries.", **kw):
+    """A run routed to review (the search topic must review always): (packet, episode, result)."""
+    path = log(e, text, **kw)
+    packet = pipeline.prepare(e, e.profile)
+    h = handle_for(packet, path)
+    ops = {
+        "ops": [
+            {
+                "op": "add_claim",
+                "note": note_handle(packet, "topics/search/fts5.md"),
+                "text": text,
+                "sources": [f"{h}#L{packet.episodes[h].first_line}"],
+            }
+        ]
+    }
+    result = pipeline.apply(e, packet, ops, e.profile, agent="codex")
+    assert result.status == "review", result.errors
+    return packet, path, result
+
+
+def tamper(example: Path, proposal: str, change) -> None:
+    """Rewrite the packet embedded in a proposal file, as anyone with file access could."""
+    file = example / proposal
+    text = file.read_text()
+    start = text.rindex("```json\n") + len("```json\n")
+    end = text.index("\n```", start)
+    payload = json.loads(text[start:end])
+    change(payload["packet"])
+    file.write_text(text[:start] + json.dumps(payload) + text[end:])
+
+
+def git_init(example: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    empty = tmp_path / "gitconfig"
+    empty.write_text("")
+    for var, value in {
+        "GIT_CONFIG_GLOBAL": str(empty),
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_AUTHOR_NAME": "T",
+        "GIT_AUTHOR_EMAIL": "t@example.com",
+        "GIT_COMMITTER_NAME": "T",
+        "GIT_COMMITTER_EMAIL": "t@example.com",
+    }.items():
+        monkeypatch.setenv(var, value)
+    subprocess.run(["git", "-C", str(example), "init", "-q"], check=True)
+    subprocess.run(["git", "-C", str(example), "add", "-A"], check=True)
+    subprocess.run(["git", "-C", str(example), "commit", "-qm", "init"], check=True)
+
+
+def head(example: Path) -> str:
+    return subprocess.run(
+        ["git", "-C", str(example), "rev-parse", "HEAD"], capture_output=True, text=True
+    ).stdout
+
+
+@pytest.mark.parametrize("forgery", ["protected_note", "archive_target", "note_path_escape"])
+def test_forged_proposal_is_refused(
+    example: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys, forgery: str
+):
+    from brainwiki.config._user import register_brain
+    from brainwiki.consolidate._packet import drop_packet
+
+    review_always(example)
+    git_init(example, monkeypatch, tmp_path)
+    register_brain("ex", example, make_default=True)
+    with eng(example) as e:
+        packet, path, result = propose(e)
+        drop_packet(e, packet.run)  # as on another device, or a run that was never prepared
+    rules = (example / "rules.md").read_bytes()
+    fts5 = note_handle(packet, "topics/search/fts5.md")
+    evil = "topics/search/evil.md"
+
+    def change(raw):
+        if forgery == "protected_note":
+            raw["notes"][fts5]["path"] = "rules.md"
+            raw["notes"][fts5]["hash"] = "sha256:" + hashlib.sha256(rules).hexdigest()
+        elif forgery == "note_path_escape":
+            raw["notes"][fts5]["path"] = "topics/search/../../rules.md"
+        for ep in raw["episodes"].values():
+            ep["archive_to"] = evil
+
+    tamper(example, result.proposal, change)
+    before = head(example)
+    capsys.readouterr()
+    code = main(["review", "accept", packet.run])
+    err = capsys.readouterr().err
+    assert code != 0 and "refusing the proposal" in err
+    assert (example / "rules.md").read_bytes() == rules
+    assert (example / path).exists() and not (example / evil).exists()
+    assert not (example / "archive" / path.split("/", 1)[1]).exists()
+    assert head(example) == before
+
+
+def test_accept_rebuilds_provenance_from_the_episode(example: Path):
+    from brainwiki.consolidate._packet import drop_packet
+
+    review_always(example)
+    with eng(example) as e:
+        packet, path, result = propose(e, inputs="unknown")
+        drop_packet(e, packet.run)
+
+        def change(raw):
+            for ep in raw["episodes"].values():
+                ep["inputs"], ep["origin"] = "local", "owner"
+
+        tamper(example, result.proposal, change)
+        accepted = pipeline.accept_review(e, packet.run, e.profile)
+        assert accepted.status == "applied", accepted.errors
+    doc = parse_document("x", (example / "topics/search/fts5.md").read_text())
+    claim = next(c for c in doc.claims if c.text == "FTS5 handles prefix queries.")
+    assert claim.meta["inputs"] == "unknown" and claim.meta["origin"] == "agent"
+    assert not (example / path).exists()
+
+
+def test_create_note_in_review_topic_routes_to_review(example: Path):
+    review_always(example)
+    with eng(example) as e:
+        path = log(e, "Lumen ranks title matches first.")
+        packet = pipeline.prepare(e, e.profile)
+        h = handle_for(packet, path)
+        claim = {
+            "text": "Lumen ranks title matches first.",
+            "sources": [f"{h}#L{packet.episodes[h].first_line}"],
+        }
+        ops = {
+            "ops": [
+                {
+                    "op": "create_note",
+                    "ref": "new:search/ranking",
+                    "title": "Ranking",
+                    "claims": [claim],
+                }
+            ]
+        }
+        result = pipeline.apply(e, packet, ops, e.profile)
+        assert result.status == "review" and "topic search requires review" in result.review
+        assert not (example / "topics/search/ranking.md").exists()
+        sub = {"op": "create_topic", "slug": "cjk", "title": "CJK", "parent": "search"}
+        note = {"op": "create_note", "ref": "new:cjk/x", "title": "X", "claims": [claim]}
+        validation = pipeline.validate(e, packet, {"ops": [sub, note]})
+        assert validation.ok and "topic search requires review" in validation.review
+
+
+def test_cli_exit_codes_and_messages(example: Path, tmp_path: Path, capsys):
+    from brainwiki.config._user import register_brain
+
+    register_brain("ex", example, make_default=True)
+    review_always(example)
+    with eng(example) as e:
+        path = log(e, "FTS5 handles prefix queries.")
+    assert main(["consolidate", "--prepare", "--apply", "x.json"]) == 2
+    assert main(["consolidate", "--prepare", "--max-episodes", "0"]) == 2
+    capsys.readouterr()
+    assert main(["consolidate", "--prepare", "--topic", "nosuch"]) == 3
+    assert "unknown topic 'nosuch'" in capsys.readouterr().err
+    out = tmp_path / "packet.json"
+    assert main(["consolidate", "--prepare", "--out", str(out)]) == 0
+    prepared = json.loads(out.read_text())
+    assert prepared["instructions"] and prepared["packet"]["episodes"]
+    run = prepared["run"]
+    h = next(ep["handle"] for ep in prepared["packet"]["episodes"])
+    fts5 = next(n["handle"] for n in prepared["packet"]["notes"] if n["path"].endswith("fts5.md"))
+    first = int(prepared["packet"]["episodes"][0]["lines"][0].split("|")[0])
+    ops = tmp_path / "ops.json"
+    ops.write_text("not json")
+    capsys.readouterr()
+    assert main(["consolidate", "--apply", str(ops), "--run", run]) == 1
+    assert "invalid_ops" in capsys.readouterr().err
+    add = {
+        "op": "add_claim",
+        "note": fts5,
+        "text": "FTS5 handles prefix queries.",
+        "sources": [f"{h}#L{first}"],
+    }
+    ops.write_text(json.dumps({"ops": [add]}))
+    assert main(["consolidate", "--apply", str(ops), "--run", run]) == 1
+    text = capsys.readouterr().out
+    assert (
+        "Routed to review" in text and "Nothing is written until the proposal is accepted" in text
+    )
+    assert "Archived" not in text and (example / path).exists()
+
+    # review show: the proposed changes, never the packet's paths and hashes
+    assert main(["review", "show", run]) == 0
+    shown = capsys.readouterr().out
+    assert 'add claim to topics/search/fts5.md: "FTS5 handles prefix queries."' in shown
+    assert "+  - " in shown and "sha256:" not in shown and "archive_to" not in shown
+    assert main(["review", "show", run, "--json"]) == 0
+    data = json.loads(capsys.readouterr().out)
+    assert "packet" not in data and "sha256:" not in json.dumps(data)
+
+    # a stale packet is a conflict (4) and says to prepare again
+    with eng(example) as e:
+        log(e, "Another fact about search.")
+    assert main(["consolidate", "--prepare", "--json"]) == 0
+    second = json.loads(capsys.readouterr().out)
+    note = example / "topics/search/fts5.md"
+    note.write_text(note.read_text() + "\nEdited by hand.\n")
+    h2 = second["packet"]["episodes"][0]["handle"]
+    n2 = next(n["handle"] for n in second["packet"]["notes"] if n["path"].endswith("fts5.md"))
+    l2 = int(second["packet"]["episodes"][0]["lines"][0].split("|")[0])
+    ops.write_text(json.dumps({"ops": [{**add, "note": n2, "sources": [f"{h2}#L{l2}"]}]}))
+    assert main(["consolidate", "--apply", str(ops), "--run", second["run"]]) == 4
+    stale = capsys.readouterr().out
+    assert "Prepare a new run" in stale and "fix the ops" not in stale
 
 
 FAKE_AGY = """#!{python}

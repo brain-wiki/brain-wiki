@@ -158,3 +158,35 @@ def test_editing_a_note_keeps_incoming_links_resolved(example: Path):
             "SELECT other FROM edges WHERE raw_target='fts5' AND rel='links_to'"
         ).fetchall()
         assert hub_links and all(r["other"] for r in hub_links)
+
+
+def test_read_raw_is_the_file_and_section_flags_agree(
+    example: Path, capsys: pytest.CaptureFixture[str]
+):
+    from brainwiki.cli._main import main
+    from brainwiki.errors import UsageError
+    from brainwiki.index._read import format_read_text
+
+    note = example / "topics/search/ripgrep.md"
+    with engine_for(example) as eng:
+        raw = read(eng, "ripgrep", mode="raw")
+        assert raw["banners"] and format_read_text(raw) == note.read_text()  # no banners (04 §7)
+        assert read(eng, "fts5", section="claims")["mode"] == "section"  # --section implies it
+        with pytest.raises(UsageError):
+            read(eng, "fts5", mode="section")
+        with pytest.raises(UsageError):
+            read(eng, "fts5", mode="full", section="claims")
+    assert main(["--brain", str(example), "read", "ripgrep", "--mode", "raw"]) == 0
+    assert capsys.readouterr().out == note.read_text()
+    assert main(["--brain", str(example), "read", "fts5", "--mode", "section"]) == 2
+
+
+def test_where_matches_keys_stored_as_columns(example: Path):
+    def paths(where: dict[str, str]) -> list[str]:
+        return [r["path"] for r in search(eng, "", where=where, limit=50)["results"]]
+
+    with engine_for(example) as eng:
+        assert paths({"tags": "SEARCH"}) == ["topics/search/fts5.md"]  # a list matches any item
+        assert paths({"aliases": "fts5 decision"}) == ["topics/search/fts5.md"]
+        assert paths({"title": "Use ripgrep for search"}) == ["topics/search/ripgrep.md"]
+        assert paths({"id": "01M4KT3JPSB7BP2SNSCAVC2SF5"}) == ["topics/search/ripgrep.md"]

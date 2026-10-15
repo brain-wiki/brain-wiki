@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import sys
 from typing import Any
 
-from brainwiki.cli._output import emit
+from brainwiki.cli._output import emit, warn
 from brainwiki.engine import open_engine
 from brainwiki.errors import UsageError
 
@@ -22,11 +23,43 @@ def orient(args: Any) -> int:
     return 0
 
 
-def search(args: Any) -> int:
+_INCLUDES = ("archived", "episodes", "archived_episodes")
+_SEARCH_LIMIT = 50
+
+
+def check_range(flag: str, value: int, low: int, high: int) -> None:
+    """Refuse an out-of-range number rather than quietly clamping it."""
+    if not low <= value <= high:
+        raise UsageError(f"{flag} takes {low}-{high}, not {value}")
+
+
+def print_results(args: Any, result: dict[str, Any]) -> None:
+    """A search or browse result in the form the flags ask for. With --paths the next-page
+    hint goes to stderr, so a pipe gets only paths but a person still sees rows were left."""
     from brainwiki.index import format_search_text
+
+    if args.count:
+        emit(args, result, format_search_text(result, "count"))
+        return
+    emit(args, result, format_search_text(result, "paths" if args.paths else "text"))
+    if args.paths and not args.json and result.get("next_cursor"):
+        left = result["total"] - int(result["next_cursor"])
+        sys.stdout.flush()  # after the paths on a terminal
+        warn(f"… {left} more (--cursor {result['next_cursor']})")
+
+
+def search(args: Any) -> int:
     from brainwiki.index import search as run
 
     include = {part.strip() for part in (args.include or "").split(",") if part.strip()}
+    unknown = sorted(include - set(_INCLUDES))
+    if unknown:
+        raise UsageError(
+            f"--include takes a comma list of {', '.join(_INCLUDES)}, not {', '.join(unknown)}"
+        )
+    if "episodes" in include and args.no_episodes:
+        raise UsageError("--include episodes and --no-episodes contradict each other")
+    check_range("--limit", args.limit, 1, _SEARCH_LIMIT)
     with _engine(args) as engine:
         result = run(
             engine,
@@ -49,10 +82,7 @@ def search(args: Any) -> int:
             include_archived="archived" in include,
             include_archived_episodes="archived_episodes" in include,
         )
-    if args.count and not args.json and not args.facets:
-        print(result["total"])
-        return 0
-    emit(args, result, format_search_text(result, "paths" if args.paths else "text"))
+    print_results(args, result)
     return 0
 
 
@@ -72,6 +102,9 @@ def read(args: Any) -> int:
 
     with _engine(args) as engine:
         result = run(engine, args.target, mode=args.mode, section=args.section)
+    if result["mode"] == "raw" and result["kind"] in ("note", "hub") and not args.json:
+        sys.stdout.write(format_read_text(result))  # byte for byte: no added newline
+        return 0
     emit(args, result, format_read_text(result))
     return 0
 
@@ -80,6 +113,8 @@ def neighbors(args: Any) -> int:
     from brainwiki.index import format_neighbors_text
     from brainwiki.index import neighbors as run
 
+    check_range("--depth", args.depth, 1, 3)
+    check_range("--limit", args.limit, 1, 100)
     with _engine(args) as engine:
         result = run(
             engine,
@@ -99,6 +134,8 @@ def neighbors(args: Any) -> int:
 
 
 def index(args: Any) -> int:
+    if args.rebuild and args.status:
+        raise UsageError("--rebuild and --status are alternatives; pass one")
     with _engine(args) as engine:
         stats = engine.rebuild() if args.rebuild else engine.scan(force=True)
         counts = {

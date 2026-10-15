@@ -32,7 +32,10 @@ write       = ["episodes", "propose_rules", "consolidate"]
 
 `brain agents grant|revoke HOST CAPABILITY…` edits these tables as one undoable
 `config` run (comments kept; a new table starts from what the host may already
-do), and refreshes the `AGENTS.md` block when the default profile's `edit`
+do). `read_origin` is granted and revoked the same way, as a flag. A host id
+that is not a known host (`claude-code`, `codex`, `antigravity`, `openclaw`,
+`cursor`, `generic`, `default`) and has no table yet gets a warning, since it
+is most likely a typo, but the change is made. The command also refreshes the `AGENTS.md` block when the default profile's `edit`
 changes, since that block tells file-reading agents whether they may edit.
 A refusal names the command that allows the action for that host alone, e.g.
 `brain agents grant claude-code consolidate`.
@@ -40,11 +43,22 @@ A refusal names the command that allows the action for that host alone, e.g.
 Resolution: `--host <id>` → `[agents.<id>]` → `[agents.default]` →
 built-in default. The CLI acts as `owner` (everything allowed) because the
 person at the terminal owns the brain; `--as <host>` acts with a host's
-profile, which is how users check what it may do.
+profile, which is how users check what it may do. Under `--as`, every CLI
+write does what that host could do through MCP, or is refused:
+
+| Command | Under `--as <host>` |
+|---|---|
+| `log` | Needs `episodes`; recorded as `origin: agent`, `inputs: unknown` (or `external`), with the host as agent, like `brain_log_episode` |
+| `rule add` | Needs `propose_rules`; saved as a proposal for `brain rule accept`, like `brain_propose_rule` without a way to ask |
+| `check`, `mv`, `lint --fix` | Need `edit`: they change notes directly (`--dry-run` previews need nothing) |
+| `rule accept`/`reject`, `agents grant`/`revoke`, `undo` | Refused: these are the user's decisions. An agent undoing runs could undo the user's own work, so no capability allows it |
 
 Enforcement points, all in the engine so every interface gets them:
 
-- Writes: tools absent from `write` are refused with `forbidden`.
+- Writes: tools absent from `write` are refused with `forbidden`. Write
+  functions check the profile themselves (`move_note`, `lint.fix`,
+  `accept_rule`, `reject_rule`, `profile_run`), so a new interface inherits
+  the checks.
 - Host brain limits from the user config ([03 §3](03-config-and-storage.md#3-choosing-a-brain)).
 
 Profiles are not authentication. A local stdio server trusts the `--host`
@@ -151,9 +165,12 @@ Global options: `--brain NAME|PATH`, `--as HOST`, `--json`, `--version`.
 | 1 | The command ran and found problems (lint errors, invalid ops, review required), or a path could not be read or written (`os_error`) |
 | 2 | Usage error |
 | 3 | Not found (brain, note, run) |
-| 4 | Conflict (stale packet, files changed since run, lock timeout) |
+| 4 | Conflict: `conflict` (a name or file already there, an edited block), `stale` (notes changed since prepare, files changed since a run), `expired`, or `busy` (lock timeout) |
 | 5 | Forbidden by profile or host limits |
-| 10 | Internal error (bug) |
+| 10 | Internal error (bug): one line, `internal: unexpected error; details are in <log>`, with the trace in `<state>/logs/brain-wiki.log` |
+
+Errors print one line to stderr, `<code>: <message>`, with the codes of
+§3.6.
 
 ### 2.4 Startup cost
 
@@ -388,7 +405,8 @@ starts with a stable code:
 | `ambiguous` | Target matches several notes; the message lists them |
 | `forbidden` | Not allowed by the profile or host limits |
 | `invalid_ops` | Validation failed; a list of `{op_index, check, message}` follows |
-| `stale` | Notes changed since the packet was prepared; prepare again |
+| `stale` | Notes changed since the packet was prepared, or files since the run read them; prepare again |
+| `conflict` | The change collides with something already there (a registered name, an existing file) |
 | `budget_exceeded` | `rules.md` would exceed its budget |
 | `expired` | The run handle is older than its expiry |
 | `busy` | The brain's write lock could not be taken in time |

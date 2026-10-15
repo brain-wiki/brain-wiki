@@ -27,7 +27,7 @@ discover ─► filter ─► route ─► extract ─► distill (or raw) ─�
 |---|---|
 | Discover | A per-host session reader lists sessions with id, working directory, start and last-modified time, size, and whether it is a subagent ([[08-64-session-readers\|08 §6.4]]). |
 | Filter | Skip subagent sessions, brain-wiki's own headless runs, sessions idle for less than `min_idle_minutes` (still in progress), and sessions with fewer than `min_user_turns` user messages. |
-| Route | Each session belongs to the brain of its working directory, checked in order: the first matching pattern in `[harvest.routes]` (`brain harvest route PATTERN BRAIN` adds one and keeps longer patterns first, so a specific folder still wins over `~/**`), a project file (`.brain-wiki.toml`), the brain folder it is inside, then the host's `brain` ([[03-3-choosing-a-brain\|03 §3]]). Sessions that resolve to no brain are skipped, never sent to the default brain. |
+| Route | Each session belongs to the brain of its working directory, checked in order: a project file (`.brain-wiki.toml`), the brain folder it is inside, the first matching pattern in `[harvest.routes]` (`brain harvest route PATTERN BRAIN` adds one and keeps longer patterns first, so a specific folder still wins over `~/**`), then the host's `brain`. Routes come after what the folder itself says, so a catch-all never overrides a project's own brain ([[03-3-choosing-a-brain\|03 §3]]). Sessions that resolve to no brain are skipped, never sent to the default brain. |
 | Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Text the host injected into turns (reminders, command echoes) is stripped. Secrets are scrubbed. Inputs are computed from the tool calls. |
 | Distill | One call to the configured headless preset ([[08-7-headless-presets\|08 §7]]) with the distill instructions (`prompts/distill.md`): the model returns `{skip, summary, claims[{text, turns}], negative_findings, open_questions, topics}`. Long sessions are split into chunks of at most 30k tokens, one episode per chunk. With `--raw`, no model is called and the episode holds a condensed transcript excerpt instead; consolidation distills it later. |
 | Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-inputs`. The dedupe key `<host>:<session>:<turn range>` makes a repeated harvest write nothing new. |
@@ -58,6 +58,10 @@ The in-agent recipe is off by default and enabled per host (`[harvest]
 enabled` and `hosts` in the user config, plus `harvest` in the host's
 profile `write` list). `brain harvest` in a terminal is the owner's
 command and needs neither; every CLI run starts as a dry run that lists the sessions
-it would read, the brain each routes to, and an estimate of tokens for
-distillation; `--apply` executes. A backend only receives sessions routed
-to a brain; unrouted sessions are skipped.
+it would read (full session id and the folder it ran in), the brain each
+routes to, and an estimate of tokens for distillation; `--apply` executes,
+and `--apply --dry-run` lists the turn ranges it would write as episodes,
+per session, and writes nothing. `--from` with an unknown host, or one
+without a session reader, is a usage error, as it is for `brain harvest
+enable`. A backend only receives sessions routed to a brain; unrouted
+sessions are skipped.

@@ -107,7 +107,7 @@ discover ─► filter ─► route ─► extract ─► distill (or raw) ─�
 |---|---|
 | Discover | A per-host session reader lists sessions with id, working directory, start and last-modified time, size, and whether it is a subagent ([08 §6.4](08-agent-integrations.md#64-session-readers)). |
 | Filter | Skip subagent sessions, brain-wiki's own headless runs, sessions idle for less than `min_idle_minutes` (still in progress), and sessions with fewer than `min_user_turns` user messages. |
-| Route | Each session belongs to the brain of its working directory, checked in order: the first matching pattern in `[harvest.routes]` (`brain harvest route PATTERN BRAIN` adds one and keeps longer patterns first, so a specific folder still wins over `~/**`), a project file (`.brain-wiki.toml`), the brain folder it is inside, then the host's `brain` ([03 §3](03-config-and-storage.md#3-choosing-a-brain)). Sessions that resolve to no brain are skipped, never sent to the default brain. |
+| Route | Each session belongs to the brain of its working directory, checked in order: a project file (`.brain-wiki.toml`), the brain folder it is inside, the first matching pattern in `[harvest.routes]` (`brain harvest route PATTERN BRAIN` adds one and keeps longer patterns first, so a specific folder still wins over `~/**`), then the host's `brain`. Routes come after what the folder itself says, so a catch-all never overrides a project's own brain ([03 §3](03-config-and-storage.md#3-choosing-a-brain)). Sessions that resolve to no brain are skipped, never sent to the default brain. |
 | Extract | Normalize turns (user text, assistant text, tool calls by name and short argument summary). Tool output bodies are dropped. Text the host injected into turns (reminders, command echoes) is stripped. Secrets are scrubbed. Inputs are computed from the tool calls. |
 | Distill | One call to the configured headless preset ([08 §7](08-agent-integrations.md#7-headless-presets)) with the distill instructions (`prompts/distill.md`): the model returns `{skip, summary, claims[{text, turns}], negative_findings, open_questions, topics}`. Long sessions are split into chunks of at most 30k tokens, one episode per chunk. With `--raw`, no model is called and the episode holds a condensed transcript excerpt instead; consolidation distills it later. |
 | Write | Episodes with `bw-captured: harvest`, `bw-agent`, `bw-session`, `bw-turns`, `bw-device`, and the computed `bw-inputs`. The dedupe key `<host>:<session>:<turn range>` makes a repeated harvest write nothing new. |
@@ -138,9 +138,13 @@ The in-agent recipe is off by default and enabled per host (`[harvest]
 enabled` and `hosts` in the user config, plus `harvest` in the host's
 profile `write` list). `brain harvest` in a terminal is the owner's
 command and needs neither; every CLI run starts as a dry run that lists the sessions
-it would read, the brain each routes to, and an estimate of tokens for
-distillation; `--apply` executes. A backend only receives sessions routed
-to a brain; unrouted sessions are skipped.
+it would read (full session id and the folder it ran in), the brain each
+routes to, and an estimate of tokens for distillation; `--apply` executes,
+and `--apply --dry-run` lists the turn ranges it would write as episodes,
+per session, and writes nothing. `--from` with an unknown host, or one
+without a session reader, is a usage error, as it is for `brain harvest
+enable`. A backend only receives sessions routed to a brain; unrouted
+sessions are skipped.
 
 ### 2.3 Checked agent edits
 
@@ -167,7 +171,8 @@ recorded version:
 | Links and relations | A relation does not parse or names an unknown `bw-` field (error), or a new link does not resolve (warning) |
 | Claims | Claim metadata is broken, or a claim was deleted or reworded in place. Claims change only by superseding (move the old claim to `bw-claims-superseded`, add the new one), so a fact's history is never lost |
 | Claim provenance | An agent changed an existing claim's `origin`, `inputs`, or `src`. Only brain-wiki and the user set provenance |
-| Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` |
+| Loss guard | Much of a note's text disappeared in one edit: a warning above 10%, an error above 50% unless `--allow-shrink` (MCP `allow_shrink`) |
+| Lint | The edit introduces a strict lint error: file rules on the new content, and cross-file rules (a `by:` naming no claim, a supersession cycle) reported on lines the edit added or changed. Warnings and info are shown with their own severity and do not block |
 | Protected files | Any of the files above changed |
 | Sync debris | Merge-conflict markers or sync-conflict copies |
 
@@ -177,20 +182,23 @@ it; `log.md` gains a line; the brain's git repo, if any, gets a commit;
 author `agent:<host>`. Claims the edit added get `origin: agent` and
 `inputs: unknown`, whatever the agent wrote (an edit cannot show what else
 happened in the session), so they show as unverified until the user edits
-them; consolidation keeps the worse value when it merges. A
-failed check records nothing and returns every problem with its line; the
+them; consolidation keeps the worse value when it merges. Claims the user
+adds are left as written. A failed check records nothing and returns every problem with its line; the
 agent fixes the file and checks again, or `brain restore <path>` puts back
 the last recorded version.
 
 **The last recorded version.** The index keeps, for each note, the content
 it had when a run last wrote it, when `brain check` last recorded it, or
-when the index was first built. A note created outside brain-wiki after
-that is recorded as absent, so it shows as a pending creation. A note whose
+when the index was first built: every note found before the first full
+scan completes counts as the starting version, even when a write (a first
+`brain log` or rule change) indexed some files before that scan. A note
+created outside brain-wiki after that is recorded as absent, so it shows as a pending creation. A note whose
 file differs from its recorded version has a *pending edit*. `brain check`
 with no paths lists pending edits with their diffs; `brain check --adopt
 PATH` records a pending edit as the user's (author `owner`) even when checks
 report problems, which is how hand edits made outside brain-wiki can be
-given an undo point. Pending edits are not lint errors: humans edit their
+given an undo point. Adopting cannot record a protected file or a file that
+is not a note, so a failed check suggests `--adopt` only when it would help. Pending edits are not lint errors: humans edit their
 notes freely, and nothing nags them. A rename by hand carries the recorded
 version to the new path. The recorded versions survive index rebuilds,
 since they are the only record of unchecked edits; only a lost index starts
@@ -285,7 +293,7 @@ rolled back from in-memory pre-images before the lock is released.
 | Trigger | Backend | How |
 |---|---|---|
 | User asks their agent ("consolidate my brain") | `agent` | The skill drives `brain_consolidate_prepare` / `brain_consolidate_apply` over MCP. |
-| User drives it from a terminal | `agent` | `brain consolidate --prepare` writes the packet and instructions; any model or person produces the ops; `brain consolidate --apply OPS.json --run RUN` validates and applies them. |
+| User drives it from a terminal | `agent` | `brain consolidate --prepare` prints the instructions and packet (`--out FILE` writes the same JSON document `--json` prints: `run`, `instructions`, `packet`); any model or person produces the ops; `brain consolidate --apply OPS.json --run RUN` validates and applies them. Exit codes follow [07 §2.3](07-interfaces.md#23-exit-codes): 0 applied or dry run, 1 invalid ops (including a file that is not JSON) or routed to review, 4 stale (prepare again). |
 
 v0.1 never consolidates on its own in the background. Running an LLM costs
 money and attention, and the user should choose when. Scheduled, headless
@@ -509,12 +517,19 @@ session. They get the strictest path.
 
 | Path | Flow |
 |---|---|
-| `brain rule add "…"` | The person running the CLI is the user. Written immediately, `origin: owner`, `quote` defaults to the text. |
+| `brain rule add "…"` | The person running the CLI is the user. Written immediately, `origin: owner`, `quote` defaults to the text. With `--as <host>`, it needs `propose_rules` and is saved as a proposal instead ([07 §1](07-interfaces.md#1-agent-profiles)). |
 | MCP `brain_propose_rule {text, user_quote, replaces?}` | Requires `propose_rules` in the profile's `write` list. The server asks the user to confirm, showing the exact rule: through an input-required result carrying an elicitation request on 2026-07-28 connections, or a pushed elicitation on older sessions, whichever the client advertises. The tool is also annotated as destructive and, for hosts that honor it, as requiring user interaction (`_meta["anthropic/requiresUserInteraction"]`), so the call itself is approved by the user. Confirmed → written with `origin: owner`, `via: mcp`. Declined → nothing. If the client supports neither form of confirmation, the rule is written as a proposal (`inbox/proposals/rule-<id>.md`) and orientation shows "1 rule awaiting confirmation: `brain rule accept <id>`". |
 | Consolidation | Never. If an episode looks like a preference ("user prefers X"), the instructions say to record it as a claim in a `preferences` topic; promoting it to a rule is a separate, user-confirmed step. |
 
 Replacing a rule (`replaces: r-…`) moves the old line to `archive/rules.md`.
 Budget overflow is an error that tells the user which rules are longest.
+Adding, proposing, or accepting a rule is refused with `not_found` when
+`replaces` names no rule, and with `conflict` when an existing rule already
+says the same thing (compared ignoring case and spacing).
+
+A proposal is known by its file name (`rule-<id>.md`): `brain rule list`
+shows that id, and the rule it replaces, and `accept` and `reject` take it.
+Accepting and rejecting are the user's decisions: no profile allows them.
 
 ## 7. Validation and apply
 
@@ -531,7 +546,7 @@ Budget overflow is an error that tells the user which rules are longest.
 | V7 | Completeness: episodes neither cited nor skipped. | Not an error: they stay pending and the run reports them. |
 | V8 | **Supersession ratio**: for a note with ≥ 4 active claims, superseded + retracted in this run ÷ active before > `max_supersede_ratio`. | Run is routed to review. |
 | V9 | **Specificity warning**: a superseding claim drops anchors (numbers, dates, versions, URLs, code spans, wikilinks) that appear in the old claim. | Warning in the run record and review file. Not blocking: changing a value is the point of superseding, and the old text is kept. |
-| V10 | Any touched topic has `review = "always"`, or sources include `inputs` ≠ `local` and `review_external = true` (default `false`). | Run is routed to review. |
+| V10 | Any topic an op writes into has `review = "always"` (a note's own topic for claim ops and relations, the target's too for `supersedes`, the topic of a created note, and the parent of a created sub-topic, whose policy it inherits), or sources include `inputs` ≠ `local` and `review_external = true` (default `false`). | Run is routed to review. |
 | V11 | Lint (strict) on every touched file after the in-memory apply; errors already present before the run do not count. | Invalid; nothing is written. |
 
 **Why not a content-loss threshold on whole files?** Because the writer
@@ -551,7 +566,25 @@ packets while a proposal references them).
   at a proposal but cannot accept it (MCP review tools are in the
   [backlog](../proposals/README.md#backlog)).
 - Accept re-validates the stored ops against the current brain (notes may
-  have changed) and applies them as a normal run.
+  have changed) and applies them as a normal run. The proposal is a file
+  anything with access to the brain can write, so the packet embedded in it
+  is never trusted: accept rebuilds the packet from the current brain with
+  the code `prepare` uses, keeping only which handle names which note,
+  claim, and episode (from the packet saved in `<state>/runs/<run>/` when
+  this device prepared the run, else from the proposal). Every note must be
+  a note or hub outside `rules.md`, `log.md`, `brain.toml`, `AGENTS.md`,
+  `inbox/`, `archive/`, and `reports/`, at the path and id the proposal
+  names; every episode a pending one whose archive target is its computed
+  archive location. A proposal that names anything else is refused with a
+  `format` error (exit 1) and nothing is written. Hashes, line ranges,
+  provenance (`origin`, `inputs`), and topic review policies come from the
+  files. A note, claim, or episode the ops use that has changed or gone
+  makes the accept stale (exit 4): reject the proposal and consolidate
+  again.
+- `show` prints what accepting would do, computed the same way: the review
+  reasons, one line per op with handles resolved to paths, and the diff
+  against the brain as it is now (or why accepting would fail). It never
+  prints the packet.
 - Proposals are files in the brain, so they sync to the user's other
   devices and can be reviewed in Obsidian.
 
@@ -599,16 +632,21 @@ Pre-images are stored next to it (`preimages/<sha256>`, gzip).
 
 `brain undo [<run>]` (default: the latest applied run on this device):
 
-- **Git brains:** if the run's commit exists, `git revert --no-edit <commit>`.
-  Revert merges with later edits; a conflict aborts the revert and reports
-  the files, leaving the tree as it was.
-- **Other brains:** for each file, if its current hash equals `after`,
-  restore the pre-image (or delete it if `before` is null) and move episodes
-  back. If any file changed since the run, refuse and list them. `--force`
-  saves the current versions under `<state>/runs/<run>/conflicts/` first.
-- Undo is itself recorded (`kind: undo`) and logged in `log.md`.
+- For each file, if its current hash equals `after`, restore the pre-image
+  (or delete it if `before` is null) and move episodes back. `log.md` is
+  append-only and not restored. If any file changed since the run, refuse
+  and list them; files no later run touched do not block, so an older run
+  can be undone. `--force` saves the current versions under
+  `<state>/runs/<run>/conflicts/` first.
+- Undo is itself a run (`kind: undo`, §7.3): logged in `log.md` and, in a
+  git brain, committed with exactly the restored files, deletions included.
+- Git is never the source of what to restore, the pre-images are: a run can
+  touch files git never saw (an uncommitted episode, a proposal), and a
+  `git revert` of an older run conflicts on `log.md`.
 
-Retention: the last 200 runs or 90 days, whichever keeps more.
+Retention: the last 200 runs or 90 days, whichever keeps more. Older runs can no
+longer be undone by `brain undo`; in a git brain, their commits can still be reverted
+with git.
 
 ## 9. Concurrency and multiple devices
 

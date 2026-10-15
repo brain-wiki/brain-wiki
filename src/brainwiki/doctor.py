@@ -90,27 +90,26 @@ def _brain_summary(name: str, path: Path) -> dict[str, Any]:
         if (path / layout.episodes_dir).exists()
         else 0
     )
-    info["notes"] = (
-        sum(1 for _ in (path / layout.topics_dir).rglob("*.md"))
-        if (path / layout.topics_dir).exists()
-        else 0
-    )
     proposals = path / layout.proposals_dir
     info["open_proposals"] = sum(1 for _ in proposals.glob("*.md")) if proposals.exists() else 0
-    info.update(_runs_summary(brain))
+    info.update(_index_summary(brain))
     return info
 
 
-def _runs_summary(brain: Any) -> dict[str, Any]:
+def _index_summary(brain: Any) -> dict[str, Any]:
+    """Roll back interrupted runs, then count notes from the index the way `brain list` and
+    the briefing do: a topic's hub is its index, not one of its notes (04 §8)."""
     from brainwiki.engine import Engine
     from brainwiki.runs import list_records, recover
 
     with Engine(brain) as engine:
         recovered = recover(engine)
+        engine.scan()
+        notes = engine.db.execute("SELECT COUNT(*) FROM nodes WHERE kind = 'note'").fetchone()[0]
     uncommitted = [
         {"run": r.run, "error": r.git_error} for r in list_records(brain.key) if r.git_error
     ][:10]
-    return {"recovered_runs": recovered, "uncommitted_runs": uncommitted}
+    return {"notes": notes, "recovered_runs": recovered, "uncommitted_runs": uncommitted}
 
 
 def run_doctor() -> dict[str, Any]:
@@ -167,6 +166,20 @@ def run_doctor() -> dict[str, Any]:
             }
         )
         report["next_steps"].append("create a brain")
+    elif user.default not in user.brains:
+        report["problems"].append(
+            {
+                "code": "no_default_brain",
+                "severity": "warning",
+                "message": (
+                    f"The default brain {user.default!r} is not registered."
+                    if user.default
+                    else "No default brain is set."
+                )
+                + " Commands need --brain NAME unless run inside a brain folder.",
+                "fix": f"brain brains default {sorted(user.brains)[0]}",
+            }
+        )
     if not report["sqlite"]["fts5"]:
         report["problems"].append(
             {

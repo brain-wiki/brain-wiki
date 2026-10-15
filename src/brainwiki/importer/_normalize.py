@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from brainwiki.format import (
     STATUSES,
     add_items,
@@ -43,14 +45,14 @@ def convert_relations(text: str, *, drop: bool = False) -> str:
     return text
 
 
-def identity_and_status(text: str) -> str:
+def identity_and_status(text: str, *, mint: Callable[[], str] = new_ulid) -> str:
     """Phase 2: mint missing ids, move non-standard status values to `stage`, fix list fields."""
     doc = parse_document("x.md", text)
     if doc.frontmatter.error:
         return text
     values: dict[str, object] = {}
     if doc.fm.get("id") is None:
-        values["id"] = new_ulid()
+        values["id"] = mint()
     status = doc.fm.get("status")
     if status is not None and str(status) not in STATUSES:
         new_status, stage = map_status(str(status))

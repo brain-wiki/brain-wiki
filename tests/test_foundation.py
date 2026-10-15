@@ -8,6 +8,7 @@ import pytest
 
 from brainwiki.config._manifest import parse_manifest
 from brainwiki.config._resolve import resolve_brain
+from brainwiki.config._user import load_user_config
 from brainwiki.errors import Conflict, FormatError, NotConfigured, UsageError
 from brainwiki.ids import is_ulid, new_ulid, ulid_datetime
 from brainwiki.store import LocalStore
@@ -181,3 +182,47 @@ def test_a_name_follows_its_brain_to_a_new_folder(brain_dir: Path, tmp_path: Pat
     assert main(["brains", "add", "test", str(moved)]) == 0
     user = load_user_config()
     assert user.brains["test"].resolve() == moved.resolve() and user.default == "test"
+
+
+def test_rename_checks_first_and_carries_every_reference(brain_dir: Path, tmp_path: Path):
+    from brainwiki.cli import main
+    from brainwiki.config import config_file
+    from brainwiki.config._user import add_harvest_route, register_brain, set_value
+    from brainwiki.lifecycle import init_brain
+
+    register_brain("work", init_brain(tmp_path / "brains" / "work", "work"))
+    set_value("hosts.codex.brain", "test")
+    set_value("hosts.codex.brains", ["test", "work"])
+    add_harvest_route("~/lumen/**", "test")
+    before = config_file().read_text()
+    assert main(["brains", "rename", "test", "work"]) == 4  # NEW is taken: nothing changes
+    assert main(["brains", "rename", "nosuch", "x"]) == 3
+    assert main(["brains", "rename", "test", "Bad Name"]) == 2
+    assert config_file().read_text() == before
+    assert main(["brains", "rename", "test", "lumen"]) == 0
+    user = load_user_config()
+    assert set(user.brains) == {"lumen", "work"} and user.brains["lumen"] == brain_dir
+    assert user.default == "lumen"
+    assert (user.hosts["codex"].brain, user.hosts["codex"].brains) == ("lumen", ["lumen", "work"])
+    assert user.harvest["routes"] == {"~/lumen/**": "lumen"}
+
+
+def test_brain_names_are_checked(brain_dir: Path, capsys: pytest.CaptureFixture[str]):
+    from brainwiki.cli import main
+
+    assert main(["brains", "add", "bad name!", str(brain_dir)]) == 2
+    assert "lowercase letters, digits, and hyphens" in capsys.readouterr().err
+    assert "bad name!" not in load_user_config().brains
+
+
+def test_doctor_flags_a_missing_default(brain_dir: Path, tmp_path: Path):
+    from brainwiki.cli import main
+    from brainwiki.config._user import register_brain
+    from brainwiki.doctor import run_doctor
+    from brainwiki.lifecycle import init_brain
+
+    register_brain("work", init_brain(tmp_path / "brains" / "work", "work"))
+    assert not [p for p in run_doctor()["problems"] if p["code"] == "no_default_brain"]
+    assert main(["brains", "remove", "test"]) == 0
+    problem = next(p for p in run_doctor()["problems"] if p["code"] == "no_default_brain")
+    assert problem["fix"] == "brain brains default work"

@@ -130,6 +130,11 @@ def resolve_brain(
         brain = open_brain(root)
         _check_host_limit(brain, host, host_cfg.brains)
         return brain
+    if user.brains:
+        raise NotConfigured(
+            "no default brain; pick one with `brain brains default NAME`, or pass --brain NAME "
+            f"(registered: {', '.join(sorted(user.brains))})"
+        )
     raise NotConfigured(
         "no brain is configured; run `brain setup` in a terminal, or ask your agent to run "
         "`brain setup --guide` and walk you through it"
@@ -146,21 +151,14 @@ def _check_host_limit(brain: Brain, host: str | None, allowed: list[str] | None)
 def route_brain(cwd: str | None, host: str, user: UserConfig) -> Brain | None:
     """The brain a session's working directory belongs to, or None (05 §2.2, Route).
 
-    Unlike `resolve_brain`, there is no fallback to the user's default brain: a session that
-    routes nowhere is skipped, never filed into an unrelated brain.
+    What the folder says comes first (its project file, the brain it is inside); routes are the
+    fallback, so a catch-all like `~/**` never overrides a project's own brain. Unlike
+    `resolve_brain`, there is no fallback to the user's default brain: a session that routes
+    nowhere is skipped, never filed into an unrelated brain.
     """
-    import fnmatch
-
     if not cwd:
         return None
     path = Path(cwd).expanduser()
-    routes = user.harvest.get("routes") or {}
-    for pattern, choice in routes.items():
-        expanded = str(Path(pattern).expanduser()) if pattern.startswith("~") else pattern
-        if fnmatch.fnmatch(str(path), expanded) or fnmatch.fnmatch(str(path) + "/", expanded):
-            brain = _from_choice(str(choice), user)
-            if brain is not None:
-                return brain
     choice = _project_choice(path) if path.exists() else None
     brain = _from_choice(choice, user) if choice else None
     if brain is not None:
@@ -174,5 +172,22 @@ def route_brain(cwd: str | None, host: str, user: UserConfig) -> Brain | None:
             return open_brain(brain_root, name=name)
         except ValueError:
             continue
+    routed = _route_choice(path, user)
+    if routed is not None:
+        return routed
     host_default = user.host(host).brain
     return _from_choice(host_default, user) if host_default else None
+
+
+def _route_choice(path: Path, user: UserConfig) -> Brain | None:
+    """The first `[harvest.routes]` pattern matching `path`; `brain harvest route` keeps the
+    longest patterns first, so the most specific folder wins."""
+    import fnmatch
+
+    for pattern, choice in (user.harvest.get("routes") or {}).items():
+        expanded = str(Path(pattern).expanduser()) if pattern.startswith("~") else pattern
+        if fnmatch.fnmatch(str(path), expanded) or fnmatch.fnmatch(str(path) + "/", expanded):
+            brain = _from_choice(str(choice), user)
+            if brain is not None:
+                return brain
+    return None

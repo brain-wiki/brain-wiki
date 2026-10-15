@@ -49,4 +49,6 @@ hosts   = ["claude-code"]
 - No credentials are ever stored here. Proposed remote backends use the
   platform's own credential chains ([[proposal-remote-sync|remote sync]]).
 - The file is created by `brain init` and edited by `brain brains add |
-  remove | default`, which preserve comments and formatting.
+  remove | rename | default | limit`, which preserve comments and formatting.
+  `add` and `rename` take names of lowercase letters, digits, and hyphens.
+  An edit that fails changes nothing.

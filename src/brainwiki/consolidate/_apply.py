@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 from brainwiki.consolidate._packet import Packet
 from brainwiki.consolidate._validate import Validation
-from brainwiki.errors import Conflict, InvalidOps
+from brainwiki.errors import InvalidOps, Stale
 from brainwiki.format import (
     CLAIMS,
     SUPERSEDED,
@@ -114,7 +114,7 @@ class _Applier:
     def read(self, path: str) -> str:
         text = self.run.read(path)
         if text is None:
-            raise Conflict(f"{path} no longer exists; prepare a new run")
+            raise Stale(f"{path} no longer exists; prepare a new run")
         return text
 
     def write(self, path: str, text: str, *, bookkeeping: bool = False) -> None:
@@ -129,9 +129,7 @@ class _Applier:
         for note in self.packet.notes.values():
             data = self.run.read_bytes(note.path)
             if data is None or "sha256:" + sha256_bytes(data) != note.hash:
-                raise Conflict(
-                    f"{note.path} changed since the packet was prepared; prepare a new run"
-                )
+                raise Stale(f"{note.path} changed since the packet was prepared; prepare a new run")
 
     def episode_meta(self, sources: list[str]) -> dict[str, str]:
         paths: list[str] = []

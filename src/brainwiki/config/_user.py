@@ -98,12 +98,19 @@ def _moved(old: Path, new: Path) -> bool:
     return old_id is None or old_id == _brain_id(new)
 
 
-def registration_conflict(name: str, brain_path: Path, *, path: Path | None = None) -> str | None:
+def registration_conflict(
+    name: str, brain_path: Path, *, path: Path | None = None, replaces: str | None = None
+) -> str | None:
     """Why `name` cannot be registered for `brain_path`: the name is taken by another brain, or
-    the folder is registered under another name."""
+    the folder is registered under another name (other than `replaces`, the name being renamed)."""
     user = load_user_config(path)
     target = brain_path.expanduser().resolve()
     current = user.brains.get(name)
+    if replaces is not None and replaces != name and current is not None:
+        return (
+            f"a brain named {name!r} is already registered at {current}; pick another name, "
+            f"or `brain brains remove {name}` first"
+        )
     if (
         current is not None
         and current.expanduser().resolve() != target
@@ -114,7 +121,7 @@ def registration_conflict(name: str, brain_path: Path, *, path: Path | None = No
             f"or `brain brains remove {name}` first"
         )
     for other, where in user.brains.items():
-        if other != name and where.expanduser().resolve() == target:
+        if other not in (name, replaces) and where.expanduser().resolve() == target:
             return (
                 f"{brain_path} is already registered as {other!r}; "
                 f"use `brain brains rename {other} {name}`"
@@ -123,13 +130,22 @@ def registration_conflict(name: str, brain_path: Path, *, path: Path | None = No
 
 
 def register_brain(
-    name: str, brain_path: Path, *, make_default: bool | None = None, path: Path | None = None
+    name: str,
+    brain_path: Path,
+    *,
+    make_default: bool | None = None,
+    path: Path | None = None,
+    replaces: str | None = None,
 ) -> None:
     """Add a brain entry, preserving the file's comments and formatting. Refuses a name or a
-    folder that is already registered, so a typo never silently re-points a brain."""
+    folder that is already registered, so a typo never silently re-points a brain.
+
+    With `replaces`, this is a rename: the old entry goes, and every reference to the old name
+    (the default, `[hosts.*] brain` and `brains`, harvest routes) follows, in one write. On a
+    conflict nothing changes."""
     import tomlkit
 
-    problem = registration_conflict(name, brain_path, path=path)
+    problem = registration_conflict(name, brain_path, path=path, replaces=replaces)
     if problem:
         raise Conflict(problem)
     path = path or config_file()
@@ -140,10 +156,29 @@ def register_brain(
         doc["brains"] = brains
     entry = tomlkit.table()
     entry["path"] = _display_path(brain_path)
+    if replaces is not None and replaces != name and replaces in brains:
+        entry = brains[replaces]
+        del brains[replaces]
+        _rename_references(doc, replaces, name)
     brains[name] = entry
     if make_default or (make_default is None and not doc.get("default")):
         doc["default"] = name
     _save_doc(path, doc)
+
+
+def _rename_references(doc: tomlkit.TOMLDocument, old: str, new: str) -> None:
+    if doc.get("default") == old:
+        doc["default"] = new
+    for table in (doc.get("hosts") or {}).values():
+        if table.get("brain") == old:
+            table["brain"] = new
+        allowed = table.get("brains")
+        if isinstance(allowed, list) and old in allowed:
+            table["brains"] = [new if b == old else b for b in allowed]
+    routes = (doc.get("harvest") or {}).get("routes")
+    for pattern in list(routes or {}):
+        if routes[pattern] == old:
+            routes[pattern] = new
 
 
 def unregister_brain(name: str, *, path: Path | None = None) -> bool:

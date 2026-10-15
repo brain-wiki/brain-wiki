@@ -10,7 +10,13 @@ from brainwiki.index._orient import agents_block, orient, topic_rows
 from brainwiki.index._read import format_read_text, read, resolve_target
 from brainwiki.index._resolver import LinkNamer, Resolver, link_text, norm_key
 from brainwiki.index._scanner import NOTE_KINDS, classify, discovered_topics, scan
-from brainwiki.index._search import format_search_text, node_filters, parse_cursor, search
+from brainwiki.index._search import (
+    format_search_text,
+    known_topics,
+    node_filters,
+    parse_cursor,
+    search,
+)
 from brainwiki.index._topics import TopicTree, slugify, topic_tree
 
 __all__ = [
@@ -25,6 +31,7 @@ __all__ = [
     "format_neighbors_text",
     "format_read_text",
     "format_search_text",
+    "known_topics",
     "link_text",
     "list_brains",
     "neighbors",

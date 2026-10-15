@@ -34,14 +34,16 @@ def git_dir_path(root: Path, name: str) -> Path | None:
     return path if path.is_absolute() else root / path
 
 
-def commit_exists(root: Path, sha: str) -> bool:
-    return run_git(root, "cat-file", "-e", f"{sha}^{{commit}}").returncode == 0
+def _committable(root: Path, paths: list[str]) -> tuple[list[str], list[str]]:
+    """(paths to stage, paths already staged as deleted).
 
-
-def _committable(root: Path, paths: list[str]) -> list[str]:
-    """Paths that exist or are tracked, minus ignored files (git add would refuse them)."""
+    To stage: paths that exist or are in the index, minus ignored files (git add would refuse
+    them). A path only HEAD still has is a deletion staged earlier: git add refuses it, but the
+    commit must include it or HEAD keeps the file.
+    """
     keep: list[str] = []
     untracked_existing: list[str] = []
+    staged_deleted: list[str] = []
     for rel in dict.fromkeys(paths):
         exists = (root / rel).exists()
         tracked = run_git(root, "ls-files", "--error-unmatch", "--", rel).returncode == 0
@@ -49,23 +51,27 @@ def _committable(root: Path, paths: list[str]) -> list[str]:
             keep.append(rel)
         elif exists:
             untracked_existing.append(rel)
+        elif run_git(root, "cat-file", "-e", f"HEAD:{rel}").returncode == 0:
+            staged_deleted.append(rel)
     if untracked_existing:
         ignored = run_git(root, "check-ignore", "--", *untracked_existing)
         ignored_set = set(ignored.stdout.splitlines()) if ignored.returncode == 0 else set()
         keep += [p for p in untracked_existing if p not in ignored_set]
-    return keep
+    return keep, staged_deleted
 
 
 def commit_paths(
     root: Path, paths: list[str], subject: str, trailers: dict[str, str]
 ) -> tuple[str | None, str | None]:
     """Commit exactly `paths` with the user's identity and hooks. Returns (sha, error)."""
-    paths = _committable(root, paths)
+    to_add, staged_deleted = _committable(root, paths)
+    paths = to_add + staged_deleted
     if not paths:
         return None, None
-    added = run_git(root, "add", "-A", "--", *paths)
-    if added.returncode != 0:
-        return None, added.stderr.strip() or "git add failed"
+    if to_add:
+        added = run_git(root, "add", "-A", "--", *to_add)
+        if added.returncode != 0:
+            return None, added.stderr.strip() or "git add failed"
     if run_git(root, "diff", "--cached", "--quiet", "--", *paths).returncode == 0:
         return None, None
     trailer_text = "\n".join(f"{k}: {v}" for k, v in trailers.items())
@@ -74,16 +80,3 @@ def commit_paths(
         return None, (committed.stderr or committed.stdout).strip() or "git commit failed"
     head = run_git(root, "rev-parse", "HEAD")
     return (head.stdout.strip() or None), None
-
-
-def revert_no_commit(root: Path, sha: str) -> str | None:
-    """Apply the inverse of a commit to the index and tree. Returns an error, or None."""
-    result = run_git(root, "revert", "--no-commit", sha)
-    if result.returncode == 0:
-        return None
-    run_git(root, "revert", "--abort")
-    return (result.stderr or result.stdout).strip() or "git revert failed"
-
-
-def restore_from_head(root: Path, rel: str) -> None:
-    run_git(root, "checkout", "HEAD", "--", rel)

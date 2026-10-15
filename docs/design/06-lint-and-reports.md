@@ -163,12 +163,15 @@ check`, not by lint, so hand edits never raise warnings.
 converting frontmatter relations, listing notes in hubs) run only when
 their codes are selected with `--select`, because they are suggestions, not
 repairs. `--select` and `--ignore` take codes or prefixes (`BW3`, `BW405`)
-for checks and fixes alike. Rules:
+for checks and fixes alike; one that matches no rule is a usage error, so a
+typo cannot pass as "no problems". Rules:
 
 - A fix changes only the lines it must (02 §4). It never reflows prose.
 - All fixes in one invocation form one run with an undo record, one
   `log.md` entry, and one git commit if git mode is on.
-- `--fix --dry-run` prints the diff.
+- `--fix --dry-run` prints the diff; `--dry-run` alone is a usage error.
+- `--fix` changes files, so under `--as <host>` it needs the `edit`
+  capability ([07 §1](07-interfaces.md#1-agent-profiles)).
 - Fixes that need judgment (resolving an ambiguous link, removing a
   secret, choosing between conflict copies) are never automatic.
 
@@ -183,6 +186,10 @@ topics/search/fts5.md
   31  error    BW304  relation target "SQLite policy" not found; did you mean "SQLite version policy"?
 2 problems (1 error, 1 warning), 1 fixable with --fix
 ```
+
+The "fixable with --fix" count is what `--fix` with the same options would
+repair. Fixable `info` problems are counted after it, with the selection
+that turns them on: `; 2 more with --fix --select BW205,BW405`.
 
 `--json` emits a list of `{code, severity, path, line, message, fixable}`.
 Exit codes: `0` no errors, `1` errors found, `2` usage error; the rest as in
@@ -214,8 +221,13 @@ churn on every run.
 ## 8. Pre-commit integration
 
 - `brain lint --install-hook` writes a small `.git/hooks/pre-commit` in the
-  brain that runs `brain lint --staged`. It refuses to overwrite an
-  existing hook and prints how to chain it instead.
+  brain that runs `brain lint --staged`. Run again, it reports the hook as
+  already installed. It refuses to overwrite any other existing hook and
+  prints how to chain it instead.
+- The hook also checks brain-wiki's own run commits. When it (or anything
+  else) makes git refuse one, the run stays applied, its files stay staged,
+  and the command prints git's message on stderr with how to finish: fix the
+  problem, then `git commit`.
 - The repository also ships `.pre-commit-hooks.yaml` so users of the
   pre-commit framework can add `brain-lint` to their own config.
 

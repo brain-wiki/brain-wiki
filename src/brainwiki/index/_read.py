@@ -7,7 +7,7 @@ import json
 import re
 from typing import TYPE_CHECKING, Any
 
-from brainwiki.errors import Ambiguous, NotFound
+from brainwiki.errors import Ambiguous, NotFound, UsageError
 from brainwiki.format import Claim, ParsedDoc, parse_document, strip_meta_comments
 from brainwiki.index._guards import banners, guards_for
 from brainwiki.index._resolver import Resolver
@@ -84,10 +84,14 @@ def _render_full(engine: Engine, text: str) -> str:
 def read(
     engine: Engine, target: str, *, mode: str | None = None, section: str | None = None
 ) -> dict[str, Any]:
+    if section and mode not in (None, "section"):
+        raise UsageError(f"a section is read with mode 'section', not {mode!r}")
+    if mode == "section" and not section:
+        raise UsageError("mode 'section' needs a section heading")
     node = resolve_target(engine, target)
     text = engine.store.read_text(node["path"])
     kind = node["kind"]
-    mode = mode or ("outline" if kind == "hub" else "full")
+    mode = mode or ("section" if section else "outline" if kind == "hub" else "full")
     guard_info = (
         guards_for(engine, [node["id"]])[node["id"]]
         if kind in ("note", "hub")
@@ -118,9 +122,7 @@ def read(
     if mode == "raw":
         result["content"] = text
     elif mode == "section":
-        if not section:
-            raise NotFound("mode 'section' needs a section heading")
-        wanted = section.strip().lstrip("#").strip().lower()
+        wanted = (section or "").strip().lstrip("#").strip().lower()
         match = next((s for s in doc.sections if s.name == wanted), None)
         if match is None and wanted == "claims" and _claims_block(doc):
             result["content"] = _claims_block(doc)
@@ -277,6 +279,9 @@ def _outline_text(result: dict[str, Any]) -> str:
 
 
 def format_read_text(result: dict[str, Any]) -> str:
+    """Banners, then the content; `raw` is the content alone, the file as on disk (04 §7)."""
+    if result.get("mode") == "raw":
+        return result.get("content", "")
     head = "\n".join(result.get("banners", []))
     return (head + "\n\n" if head else "") + result.get("content", "")
 

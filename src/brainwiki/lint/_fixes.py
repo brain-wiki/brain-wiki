@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from brainwiki.errors import Conflict
+from brainwiki.errors import Conflict, Forbidden
 from brainwiki.lint._files import run_gate
 from brainwiki.lint._model import LintResult, Problem
 from brainwiki.lint._runner import lint
@@ -75,6 +75,8 @@ def fix(
     ignore: list[str] | None = None,
     dry_run: bool = False,
 ) -> FixOutcome:
+    if not dry_run and not engine.profile.can("edit"):
+        raise Forbidden(engine.profile.refusal(engine.host, "edit", "fix files"))
     result = lint(engine, paths=paths, profile=profile, select=select, ignore=ignore, fixes=True)
     run, applied = plan(engine, result, include_info=bool(select))
     if not run.entries:

@@ -4,8 +4,24 @@ from __future__ import annotations
 
 from typing import Any
 
-from brainwiki.cli._output import emit
+from brainwiki.cli._output import emit, warn
 from brainwiki.engine import open_engine
+from brainwiki.errors import Forbidden
+
+
+def warn_git(record: Any) -> None:
+    """Say on stderr when a run was applied but its git commit failed, e.g. a pre-commit hook
+    refused it: the files changed, and git does not have them."""
+    error = getattr(record, "git_error", None)
+    if not error:
+        return
+    lines = error.strip().splitlines()
+    shown = "\n".join("  " + line for line in lines[:8]) + ("\n  …" if len(lines) > 8 else "")
+    warn(
+        f"warning: {record.run} changed the files, but git refused the commit:\n{shown}\n"
+        "  The changes are staged. Fix what git reported (for the brain's pre-commit hook, "
+        "`brain lint`), then `git commit`."
+    )
 
 
 def runs(args: Any) -> int:
@@ -60,7 +76,11 @@ def runs(args: Any) -> int:
 def undo(args: Any) -> int:
     from brainwiki.runs import undo as run_undo
 
-    with open_engine(args.brain, host=getattr(args, "as_host", None)) as engine:
-        result = run_undo(engine, args.run, force=args.force, agent=getattr(args, "as_host", None))
+    host = getattr(args, "as_host", None)
+    with open_engine(args.brain, host=host) as engine:
+        if engine.profile.name != "owner":
+            raise Forbidden(f"only the user can undo runs, not an agent (acting as {host!r})")
+        result = run_undo(engine, args.run, force=args.force)
+    warn_git(result)
     emit(args, result.to_json(), f"{result.summary} ({result.run})")
     return 0

@@ -79,11 +79,20 @@ def list_(args: Any) -> int:
 def brains(args: Any) -> int:
     user = load_user_config()
     action, rest = args.action, args.args
+
+    def _check_brain_name(name: str) -> None:
+        if not SLUG_RE.match(name):
+            raise UsageError(
+                f"{name!r} is not a brain name: use lowercase letters, digits, and hyphens "
+                "(e.g. work, personal-notes)"
+            )
+
     if action == "list":
         return list_(args)
     if action == "add":
         if len(rest) != 2:
             raise UsageError("brain brains add NAME PATH")
+        _check_brain_name(rest[0])
         brain = open_brain(Path(rest[1]))
         register_brain(rest[0], brain.root, make_default=None)
         emit(
@@ -111,13 +120,17 @@ def brains(args: Any) -> int:
         )
         return 0
     if action == "rename":
-        if len(rest) != 2 or rest[0] not in user.brains:
+        if len(rest) != 2:
             raise UsageError("brain brains rename OLD NEW")
-        path = user.brains[rest[0]]
-        was_default = user.default == rest[0]
-        unregister_brain(rest[0])
-        register_brain(rest[1], path, make_default=was_default)
-        emit(args, {"renamed": rest}, f"Renamed {rest[0]!r} to {rest[1]!r}")
+        old, new = rest
+        if old not in user.brains:
+            raise NotFound(
+                f"no brain named {old!r}; registered: {', '.join(user.brains) or 'none'}"
+            )
+        _check_brain_name(new)
+        if old != new:
+            register_brain(new, user.brains[old], make_default=False, replaces=old)
+        emit(args, {"renamed": rest}, f"Renamed {old!r} to {new!r}")
         return 0
     if action == "default":
         if len(rest) != 1 or rest[0] not in user.brains:
@@ -150,10 +163,12 @@ def brains(args: Any) -> int:
 
 
 def agents(args: Any) -> int:
+    from brainwiki.cli._cmd_runs import warn_git
+    from brainwiki.cli._output import warn
     from brainwiki.engine import open_engine
     from brainwiki.write import profile_run
 
-    with open_engine(args.brain) as engine:
+    with open_engine(args.brain, host=getattr(args, "as_host", None)) as engine:
         name = engine.brain.display_name
         manifest = engine.brain.manifest
         if args.action == "list":
@@ -167,7 +182,7 @@ def agents(args: Any) -> int:
             }
             width = max(len(h) for h in hosts)
             lines = [
-                f"  {h:<{width}}  {', '.join(r['write'])}"
+                f"  {h:<{width}}  {', '.join(r['write']) or 'nothing'}"
                 + ("; reads origins" if r["read_origin"] else "")
                 for h, r in rows.items()
             ]
@@ -190,6 +205,13 @@ def agents(args: Any) -> int:
             grants=change if args.action == "grant" else None,
             revokes=change if args.action == "revoke" else None,
         )
+        from brainwiki.hosts import connect
+
+        if host != "default" and host not in connect.HOSTS and host not in manifest.agents:
+            warn(
+                f"note: {host!r} is not a known host id ({', '.join(connect.HOSTS)}, default); "
+                "changing its profile anyway"
+            )
         if not run.entries:
             already = "may already" if args.action == "grant" else "may not"
             emit(args, {"changed": False}, f"No change: {host} {already} do that.")
@@ -198,11 +220,15 @@ def agents(args: Any) -> int:
             emit(args, {"changed": False, "diff": run.diff()}, run.diff())
             return 0
         record = run.commit(log_lines=[f"- {args.action} {host}: {', '.join(caps)}"])
-    now = open_brain(engine.brain.root).manifest.profile(host).write
+    warn_git(record)
+    profile = open_brain(engine.brain.root).manifest.profile(host)
+    now = profile.write
     emit(
         args,
-        record.to_json() | {"host": host, "write": now},
-        f"{host} may now: {', '.join(now)} (undo: brain undo {record.run})",
+        record.to_json() | {"host": host, "write": now, "read_origin": profile.read_origin},
+        f"{host} may now: {', '.join(now) or 'nothing'}"
+        + ("; reads origins" if profile.read_origin else "")
+        + f" (undo: brain undo {record.run})",
     )
     return 0
 

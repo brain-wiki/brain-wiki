@@ -52,7 +52,9 @@ def bench(args: Any) -> int:
     from brainwiki.bench import report, suites
 
     if args.compare:
-        text, regressions = report.compare(Path(args.compare[0]), Path(args.compare[1]))
+        text, regressions = report.compare(
+            Path(args.compare[0]), Path(args.compare[1]), quiet=args.quiet
+        )
         print(text)
         return 1 if regressions else 0
     names = args.suites or _DEFAULT_SUITES
@@ -91,8 +93,14 @@ def bench(args: Any) -> int:
         command += " --backends " + ",".join(backends)
     data = report.build(results, command=command, sizes=sizes, backends=backends)
     results_path, report_path = report.write(out, data)
-    print(report.table(data))
     failures = report.hard_failures(data)
+    if args.quiet:
+        print(
+            f"bench: {len(results)} suite(s), {len(data['metrics'])} metrics, "
+            f"{len(failures)} hard target(s) failed"
+        )
+    else:
+        print(report.table(data))
     if failures:
         print(f"\n{len(failures)} hard target(s) failed:")
         for m in failures[:20]:

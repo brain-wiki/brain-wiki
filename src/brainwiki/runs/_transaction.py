@@ -13,7 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from brainwiki.errors import Conflict, InvalidOps, NotFound
+from brainwiki.errors import Conflict, InvalidOps, NotFound, Stale
 from brainwiki.ids import run_id as new_run_id
 from brainwiki.runs import _git as git
 from brainwiki.runs._lock import brain_lock
@@ -31,7 +31,7 @@ from brainwiki.store import sha256_bytes
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
-LOG_FILE = "log.md"
+_LOG_FILE = "log.md"
 _MAX_LOG_FILE_LINES = 20
 
 
@@ -259,7 +259,7 @@ class Run:
     def _stage_log(self, lines: list[str] | None) -> None:
         from brainwiki.lifecycle import LOG_HEADER
 
-        entry = self._ensure(LOG_FILE)
+        entry = self._ensure(_LOG_FILE)
         current = (entry.final or LOG_HEADER.encode("utf-8")).decode("utf-8")
         if current and not current.endswith("\n"):
             current += "\n"
@@ -321,7 +321,7 @@ class Run:
         from brainwiki.lifecycle import declare_format
 
         writes = any(
-            e.final_path.endswith(".md") and e.final_path != LOG_FILE and e.final is not None
+            e.final_path.endswith(".md") and e.final_path != _LOG_FILE and e.final is not None
             for e in self.entries
         )
         return writes and declare_format(self.engine)
@@ -331,7 +331,7 @@ class Run:
             path = self.store.abspath(entry.path)
             current = sha256_bytes(path.read_bytes()) if path.is_file() else None
             if current != (entry.observed_sha if entry.adopted else entry.base_sha):
-                raise Conflict(f"{entry.path} changed since this run read it; re-run")
+                raise Stale(f"{entry.path} changed since this run read it; re-run")
             if entry.moved_to and self.store.abspath(entry.moved_to).exists():
                 raise Conflict(f"{entry.moved_to} already exists")
 

@@ -571,6 +571,17 @@ def _api(srv: _VizServer, path: str) -> object:
     return json.loads(body)
 
 
+def test_cli_refuses_an_unknown_topic(example: Path, tmp_path: Path, capsys):
+    from brainwiki.cli._main import main
+
+    out = tmp_path / "map.json"
+    assert main(["viz", "--brain", str(example), "--topic", "nosuch", "--export", str(out)]) == 3
+    assert capsys.readouterr().err.startswith("not_found: no topic 'nosuch'")
+    assert not out.exists()
+    assert main(["viz", "--brain", str(example), "--topic", "SEARCH", "--export", str(out)]) == 0
+    assert json.loads(out.read_text())["nodes"]
+
+
 def test_cli_prints_url_through_a_pipe(example: Path):
     import os
     import select
