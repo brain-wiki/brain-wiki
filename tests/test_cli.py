@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from brainwiki import FORMAT_VERSION
+from brainwiki import __version__
 from brainwiki.cli._main import main
 
 # What `brain --help` must not import: the expensive parts load only for the command that uses
@@ -42,9 +42,9 @@ def test_bare_brain_prints_help_and_exits_2(capsys: pytest.CaptureFixture[str]):
         assert f"\n  {gone} " not in out
 
 
-def test_version_names_the_format(capsys: pytest.CaptureFixture[str]):
+def test_version_prints_only_the_version(capsys: pytest.CaptureFixture[str]):
     assert main(["--version"]) == 0
-    assert capsys.readouterr().out.rstrip().endswith(f"(format {FORMAT_VERSION})")
+    assert capsys.readouterr().out.rstrip() == f"brain-wiki {__version__}"
 
 
 @pytest.mark.parametrize(

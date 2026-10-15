@@ -70,7 +70,7 @@ brain bench --compare A.json B.json
 
 Global options: `--brain NAME|PATH`, `--as HOST`, and `--json`, accepted
 before the command and after it; the one nearer the command wins. `brain
---version` prints `brain-wiki X (format N)`. Every command and subcommand has
+--version` prints `brain-wiki X`. Every command and subcommand has
 its own `--help` (`-h`).
 
 Browsing has no commands of its own beyond the link and tag listings:

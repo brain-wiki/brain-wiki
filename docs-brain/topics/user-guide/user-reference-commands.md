@@ -11,7 +11,7 @@ bw-part_of:
 
 Global options: `--brain NAME|PATH`, `--as HOST` (act with that host's
 profile), and `--json`, before or after the command. `brain --version` prints
-the version and the file format it writes. `brain <command> --help` (and
+the version. `brain <command> --help` (and
 `brain <command> <subcommand> --help`, e.g. `brain rules add --help`) lists
 each command's options. `brain --install-completion` installs tab completion
 for your shell.

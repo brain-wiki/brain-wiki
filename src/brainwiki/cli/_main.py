@@ -133,7 +133,7 @@ def _show_version(value: bool) -> None:
     if value:
         import brainwiki  # __version__ reads package metadata (~50 ms), so only when asked
 
-        print(f"brain-wiki {brainwiki.__version__} (format {brainwiki.FORMAT_VERSION})")
+        print(f"brain-wiki {brainwiki.__version__}")
         raise typer.Exit()
 
 
