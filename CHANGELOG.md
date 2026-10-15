@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0.dev1 (unreleased)
+## 0.1.0.dev1 (2026-10-14)
 
 - `brain setup --guide` prints the setup steps for an AI agent, so any agent
   that can run commands can set brain-wiki up from one prompt, without the
@@ -29,6 +29,32 @@
   show`, `accept`, and `reject` take a rule proposal's id.
 - `brain import --phase` given with a mode other than `--overlay` is a usage
   error even when it is `--phase 0`.
+- Harvest routes are a fallback: a project's `.brain-wiki.toml` now wins over
+  a catch-all route such as `~/**`.
+
+Fixes from an audit of every command, each with a regression test:
+
+- **Data loss:** undo could delete notes when the first write came before
+  any full scan. In a git brain, undo lost files git never tracked (inbox
+  episodes, proposals), left deletions staged, and failed for any run but the
+  newest. Undo now restores from the run's saved copies in every brain.
+- **Safety:** `brain review accept` trusted the packet inside the proposal
+  file, so a forged one could write `rules.md`; it now rebuilds the packet
+  from the brain. `--as HOST` is enforced by every write command.
+- `brain import --apply --dry-run` applied the import; a failed `brain
+  brains rename` deleted the brain's entry; overlay phases 1–3 never ran in
+  a git repository; `--to-episodes` turned frontmatter into an episode.
+- `tags`, `types`, `orphans`, and `unresolved` showed a stale index; `search
+  --where` ignored tags, aliases, title, and id; `read --mode raw` was not
+  the raw file; `doctor` counted hubs as notes.
+- `brain check` recorded edits that lint rejects; `brain mv` of a topic left
+  its `brain.toml` entry behind; topics with `review = "always"` skipped
+  review for new notes.
+- `brain connect` broke a project-scope install on a later user-scope
+  connect, did not restore config files byte for byte, and crashed on
+  malformed JSON.
+- Unexpected errors exit 10 with a log reference instead of a traceback;
+  conflicts report `conflict:`, and only stale data reports `stale:`.
 
 ## 0.1.0.dev0 (2026-10-14)
 
