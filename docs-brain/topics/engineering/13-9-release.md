@@ -16,8 +16,9 @@ bw-part_of:
 2. Push `main` and the tag `vX.Y.Z` together. `.github/workflows/release.yml` checks the tag
    against the version and the changelog, runs `scripts/check.py`, builds the
    sdist and wheel, publishes them to PyPI with trusted publishing, and
-   creates the GitHub release from the changelog entry, marked a pre-release
-   for a development version. Its job that publishes `server.json` to the MCP
+   creates the GitHub release from the changelog entry. GitHub labels it the
+   way pip treats it: a dev, alpha, beta, or rc version is marked Latest while
+   no final release exists, and a pre-release once one does. Its job that publishes `server.json` to the MCP
    Registry (GitHub OIDC) is turned off until the project decides to be
    listed, with the repository public first: a Registry install gets only the
    MCP server, and its first run depends on the `not_configured` hint leading

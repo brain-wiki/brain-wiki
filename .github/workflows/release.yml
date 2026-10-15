@@ -13,6 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
+      final: ${{ steps.version.outputs.final }}
       prerelease: ${{ steps.version.outputs.prerelease }}
     steps:
       - uses: actions/checkout@v5
@@ -25,7 +26,12 @@ jobs:
           version=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
           test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME does not match version $version"; exit 1; }
           grep -Eq "^## $version \([0-9]{4}-[0-9]{2}-[0-9]{2}\)" CHANGELOG.md || { echo "CHANGELOG.md has no dated entry for $version"; exit 1; }
-          if echo "$version" | grep -Eq '(a|b|rc|\.dev)[0-9]+$'; then prerelease=true; else prerelease=false; fi
+          # GitHub labels a release the way pip treats it: a dev, alpha, beta or rc version is
+          # a pre-release only once a final release exists; until then it is what pip installs.
+          if echo "$version" | grep -Eq '(a|b|rc|\.dev)[0-9]+$'; then final=false; else final=true; fi
+          finals=$(git ls-remote --tags origin 'v*' | grep -Ec 'refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$' || true)
+          if [ "$final" = false ] && [ "$finals" -gt 0 ]; then prerelease=true; else prerelease=false; fi
+          echo "final=$final" >> "$GITHUB_OUTPUT"
           echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
       - run: uv sync
       - run: uv run scripts/check.py
@@ -52,7 +58,7 @@ jobs:
   # (13 §9). To turn it on, delete `false && `; development releases stay out either way.
   mcp-registry:
     needs: [build, pypi]
-    if: false && needs.build.outputs.prerelease == 'false'
+    if: false && needs.build.outputs.final == 'true'
     runs-on: ubuntu-latest
     permissions:
       id-token: write  # MCP Registry login with GitHub OIDC
@@ -83,5 +89,5 @@ jobs:
         run: |
           version=${GITHUB_REF_NAME#v}
           awk -v v="$version" 'index($0, "## " v " (") == 1 {on = 1; next} /^## / {on = 0} on' CHANGELOG.md > notes.md
-          flag=$(test "$PRERELEASE" = true && echo --prerelease || true)
+          flag=$(test "$PRERELEASE" = true && echo --prerelease || echo --latest)
           gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes-file notes.md $flag

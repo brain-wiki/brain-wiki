@@ -55,8 +55,9 @@ MCP Registry job is turned off until the project decides to be listed.
 1. Set `version` in `pyproject.toml` to `X.Y.Z`, or a development release
    such as `X.Y.Z.devN`, and date its changelog entry: `## X.Y.Z (YYYY-MM-DD)`.
    A development release goes to PyPI like any other, and pip and uv install
-   it while no final release exists; the GitHub release is marked a
-   pre-release.
+   it while no final release exists. The GitHub release follows the same
+   rule: it is marked Latest until a final release exists, and a
+   pre-release after that.
 2. `uv run scripts/sync_versions.py`, then commit.
 3. `git tag vX.Y.Z && git push origin main vX.Y.Z`.
 4. Move `main` to the next development version (`X.Y.(Z+1).dev0` after
