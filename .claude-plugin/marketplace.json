@@ -9,7 +9,7 @@
     {
       "name": "brain-wiki",
       "source": "./",
-      "description": "A local-first second brain for AI agents, kept as plain Markdown that you own.",
+      "description": "A local-first second brain for AI agents: plain Markdown notes that you own, connected by meaningful links.",
       "category": "productivity"
     }
   ]
