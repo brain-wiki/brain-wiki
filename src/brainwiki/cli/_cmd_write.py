@@ -161,33 +161,3 @@ def mv(args: Any) -> int:
     warn_git(record)
     emit(args, record.to_json(), f"Moved {src} → {dst} ({record.run})")
     return 0
-
-
-def check(args: Any) -> int:
-    from brainwiki.runs import load_record
-    from brainwiki.write import check_edits, format_check_text
-
-    with open_engine(args.brain, host=getattr(args, "as_host", None)) as engine:
-        result = check_edits(
-            engine, args.paths, allow_shrink=args.allow_shrink, adopt=args.adopt, cli=True
-        )
-        if result.get("run"):
-            warn_git(load_record(engine.brain.key, result["run"]))
-    emit(args, result, format_check_text(result))
-    return 1 if result["status"] == "failed" else 0
-
-
-def restore(args: Any) -> int:
-    from brainwiki.write import restore as run
-
-    with open_engine(args.brain, host=getattr(args, "as_host", None)) as engine:
-        result = run(engine, args.path)
-    text = (
-        f"{result['path']} already matches its last recorded version."
-        if result["status"] == "unchanged"
-        else f"Restored {result['path']}"
-        + (" (removed: it was not recorded)" if result.get("deleted") else "")
-        + (f"; the discarded version is in {result['saved']}" if result.get("saved") else "")
-    )
-    emit(args, result, text)
-    return 0

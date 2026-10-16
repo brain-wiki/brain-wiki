@@ -91,5 +91,5 @@ def parse_claim_block(lines: list[tuple[int, str]]) -> tuple[list[Claim], list[t
     return claims, problems
 
 
-def clean_claim_text(text: str) -> str:
+def _clean_claim_text(text: str) -> str:
     return " ".join(text.replace("<!--", "").replace("-->", "").split())

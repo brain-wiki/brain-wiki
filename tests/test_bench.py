@@ -78,24 +78,6 @@ def test_wikilink_after_token_is_not_a_secret():
     assert find_secrets("The rotation token is [[broker-policy]] for now.") == []
 
 
-def test_injection_slice_writes_no_rule_and_taints_claims(tmp_path: Path):
-    checks = suites._slice_injection(suites._base_brain(tmp_path / "brain"))
-    assert all(checks.values()), checks
-
-
-def test_completeness_slice_keeps_uncited_episodes_pending(tmp_path: Path):
-    checks = suites._slice_completeness(suites._base_brain(tmp_path / "brain"))
-    assert all(checks.values()), checks
-
-
-def test_missing_model_backend_is_skipped(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv("PATH", str(tmp_path))
-    result = suites.SuiteResult("consolidation")
-    suites._model_slices(result, tmp_path, ["claude-code", "no-such-preset"])
-    assert set(result.details["skipped_backends"]) == {"claude-code", "no-such-preset"}
-    assert result.status == "pass"
-
-
 def test_perf_suite_measures_every_budget(tmp_path: Path):
     result = suites.perf(tmp_path, 100)
     m = _metrics(result)

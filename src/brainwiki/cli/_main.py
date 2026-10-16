@@ -36,8 +36,7 @@ _HANDLERS: dict[str, str] = {
     "log": "brainwiki.cli._cmd_write:log",
     "rules": "brainwiki.cli._cmd_write:rules",
     "mv": "brainwiki.cli._cmd_write:mv",
-    "check": "brainwiki.cli._cmd_write:check",
-    "restore": "brainwiki.cli._cmd_write:restore",
+    "validate": "brainwiki.cli._cmd_lint:validate",
     "consolidate": "brainwiki.cli._cmd_consolidate:consolidate",
     "review": "brainwiki.cli._cmd_consolidate:review",
     "runs": "brainwiki.cli._cmd_runs:runs",
@@ -248,7 +247,7 @@ def _brains_default(
     return _brains(ctx, "default", name)
 
 
-@_brains_app.command("limit", help="the only brains an agent _app may use")
+@_brains_app.command("limit", help="the only brains an agent app may use")
 def _brains_limit(
     ctx: typer.Context,
     host: Annotated[str, typer.Argument(help="host id, e.g. claude-code")],
@@ -260,7 +259,7 @@ def _brains_limit(
     return _brains(ctx, "limit", host, *names)
 
 
-@_brains_app.command("unlimit", help="let an agent _app use every brain again")
+@_brains_app.command("unlimit", help="let an agent app use every brain again")
 def _brains_unlimit(
     ctx: typer.Context,
     host: Annotated[str, typer.Argument(help="host id, e.g. claude-code")],
@@ -271,7 +270,7 @@ def _brains_unlimit(
     return _brains(ctx, "unlimit", host)
 
 
-_agents_app = _sub_app("what each agent _app may do in a brain (bare: list the profiles)")
+_agents_app = _sub_app("what each agent app may do in a brain (bare: list the profiles)")
 _app.add_typer(_agents_app, name="agents")
 
 _Host = Annotated[str, typer.Argument(help="a host id, or default")]
@@ -279,7 +278,7 @@ _Caps = Annotated[
     list[str],
     typer.Argument(
         metavar="CAPABILITY...",
-        help="episodes, edit, propose_rules, consolidate, harvest, review",
+        help="episodes, edit, propose_rules, harvest",
     ),
 ]
 _ProfileDryRun = Annotated[bool, typer.Option("--dry-run", help="show the diff without writing")]
@@ -294,14 +293,14 @@ def _agents_root(
     return None
 
 
-@_agents_app.command("list", help="what each agent _app may write")
+@_agents_app.command("list", help="what each agent app may write")
 def _agents_list(
     ctx: typer.Context, brain: _Brain = None, as_host: _As = None, json: _Json = False
 ) -> _Call:
     return _call(ctx, "agents", action="list", args=[], dry_run=False)
 
 
-@_agents_app.command("grant", help="let an agent _app do more")
+@_agents_app.command("grant", help="let an agent app do more")
 def _agents_grant(
     ctx: typer.Context,
     host: _Host,
@@ -728,35 +727,18 @@ def _rules_reject(
 
 
 @_app.command(
-    "check",
-    help="record notes you edited by hand: validates each one, then records it; "
-    "with no paths, lists hand edits not yet recorded",
+    "validate",
+    help="check the frontmatter of notes you created or edited "
+    "(default: the notes git sees as changed)",
 )
-def _check(
+def _validate(
     ctx: typer.Context,
-    paths: Annotated[list[str] | None, typer.Argument(help="note files you edited")] = None,
-    adopt: Annotated[
-        bool, typer.Option("--adopt", help="record as your own edit despite problems")
-    ] = False,
-    allow_shrink: Annotated[
-        bool, typer.Option("--allow-shrink", help="allow removing most of a note")
-    ] = False,
+    paths: Annotated[list[str] | None, typer.Argument(help="note files to check")] = None,
     brain: _Brain = None,
     as_host: _As = None,
     json: _Json = False,
 ) -> _Call:
-    return _call(ctx, "check", paths=list(paths or []), adopt=adopt, allow_shrink=allow_shrink)
-
-
-@_app.command("restore", help="put back a note's last recorded version")
-def _restore(
-    ctx: typer.Context,
-    path: Annotated[str, typer.Argument(help="note file to restore")],
-    brain: _Brain = None,
-    as_host: _As = None,
-    json: _Json = False,
-) -> _Call:
-    return _call(ctx, "restore", path=path)
+    return _call(ctx, "validate", paths=list(paths or []))
 
 
 @_app.command("mv", help="move a note, or a topic folder with its notes, rewriting links")
@@ -777,7 +759,11 @@ def _mv(
 # -- consolidate and review ------------------------------------------------------
 
 
-@_app.command("consolidate", help="drive consolidation yourself (agents use brain_consolidate_*)")
+@_app.command(
+    "consolidate",
+    help="gather pending episodes to fold into notes (--prepare), then archive the ones "
+    "handled (--done)",
+)
 def _consolidate(
     ctx: typer.Context,
     topic: Annotated[
@@ -785,32 +771,25 @@ def _consolidate(
     ] = None,
     max_episodes: Annotated[
         int | None,
-        typer.Option("--max-episodes", help="most episodes in the packet (default: brain.toml)"),
+        typer.Option("--max-episodes", help="most episodes to gather (default: brain.toml)"),
     ] = None,
-    dry_run: Annotated[
-        bool, typer.Option("--dry-run", help="with --apply, show the diff without writing")
-    ] = False,
     prepare: Annotated[
-        bool, typer.Option("--prepare", help="write a packet for an external driver")
+        bool,
+        typer.Option(
+            "--prepare", help="list pending episodes with candidate notes and the guidance"
+        ),
     ] = False,
     out: Annotated[
         str | None,
-        typer.Option(
-            "--out",
-            help="with --prepare, write the packet as JSON ({run, instructions, packet}) "
-            "to this file",
-        ),
+        typer.Option("--out", help="with --prepare, write {guidance, packet} as JSON to this file"),
     ] = None,
-    apply_file: Annotated[
-        str | None,
+    done: Annotated[
+        list[str] | None,
         typer.Option(
-            "--apply",
-            metavar="OPS.json",
-            help="validate and apply ops from this file (- for stdin); writes notes",
+            "--done",
+            metavar="EPISODE",
+            help="archive this consolidated episode (path or id; repeatable)",
         ),
-    ] = None,
-    run: Annotated[
-        str | None, typer.Option("--run", help="run id from --prepare (needed with --apply)")
     ] = None,
     brain: _Brain = None,
     as_host: _As = None,
@@ -821,31 +800,26 @@ def _consolidate(
         "consolidate",
         topic=topic,
         max_episodes=max_episodes,
-        dry_run=dry_run,
         prepare=prepare,
         out=out,
-        apply_file=apply_file,
-        run=run,
+        done=list(done or []),
     )
 
 
-_review_app = _sub_app("proposals awaiting you: consolidations, edits, and rules")
+_review_app = _sub_app("agents' rule proposals awaiting you")
 _app.add_typer(_review_app, name="review")
 
-_ReviewId = Annotated[
-    str,
-    typer.Argument(metavar="ID", help="proposal id: a run (run-...) or a rule proposal (r-...)"),
-]
+_ReviewId = Annotated[str, typer.Argument(metavar="ID", help="rule proposal id (r-...)")]
 
 
-@_review_app.command("list", help="proposals awaiting review, with their kind")
+@_review_app.command("list", help="rule proposals awaiting review")
 def _review_list(
     ctx: typer.Context, brain: _Brain = None, as_host: _As = None, json: _Json = False
 ) -> _Call:
     return _call(ctx, "review", action="list", run=None)
 
 
-@_review_app.command("show", help="what a proposal would change")
+@_review_app.command("show", help="what a rule proposal says")
 def _review_show(
     ctx: typer.Context,
     run: _ReviewId,
@@ -856,7 +830,7 @@ def _review_show(
     return _call(ctx, "review", action="show", run=run)
 
 
-@_review_app.command("accept", help="apply a proposal")
+@_review_app.command("accept", help="accept a rule proposal")
 def _review_accept(
     ctx: typer.Context,
     run: _ReviewId,
@@ -867,7 +841,7 @@ def _review_accept(
     return _call(ctx, "review", action="accept", run=run)
 
 
-@_review_app.command("reject", help="discard a proposal")
+@_review_app.command("reject", help="discard a rule proposal")
 def _review_reject(
     ctx: typer.Context,
     run: _ReviewId,
@@ -1320,9 +1294,7 @@ def _bench(
     ctx: typer.Context,
     suites: Annotated[
         list[str] | None,
-        typer.Argument(
-            help="retrieval, lint, perf, consolidation, agent (default: retrieval lint perf)"
-        ),
+        typer.Argument(help="retrieval, lint, perf, agent (default: retrieval lint perf)"),
     ] = None,
     quiet: Annotated[
         bool,
@@ -1334,7 +1306,7 @@ def _bench(
     ] = False,
     backends: Annotated[
         str,
-        typer.Option("--backends", help="comma list of model presets for consolidation and agent"),
+        typer.Option("--backends", help="comma list of model presets for the agent suite"),
     ] = "",
     sizes: Annotated[
         str, typer.Option("--sizes", help="comma list of brain sizes in notes, e.g. 1k,10k")

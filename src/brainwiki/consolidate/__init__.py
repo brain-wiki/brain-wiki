@@ -1,18 +1,8 @@
-"""Consolidation: selection, packets, the ops schema and validator, the writer, backends, review."""
+"""Consolidation helper: gather pending episodes for an agent, then archive the ones it folded in."""
 
 from __future__ import annotations
 
-from brainwiki.consolidate import _pipeline as pipeline
-from brainwiki.consolidate._presets import PRESETS, extract_ops, run_command
-from brainwiki.consolidate._review import list_proposals, proposal_path
-from brainwiki.consolidate._schema import LOOSE_SCHEMA
+from brainwiki.consolidate._done import done
+from brainwiki.consolidate._prepare import guidance, packet_text, prepare
 
-__all__ = [
-    "LOOSE_SCHEMA",
-    "PRESETS",
-    "extract_ops",
-    "list_proposals",
-    "pipeline",
-    "proposal_path",
-    "run_command",
-]
+__all__ = ["done", "guidance", "packet_text", "prepare"]

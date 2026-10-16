@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from brainwiki.format._agents_md import extract_block, replace_block
-from brainwiki.format._claims import Claim, clean_claim_text
+from brainwiki.format._claims import Claim
 from brainwiki.format._document import ParsedDoc, parse_document
 from brainwiki.format._edit import append_to_section, replace_line_matching
 from brainwiki.format._episode import (
@@ -17,9 +17,7 @@ from brainwiki.format._episode import (
 )
 from brainwiki.format._fields import (
     ALIAS_KEYS,
-    CLAIMS,
     FIELDS,
-    SUPERSEDED,
     add_items,
     as_items,
     canonical_item,
@@ -29,7 +27,6 @@ from brainwiki.format._fields import (
     item_lines,
     list_values,
     move_item,
-    needs_format2,
     quote,
     relation_value,
     replace_item,
@@ -46,19 +43,15 @@ from brainwiki.format._normalize import (
     relation_values_for,
 )
 from brainwiki.format._relations import (
-    CANONICAL,
     INVERSE,
     SYMMETRIC_RELS,
-    canonical_verb,
     canonicalize_line,
 )
 from brainwiki.format._rules import RULES_HEADER, format_rule, parse_rules
 
 __all__ = [
     "ALIAS_KEYS",
-    "CANONICAL",
     "CAPTURED",
-    "CLAIMS",
     "Claim",
     "EpisodeContent",
     "FIELDS",
@@ -69,16 +62,13 @@ __all__ = [
     "RELATION_PROPERTIES",
     "RULES_HEADER",
     "STATUSES",
-    "SUPERSEDED",
     "SYMMETRIC_RELS",
     "add_items",
     "append_to_section",
     "as_items",
     "canonical_item",
-    "canonical_verb",
     "canonicalize_line",
     "claim_value",
-    "clean_claim_text",
     "episode_path",
     "extract_block",
     "field",
@@ -91,7 +81,6 @@ __all__ = [
     "map_status",
     "mask_code",
     "move_item",
-    "needs_format2",
     "now_iso",
     "parse_document",
     "parse_rules",

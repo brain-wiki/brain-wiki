@@ -156,7 +156,6 @@ def _pending_stats(engine: Engine, stats: dict[str, Any] | None = None) -> dict[
     return {
         "pending": stats["pending"],
         "oldest_days": round(max(oldest_days, 0.0), 1),
-        "proposals": len(files) - len(rule_ids),
         "rule_proposals": rule_ids,
     }
 
@@ -267,10 +266,6 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         f"{inbox['pending']} pending {'episode' if inbox['pending'] == 1 else 'episodes'}"
         + (f", oldest {inbox['oldest_days']} days" if inbox["pending"] else ""),
     ]
-    if inbox["proposals"]:
-        inbox_lines.append(
-            f"{inbox['proposals']} proposal(s) awaiting review (`brain review list`)."
-        )
     if inbox["rule_proposals"]:
         count = len(inbox["rule_proposals"])
         inbox_lines.append(
@@ -351,7 +346,7 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         "contents": {k: v for k, v in info.items() if k != "span"}
         | {"span": list(info["span"]) if info["span"] else None},
         "pending_episodes": inbox["pending"],
-        "open_proposals": inbox["proposals"],
+        "open_proposals": len(inbox["rule_proposals"]),
         "notes": info["notes"],
     }
 

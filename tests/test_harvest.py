@@ -103,7 +103,7 @@ def test_distilled_harvest_and_validation(
         "claims": [{"text": "FTS5 p95 is 4 ms on 10k notes.", "turns": "3-4"}],
         "negative_findings": ["Pure-Python BM25 was too slow above 2k notes."],
     }
-    monkeypatch.setattr("brainwiki.consolidate.run_command", lambda *a, **k: json.dumps(reply))
+    monkeypatch.setattr("brainwiki.presets.run_command", lambda *a, **k: json.dumps(reply))
     (candidate,) = [c for c in hv.discover(load_user_config(), ["claude-code"]) if not c.skip]
     out = cmd_harvest._harvest_one(hv, candidate, "claude-code", dry_run=False)
     text = (brain_dir / out["episodes"][0]).read_text()

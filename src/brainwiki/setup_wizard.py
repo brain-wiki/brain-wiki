@@ -44,10 +44,7 @@ def setup_guide() -> str:
     return _GUIDE_HEADER + text
 
 
-_ABILITIES = (
-    ("consolidate", "consolidate the inbox into notes when you ask"),
-    ("propose_rules", "propose standing rules (you confirm each one)"),
-)
+_ABILITIES = (("propose_rules", "propose standing rules (you confirm each one)"),)
 
 
 def _choose_adopt(ask: _Ask, out: Callable[[str], None]) -> bool:
@@ -251,8 +248,8 @@ def _permissions(
     if not any(missing.values()):
         return
     out(
-        "\nEvery agent may log what it learns and correct notes; each correction is checked "
-        "and can be undone. Two more abilities stay off until you turn them on for an app."
+        "\nEvery agent may log what it learns and edit notes directly. Proposing standing "
+        "rules stays off until you turn it on for an app."
     )
     grants: dict[str, list[str]] = {}
     for host, caps in missing.items():
@@ -297,12 +294,12 @@ def _next_steps(hosts: list[str]) -> list[str]:
             'From this terminal: `brain log "…"`, `brain search …`, `brain viz`.',
         ]
     manifest = resolve_brain(None, user=load_user_config()).manifest
-    consolidators = [h for h in hosts if manifest.profile(h).can("consolidate")]
+    editors = [h for h in hosts if manifest.profile(h).can("edit")]
     return [
         f'Start a new session in {", ".join(hosts)} and try "Remember that …" or '
         '"What did we decide about …?"',
-        f'When the inbox fills up, ask {consolidators[0]} "Consolidate my brain."'
-        if consolidators
-        else "To fold the inbox into notes, let an app consolidate: run `brain setup` again.",
+        f'When the inbox fills up, ask {editors[0]} "Consolidate my brain."'
+        if editors
+        else "To fold the inbox into notes, let an app edit notes: run `brain setup` again.",
         'From this terminal: `brain log "…"`, `brain search …`, `brain viz`.',
     ]

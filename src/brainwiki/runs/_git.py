@@ -26,6 +26,27 @@ def is_work_tree(root: Path) -> bool:
     return result.returncode == 0 and result.stdout.strip() == "true"
 
 
+def changed_files(root: Path) -> list[str]:
+    """Paths (relative to `root`) git sees as modified, added, deleted, or untracked."""
+    result = run_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all", "--", ".")
+    if result.returncode != 0:
+        return []
+    prefix = run_git(root, "rev-parse", "--show-prefix").stdout.strip()
+    entries = result.stdout.split("\0")
+    out: list[str] = []
+    i = 0
+    while i < len(entries):
+        entry = entries[i]
+        i += 1
+        if len(entry) < 4:
+            continue
+        status, path = entry[:2], entry[3:]
+        if "R" in status or "C" in status:
+            i += 1  # the source path of a rename or copy follows
+        out.append(path.removeprefix(prefix) if prefix else path)
+    return out
+
+
 def git_dir_path(root: Path, name: str) -> Path | None:
     result = run_git(root, "rev-parse", "--git-path", name)
     if result.returncode != 0:

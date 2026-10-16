@@ -11,7 +11,6 @@ from brainwiki.config._dirs import (
     state_dir,
 )
 from brainwiki.config._manifest import (
-    AGENT_EDITS,
     MANIFEST,
     SLUG_RE,
     Layout,
@@ -41,7 +40,6 @@ from brainwiki.config._user import (
 )
 
 __all__ = [
-    "AGENT_EDITS",
     "AGENT_SETUP_HINT",
     "Brain",
     "Layout",

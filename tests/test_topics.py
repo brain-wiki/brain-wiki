@@ -22,16 +22,14 @@ from brainwiki.write._move import move_note
 
 MANIFEST = """format = 2
 id = "01M4KT3JPRY4W6766VT18CQS8Z"
-[topics.people]
-agent_edits = "review"
 [topics.rin-sato]
-review = "always"
+title = "Rin Sato"
 [topics.handbook]
 path = "topics/search/guide"
 """
 
 
-def test_tree_slugs_parents_and_inheritance():
+def test_tree_slugs_and_parents():
     manifest = parse_manifest(MANIFEST)
     tree = _build_tree(
         manifest,
@@ -59,11 +57,6 @@ def test_tree_slugs_parents_and_inheritance():
         "people",
     ]
     assert tree.roots() == ["people", "search"]
-    assert tree.setting("meetings", "agent_edits") == "review"
-    assert tree.setting("search-notes", "agent_edits") is None
-    assert (
-        tree.setting("meetings", "review") == "always" and tree.setting("people", "review") is None
-    )
     assert tree.for_path("topics/people/rin-sato/meetings/2026-10-01.md") == "meetings"
     assert tree.for_path("topics/people/rin-sato/drafts/idea.md") == "rin-sato"  # no hub: no topic
     assert tree.expand(["people"]) == {"people", "rin-sato", "meetings", "notes"}

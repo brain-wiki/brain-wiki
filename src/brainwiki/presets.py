@@ -1,4 +1,4 @@
-"""Headless presets for harvest distillation and the bench (design doc 08 §7).
+"""Headless presets for harvest distillation (design doc 08 §7).
 
 Each preset runs a host CLI once, prompt on stdin, in an empty temporary directory. Exact flags
 live here, not in the docs, because CLIs change faster than documents.
@@ -128,7 +128,7 @@ def _agy_extract(stdout: str, call: _Call) -> str:
     return _pick(result, ("response",), stdout) if result else stdout
 
 
-PRESETS: dict[str, _Preset] = {
+_PRESETS: dict[str, _Preset] = {
     "claude-code": _Preset(
         "claude-code",
         "claude",
@@ -177,10 +177,10 @@ def run_command(
                 command[0],
             )
         else:
-            preset = PRESETS.get(command)
+            preset = _PRESETS.get(command)
             if preset is None:
                 raise UsageError(
-                    f"unknown preset {command!r}; use one of {', '.join(PRESETS)} or an argv list"
+                    f"unknown preset {command!r}; use one of {', '.join(_PRESETS)} or an argv list"
                 )
             if preset.uses_schema and schema is not None:
                 call.schema = json.dumps(schema, separators=(",", ":"))
@@ -194,7 +194,7 @@ def run_command(
         if shutil.which(binary) is None:
             raise NotAvailable(
                 f"preset {name!r} needs `{binary}` on PATH; pick another with --distill "
-                f"({', '.join(PRESETS)}), or --raw for no model"
+                f"({', '.join(_PRESETS)}), or --raw for no model"
             )
         try:
             done = subprocess.run(
@@ -214,17 +214,3 @@ def run_command(
             tail = (done.stderr or done.stdout).strip().splitlines()[-5:]
             raise NotAvailable(f"{name} exited with {done.returncode}: " + " | ".join(tail))
         return extract(done.stdout, call)
-
-
-def extract_ops(text: str) -> dict[str, Any] | None:
-    """The first JSON object with an `ops` array in a model reply (code fences allowed)."""
-    decoder = json.JSONDecoder()
-    stripped = text.strip()
-    for start in [i for i, ch in enumerate(stripped) if ch == "{"]:
-        try:
-            value, _ = decoder.raw_decode(stripped[start:])
-        except ValueError:
-            continue
-        if isinstance(value, dict) and isinstance(value.get("ops"), list):
-            return value
-    return None

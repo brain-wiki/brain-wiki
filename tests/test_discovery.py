@@ -305,10 +305,10 @@ def test_instructions_follow_the_host_profile(example: Path):
     assert host_access(None) == Access(edit=True)
     restricted = server_instructions(Access(edit=False))
     assert "Markdown files directly" in restricted and "do not edit" in restricted
-    assert "brain_check" not in restricted and "Details: the `brain` skill" not in restricted
+    assert "brain_validate" not in restricted and "Details: the `brain` skill" not in restricted
     full = _marked_block(Access(edit=True))
     assert full.startswith("<!-- brain-wiki:begin v1 -->\n## brain-wiki")
-    assert full.rstrip().endswith("<!-- brain-wiki:end -->") and "brain_check" in full
+    assert full.rstrip().endswith("<!-- brain-wiki:end -->") and "brain_validate" in full
     assert len(server_instructions(Access(edit=True))) < 2000
 
 

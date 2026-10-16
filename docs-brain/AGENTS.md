@@ -4,11 +4,10 @@
 - Read `rules.md` first: standing directives from the user.
 - Knowledge lives in `topics/<topic>/`; each topic has a hub (`index.md`).
 - To record something, add a new file under `inbox/episodes/YYYY/MM/<ULID>.md`
-  (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or `rules.md`
-  directly; consolidation folds episodes into notes.
-- A note's relations are its `bw-<verb>` frontmatter fields: part_of, has_part,
-  depends_on, enables, conflicts_with, supersedes, superseded_by, related_to. If a
-  note is superseded or conflicts with another, read both before acting.
+  (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or
+  `rules.md` directly.
+- A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note
+  with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
 
 | Topic | Hub | About |
 |---|---|---|

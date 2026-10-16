@@ -13,7 +13,7 @@ from typing import Any
 
 from brainwiki.errors import UsageError
 
-_SUITES = ("retrieval", "lint", "consolidation", "perf", "agent")
+_SUITES = ("retrieval", "lint", "perf", "agent")
 _DEFAULT_SUITES = ["retrieval", "lint", "perf"]
 _ENV = ("BRAIN_WIKI_CONFIG", "BRAIN_WIKI_STATE_DIR", "BRAIN_WIKI_CACHE_DIR", "BRAIN_WIKI_DATA_DIR")
 

@@ -14,10 +14,9 @@ from brainwiki.errors import FormatError, UsageError
 
 MANIFEST = "brain.toml"
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
-_WRITE_CAPABILITIES = ("episodes", "edit", "propose_rules", "consolidate", "harvest", "review")
-# What an agent without its own profile may do: log episodes and correct notes it checks.
+_WRITE_CAPABILITIES = ("episodes", "edit", "propose_rules", "harvest")
+# What an agent without its own profile may do: log episodes and edit notes.
 _DEFAULT_WRITE = ("episodes", "edit")
-AGENT_EDITS = ("allow", "review", "deny")
 
 
 @dataclass
@@ -76,10 +75,7 @@ class SearchCfg:
 
 @dataclass
 class ConsolidateCfg:
-    review: str = "auto"
-    review_external: bool = False
     max_episodes_per_run: int = 50
-    max_supersede_ratio: float = 0.25
 
 
 @dataclass
@@ -100,10 +96,6 @@ class TopicCfg:
     path_declared: bool = False  # without one, the folder whose slug matches, at any depth
     title: str | None = None
     description: str | None = None
-    review: str | None = None
-    agent_edits: str | None = (
-        None  # None inherits (allow at the top); others outside AGENT_EDITS deny
-    )
 
 
 @dataclass
@@ -134,7 +126,7 @@ _SECTIONS: dict[str, type] = {
     "reports": ReportsCfg,
 }
 _TOP_LEVEL = {"format", "id", "name", "description", "topics", "agents", *_SECTIONS}
-_TOPIC_KEYS = {"path", "title", "description", "review", "agent_edits"}
+_TOPIC_KEYS = {"path", "title", "description"}
 _AGENT_KEYS = {"write", "read_origin"}
 
 
@@ -271,8 +263,6 @@ def parse_manifest(text: str) -> Manifest:
             path_declared="path" in raw,
             title=raw.get("title"),
             description=raw.get("description"),
-            review=raw.get("review"),
-            agent_edits=raw.get("agent_edits"),
         )
     agents: dict[str, dict[str, Any]] = {}
     for name, raw in _table("agents", data.get("agents")).items():

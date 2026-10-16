@@ -22,10 +22,10 @@ from mcp_types import CallToolResult, TextContent, ToolAnnotations
 from pydantic import BaseModel, Field
 
 from brainwiki import __version__
-from brainwiki.config import AGENT_SETUP_HINT, load_user_config, resolve_brain
+from brainwiki.config import AGENT_SETUP_HINT, UserConfig, load_user_config, resolve_brain
 from brainwiki.config import Brain as BrainRef
 from brainwiki.engine import Engine
-from brainwiki.errors import BrainError, Forbidden, NotFound
+from brainwiki.errors import BrainError, Forbidden
 from brainwiki.hosts import (
     Access,
     detect_host,
@@ -117,13 +117,17 @@ class _State:
     def engine(self, brain: str | None) -> Engine:
         user = load_user_config()
         return self.engine_for(
-            resolve_brain(brain or self.default_brain, host=self.host, user=user)
+            resolve_brain(brain or self.default_brain, host=self.host, user=user), user
         )
 
-    def engine_for(self, resolved: BrainRef) -> Engine:
+    def engine_for(self, resolved: BrainRef, user: UserConfig | None = None) -> Engine:
+        """The cached engine for a brain, refreshed from the `brain.toml` just read, so a grant
+        or revoke applies to the next call without restarting the server."""
         engine = self.engines.get(resolved.key)
         if engine is None:
-            engine = self.engines[resolved.key] = Engine(resolved, host=self.host)
+            engine = self.engines[resolved.key] = Engine(resolved, host=self.host, user=user)
+        else:
+            engine.reload(resolved, user)
         return engine
 
 
@@ -403,41 +407,32 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
 
     # -- write ----------------------------------------------------------
     @mcp.tool(
-        name="brain_check",
-        title="Check and record note edits",
-        annotations=ToolAnnotations(
-            read_only_hint=False,
-            destructive_hint=False,
-            idempotent_hint=True,
-            open_world_hint=False,
-        ),
-        description="After editing notes' Markdown files directly, validate and record the edits: "
-        "pass the paths you changed. Problems come back with their lines; nothing is recorded "
-        "until all errors are fixed. Claims change only by superseding (move the old one to "
-        "bw-claims-superseded, add the new one). With no paths, lists notes with unrecorded edits.",
+        name="brain_validate",
+        title="Validate edited notes",
+        annotations=_READ,
+        description="After creating or editing notes' Markdown files directly, check their "
+        "frontmatter: pass the paths you changed (default: the notes git sees as changed). "
+        "Problems come back with their lines and what is allowed; fix them and validate again.",
     )
     @guard
-    def brain_check(
+    def brain_validate(
         paths: Annotated[
             list[str],
             Field(
-                max_length=50,
-                description="Brain-relative paths you edited; empty lists pending edits without recording.",
+                max_length=100,
+                description="Brain-relative paths you created or edited; empty checks the notes "
+                "git sees as changed (every note without git).",
             ),
         ] = [],  # noqa: B006
-        allow_shrink: Annotated[
-            bool, Field(description="Allow an edit that removes most of a note.")
-        ] = False,
         brain: _Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
-        from brainwiki.write import check_edits, format_check_text
+        from brainwiki.lint import format_validate_text, validate
 
         engine = state.engine(brain)
-        if paths:
-            need(engine, "edit")
-        result = check_edits(engine, list(paths), allow_shrink=allow_shrink)
-        return _result(format_check_text(result), result)
+        result, scope = validate(engine, list(paths) or None)
+        data = result.to_json() | {"checked": scope}
+        return _result(format_validate_text(result, scope), data)
 
     @mcp.tool(
         name="brain_log_episode",
@@ -589,17 +584,12 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     # -- consolidation --------------------------------------------------
     @mcp.tool(
         name="brain_consolidate_prepare",
-        title="Start consolidating the inbox",
-        annotations=ToolAnnotations(
-            read_only_hint=False,
-            destructive_hint=False,
-            idempotent_hint=False,
-            open_world_hint=False,
-        ),
+        title="Gather the inbox to consolidate",
+        annotations=_READ,
         meta={"anthropic/maxResultSizeChars": _PACKET_CHARS},
-        description="Start a consolidation run: returns instructions and a packet of pending episodes "
-        "with candidate notes. Propose ops as the instructions say, then call "
-        "brain_consolidate_apply with the run id. Runs expire after one hour.",
+        description="Gather pending inbox episodes with the notes they may belong to, and how to "
+        "fold them in. Edit notes directly, run brain_validate, then call "
+        "brain_consolidate_done with the episodes you handled.",
     )
     @guard
     def brain_consolidate_prepare(
@@ -608,68 +598,57 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         ] = None,
         max_episodes: Annotated[
             int | None,
-            Field(ge=1, le=100, description="Most episodes in the packet; default: brain.toml."),
+            Field(ge=1, le=100, description="Most episodes to gather; default: brain.toml."),
         ] = None,
         brain: _Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
-        from brainwiki.consolidate import pipeline
+        from brainwiki.consolidate import packet_text, prepare
 
         engine = state.engine(brain)
-        packet = pipeline.prepare(
-            engine, engine.profile, backend="agent", topic=topic, max_episodes=max_episodes
-        )
+        packet = prepare(engine, topic=topic, max_episodes=max_episodes)
         if packet is None:
-            return _result("Nothing to consolidate: no pending episodes.", {"run": None})
-        text = pipeline.instructions() + "\n" + packet.model_text()
-        return _result(
-            text, {"run": packet.run, "episodes": len(packet.episodes), "notes": len(packet.notes)}
-        )
+            return _result("Nothing to consolidate: no pending episodes.", {"episodes": 0})
+        summary = {
+            "episodes": len(packet["episodes"]),
+            "pending": packet["pending"],
+            "notes": len(packet["notes"]),
+        }
+        return _result(packet_text(packet), summary)
 
     @mcp.tool(
-        name="brain_consolidate_apply",
-        title="Apply consolidation ops",
+        name="brain_consolidate_done",
+        title="Archive consolidated episodes",
         annotations=ToolAnnotations(
-            read_only_hint=False, destructive_hint=True, idempotent_hint=True, open_world_hint=False
+            read_only_hint=False,
+            destructive_hint=False,
+            idempotent_hint=False,
+            open_world_hint=False,
         ),
-        description="Validate and apply the ops for a run from brain_consolidate_prepare. Invalid ops "
-        "return precise errors and the run stays open: fix and call again. dry_run shows the diff.",
+        description="Move the episodes you folded into notes (or found nothing durable in) from "
+        "the inbox to the archive, as one run the user can undo.",
     )
     @guard
-    def brain_consolidate_apply(
-        run: Annotated[
-            str,
+    def brain_consolidate_done(
+        episodes: Annotated[
+            list[str],
             Field(
-                pattern=r"^run-[0-9A-HJKMNP-TV-Z]{26}$",
-                description="Run id from brain_consolidate_prepare.",
+                min_length=1,
+                max_length=200,
+                description="Episode paths (inbox/...) or ids, as brain_consolidate_prepare "
+                "listed them.",
             ),
         ],
-        ops: Annotated[
-            list[dict[str, Any]],
-            Field(description="Operations, see the instructions from prepare."),
-        ],
-        dry_run: Annotated[
-            bool, Field(description="Validate and return the diff without writing.")
-        ] = False,
-        brain: Annotated[
-            str | None,
-            Field(description="Brain name; omit to use the brain that holds the run."),
-        ] = None,
+        brain: _Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
-        from brainwiki.consolidate import pipeline
+        from brainwiki.consolidate import done
 
-        engine = _engine_for_run(state, run, brain)
-        result = pipeline.apply_run(
-            engine, run, {"ops": ops}, engine.profile, dry_run=dry_run, agent=state.host
-        )
-        if result.status == "invalid":
-            raise ToolError("invalid_ops: " + "; ".join(result.errors[:30]))
-        if result.status == "stale":
-            raise ToolError(
-                "stale: " + "; ".join(result.errors) + " Call brain_consolidate_prepare again."
-            )
-        return _result(result.format_text(), result.to_json())
+        engine = state.engine(brain)
+        record = done(engine, list(episodes), agent=state.host)
+        archived = [c.final_path for c in record.files if c.moved_to]
+        text = f"{record.run}: archived {len(archived)} episode(s) (undo: brain undo {record.run})"
+        return _result(text, {"run": record.run, "archived": archived})
 
     # -- origin and harvest ---------------------------------------------
     @mcp.tool(
@@ -827,14 +806,14 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     @mcp.prompt(
         name="consolidate",
         title="Consolidate the brain's inbox",
-        description="Fold the pending episodes into notes through validated, undoable operations.",
+        description="Fold the pending episodes into notes by editing them directly.",
     )
     def consolidate_prompt() -> str:
         return (
-            "Consolidate my brain's inbox. Call brain_consolidate_prepare, follow its instructions to "
-            "propose ops, and call brain_consolidate_apply with the run id. If it reports errors, fix the "
-            "ops and call apply again. Repeat while episodes remain pending, then tell me in a few lines "
-            "what changed (notes created or updated, claims superseded, anything sent to review)."
+            "Consolidate my brain's inbox. Call brain_consolidate_prepare and follow its guidance: edit "
+            "or create notes, run brain_validate on the files you changed, then call "
+            "brain_consolidate_done with the episodes you handled. Repeat while episodes remain pending, "
+            "then tell me in a few lines what changed (notes created or updated, episodes skipped)."
         )
 
     @mcp.prompt(
@@ -865,24 +844,6 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     mcp._brainwiki_state = state  # type: ignore[attr-defined]  # for tests
     _forbid_unknown_arguments(mcp)
     return mcp
-
-
-def _engine_for_run(state: _State, run: str, brain: str | None) -> Engine:
-    """The brain whose state dir holds this run's packet."""
-    from brainwiki.config import brain_state_dir
-
-    if brain:
-        return state.engine(brain)
-    candidates = []
-    for name in [None, *load_user_config().brains]:  # the default first, if there is one
-        try:
-            candidates.append(state.engine(name))
-        except BrainError:
-            continue
-    for engine in candidates:
-        if (brain_state_dir(engine.brain.key) / "runs" / run / "packet.json").is_file():
-            return engine
-    raise NotFound(f"no prepared run {run}; call brain_consolidate_prepare")
 
 
 def _forbid_unknown_arguments(server: MCPServer) -> None:

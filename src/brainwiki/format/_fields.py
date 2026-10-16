@@ -335,7 +335,7 @@ def is_format1(doc: ParsedDoc) -> bool:
     )
 
 
-def needs_format2(text: str) -> bool:
+def _needs_format2(text: str) -> bool:
     from brainwiki.format._document import parse_document
 
     return is_format1(parse_document("x.md", text))

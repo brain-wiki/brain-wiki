@@ -69,7 +69,7 @@ def test_manifest_defaults_and_unknown_keys():
         "agents.codex.max_privacy",
     }
     assert m.profile("unknown-host").write == ["episodes", "edit"]
-    assert m.profile(None).can("consolidate")
+    assert m.profile(None).can("harvest") and not m.profile(None).can("consolidate")
 
 
 @pytest.mark.parametrize(

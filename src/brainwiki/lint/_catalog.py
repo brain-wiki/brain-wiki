@@ -31,6 +31,7 @@ _RULES = [
     _RuleInfo(
         "BW116", "warning", "info", True, "note is in format 1 (body sections, unprefixed fields)"
     ),
+    _RuleInfo("BW121", "error", "error", False, "file is never edited directly"),
     _RuleInfo("BW201", "error", "warning", False, "claim metadata comment is malformed"),
     _RuleInfo("BW202", "error", "error", True, "duplicate claim id"),
     _RuleInfo("BW203", "error", "warning", False, "by: points to a claim that does not exist"),
@@ -69,6 +70,8 @@ _RULES = [
     _RuleInfo("BW702", "warning", "warning", False, "instruction-like text in an unverified claim"),
 ]
 _RULES: dict[str, _RuleInfo] = {r.code: r for r in _RULES}
+# The frontmatter rules `brain validate` runs (design doc 06 §3).
+SCHEMA_CODES = ("BW101", "BW102", "BW103", "BW104", "BW105", "BW106", "BW121", "BW302")
 
 
 def severity(code: str, profile: str) -> str:

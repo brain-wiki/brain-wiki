@@ -1,8 +1,7 @@
 """The topic tree (design doc 02 §2): which folders are topics, their parents, what they inherit.
 
 A topic is a folder directly under the topics directory, or a folder at any depth below it that
-has a hub. Its slug, not its path, is its identity, so folders can be reorganized. Topic policies
-(`review`, `agent_edits`) inherit down the tree.
+has a hub. Its slug, not its path, is its identity, so folders can be reorganized.
 """
 
 from __future__ import annotations
@@ -38,7 +37,6 @@ def _is_hub_file(layout: Layout, rel: str) -> bool:
 class TopicTree:
     paths: dict[str, str]  # slug -> folder
     parents: dict[str, str | None]
-    settings: dict[str, dict[str, str]] = field(default_factory=dict)  # slug -> nearest declared
     _children: dict[str, list[str]] = field(default_factory=dict, compare=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -91,10 +89,6 @@ class TopicTree:
             out.add(slug)
             out.update(self.descendants(slug))
         return out
-
-    def setting(self, slug: str | None, name: str) -> str | None:
-        """A topic policy (`review`, `agent_edits`): its own, else its nearest ancestor's."""
-        return self.settings.get(slug, {}).get(name) if slug else None
 
     @property
     def signature(self) -> str:
@@ -162,28 +156,7 @@ def _build_tree(manifest: Manifest, top_dirs: Iterable[str], hub_files: Iterable
         claimed[folder] = slug
 
     parents = {slug: parent_of(path) for slug, path in paths.items()}
-    settings: dict[str, dict[str, str]] = {}
-    for slug in paths:
-        found: dict[str, str] = {}
-        for owner in [slug, *_chain(parents, slug)]:
-            cfg = declared.get(owner)
-            for name in _INHERITED:
-                value = getattr(cfg, name, None) if cfg else None
-                if value is not None and name not in found:
-                    found[name] = value
-        settings[slug] = found
-    return TopicTree(paths, parents, settings)
-
-
-_INHERITED = ("review", "agent_edits")
-
-
-def _chain(parents: dict[str, str | None], slug: str) -> list[str]:
-    out, current = [], parents.get(slug)
-    while current is not None and current not in out and current != slug:
-        out.append(current)
-        current = parents.get(current)
-    return out
+    return TopicTree(paths, parents)
 
 
 def topic_tree(engine: Engine) -> TopicTree:

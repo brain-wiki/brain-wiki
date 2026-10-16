@@ -28,7 +28,7 @@ _BASELINE_KEEP = (
 )
 _BASELINE_REPLACE = "INSERT OR REPLACE INTO episode_hashes(episode_id, sha256, path, first_seen) VALUES (?, ?, ?, ?)"
 _NOTE_BASE = "INSERT OR {mode} INTO baselines(path, sha256, content, since) VALUES (?, ?, ?, ?)"
-NOTE_KINDS = ("note", "hub")
+_NOTE_KINDS = ("note", "hub")
 
 
 def _set_baseline(
@@ -250,7 +250,7 @@ def scan(
         for rel in rebase:
             if rel not in seen:
                 conn.execute("DELETE FROM baselines WHERE path=?", (rel,))
-            elif classify(engine, rel, topics) in NOTE_KINDS:
+            elif classify(engine, rel, topics) in _NOTE_KINDS:
                 _set_baseline(conn, rel, engine.store.read_bytes(rel))
         parsed_nodes: list[tuple[str, str]] = []
         for rel, data in to_parse:
@@ -260,7 +260,7 @@ def scan(
             node_id, changed_names = _index_file(
                 engine, conn, rel, data, st.mtime_ns, st.size, kind, tree, sanctioned, orphaned
             )
-            if kind in NOTE_KINDS:
+            if kind in _NOTE_KINDS:
                 if sanctioned or adopt_all:
                     _set_baseline(conn, rel, data, keep=not sanctioned)
                 else:  # changed outside a run: keep the recorded version; a new file was absent

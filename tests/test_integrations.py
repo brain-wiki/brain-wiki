@@ -64,7 +64,7 @@ def test_connect_writes_the_instruction_block_and_uninstall_removes_it(
     assert main(["connect", "claude-code"]) == 0
     text = rules.read_text()
     assert (
-        text.startswith(_BEGIN) and "brain_list" in text and "brain_check" in text
+        text.startswith(_BEGIN) and "brain_list" in text and "brain_validate" in text
     )  # default: edit
     assert main(["connect", "claude-code"]) == 0  # unchanged block: rewritten quietly
     rules.write_text(text.replace("once per session", "twice per session"))
@@ -137,7 +137,7 @@ def test_connect_antigravity_and_cursor_with_uninstall(
     link = Path.home() / ".gemini" / "config" / "plugins" / "brain-wiki"
     assert link.is_symlink() and (link / "plugin.json").is_file()
     rule = (link / "rules" / "brain-wiki.md").read_text()
-    assert "trigger: always_on" in rule and "brain_check" in rule
+    assert "trigger: always_on" in rule and "brain_validate" in rule
     assert not (link / "hooks.json").exists()
     assert cn._load_record("antigravity")["links"] == [str(link)]
     cursor = Path.home() / ".cursor" / "mcp.json"
@@ -353,50 +353,51 @@ def test_setup_wizard_grants_permissions_and_harvest_through_the_shared_commands
             "hosts": [host],
         },
     )
-    # consolidate: yes; propose rules: no; apply: yes; harvest: yes; apply grant: yes; route: yes
-    answers = iter(["y", "n", "", "y", "", "y"])
+    # propose rules: yes; apply: yes; harvest: yes; apply grant: yes; route: yes
+    answers = iter(["y", "", "y", "", "y"])
     output: list[str] = []
     assert run_wizard(None, ask=lambda _: next(answers, "n"), out=output.append) == 0
     user = load_user_config()
     assert user.harvest_enabled("claude-code")
     assert user.harvest["routes"] == {"~/**": "test"}
     profile = open_brain(brain_dir).manifest.profile("claude-code")
-    assert profile.write == ["episodes", "edit", "consolidate", "harvest"]
+    assert profile.write == ["episodes", "edit", "propose_rules", "harvest"]
     assert any('ask claude-code "Consolidate my brain."' in line for line in output)
 
 
 def test_agents_grant_and_revoke_are_undoable_runs(brain_dir: Path, capsys):
     before = (brain_dir / "brain.toml").read_text()
-    assert main(["agents", "grant", "claude-code", "consolidate", "--dry-run"]) == 0
+    assert main(["agents", "grant", "claude-code", "propose_rules", "--dry-run"]) == 0
     assert "+[agents.claude-code]" in capsys.readouterr().out
     assert (brain_dir / "brain.toml").read_text() == before
-    assert main(["agents", "grant", "claude-code", "consolidate"]) == 0
+    assert main(["agents", "grant", "claude-code", "propose_rules"]) == 0
     assert main(["agents", "revoke", "claude-code", "edit"]) == 0
     assert open_brain(brain_dir).manifest.profile("claude-code").write == [
         "episodes",
-        "consolidate",
+        "propose_rules",
     ]
     assert open_brain(brain_dir).manifest.profile("codex").write == ["episodes", "edit"]
     assert main(["undo"]) == 0
     assert "edit" in open_brain(brain_dir).manifest.profile("claude-code").write
     assert main(["agents", "grant", "claude-code", "fly"]) == 2
+    assert main(["agents", "grant", "claude-code", "consolidate"]) == 2  # removed in format 3
     capsys.readouterr()
     assert main(["agents"]) == 0
     assert "claude-code" in capsys.readouterr().out
 
 
 def test_revoking_edit_from_default_rewrites_the_agents_md_block(brain_dir: Path):
-    assert "To correct a note" in (brain_dir / "AGENTS.md").read_text()
+    assert "To add or correct knowledge" in (brain_dir / "AGENTS.md").read_text()
     assert main(["agents", "revoke", "default", "edit"]) == 0
-    assert "To correct a note" not in (brain_dir / "AGENTS.md").read_text()
+    assert "To add or correct knowledge" not in (brain_dir / "AGENTS.md").read_text()
     assert main(["lint"]) == 0
 
 
 def test_a_refusal_names_the_command_that_allows_it():
     from brainwiki.config import Profile
 
-    text = Profile(name="default").refusal("claude-code", "consolidate", "consolidate")
-    assert "brain agents grant claude-code consolidate" in text
+    text = Profile(name="default").refusal("claude-code", "harvest", "harvest sessions")
+    assert "brain agents grant claude-code harvest" in text
 
 
 def test_reconnecting_keeps_user_config_and_cleans_old_blocks(

@@ -24,15 +24,12 @@ id = "{id}"
 name = "{name}"
 # description = "What this brain is for, in one line (shown by `brain brains`)"
 
-[consolidate]
-review = "auto"            # auto | always: whether consolidation waits for your review
-
 [agents.default]           # what agents without their own profile may write
 write       = ["episodes", "edit"]
 
 # Example of a profile for one agent:
 # [agents.claude-code]
-# write       = ["episodes", "edit", "propose_rules", "consolidate", "harvest"]
+# write       = ["episodes", "edit", "propose_rules", "harvest"]
 """
 
 LOG_HEADER = "# Log\n\nChanges made by brain-wiki, newest at the bottom.\n"
@@ -49,16 +46,16 @@ def default_agents_block(
     ]
     write = (
         [
-            "- To record something new, add a file under `inbox/episodes/YYYY/MM/<ULID>.md`",
-            "  (or call the brain-wiki MCP tool `brain_log_episode`). To correct a note, edit it,",
-            "  then run `brain check <path>` (MCP: `brain_check`) and fix what it reports.",
-            "  Never edit `rules.md`, episodes, or `log.md`.",
+            "- To add or correct knowledge, edit or create a note, then run",
+            "  `brain validate <path>` (MCP: `brain_validate`) and fix what it reports. Something",
+            "  not organized yet goes in `inbox/episodes/YYYY/MM/<ULID>.md` (or the MCP tool",
+            "  `brain_log_episode`). Never edit `rules.md`, episodes, or `log.md`.",
         ]
         if edit
         else [
             "- To record something, add a new file under `inbox/episodes/YYYY/MM/<ULID>.md`",
-            "  (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or `rules.md`",
-            "  directly; consolidation folds episodes into notes.",
+            "  (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or",
+            "  `rules.md` directly.",
         ]
     )
     return "\n".join(
@@ -68,9 +65,8 @@ def default_agents_block(
             "- Read `rules.md` first: standing directives from the user.",
             "- Knowledge lives in `topics/<topic>/`; each topic has a hub (`index.md`).",
             *write,
-            "- A note's relations are its `bw-<verb>` frontmatter fields: part_of, has_part,",
-            "  depends_on, enables, conflicts_with, supersedes, superseded_by, related_to. If a",
-            "  note is superseded or conflicts with another, read both before acting.",
+            "- A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note",
+            "  with `status: superseded` names its replacement in `bw-superseded_by`: read that one.",
             "",
             *table,
         ]

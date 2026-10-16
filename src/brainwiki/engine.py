@@ -49,6 +49,23 @@ class Engine:
         self._hub_files = None
         return self.scan(force=True)
 
+    def reload(self, brain: Brain, user: UserConfig | None = None) -> None:
+        """Pick up a changed `brain.toml` (and user config): the profile at once, the index when
+        its layout or topics changed. Long-lived processes call this before each use."""
+        if user is not None:
+            self.user = user
+        if brain.manifest == self.manifest:
+            return
+        reindex = (brain.manifest.layout, brain.manifest.topics) != (
+            self.manifest.layout,
+            self.manifest.topics,
+        )
+        self.brain, self.manifest = brain, brain.manifest
+        self.profile = self.manifest.profile(self.host)
+        if reindex:
+            self.close()
+            self.last_scan_ns = 0
+
     def fresh(self) -> Engine:
         self.scan()
         return self

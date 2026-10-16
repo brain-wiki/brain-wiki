@@ -6,10 +6,10 @@ from hypothesis import strategies as st
 from brainwiki.format._document import parse_document
 from brainwiki.format._edit import append_to_section
 from brainwiki.format._fields import (
+    _needs_format2,
     claim_value,
     list_values,
     move_item,
-    needs_format2,
     quote,
     relation_value,
     replace_item,
@@ -112,7 +112,7 @@ def test_document_structure():
     assert [link.target for link in doc.links] == ["SQLite version policy"]
     assert "default search backend" in doc.body_text
     assert "shells out" not in doc.body_text and "shells out" in doc.history_text
-    assert not needs_format2(NOTE)
+    assert not _needs_format2(NOTE)
 
 
 def test_format1_still_parses_and_converts():
@@ -131,11 +131,11 @@ def test_format1_still_parses_and_converts():
     assert targets == ["SQLite version policy"]
     assert "shells out" not in doc.body_text and "shells out" in doc.history_text
     assert "<!--" not in doc.body_text
-    assert needs_format2(NOTE_V1)
+    assert _needs_format2(NOTE_V1)
 
     out = to_format2(NOTE_V1)
     new = parse_document("topics/search/fts5.md", out)
-    assert not needs_format2(out) and not new.problems[1:]
+    assert not _needs_format2(out) and not new.problems[1:]
     assert [(c.text, c.id, c.status) for c in new.claims] == [
         (c.text, c.id, c.status) for c in sorted(doc.claims, key=lambda c: c.status != "active")
     ]

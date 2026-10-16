@@ -34,11 +34,11 @@ TOOLS = {
     "brain_search",
     "brain_read",
     "brain_neighbors",
-    "brain_check",
+    "brain_validate",
     "brain_log_episode",
     "brain_propose_rule",
     "brain_consolidate_prepare",
-    "brain_consolidate_apply",
+    "brain_consolidate_done",
     "brain_read_origin",
     "brain_harvest_prepare",
     "brain_harvest_apply",
@@ -92,7 +92,7 @@ def test_bundle_ships_no_hooks_and_an_always_on_rule():
     meta, body = frontmatter(ROOT / "rules/brain-wiki.md")
     assert meta["trigger"] == "always_on"
     assert "brain_list" in body and "brain_neighbors" in body
-    assert "brain_check" in body  # a marketplace install gets the default profile, which edits
+    assert "brain_validate" in body  # a marketplace install gets the default profile, which edits
 
 
 def test_versions_and_pins_match_pyproject():
@@ -181,7 +181,8 @@ def test_skills_shipped():
 
 
 @pytest.mark.parametrize(
-    ("name", "trailer"), [("harvest.md", "## Packet"), ("distill.md", "## Session")]
+    ("name", "trailer"),
+    [("consolidate.md", "## Packet"), ("harvest.md", "## Packet"), ("distill.md", "## Session")],
 )
 def test_prompts_end_with_payload_heading(name, trailer):
     text = (ROOT / "src/brainwiki/assets/prompts" / name).read_text(encoding="utf-8")

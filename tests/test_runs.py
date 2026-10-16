@@ -15,7 +15,7 @@ from brainwiki.runs import Run, list_records, load_record
 from brainwiki.runs._git import commit_paths
 from brainwiki.runs._record import save_record
 from brainwiki.runs._undo import recover, undo
-from brainwiki.write import check_edits, move_note, write_episode
+from brainwiki.write import move_note, write_episode
 from brainwiki.write._episode import EpisodeContent
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
@@ -187,7 +187,6 @@ def example(tmp_path: Path) -> Path:
 
 @pytest.mark.parametrize("first", ["episode", "run"])
 def test_first_write_before_a_full_scan_keeps_existing_notes(example: Path, first: str):
-    original = (example / FTS5).read_text()
     with Engine(open_brain(example)) as eng:
         if first == "episode":  # `brain log` as the first command
             write_episode(
@@ -202,15 +201,7 @@ def test_first_write_before_a_full_scan_keeps_existing_notes(example: Path, firs
             run.write("rules.md", (example / "rules.md").read_text() + "\n- Be brief.\n")
             run.commit()
         eng.scan()
-        assert check_edits(eng)["pending"] == []
-        absent = eng.db.execute("SELECT path FROM baselines WHERE sha256 IS NULL").fetchall()
-        assert [r[0] for r in absent] == []
-    (example / FTS5).write_text(original + "\nLumen also ranks titles higher.\n")
-    with Engine(open_brain(example)) as eng:
-        record = load_record(eng.brain.key, check_edits(eng, [FTS5])["run"])
-        assert [c.before for c in record.files if c.path == FTS5] != [None]
-        undo(eng)
-    assert (example / FTS5).read_text() == original
+        assert eng.db.execute("SELECT 1 FROM nodes WHERE path = ?", (FTS5,)).fetchone()
 
 
 @pytest.mark.parametrize("use_git", [False, True])

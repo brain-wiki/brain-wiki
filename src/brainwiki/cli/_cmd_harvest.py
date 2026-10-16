@@ -159,7 +159,7 @@ def _configure(args: Any) -> int:
 
 
 def _harvest_one(hv: Any, candidate: Any, preset: str | None, *, dry_run: bool) -> dict[str, Any]:
-    from brainwiki.consolidate import run_command
+    from brainwiki.presets import run_command
 
     out: dict[str, Any] = {
         "session": candidate.info.id,

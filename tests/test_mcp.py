@@ -17,11 +17,11 @@ TOOLS = [
     "brain_search",
     "brain_read",
     "brain_neighbors",
-    "brain_check",
+    "brain_validate",
     "brain_log_episode",
     "brain_propose_rule",
     "brain_consolidate_prepare",
-    "brain_consolidate_apply",
+    "brain_consolidate_done",
     "brain_read_origin",
     "brain_harvest_prepare",
     "brain_harvest_apply",
@@ -39,8 +39,7 @@ def example(tmp_path: Path) -> Path:
     shutil.copytree(FIXTURE, root)
     toml = root / "brain.toml"
     toml.write_text(
-        toml.read_text()
-        + '\n[agents.claude-code]\nwrite = ["episodes", "propose_rules", "consolidate"]\n'
+        toml.read_text() + '\n[agents.claude-code]\nwrite = ["episodes", "propose_rules"]\n'
     )
     register_brain("ex", root, make_default=True)
     return root
@@ -93,12 +92,20 @@ async def test_read_tools_and_errors(example: Path):
 
 
 @pytest.mark.anyio
-async def test_check_needs_the_edit_capability(example: Path):
+async def test_validate_reads_and_a_grant_applies_without_a_restart(example: Path):
+    from brainwiki.cli._main import main
+
+    inbox = "inbox/episodes/2026/10/01M4KT3JPSB7BP2SNSCAVC2SFB.md"
     async with Client(build_server("claude-code")) as client:
-        pending = await client.call_tool("brain_check", {})
-        refused = await client.call_tool("brain_check", {"paths": ["topics/search/fts5.md"]})
-    assert not pending.is_error and pending.structured_content["status"] == "pending"
+        checked = await client.call_tool("brain_validate", {"paths": ["topics/search/fts5.md"]})
+        refused = await client.call_tool("brain_consolidate_done", {"episodes": [inbox]})
+        assert main(["agents", "grant", "claude-code", "edit", "--brain", str(example)]) == 0
+        allowed = await client.call_tool("brain_consolidate_done", {"episodes": [inbox]})
+    assert not checked.is_error and checked.structured_content["checked"] == [
+        "topics/search/fts5.md"
+    ]
     assert refused.is_error and "forbidden:" in refused.content[0].text
+    assert not allowed.is_error and allowed.structured_content["archived"]
 
 
 @pytest.mark.anyio
@@ -159,20 +166,21 @@ async def test_propose_rule_paths(example: Path):
 
 @pytest.mark.anyio
 async def test_consolidate_over_mcp(example: Path):
-    async with Client(build_server("claude-code")) as client:
+    toml = example / "brain.toml"
+    toml.write_text(toml.read_text() + '\n[agents.codex]\nwrite = ["episodes", "edit"]\n')
+    async with Client(build_server("codex")) as client:
         prepared = await client.call_tool("brain_consolidate_prepare", {})
-        run = prepared.structured_content["run"]
-        bad = await client.call_tool(
-            "brain_consolidate_apply",
-            {"run": run, "ops": [{"op": "skip_episode", "episode": "E9"}]},
+        assert prepared.structured_content["episodes"] == 1
+        assert '"archive_to"' in prepared.content[0].text
+        bad = await client.call_tool("brain_consolidate_done", {"episodes": ["inbox/nope.md"]})
+        assert bad.is_error and "not_found:" in bad.content[0].text
+        good = await client.call_tool(
+            "brain_consolidate_done",
+            {"episodes": ["inbox/episodes/2026/10/01M4KT3JPSB7BP2SNSCAVC2SFB.md"]},
         )
-        assert bad.is_error and "invalid_ops:" in bad.content[0].text
-        ops = [
-            {"op": "skip_episode", "episode": f"E{i + 1}", "reason": "test"}
-            for i in range(prepared.structured_content["episodes"])
-        ]
-        good = await client.call_tool("brain_consolidate_apply", {"run": run, "ops": ops})
-    assert not good.is_error and good.structured_content["status"] == "applied"
+        empty = await client.call_tool("brain_consolidate_prepare", {})
+    assert not good.is_error and good.structured_content["run"].startswith("run-")
+    assert empty.structured_content["episodes"] == 0
 
 
 @pytest.mark.anyio

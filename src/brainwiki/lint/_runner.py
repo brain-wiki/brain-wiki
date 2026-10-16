@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from brainwiki.lint._catalog import severity
 from brainwiki.lint._cross import cross_checks
-from brainwiki.lint._files import LINT_VERSION, FileContext, check_file, check_text
+from brainwiki.lint._files import LINT_VERSION, FileContext, check_file
 from brainwiki.lint._model import LintResult, Problem
 
 if TYPE_CHECKING:
@@ -145,28 +145,3 @@ def lint(
     return LintResult(
         kept, files_checked=checked, seconds=time.monotonic() - started, fix_info=bool(select)
     )
-
-
-def lint_cross(engine: Engine, paths: list[str]) -> list[Problem]:
-    """Cross-file rules (strict) reported on `paths`, as the index has them now."""
-    ctx = FileContext.for_engine(engine)
-    wanted = set(paths)
-    out = []
-    for problem in cross_checks(engine, ctx):
-        if problem.path not in wanted:
-            continue
-        problem.severity = severity(problem.code, "strict")
-        if problem.severity != "off":
-            out.append(problem)
-    return out
-
-
-def lint_text(engine: Engine, path: str, text: str) -> list[Problem]:
-    """File rules for one file's proposed content (strict), for previews and tests."""
-    from brainwiki.index import classify
-
-    ctx = FileContext.for_engine(engine)
-    problems = check_text(ctx, path, classify(engine, path, ctx.topics), text)
-    for problem in problems:
-        problem.severity = severity(problem.code, "strict")
-    return [p for p in problems if p.severity != "off"]

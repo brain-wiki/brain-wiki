@@ -122,10 +122,10 @@ def check_file(
         text = data.decode("utf-8")
     except UnicodeDecodeError:
         return [Problem("BW111", rel, 1, "file is not valid UTF-8")]
-    return check_text(ctx, rel, kind, text, fixes=fixes)
+    return _check_text(ctx, rel, kind, text, fixes=fixes)
 
 
-def check_text(
+def _check_text(
     ctx: FileContext, rel: str, kind: str, text: str, *, fixes: bool = False
 ) -> list[Problem]:
     problems: list[Problem] = []
@@ -467,7 +467,7 @@ def run_gate(engine: Engine) -> Callable[[Run], list[Problem]]:
                     return []
                 return [
                     p
-                    for p in check_text(ctx, path, kind, text)
+                    for p in _check_text(ctx, path, kind, text)
                     if severity(p.code, "strict") == "error"
                 ]
 
