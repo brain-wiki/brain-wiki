@@ -200,7 +200,8 @@ def _writing_lines(engine: Engine, topics: list[dict[str, Any]]) -> list[str]:
     return [
         "## Writing notes",
         f"- Edit or create Markdown files at `{layout.topics_dir}/<topic>/<slug>.md` (topics: "
-        f"{known}); a new topic is a folder with an `{layout.hub_filename}` hub.",
+        f"{known}); a new topic is a folder with an "
+        f"`{layout.hub_filename.replace('{folder}', '<folder>')}` hub.",
         "- Frontmatter is metadata only: `type` (note, decision, howto, person, …), `title`, "
         f'`status` ({" | ".join(STATUSES)}), `bw-superseded_by: "[[newer note]]"` with '
         '`status: superseded`, `bw-sources: ["[[archive/episodes/…]]", "https://…"]`, '

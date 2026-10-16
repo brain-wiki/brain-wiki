@@ -298,6 +298,10 @@ def test_briefing_teaches_writing_only_to_agents_that_edit(example: Path):
     assert "(active | superseded | archived)" in text and "`brain_validate`" in text
     with _engine(example, "some-host") as reader:  # the default profile only logs episodes
         assert "## Writing notes" not in orient(reader)["text"]
+    toml = example / "brain.toml"
+    toml.write_text(toml.read_text() + '\n[layout]\nhub_filename = "{folder}.md"\n')
+    with _engine(example, "trusted") as editor:
+        assert "a folder with an `<folder>.md` hub" in orient(editor)["text"]
 
 
 def test_briefing_truncates_topics_with_a_browse_pointer(example: Path):
