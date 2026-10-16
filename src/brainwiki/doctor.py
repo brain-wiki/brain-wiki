@@ -156,6 +156,9 @@ def run_doctor() -> dict[str, Any]:
                     "fix": f"brain brains add {name} <new path>",
                 }
             )
+    from brainwiki.schedule import schedule_problems
+
+    report["problems"] += schedule_problems(report["brains"])
     if not user.brains:
         report["problems"].append(
             {

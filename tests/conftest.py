@@ -18,6 +18,15 @@ def isolated_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.delenv("BRAIN_WIKI_BRAIN", raising=False)
     monkeypatch.delenv("BRAIN_WIKI_HOST", raising=False)
     monkeypatch.delenv("BRAIN_WIKI_INTERNAL", raising=False)
+    # No test reaches the real crontab or launchd: `brain schedule` and the brains rename and
+    # remove hooks see a scheduler with no commands.
+    import subprocess
+
+    from brainwiki.schedule import _jobs
+
+    monkeypatch.setattr(
+        _jobs, "_runner", lambda argv, stdin=None: subprocess.CompletedProcess(argv, 127, "", "")
+    )
     return home
 
 

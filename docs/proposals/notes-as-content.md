@@ -176,8 +176,9 @@ brain schedule list
       (`git pull --rebase` in the brain).
    4. With `--push`: push to the upstream. If origin moved since the fetch,
       fetch and rebase once more, then push; a second rejection exits 1.
-4. Record the time and the outcome (committed, fetched, pushed, conflict,
-   offline) under the brain's id in `<state>/schedule/<brain-id>.json`.
+4. Record the time and the outcome (committed, nothing, fetched, pushed,
+   conflict, rejected, offline, busy) and the last successful sync under the
+   brain's id in `<state>/schedule/<brain-id>.json`.
 
 The commit message:
 

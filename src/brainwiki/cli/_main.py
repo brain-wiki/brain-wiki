@@ -38,6 +38,8 @@ _HANDLERS: dict[str, str] = {
     "validate": "brainwiki.cli._cmd_lint:validate",
     "consolidate": "brainwiki.cli._cmd_consolidate:consolidate",
     "review": "brainwiki.cli._cmd_consolidate:review",
+    "commit": "brainwiki.cli._cmd_schedule:commit",
+    "schedule": "brainwiki.cli._cmd_schedule:schedule",
     "runs": "brainwiki.cli._cmd_runs:runs",
     "undo": "brainwiki.cli._cmd_runs:undo",
     "lint": "brainwiki.cli._cmd_lint:lint",
@@ -818,6 +820,87 @@ def _review_reject(
     json: _Json = False,
 ) -> _Call:
     return _call(ctx, "review", action="reject", run=run)
+
+
+# -- commit and schedule -------------------------------------------------------------
+
+
+@_app.command("commit", help="commit the brain's direct edits to git and sync with origin")
+def _commit(
+    ctx: typer.Context,
+    settle: Annotated[
+        str,
+        typer.Option("--settle", help="leave out files changed this recently (e.g. 30s, 2m, 1h)"),
+    ] = "2m",
+    no_fetch: Annotated[
+        bool, typer.Option("--no-fetch", help="do not fetch or rebase onto origin")
+    ] = False,
+    push: Annotated[bool, typer.Option("--push", help="also push to the upstream branch")] = False,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="show what would be committed; change nothing")
+    ] = False,
+    brain: _Brain = None,
+    as_host: _As = None,
+    json: _Json = False,
+) -> _Call:
+    return _call(ctx, "commit", settle=settle, no_fetch=no_fetch, push=push, dry_run=dry_run)
+
+
+_schedule_app = _sub_app("OS jobs that run `brain commit` for a brain (bare: list them)")
+_app.add_typer(_schedule_app, name="schedule")
+
+_Job = Annotated[Literal["commit"], typer.Argument(metavar="commit", help="the job: commit")]
+_ScheduleDryRun = Annotated[
+    bool, typer.Option("--dry-run", help="show the job and the commands; change nothing")
+]
+
+
+def _schedule(ctx: typer.Context, action: str, **values: Any) -> _Call:
+    values = {"every": "15m", "push": False, "dry_run": False} | values
+    return _call(ctx, "schedule", action=action, **values)
+
+
+@_schedule_app.callback(invoke_without_command=True)
+def _schedule_root(
+    ctx: typer.Context, brain: _Brain = None, as_host: _As = None, json: _Json = False
+) -> _Call | None:
+    return _schedule(ctx, "list") if ctx.invoked_subcommand is None else None
+
+
+@_schedule_app.command("add", help="run `brain commit` for the brain on a schedule")
+def _schedule_add(
+    ctx: typer.Context,
+    job: _Job,
+    every: Annotated[
+        str,
+        typer.Option("--every", help="5m, 10m, 15m, 20m, 30m, or 1h, 2h, 3h, 4h, 6h, 8h, 12h, 24h"),
+    ] = "15m",
+    push: Annotated[bool, typer.Option("--push", help="the job also pushes")] = False,
+    dry_run: _ScheduleDryRun = False,
+    brain: _Brain = None,
+    as_host: _As = None,
+    json: _Json = False,
+) -> _Call:
+    return _schedule(ctx, "add", every=every, push=push, dry_run=dry_run)
+
+
+@_schedule_app.command("remove", help="remove the brain's job")
+def _schedule_remove(
+    ctx: typer.Context,
+    job: _Job,
+    dry_run: _ScheduleDryRun = False,
+    brain: _Brain = None,
+    as_host: _As = None,
+    json: _Json = False,
+) -> _Call:
+    return _schedule(ctx, "remove", dry_run=dry_run)
+
+
+@_schedule_app.command("list", help="every brain's job: interval, push, last run")
+def _schedule_list(
+    ctx: typer.Context, brain: _Brain = None, as_host: _As = None, json: _Json = False
+) -> _Call:
+    return _schedule(ctx, "list")
 
 
 _runs_app = _sub_app("list or show run records (bare: list them)")

@@ -16,7 +16,7 @@ from brainwiki.config import (
     set_value,
     unregister_brain,
 )
-from brainwiki.errors import Conflict, NotFound, UsageError
+from brainwiki.errors import BrainError, Conflict, NotFound, UsageError
 
 
 def init(args: Any) -> int:
@@ -92,16 +92,23 @@ def brains(args: Any) -> int:
         path = user.brains.get(rest[0])
         if not unregister_brain(rest[0]):
             raise NotFound(f"no brain named {rest[0]!r}")
-        if args.purge_state and path and (path / "brain.toml").exists():
+        try:
+            brain_id = open_brain(path).id if path else None
+        except BrainError:  # gone or unreadable: nothing of it to clean up here
+            brain_id = None
+        if args.purge_state and brain_id:
             from brainwiki.config import cache_dir, state_dir
 
-            brain_id = open_brain(path).id
             for base in (state_dir(), cache_dir()):
                 shutil.rmtree(base / "brains" / brain_id, ignore_errors=True)
+        from brainwiki.schedule import remove_job
+
+        job = bool(brain_id) and remove_job(brain_id)
         emit(
             args,
-            {"removed": rest[0]},
-            f"Removed {rest[0]!r} from the user config (the brain folder is untouched)",
+            {"removed": rest[0], "job_removed": job},
+            f"Removed {rest[0]!r} from the user config (the brain folder is untouched)"
+            + ("; removed its commit job" if job else ""),
         )
         return 0
     if action == "rename":
@@ -113,9 +120,21 @@ def brains(args: Any) -> int:
                 f"no brain named {old!r}; registered: {', '.join(user.brains) or 'none'}"
             )
         _check_brain_name(new)
+        job = False
         if old != new:
             register_brain(new, user.brains[old], make_default=False, replaces=old)
-        emit(args, {"renamed": rest}, f"Renamed {old!r} to {new!r}")
+            from brainwiki.schedule import rename_job
+
+            try:
+                job = rename_job(open_brain(user.brains[old]).id, new)
+            except BrainError:  # gone or unreadable: no job can be found by its id
+                job = False
+        emit(
+            args,
+            {"renamed": rest, "job_renamed": job},
+            f"Renamed {old!r} to {new!r}"
+            + (" and pointed its commit job at the new name" if job else ""),
+        )
         return 0
     if action == "default":
         if len(rest) != 1 or rest[0] not in user.brains:
