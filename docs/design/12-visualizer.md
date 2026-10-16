@@ -11,7 +11,7 @@ person **understand and audit** their brain:
 | Question | What the view shows |
 |---|---|
 | What is in here? | Topics as nebulae grouped into constellations; zooming in reveals notes as stars |
-| What is unhealthy? | Contradictions, stale dependents, orphans, unverified claims, lint errors |
+| What is unhealthy? | Superseded notes, notes that still link to them, orphans, lint errors |
 | What changed recently? | Brightness by recency; recent consolidation runs, highlighted where they landed |
 
 Non-goals: editing notes, collaboration, public hosting. The view is
@@ -34,16 +34,16 @@ decoration for its own sake.
 ```
  Galaxy ──► Constellation ──► Topic ──► Note
  groups of     topics as        hub core,     one note in focus,
- topics        nebulae          notes as      its typed neighborhood
+ topics        nebulae          notes as      its linked neighborhood
                                 stars         lit, the rest dimmed
 ```
 
 | Level | Shows | Loaded from |
 |---|---|---|
 | Galaxy | Constellations as glowing clusters with labels; aggregated flows between them; the inbox core at the center | `/api/world` |
-| Constellation | Its topics as nebulae (size by notes, brightness by recency, red tint by open conflicts); flows between topics | `/api/world` |
-| Topic | The hub as a bright core, each sub-folder as a labeled branch (its note count) with notes around it, typed relations as light trails; relations that leave the topic run toward the other topic's nebula | `/api/topic/<slug>` |
-| Note | The note and its one-hop typed neighborhood lit, the rest dimmed; the inspector shows claims and guards | `/api/note/<id>` |
+| Constellation | Its topics as nebulae (size by notes, brightness by recency); flows between topics | `/api/world` |
+| Topic | The hub as a bright core, each sub-folder as a labeled branch (its note count) with notes around it, links between notes as light trails; links that leave the topic run toward the other topic's nebula | `/api/topic/<slug>` |
+| Note | The note and the notes it links to or is linked from lit, the rest dimmed; the inspector shows its banners, links, and backlinks | `/api/note/<id>` |
 
 - **Detail by screen size, like a map.** A topic's stars load and appear
   when its nebula grows past a size threshold on screen, wherever the
@@ -66,7 +66,7 @@ decoration for its own sake.
 - **Constellations** come from the topic tree (02 §2): each top-level topic
   that has sub-topics is a constellation of itself and everything below it,
   named by its title. The remaining topics, and every topic of a flat brain,
-  are grouped by their typed links (modularity clustering, deterministic),
+  are grouped by the links between their notes (modularity clustering, deterministic),
   aiming for about √(topics) groups of 4–40 topics. A brain with 12 topics or
   fewer has one constellation and opens at the constellation level.
 
@@ -77,9 +77,9 @@ decoration for its own sake.
   (how much the note holds: the fourth root of its lines), color (topic
   hue), brightness (recency), ghosting
   (superseded or archived), and a halo ring per health flag, all in one
-  shader. Trails are solid fat lines; directed relations add slow pulses
-  running along them (prerequisite → dependent, old → new), so motion shows
-  direction without breaking the line into dashes.
+  shader. Trails are solid fat lines; supersession adds slow pulses running
+  along them (old → new), so motion shows direction without breaking the
+  line into dashes.
 - **Post-processing:** bloom, ACES tone mapping, vignette, depth fog, a
   starfield backdrop. Camera moves are eased flights, not jumps.
 - **Navigation is a 2.5D map,** not a free 3D camera: the view keeps a fixed
@@ -132,15 +132,15 @@ decoration for its own sake.
   since every folder stays inside its wedge, no link crosses another or runs
   through a folder it does not join. Each nesting level sits one tier farther
   back from the camera, straight along the view, so depth never moves a star
-  on screen. Typed links are drawn but do not move stars outside their
+  on screen. Links are drawn but do not move stars outside their
   folder. The same brain always produces the same map, and no layout ever
   spans the whole brain.
 - **Labels say what things are.** The galaxy is the look, not the vocabulary:
   the interface says Overview, Group (of topics), Topic, and Note, never
   galaxy or constellation; *issues*, not flags; *session captures*, not
-  episodes; *Facts*, not claims; the topic index, not the hub. Relations read
-  as plain verbs (Part of, Contains, Depends on, Enables, Conflicts with,
-  Replaces, Replaced by, Related to), and every number names its unit.
+  episodes; *Sources*, not `bw-sources`; the topic index, not the hub. Links
+  read as plain verbs (Links to, Replaced by, Cites; from the other end: links
+  here, replaced by this, cites this), and every number names its unit.
 - **The hierarchy follows the folders.** Inside a topic, the map's tree is
   the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
   folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is its core, where
@@ -148,18 +148,18 @@ decoration for its own sake.
   note at the core, or, when it holds only sub-folders, an empty junction.
   Each folder is labeled just above its topmost note. A folder's label
   drops the leading ` · ` parts its parent folders' titles already say
-  ("Lumen guide · Sync · Conflicts" reads "Conflicts"). A written `part_of` that
-  points elsewhere is a relation, not the note's place.
-- **Encoding of relations:**
+  ("Lumen guide · Sync · Conflicts" reads "Conflicts"). A link to a note in
+  another folder is a link, not the note's place.
+- **Encoding of links.** The folder tree is always drawn: one line from each
+  folder's core to its parent's, brighter at the parent end; a note's place
+  in its folder's cluster says which folder holds it. Links between notes
+  form three families, each a dock chip, all on by default:
 
-| Relation | Trail |
-|---|---|
-| `part_of` | The folder tree (the dock's **Folders** chip, on by default): one line from each folder's core to its parent's, brighter at the parent end; a note's place in its folder's cluster says which folder holds it, so notes draw no lines |
-| `depends_on` | Blue, flowing prerequisite → dependent |
-| `conflicts_with` | Red, always shown when either end is visible |
-| `supersedes` | Amber, flowing old → new |
-| `related_to` | Faint violet |
-| Wikilinks (`links_to`) | Hidden by default; a dock toggle |
+| Family (dock chip) | From | Trail |
+|---|---|---|
+| **Links** | A wikilink in the body (`links_to`) | Faint violet: the main structure |
+| **Replaces** | `bw-superseded_by` (`superseded_by`) | Amber, flowing old → new |
+| **Sources** | A `bw-sources` entry (`source`) | Muted grey-blue, faint, citing → cited |
 
 ## 4. HUD and navigation
 
@@ -169,11 +169,11 @@ Glass panels over the scene, keyboard-first:
 |---|---|
 | Top bar | Brain name and profile; back, forward, and a history list of everything opened in this tab; the breadcrumb (Overview › group › parent topics › topic › folders › note); search (`/` or `Ctrl/⌘-K`); totals (topics, notes, links, *with issues*, *inbox*), where *with issues* opens the Issues tab and *inbox* says what is waiting to be merged |
 | Left panel: browse | Tabs: **Topics** (groups → topics, sub-topics nested under their parent; a group opens when you enter it, and its chevron or a second click on it closes it; with "N topics · N notes" and "N notes" counts, issue badges and recency bars; filter, and sort by name (the default; case aside, numbers in order), most notes, most issues, or recently changed, groups and topics alike), **Issues** (notes with issues grouped by kind, counts first, and the switch that highlights them on the map), **Activity** (recent recorded changes; selecting one highlights the notes it changed) |
-| Right panel: details | Always shown, headed **Details**; with nothing selected it says how to fill it. A group: its topics. A topic: description, counts (notes, changed 7d, with issues, last change), issue breakdown, **Open the topic index**, **Sub-topics** and **Folders** (each with its note count, clickable), **Most connected** notes (with link counts; hidden for topics of five notes or fewer), **Linked topics**. A note: where it lives ("In Guide › Sync › …"), type and status chips, guard banners, **Facts** (superseded struck through, unverified marked), relations by family, **Linked from**, path with copy and an `obsidian://` link |
-| Right: note preview | Clicking a note (a star, a row, a search result, a wikilink) also opens its preview over the inspector: the note rendered like Obsidian's reading view, with properties from the frontmatter, then the body (headings, lists and tasks, tables, code, callouts, highlights, tags, footnotes). Wikilinks open the linked note and move the map with it, in the body and in property values alike (so `bw-part_of` and other relations are links); links the viewer may not see show as unresolved. A claim's `{id: …}` block shows as a tooltip. `Esc` closes it, `P` toggles it |
+| Right panel: details | Always shown, headed **Details**; with nothing selected it says how to fill it. A group: its topics. A topic: description, counts (notes, changed 7d, with issues, last change), issue breakdown, **Open the topic index**, **Sub-topics** and **Folders** (each with its note count, clickable), **Most connected** notes (with link counts; hidden for topics of five notes or fewer), **Linked topics**. A note: where it lives ("In Guide › Sync › …"), type and status chips, issue chips, banners (a superseded note's warning; the notes it replaces), the summary, **Links** (the note's outlinks grouped as Replaced by, Links to, Cites; a resolved one flies to its note, an unresolved one says *not found*, one outside the map's topics says *not on the map*), **Linked from** (backlinks, each with how it links: replaced by this, links here, cites this), path with copy and an `obsidian://` link |
+| Right: note preview | Clicking a note (a star, a row, a search result, a wikilink) also opens its preview over the inspector: the note rendered like Obsidian's reading view, with properties from the frontmatter, then the body (headings, lists and tasks, tables, code, callouts, highlights, tags, footnotes). Wikilinks open the linked note and move the map with it, in the body and in property values alike (so `bw-superseded_by` and each `bw-sources` entry are links); links the viewer may not see show as unresolved. `Esc` closes it, `P` toggles it |
 | Bottom left | Minimap: top-down galaxy with the current view; click to fly. Beside it, the zoom ladder: Overview, Group, Topic, Note, with the current level and its place named, a marker that creeps toward the next level as you scroll, and earlier levels clickable |
-| Bottom center | Layer dock: one chip per relation family (the legend and the filter; a hidden family shows a hollow swatch and a struck label), health mode, a ⋯ menu (labels, Graphics: Auto, High, Low), and help. Going back to the overview is the breadcrumb's first crumb or `O` |
-| Overlays | Hover card: for a star its title, topic, status, and flags; for a trail the two notes it connects, read as a sentence ("2026.9.9 supersedes 2026.9.8"), with the trail and both ends lit, and a click goes to the other end; for a flow the two topics and the link count by type. Command palette with server-side search results grouped by topic; `?` shows the shortcuts |
+| Bottom center | Layer dock: one chip per link family (the legend and the filter; a hidden family shows a hollow swatch and a struck label), health mode, a ⋯ menu (labels, Graphics: Auto, High, Low), and help. Going back to the overview is the breadcrumb's first crumb or `O` |
+| Overlays | Hover card: for a star its title, topic, status, and flags; for a trail the two notes it connects, read as a sentence ("2026.9.9 supersedes 2026.9.8"), with the trail and both ends lit, and a click goes to the other end; for a flow the two topics and the link count, by kind when not all are body links. Command palette with server-side search results grouped by topic; `?` shows the shortcuts |
 
 Keys come from one table that drives both the handler and the shortcuts
 sheet (`?`), which shows them as each platform writes them (⌥ and ⌘ on a
@@ -187,7 +187,7 @@ Mac, Alt and Ctrl elsewhere):
 | Move | `Alt-←` / `Alt-→` (⌘ on a Mac) | The browser's own back and forward |
 | Move | `Esc` | Close what is open; otherwise up one level |
 | Show | `P`, `I`, `L` | Note preview; highlight issues; labels |
-| Show | `1`–`6` | Show or hide a kind of line, in the order of the dock |
+| Show | `1`–`3` | Show or hide a kind of line, in the order of the dock |
 | Find | `/` or `Ctrl-K` (⌘ on a Mac) | Search |
 
 Only `Esc` and `Ctrl/⌘-K` work while typing in a field, so `Ctrl/⌘-↑` and `-↓` still move the caret there. The sheet keeps
@@ -236,8 +236,9 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
   bundle.
 - **Exports:** `--export brain.html` writes one self-contained file: the
   same app with every asset inlined (CSP hashes) and the world plus every
-  topic embedded; the inspector shows what the topic data carries, without
-  claim text, and the preview says note text is not included.
+  topic embedded; the inspector shows what the topic data carries (links
+  and backlinks among the mapped notes, no summary or banners) and says note
+  text is not included.
   `--export graph.json` and `--export graph.graphml` are unchanged, for
   other tools. Exports contain every note title.
 
@@ -255,38 +256,54 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
   "topics": [{"slug": "search", "title": "Search", "description": "…", "parent": null,
               "color": "#6aa9ff", "constellation": "c1", "notes": 12,
               "hub": "01J9…", "updated": "2026-10-09", "recent": 3,
-              "flags": {"conflict": 2}, "flagged": 2}],
+              "flags": {"stale": 2}, "flagged": 2}],
   "flows": [{"a": "search", "b": "storage", "total": 7,
-             "rels": {"depends_on": 5, "related_to": 2}}],
+             "rels": {"links_to": 6, "superseded_by": 1}}],
   "episodes": {"count": 200},
   "runs": [{"id": "run-01JA…", "kind": "consolidate", "at": "…", "episodes": 6,
             "topics": {"search": 3}, "touched": ["01J9…"]}]
 }
 ```
 
-- `recent`: notes updated in the last 7 days. `flows`: typed links between
-  topics (body links excluded), `a` < `b`.
+- `recent`: notes updated in the last 7 days. `flows`: links between notes
+  of two topics, counted by `rel`, `a` < `b`; each topic keeps its 8
+  strongest.
 - A constellation from the topic tree is titled by its top topic. A grouped
-  one leads with its hub topic, one typed-linked to at least half of the
+  one leads with its hub topic, one linked to at least half of the
   other topics in it (a plugins topic and each plugin); otherwise it names the
   largest topics. The map labels a constellation by its first topic.
   Topics carry their `parent` slug.
 
 `/api/topic/<slug>`: `{slug, title, color, hub, nodes: [...], links: [...],
-external: [...]}`. `nodes` use the node shape below; `links` are relations
-with both ends in the topic; `external` are relations from this topic's notes
-to other topics (`{source, target, rel, topic, title}`, at most 400, typed
-first).
+external: [...]}`. `nodes` use the node shape below; `links` are
+`{source, target, rel}` with both ends in the topic; `external` are links
+between this topic's notes and other topics (`{source, target, rel, topic,
+title, dir}`, `dir` `out` or `in`, at most 400, metadata links first).
+
+A link's `rel` is `links_to` (a body wikilink), `superseded_by` (from the old
+note's `bw-superseded_by`: source old, target new), or `source` (a
+`bw-sources` entry: source the citing note, target the cited note or
+episode).
 
 ```json
 {"id": "01J9Z7Q2…", "title": "Use SQLite FTS5 for local search", "path": "topics/search/fts5.md",
  "kind": "note", "topic": "search", "type": "decision", "status": "active",
- "updated": "2026-10-09", "aliases": [], "degree": 7,
- "claims": 5, "superseded_claims": 1, "unverified_claims": 0, "flags": ["conflict"]}
+ "updated": "2026-10-09", "aliases": [], "lines": 42, "degree": 7, "flags": ["stale"]}
 ```
 
-`/api/note/<id>`: the outline read (path, banners, summary, claims,
-relations, backlinks), plus what the preview needs: `properties` (the
+`/api/note/<id>`: the outline read (`id`, `title`, `path`, `abs_path`,
+`kind`, `type`, `status`, `topic`, `updated`, `banners`, `summary`) and
+the note's links:
+
+- `outlinks`: `[{relation, target, id, title, path, resolved}]`, one per
+  target, metadata links first. `relation` reads from this note:
+  `superseded_by`, `links_to`, or `cites` (a `bw-sources` entry); `target` is
+  the link as written; an unresolved link has `id`, `title`, and `path` null.
+- `backlinks`: `[{id, title, path, relation}]`, at most 10, supersession
+  first. `relation` reads from this note: `supersedes` (that note names this
+  one in `bw-superseded_by`), `linked_from`, or `cited_by`.
+
+Then what the preview needs: `properties` (the
 frontmatter, as written), `markdown` (the body after the frontmatter, at most 200 KB), and
 `links` (wikilink text as written → `{id, title, topic}` for each target
 that resolves; others are absent, so they render unresolved).
@@ -296,8 +313,11 @@ snippet}]}`, at most 20).
 at most 200 per flag.
 
 `flags` come from the same queries as the reports
-([06 §7](06-lint-and-reports.md#7-reports)): `conflict`, `stale`, `orphan`,
-`unverified`, `lint_error`.
+([06 §7](06-lint-and-reports.md#7-reports)): `superseded` (status
+superseded), `stale` (an active note links to a superseded or archived note
+other than one it replaced), `orphan` (no other note links to it), and
+`lint_error`. The map lists them stale, superseded, orphan, lint error, and
+a star's halo takes the first that applies.
 
 ## 7. Budgets
 
@@ -359,7 +379,7 @@ at most 200 per flag.
 | 2.5D terrain atlas (topics as territories, notes as towns) | Easiest to navigate, but the galaxy keeps depth for separating dense clusters and matches the brain metaphor; both use the same levels and API. |
 | No build step (vendored ES modules, hand-written JS) | Keeps contributors off Node, but a HUD of this size and custom shaders are much harder to maintain without types and a bundler; committing the bundle keeps users off Node anyway. |
 | React | Preact gives the same model at a fraction of the size. |
-| Obsidian's built-in graph | No typed relations, guards, or health flags; fine as a complement. |
+| Obsidian's built-in graph | No supersession, citations, or health flags; fine as a complement. |
 | Server-side rendering to images | No interaction. |
 
 ## 11. Choosing a brain, and opening it in Obsidian
