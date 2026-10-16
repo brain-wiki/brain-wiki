@@ -26,8 +26,9 @@ def is_work_tree(root: Path) -> bool:
     return result.returncode == 0 and result.stdout.strip() == "true"
 
 
-def changed_files(root: Path) -> list[str]:
-    """Paths (relative to `root`) git sees as modified, added, deleted, or untracked."""
+def changed_files(root: Path, *, untracked: bool = True) -> list[str]:
+    """Paths (relative to `root`) git sees as modified, added, deleted, or (with `untracked`)
+    untracked."""
     result = run_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all", "--", ".")
     if result.returncode != 0:
         return []
@@ -43,6 +44,8 @@ def changed_files(root: Path) -> list[str]:
         status, path = entry[:2], entry[3:]
         if "R" in status or "C" in status:
             i += 1  # the source path of a rename or copy follows
+        if status == "??" and not untracked:
+            continue
         out.append(path.removeprefix(prefix) if prefix else path)
     return out
 

@@ -14,11 +14,23 @@ if TYPE_CHECKING:
 
 
 def _changed_notes(engine: Engine) -> list[str] | None:
-    """Markdown files git sees as changed or new; None when the brain is not a git work tree."""
+    """Markdown files git sees as changed or new; None when the brain is not a git work tree.
+
+    Left out: new files in the inbox, which agents are meant to create (episodes, proposals),
+    and reports, which brain-wiki rewrites itself. A changed episode is still reported."""
     root = engine.brain.root
     if not is_work_tree(root):
         return None
-    return [p for p in changed_files(root) if p.endswith(".md") and (root / p).is_file()]
+    layout = engine.manifest.layout
+    tracked = set(changed_files(root, untracked=False))
+    return [
+        p
+        for p in changed_files(root)
+        if p.endswith(".md")
+        and (root / p).is_file()
+        and not p.startswith(layout.reports_dir + "/")
+        and (p in tracked or not p.startswith(layout.inbox_dir + "/"))
+    ]
 
 
 def validate(engine: Engine, paths: list[str] | None = None) -> tuple[LintResult, list[str] | None]:

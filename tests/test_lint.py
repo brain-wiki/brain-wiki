@@ -350,6 +350,18 @@ def test_validate_checks_changed_notes_and_refuses_protected_files(
         subprocess.run(["git", "-C", str(example), *argv], check=True)
     assert main(["validate", "--brain", str(example)]) == 0
     assert "Nothing to validate" in capsys.readouterr().out
+    assert main(["log", "--brain", str(example), "Prefix queries take 4 ms."]) == 0
+    assert main(["report", "--brain", str(example)]) == 0
+    capsys.readouterr()
+    assert main(["validate", "--brain", str(example)]) == 0  # a new episode, rewritten reports
+    assert "Nothing to validate" in capsys.readouterr().out
+    episode = example / "inbox/episodes/2026/10/01M4KT3JPSB7BP2SNSCAVC2SFB.md"
+    episode.write_text(episode.read_text() + "Edited later.\n")
+    assert main(["validate", "--brain", str(example), "--json"]) == 1
+    assert (
+        "inbox files (episodes and proposals) are never edited directly" in capsys.readouterr().out
+    )
+    subprocess.run(["git", "-C", str(example), "checkout", "--", "inbox"], check=True)
     gpu = example / "topics/budget/gpu-freeze.md"
     gpu.write_text(gpu.read_text().replace("title:", "bw-mood: calm\ntitle:"))
     rules = example / "rules.md"
