@@ -12,7 +12,7 @@ bw-part_of:
 ## Sections
 - [[user-maintenance-consolidate]]: Consolidate
 - [[user-maintenance-review]]: Review (Maintenance)
-- [[user-maintenance-lint-and-reports]]: Lint and reports
+- [[user-maintenance-lint-and-reports]]: Lint and reports (Maintenance)
 - [[user-maintenance-move-a-note]]: Move a note
 - [[user-maintenance-undo]]: Undo (Maintenance)
 - [[user-maintenance-git]]: Git

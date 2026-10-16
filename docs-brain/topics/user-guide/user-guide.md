@@ -16,7 +16,7 @@ Generated from `docs/user/`.
   - [[user-agents-connect]]: Connect
     - [[user-agents-antigravity-notes]]: Antigravity notes
   - [[user-agents-what-agents-get]]: What agents get
-  - [[user-agents-direct-edits]]: Direct edits
+  - [[user-agents-direct-edits]]: Direct edits (Agents)
   - [[user-agents-which-agent-may-do-what]]: Which agent may do what
   - [[user-agents-harvest-off-by-default]]: Harvest (off by default)
 - [[user-getting-started]]: Getting started
@@ -33,7 +33,7 @@ Generated from `docs/user/`.
 - [[user-maintenance]]: Maintenance
   - [[user-maintenance-consolidate]]: Consolidate
   - [[user-maintenance-review]]: Review (Maintenance)
-  - [[user-maintenance-lint-and-reports]]: Lint and reports
+  - [[user-maintenance-lint-and-reports]]: Lint and reports (Maintenance)
   - [[user-maintenance-move-a-note]]: Move a note
   - [[user-maintenance-undo]]: Undo (Maintenance)
   - [[user-maintenance-git]]: Git

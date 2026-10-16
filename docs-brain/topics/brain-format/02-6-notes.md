@@ -12,8 +12,8 @@ bw-part_of:
 
 
 ## Subsections
-- [[02-61-frontmatter]]: Frontmatter
-- [[02-62-body]]: Body
+- [[02-61-frontmatter]]: Frontmatter (Brain format)
+- [[02-62-body]]: Body (Brain format)
 - [[02-63-claims]]: Claims
 - [[02-64-relations]]: Relations
 - [[02-65-links]]: Links (Brain format)

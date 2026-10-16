@@ -12,6 +12,6 @@ bw-part_of:
 ## Sections
 - [[user-agents-connect]]: Connect
 - [[user-agents-what-agents-get]]: What agents get
-- [[user-agents-direct-edits]]: Direct edits
+- [[user-agents-direct-edits]]: Direct edits (Agents)
 - [[user-agents-which-agent-may-do-what]]: Which agent may do what
 - [[user-agents-harvest-off-by-default]]: Harvest (off by default)

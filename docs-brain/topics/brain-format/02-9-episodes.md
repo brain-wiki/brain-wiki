@@ -1,14 +1,14 @@
 ---
 id: 01M3250V00W3XAEV6QS3CQ5TX8
 type: design
-title: "Episodes"
+title: "Episodes (Brain format)"
 aliases: ["02 §9"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#9-episodes"
 bw-part_of:
   - "[[brain-format]]"
 ---
-# Episodes
+# Episodes (Brain format)
 
 Episodes are the inbox. They capture what happened in a session, raw and
 unpolished, so nothing has to be decided at capture time.

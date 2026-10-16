@@ -1,13 +1,13 @@
 ---
 id: 01M3250V00KS84YTD9JM7RRKV7
 type: guide
-title: "Lint and reports"
+title: "Lint and reports (Maintenance)"
 tags: [user-guide]
 source: "docs/user/maintenance.md#lint-and-reports"
 bw-part_of:
   - "[[user-maintenance]]"
 ---
-# Lint and reports
+# Lint and reports (Maintenance)
 
 ```sh
 brain lint                       # whole brain; exit 1 on errors

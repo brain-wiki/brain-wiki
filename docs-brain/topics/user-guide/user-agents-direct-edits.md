@@ -1,13 +1,13 @@
 ---
 id: 01M3250V00XATT20Z0R61BFF7G
 type: guide
-title: "Direct edits"
+title: "Direct edits (Agents)"
 tags: [user-guide]
 source: "docs/user/agents.md#direct-edits"
 bw-part_of:
   - "[[user-agents]]"
 ---
-# Direct edits
+# Direct edits (Agents)
 
 An agent whose profile includes `edit` may correct a note directly (a
 person's new role, a wrong fact) and then run `brain_check`. The check

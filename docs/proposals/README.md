@@ -9,6 +9,7 @@ changes, in the same change as the code, and the proposal is deleted.
 
 | Proposal | Status | Changes |
 |---|---|---|
+| [Notes as content (format 3)](notes-as-content.md) | Decided, not built; target 0.2.0 | Frontmatter holds metadata only; facts and links are body Markdown; agents edit notes directly and check them with `brain validate`; `brain commit` on an OS schedule keeps git history; consolidation becomes an optional helper |
 | [Privacy](privacy.md) | Draft; open questions PQ1–PQ6 | Levels defined by where content may go (model, tools, outputs, exports), declared in a topic's `index.md`; replaces the removed privacy levels |
 | [Remote sync and object storage](remote-sync.md) | Designed, not scheduled | `brain sync` to a private git remote, then GCS and S3; a store interface for a server with no local copy |
 | [Remote MCP for chat apps](remote-mcp.md) | Designed, not scheduled; waits on privacy | HTTP transport and OAuth for ChatGPT, claude.ai, and the Gemini app |

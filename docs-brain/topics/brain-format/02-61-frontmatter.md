@@ -1,14 +1,14 @@
 ---
 id: 01M3250V003YS64ZYNPR0B97X3
 type: design
-title: "Frontmatter"
+title: "Frontmatter (Brain format)"
 aliases: ["02 §6.1"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#61-frontmatter"
 bw-part_of:
   - "[[02-6-notes]]"
 ---
-# Frontmatter
+# Frontmatter (Brain format)
 
 ```yaml
 ---
