@@ -9,79 +9,188 @@ hub_filename = "{folder}.md"
 
 [topics.overview]
 title = "Overview"
-description = "Problem, goals, non-goals, principles, scenarios, glossary"
+path = "topics/overview"
+description = "What brain-wiki is and why: the problem, principles, goals, concepts, and prior art"
+
+[topics.goals]
+title = "Goals"
+path = "topics/overview/goals"
+description = "What brain-wiki must achieve, each with how it is measured"
+
+[topics.concepts]
+title = "Concepts"
+path = "topics/overview/concepts"
+description = "The vocabulary, one note per term"
+
+[topics.experience]
+title = "User experience"
+path = "topics/experience"
+description = "What using brain-wiki is like: the journeys it serves, and the user guide"
+
+[topics.scenarios]
+title = "Scenarios"
+path = "topics/experience/scenarios"
+description = "User and agent journeys, each with the design that serves it"
+
+[topics.user-guide]
+title = "User guide"
+path = "topics/experience/user-guide"
+description = "How to install, connect, use, and maintain brain-wiki"
+
+[topics.design]
+title = "Technical design"
+path = "topics/design"
+description = "How brain-wiki works and why: the design documents and the decision log"
+
+[topics.core]
+title = "Core engine"
+path = "topics/design/core"
+description = "The brain format, configuration and storage, the index, the write path, and lint"
 
 [topics.brain-format]
 title = "Brain format"
+path = "topics/design/core/brain-format"
 description = "The on-disk contract: layout, manifest, notes, links, supersession, episodes, rules (normative)"
 
 [topics.config-and-storage]
 title = "Config and storage"
+path = "topics/design/core/config-and-storage"
 description = "User config, multiple brains, brain selection, machine state, git, desktop sync tools"
 
 [topics.index-and-retrieval]
 title = "Index and retrieval"
+path = "topics/design/core/index-and-retrieval"
 description = "SQLite schema, freshness, search ranking, the supersession guard, read, neighbors, orientation"
 
 [topics.write-path-and-consolidation]
 title = "Write path and consolidation"
+path = "topics/design/core/write-path-and-consolidation"
 description = "Direct edits and brain validate, episodes and provenance, the consolidation helper, brain commit and brain schedule, runs and undo, rules"
 
 [topics.lint-and-reports]
 title = "Lint and reports"
+path = "topics/design/core/lint-and-reports"
 description = "Rules, profiles, fixes, generated reports, pre-commit use"
+
+[topics.surfaces]
+title = "Interfaces and integrations"
+path = "topics/design/surfaces"
+description = "How people and agents reach a brain: the CLI and MCP tools, agent hosts, import, the visualizer, and onboarding"
 
 [topics.interfaces]
 title = "Interfaces: CLI, MCP, agent profiles"
+path = "topics/design/surfaces/interfaces"
 description = "CLI commands, MCP tools and schemas, agent profiles, error model"
 
 [topics.agent-integrations]
 title = "Agent integrations"
+path = "topics/design/surfaces/agent-integrations"
 description = "Plugin bundle, instruction block, brain connect, harvest; one page per host in agents/"
+
+[topics.hosts]
+title = "Agent hosts"
+path = "topics/design/surfaces/agent-integrations/hosts"
+description = "One page per host: install, instructions, harvest, and verification"
 
 [topics.import]
 title = "Import"
+path = "topics/design/surfaces/import"
 description = "Adopting existing Markdown folders and Obsidian vaults"
+
+[topics.visualizer]
+title = "Visualizer"
+path = "topics/design/surfaces/visualizer"
+description = "3D brain map"
+
+[topics.skills-and-onboarding]
+title = "Skills and onboarding"
+path = "topics/design/surfaces/skills-and-onboarding"
+description = "The three skills, the guided setup flow, and brain doctor --json"
+
+[topics.quality]
+title = "Quality and safety"
+path = "topics/design/quality"
+description = "Security and privacy, the eval bench, and engineering practice"
 
 [topics.security-and-privacy]
 title = "Security and privacy"
+path = "topics/design/quality/security-and-privacy"
 description = "Threat model and mitigations"
 
 [topics.eval-bench]
 title = "Eval bench"
+path = "topics/design/quality/eval-bench"
 description = "Retrieval, lint, and performance suites"
-
-[topics.visualizer]
-title = "Visualizer"
-description = "3D brain map"
 
 [topics.engineering]
 title = "Engineering"
+path = "topics/design/quality/engineering"
 description = "Repo layout, dependencies, packaging, testing, performance budgets, release"
 
-[topics.roadmap-and-open-questions]
-title = "Roadmap and open questions"
-description = "Implementation milestones and status, decisions needed, verification items"
-
-[topics.skills-and-onboarding]
-title = "Skills and onboarding"
-description = "The three skills, the guided setup flow, and brain doctor --json"
-
 [topics.decisions]
-title = "Design overview and decisions"
-description = "How the design documents fit together, and the decision log with what each decision rejected and where it is argued"
+title = "Decisions"
+path = "topics/design/decisions"
+description = "The decision log: what was decided, what was rejected, and where it is argued"
 
-[topics.agents]
-title = "Agent integrations by host"
-description = "How brain-wiki integrates with each agent host: install, instructions, harvest, verification"
+[topics.roadmap]
+title = "Roadmap and open questions"
+path = "topics/roadmap"
+description = "What is built, what comes next, and what is still open"
 
-[topics.user-guide]
-title = "User guide"
-description = "How to install, connect, use, and maintain brain-wiki"
+[topics.milestones]
+title = "Milestones"
+path = "topics/roadmap/milestones"
+description = "Implementation milestones and the build status"
+
+[topics.questions]
+title = "Open questions"
+path = "topics/roadmap/questions"
+description = "Decisions needed from the maintainer"
+
+[topics.verification]
+title = "Verification items"
+path = "topics/roadmap/verification"
+description = "Assumptions about hosts and dependencies to check, and what checking found"
 
 [topics.proposals]
-title = "Design proposals"
-description = "Designs not implemented yet, and the backlog of ideas without a design"
+title = "Proposals"
+path = "topics/proposals"
+description = "Designs not built yet, one topic each"
+
+[topics.ideas]
+title = "Ideas"
+path = "topics/ideas"
+description = "Ideas without a design yet, one note each, grouped by area"
+
+[topics.proposal-hooks]
+title = "Host hooks: briefing, capture, and recall"
+path = "topics/proposals/proposal-hooks"
+description = "brain hook: the briefing injected at session start, capture at stop and compaction, input tracking from tool hooks, per-prompt recall"
+
+[topics.proposal-privacy]
+title = "Privacy"
+path = "topics/proposals/proposal-privacy"
+description = "Levels defined by where content may go (model, tools, outputs, exports), declared in a topic's index.md; replaces the removed privacy levels"
+
+[topics.proposal-public-benchmarks]
+title = "Public memory benchmarks"
+path = "topics/proposals/proposal-public-benchmarks"
+description = "Bench adapters for LongMemEval and similar; probe coverage as a consolidation metric"
+
+[topics.proposal-remote-mcp]
+title = "Remote MCP for chat apps"
+path = "topics/proposals/proposal-remote-mcp"
+description = "HTTP transport and OAuth for ChatGPT, claude.ai, and the Gemini app"
+
+[topics.proposal-remote-sync]
+title = "Remote sync and object storage"
+path = "topics/proposals/proposal-remote-sync"
+description = "brain sync to a private git remote, then GCS and S3; a store interface for a server with no local copy"
+
+[topics.proposal-scheduled-maintenance]
+title = "Scheduled maintenance"
+path = "topics/proposals/proposal-scheduled-maintenance"
+description = "Routine templates for hosts' schedulers and OS schedulers; a headless consolidation backend; one consolidation device"
 
 [agents.default]
 write = ["episodes"]

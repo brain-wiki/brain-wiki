@@ -1,0 +1,15 @@
+---
+id: 01M3250V004PEWHCYE0DMW1DX8
+type: guide
+title: "Privacy and safety"
+source: "docs/user/privacy.md"
+---
+# Privacy and safety
+
+
+## Sections
+- [[user-privacy-what-agents-can-read]]: What agents can read
+- [[user-privacy-agent-profiles]]: Agent profiles (Privacy and safety)
+- [[user-privacy-several-brains]]: Several brains
+- [[user-privacy-what-is-protected]]: What is protected
+- [[user-privacy-what-is-sent-where]]: What is sent where

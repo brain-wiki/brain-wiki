@@ -3,7 +3,6 @@ id: 01M3250V00W39KXR0HPKV80R76
 type: design
 title: "Design principles"
 aliases: ["01 §5"]
-tags: [overview]
 source: "docs/design/01-overview.md#5-design-principles"
 ---
 # Design principles

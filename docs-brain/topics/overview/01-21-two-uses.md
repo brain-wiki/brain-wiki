@@ -3,7 +3,6 @@ id: 01M3250V00DDKG00VE4SVHD47J
 type: design
 title: "Two uses"
 aliases: ["01 §2.1"]
-tags: [overview]
 source: "docs/design/01-overview.md#21-two-uses"
 ---
 # Two uses

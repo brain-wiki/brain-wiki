@@ -3,7 +3,6 @@ id: 01M3250V00DHPJC7P8PSFKQWBR
 type: design
 title: "Prior art and what we take from it"
 aliases: ["01 §8"]
-tags: [overview]
 source: "docs/design/01-overview.md#8-prior-art-and-what-we-take-from-it"
 ---
 # Prior art and what we take from it

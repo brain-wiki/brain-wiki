@@ -3,7 +3,6 @@ id: 01M3250V00P1JYW0NK5TDVNCFG
 type: design
 title: "Non-goals for v0.1"
 aliases: ["01 §4"]
-tags: [overview]
 source: "docs/design/01-overview.md#4-non-goals-for-v01"
 ---
 # Non-goals for v0.1

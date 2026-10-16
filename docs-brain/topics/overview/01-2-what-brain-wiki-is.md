@@ -3,7 +3,6 @@ id: 01M3250V009PTNE46MYTSB9XZE
 type: design
 title: "What brain-wiki is"
 aliases: ["01 §2"]
-tags: [overview]
 source: "docs/design/01-overview.md#2-what-brain-wiki-is"
 ---
 # What brain-wiki is

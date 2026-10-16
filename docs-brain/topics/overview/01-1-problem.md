@@ -3,7 +3,6 @@ id: 01M3250V00P804YZSF56DMS68G
 type: design
 title: "Problem"
 aliases: ["01 §1"]
-tags: [overview]
 source: "docs/design/01-overview.md#1-problem"
 ---
 # Problem
