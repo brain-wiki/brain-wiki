@@ -1,4 +1,4 @@
-"""Git pre-commit integration: lint exactly what will be committed (docs/design/lint-and-reports.md §8)."""
+"""Git pre-commit integration: lint exactly what will be committed (lint-and-reports.md §8)."""
 
 from __future__ import annotations
 

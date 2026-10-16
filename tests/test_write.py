@@ -256,7 +256,8 @@ def test_doctor_rolls_back_interrupted_run(brain_dir: Path, capsys):
     assert (brain_dir / "topics/a/one.md").read_text() == "# One\n"
 
 
-# -- `--as HOST` acts with that host's profile (docs/design/cli-and-mcp.md §1) -----------------------------------
+# -- `--as HOST` acts with that host's profile (cli-and-mcp.md §1)
+# -----------------------------------
 def _registered(example: Path, extra: str = "") -> Path:
     from brainwiki.config._user import register_brain
 

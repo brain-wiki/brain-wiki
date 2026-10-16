@@ -1,4 +1,4 @@
-"""Session readers: one per host, all yielding normalized turns (docs/design/agent-integrations.md §6.4).
+"""Session readers: one per host, all yielding normalized turns (agent-integrations.md §6.4).
 
 Harvest, origin lookup, and input detection all read sessions through these.
 Readers are defensive: a line they cannot parse is skipped and counted, never fatal, and they
@@ -151,7 +151,9 @@ def is_untrusted(
     extra: Iterable[str] = (),
     trusted_mcp_servers: Iterable[str] = ("brain-wiki",),
 ) -> bool:
-    """Does this tool call bring outside content into the session (docs/design/write-path.md §3.2, docs/design/agent-integrations.md §6.3)?"""
+    """Does this tool call bring outside content into the session (write-path.md §3.2,
+    agent-integrations.md §6.3)?
+    """
     trusted = tuple(trusted_mcp_servers)
     if tool.startswith(("mcp__", "mcp_")) and any(server in tool for server in trusted):
         return False

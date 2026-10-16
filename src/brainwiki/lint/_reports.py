@@ -1,4 +1,4 @@
-"""`reports/`: index queries rendered as Markdown pages for people (docs/design/lint-and-reports.md §7)."""
+"""`reports/`: index queries rendered as Markdown pages for people (lint-and-reports.md §7)."""
 
 from __future__ import annotations
 

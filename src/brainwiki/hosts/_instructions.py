@@ -1,4 +1,4 @@
-"""The static instruction block `brain connect` writes into each host (docs/design/agent-integrations.md §3.2).
+"""The static instruction block `brain connect` writes into each host (agent-integrations.md §3.2).
 
 Policy only, no brain facts, so it never goes stale: agents fetch current facts with
 `brain_list` and `brain_orient`. Two sentences follow the host's profile; everything else is
@@ -82,9 +82,10 @@ def _marked_block(access: Access, *, skill: bool = True) -> str:
 
 
 def server_instructions(access: Access) -> str:
-    """The MCP server instructions: the block without its skill pointer (docs/design/cli-and-mcp.md §3.3).
+    """The MCP server instructions: the block without its skill pointer (cli-and-mcp.md §3.3).
 
-    Codex weighs the first 512 characters most (docs/design/agent-integrations.md §3.2), so the first bullet must end there.
+    Codex weighs the first 512 characters most (agent-integrations.md §3.2), so the first bullet
+    must end there.
     """
     return block_text(access, skill=False).strip()
 
@@ -110,7 +111,9 @@ def host_access(host: str | None) -> Access:
 
 
 def antigravity_rule(access: Access) -> str:
-    """The plugin's always-on rule (docs/design/agent-integrations.md §3.2): Antigravity loads it in every conversation."""
+    """The plugin's always-on rule (agent-integrations.md §3.2): Antigravity loads it in every
+    conversation.
+    """
     return (
         "---\ntrigger: always_on\ndescription: How to consult, explore, and add to the user's "
         "long-term memory in brain-wiki.\n---\n" + block_text(access)
@@ -198,7 +201,8 @@ def targets(
         base = cwd / ".claude" if scope == "project" else Path.home() / ".claude"
         return [Target(base / "rules" / "brain-wiki.md", _marked_block(access), True)], notes
     if host == "codex":
-        # Codex reads the MCP server's instructions at start-up (docs/design/agent-integrations.md §3.2), so its single global
+        # Codex reads the MCP server's instructions at start-up (agent-integrations.md §3.2), so
+        # its single global
         # AGENTS.md, often managed elsewhere (dotfiles, generators), stays untouched.
         notes.append(
             "Codex gets brain-wiki's instructions from the MCP server when it starts; no "

@@ -1,4 +1,4 @@
-"""Bench suites (docs/design/eval-bench.md §3). Each returns a SuiteResult of flat metric rows."""
+"""Bench suites (eval-bench.md §3). Each returns a SuiteResult of flat metric rows."""
 
 from __future__ import annotations
 
@@ -556,7 +556,7 @@ def lint_suite(work: Path) -> SuiteResult:
 
 
 # -- perf ---------------------------------------------------------------------------
-_BUDGETS = {  # docs/design/engineering.md §5 and docs/design/index-and-search.md §10, at 10k notes
+_BUDGETS = {  # engineering.md §5 and index-and-search.md §10, at 10k notes
     "freshness_ms": 150,
     "incremental_ms": 50,
     "search_p95_ms": 50,
@@ -617,7 +617,7 @@ def perf(work: Path, size: int, seed: int = 0) -> SuiteResult:
         values["lint_warm_s"] = _timed(lambda: lint(engine), 1)[0] / 1000
     relax = (
         1 if size >= 10_000 else 2
-    )  # CI relaxes thresholds 2x below 10k notes (docs/design/engineering.md §5)
+    )  # CI relaxes thresholds 2x below 10k notes (engineering.md §5)
     for metric, value in values.items():
         budget = _BUDGETS.get(metric)
         target = (
@@ -635,5 +635,5 @@ def agent(work: Path, backends: list[str]) -> SuiteResult:
     return SuiteResult(
         "agent",
         skipped="not implemented in this bench: needs a host run headless with the plugin "
-        "installed on a fixture brain (docs/design/eval-bench.md §3.5); run those scenarios by hand before releases",
+        "installed on a fixture brain (eval-bench.md §3.5); run those scenarios by hand before releases",
     )

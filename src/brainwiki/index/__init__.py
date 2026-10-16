@@ -1,4 +1,4 @@
-"""The derived SQLite index and the queries over it (docs/design/index-and-search.md)."""
+"""The derived SQLite index and the queries over it (index-and-search.md)."""
 
 from __future__ import annotations
 

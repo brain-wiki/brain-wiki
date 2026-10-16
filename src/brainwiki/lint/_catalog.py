@@ -1,4 +1,4 @@
-"""The BW rule catalog (docs/design/lint-and-reports.md §3). Codes are stable; new rules get new codes."""
+"""The BW rule catalog (lint-and-reports.md §3). Codes are stable; new rules get new codes."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ _RULES = [
     _RuleInfo("BW701", "error", "error", False, "text matches a secret pattern"),
 ]
 _RULES: dict[str, _RuleInfo] = {r.code: r for r in _RULES}
-# The frontmatter rules `brain validate` runs (docs/design/lint-and-reports.md §3).
+# The frontmatter rules `brain validate` runs (lint-and-reports.md §3).
 SCHEMA_CODES = (
     "BW101",
     "BW102",

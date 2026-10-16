@@ -2,7 +2,7 @@
 
 Links by file name keep working when only folders change; links that name a path, and relative
 Markdown links into or out of what moved, are rewritten. Topics are known by their slug, so
-moving a topic folder re-parents it without breaking topic policies (docs/design/brain-format.md §2); renaming
+moving a topic folder re-parents it without breaking topic policies (brain-format.md §2); renaming
 one renames its brain.toml entry in the same run.
 """
 

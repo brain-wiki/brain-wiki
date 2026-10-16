@@ -1,4 +1,6 @@
-"""Keep the index fresh: stat walk, hash on change, parse, upsert, re-resolve links (docs/design/index-and-search.md §4)."""
+"""Keep the index fresh: stat walk, hash on change, parse, upsert, re-resolve links
+(index-and-search.md §4).
+"""
 
 from __future__ import annotations
 
@@ -45,7 +47,7 @@ class ScanStats:
 
 
 def discovered_topics(engine: Engine) -> dict[str, str]:
-    """Every topic as slug -> folder: the topic tree's paths (docs/design/brain-format.md §2)."""
+    """Every topic as slug -> folder: the topic tree's paths (brain-format.md §2)."""
     return dict(topic_tree(engine).paths)
 
 

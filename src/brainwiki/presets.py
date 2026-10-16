@@ -1,4 +1,4 @@
-"""Headless presets for harvest distillation (docs/design/agent-integrations.md §7).
+"""Headless presets for harvest distillation (agent-integrations.md §7).
 
 Each preset runs a host CLI once, prompt on stdin, in an empty temporary directory. Exact flags
 live here, not in the docs, because CLIs change faster than documents.

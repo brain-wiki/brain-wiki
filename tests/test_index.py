@@ -172,7 +172,7 @@ def test_read_raw_is_the_file_and_section_flags_agree(
         raw = read(eng, "ripgrep", mode="raw")
         assert (
             raw["banners"] and format_read_text(raw) == note.read_text()
-        )  # no banners (docs/design/index-and-search.md §7)
+        )  # no banners (index-and-search.md §7)
         assert read(eng, "fts5", section="facts")["mode"] == "section"  # --section implies it
         with pytest.raises(UsageError):
             read(eng, "fts5", mode="section")

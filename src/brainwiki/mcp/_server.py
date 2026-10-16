@@ -1,4 +1,4 @@
-"""The stdio MCP server (docs/design/cli-and-mcp.md §3). Stateless per connection: cross-call state is a run id.
+"""The stdio MCP server (cli-and-mcp.md §3). Stateless per connection: cross-call state is a run id.
 
 Only this module imports the MCP SDK; the CLI never loads it.
 """
@@ -480,7 +480,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
                 summary=summary, claims=list(claims), open_questions=list(open_questions)
             ),
             origin="agent",
-            inputs="unknown",  # MCP cannot see the rest of the session (docs/design/write-path.md §3.2)
+            inputs="unknown",  # MCP cannot see the rest of the session (write-path.md §3.2)
             captured="mcp",
             agent=state.host,
             session=session,
@@ -823,7 +823,8 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
 
 
 def _forbid_unknown_arguments(server: MCPServer) -> None:
-    """Reject arguments a tool does not declare (docs/design/cli-and-mcp.md §3.4): a stale or misspelled argument fails
+    """Reject arguments a tool does not declare (cli-and-mcp.md §3.4): a stale or misspelled
+    argument fails
     with an error naming it instead of being dropped. The SDK has no option for this."""
     for tool in server._tool_manager.list_tools():  # noqa: SLF001
         model = tool.fn_metadata.arg_model

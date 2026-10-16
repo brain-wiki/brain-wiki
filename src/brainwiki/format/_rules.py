@@ -1,4 +1,4 @@
-"""`rules.md`: standing directives with the user's verbatim quote (docs/design/brain-format.md §10)."""
+"""`rules.md`: standing directives with the user's verbatim quote (brain-format.md §10)."""
 
 from __future__ import annotations
 

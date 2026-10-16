@@ -1,4 +1,6 @@
-"""Search: FTS5 with field weights, filters before ranking, browse, and the supersession guard (docs/design/index-and-search.md §6)."""
+"""Search: FTS5 with field weights, filters before ranking, browse, and the supersession guard
+(index-and-search.md §6).
+"""
 
 from __future__ import annotations
 
@@ -22,7 +24,7 @@ _CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]+")
 _RELATIVE_RE = re.compile(r"^(\d+)([dwmy])$")
 _SORTS = ("relevance", "recent", "title")
 # Words that carry no topic on their own. Dropped from a query when content words remain, so a
-# question phrased as a sentence ranks by what it is about (docs/design/index-and-search.md §6.2).
+# question phrased as a sentence ranks by what it is about (index-and-search.md §6.2).
 _FILLER = frozenset(
     {
         "a",
@@ -187,7 +189,7 @@ def node_filters(
         f"n.status IN ({','.join('?' * len(statuses))})",
     ]
     params: list[Any] = [*kinds, *statuses]
-    if topics:  # a topic filter includes its sub-topics (docs/design/brain-format.md §2)
+    if topics:  # a topic filter includes its sub-topics (brain-format.md §2)
         wanted = sorted(engine.topics.expand(topics))
         clauses.append(f"n.topic IN ({','.join('?' * len(wanted))})")
         params.extend(wanted)

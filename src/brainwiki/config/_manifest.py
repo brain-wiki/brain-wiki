@@ -1,4 +1,4 @@
-"""`brain.toml`: the manifest that marks a directory as a brain (docs/design/brain-format.md §3)."""
+"""`brain.toml`: the manifest that marks a directory as a brain (brain-format.md §3)."""
 
 from __future__ import annotations
 

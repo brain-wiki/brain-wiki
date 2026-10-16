@@ -1,4 +1,4 @@
-"""What `brain doctor` reports about commit jobs (docs/design/write-path.md §5.2)."""
+"""What `brain doctor` reports about commit jobs (write-path.md §5.2)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""`brain lint --fix`: all fixes of one invocation form one run (docs/design/lint-and-reports.md §5)."""
+"""`brain lint --fix`: all fixes of one invocation form one run (lint-and-reports.md §5)."""
 
 from __future__ import annotations
 

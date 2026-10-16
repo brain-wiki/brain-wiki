@@ -1,4 +1,4 @@
-"""Command-line interface (docs/design/cli-and-mcp.md §2)."""
+"""Command-line interface (cli-and-mcp.md §2)."""
 
 from __future__ import annotations
 

@@ -1,10 +1,12 @@
-"""`brain connect <host>`: wire a host to the locally installed brain-wiki (docs/design/agent-integrations.md §8).
+"""`brain connect <host>`: wire a host to the locally installed brain-wiki
+(agent-integrations.md §8).
 
 1. Materialize a host-specific copy of the plugin under `<data dir>/plugin/<host>/`, with MCP
    commands pointing at the installed `brain` (faster than `uvx`), `--host <id>`, and an optional
    `--brain`.
 2. Register it the way the host expects, preferring the host's own CLI.
-3. Write the static instruction block into the file the host loads in every session (docs/design/agent-integrations.md §3.2).
+3. Write the static instruction block into the file the host loads in every session
+(agent-integrations.md §3.2).
 4. Record every change (commands, files, backups, block hashes) in `<state>/connect/<host>.json`
    (user scope) or `<state>/connect/projects/<folder hash>/<host>.json` (project scope), so
    `--uninstall` undoes exactly what was done in that scope and never touches the other.
@@ -490,9 +492,9 @@ def _remove_block(item: dict[str, Any], *, dry_run: bool) -> list[str]:
 
 
 def _restore_file(item: dict[str, Any], *, dry_run: bool) -> list[str]:
-    """Undo one config edit (docs/design/agent-integrations.md §8.5). Unchanged since connect: put back the user's original
-    bytes, or delete the file connect created. Changed since: take out only brain-wiki's
-    entry, so the user's later edits survive."""
+    """Undo one config edit (agent-integrations.md §8, uninstall). Unchanged since
+    connect: put back the user's original bytes, or delete the file connect created. Changed
+    since: take out only brain-wiki's entry, so the user's later edits survive."""
     path = Path(item["path"])
     if not path.is_file():
         return []

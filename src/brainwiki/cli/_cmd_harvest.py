@@ -114,7 +114,9 @@ def harvest(args: Any) -> int:
 
 
 def _configure(args: Any) -> int:
-    """`brain harvest enable|disable|route`: the user-config side of harvest (docs/design/write-path.md §2.2)."""
+    """`brain harvest enable|disable|route`: the user-config side of harvest
+    (write-path.md §2.2).
+    """
     from brainwiki.config import add_harvest_route, config_file, load_user_config, set_harvest
 
     if args.action == "route":

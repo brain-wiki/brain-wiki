@@ -1,4 +1,4 @@
-"""Scan a Markdown folder and detect its conventions without writing anything (docs/design/import.md §3.1)."""
+"""Scan a Markdown folder and detect its conventions without writing anything (import.md §3.1)."""
 
 from __future__ import annotations
 

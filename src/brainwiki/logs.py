@@ -1,4 +1,6 @@
-"""Local log file for long-running processes whose stdout belongs to a protocol (docs/design/cli-and-mcp.md §2.2)."""
+"""Local log file for long-running processes whose stdout belongs to a protocol
+(cli-and-mcp.md §2.2).
+"""
 
 from __future__ import annotations
 

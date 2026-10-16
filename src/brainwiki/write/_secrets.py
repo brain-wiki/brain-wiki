@@ -1,4 +1,6 @@
-"""Secret detection and redaction (docs/design/security-and-privacy.md §6). Pattern-based; misses unusual formats."""
+"""Secret detection and redaction (security-and-privacy.md §6). Pattern-based; misses unusual
+formats.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Level-of-detail payloads for the visualizer: world, topic, health (docs/design/visualizer.md §2, §6).
+"""Level-of-detail payloads for the visualizer: world, topic, health (visualizer.md §2, §6).
 
 Pure functions over a `build_graph` dict; no database access.
 """
@@ -57,7 +57,8 @@ def _group_topics(slugs: list[str], adj: _Adjacency) -> list[list[str]]:
 def tree_groups(
     slugs: list[str], parents: dict[str, str | None], adj: _Adjacency
 ) -> list[list[str]]:
-    """Constellations from the topic tree (docs/design/brain-format.md §2): each top-level topic that has sub-topics, with
+    """Constellations from the topic tree (brain-format.md §2): each top-level topic that has
+    sub-topics, with
     everything below it; the remaining topics are grouped by their links (`group_topics`)."""
     present = sorted(set(slugs))
     if len(present) <= _SINGLE_MAX:
@@ -352,7 +353,7 @@ class Atlas:
             key=lambda f: (-f["total"], f["a"], f["b"]),
         )
         # Large brains link almost every pair of topics; each topic's strongest flows keep
-        # the world payload within budget (docs/design/visualizer.md §7).
+        # the world payload within budget (visualizer.md §7).
         kept: dict[str, int] = {}
         out = []
         for flow in ranked:

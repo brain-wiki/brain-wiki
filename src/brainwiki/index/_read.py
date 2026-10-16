@@ -1,4 +1,4 @@
-"""Read a note, hub, or episode with guard banners (docs/design/index-and-search.md §7)."""
+"""Read a note, hub, or episode with guard banners (index-and-search.md §7)."""
 
 from __future__ import annotations
 
@@ -135,7 +135,9 @@ _ENVELOPE_TAG = re.compile(r"<(/?untrusted-episode)", re.IGNORECASE)
 def untrusted_envelope(
     text: str, agent: str | None, inputs: str | None, *, inline: bool = False
 ) -> str:
-    """Wrap episode text so the model reads it as data (docs/design/write-path.md §3.3); the text cannot close it."""
+    """Wrap episode text so the model reads it as data (write-path.md §3.3); the text cannot close
+    it.
+    """
     body = _ENVELOPE_TAG.sub(r"&lt;\1", text)
     head = (
         f'<untrusted-episode agent="{html.escape(agent or "unknown")}" '
@@ -207,7 +209,7 @@ def _link_line(r: dict[str, Any]) -> str:
 
 
 def _handle_lines(result: dict[str, Any]) -> list[str]:
-    """Links and backlinks with the path to open next (docs/design/index-and-search.md §7)."""
+    """Links and backlinks with the path to open next (index-and-search.md §7)."""
     lines: list[str] = []
     links = result.get("links") or []
     if links:
@@ -243,7 +245,9 @@ def _outline_text(result: dict[str, Any]) -> str:
 
 
 def format_read_text(result: dict[str, Any]) -> str:
-    """Banners, then the content; `raw` is the content alone, the file as on disk (docs/design/index-and-search.md §7)."""
+    """Banners, then the content; `raw` is the content alone, the file as on disk
+    (index-and-search.md §7).
+    """
     if result.get("mode") == "raw":
         return result.get("content", "")
     head = "\n".join(result.get("banners", []))

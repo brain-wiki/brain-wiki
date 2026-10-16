@@ -1,4 +1,4 @@
-"""brain-wiki's frontmatter fields and line-local list edits (docs/design/brain-format.md §4, §6).
+"""brain-wiki's frontmatter fields and line-local list edits (brain-format.md §4, §6).
 
 brain-wiki's own metadata lives in fields named `bw-…`. Values are flat: strings or lists of
 strings, which Obsidian's Properties UI can show and edit. The claim and relation fields of

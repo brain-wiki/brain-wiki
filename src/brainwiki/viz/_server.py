@@ -1,5 +1,5 @@
 """Token-guarded, read-only HTTP server for the visualizer, on loopback unless asked otherwise
-(docs/design/visualizer.md §5, §8)."""
+(visualizer.md §5, §8)."""
 
 from __future__ import annotations
 

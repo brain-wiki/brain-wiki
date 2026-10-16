@@ -1,4 +1,4 @@
-"""Gather pending inbox episodes with the notes they may belong to (docs/design/write-path.md §4).
+"""Gather pending inbox episodes with the notes they may belong to (write-path.md §4).
 
 The agent folds them in by editing notes directly; nothing here writes to the brain.
 """

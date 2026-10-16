@@ -1,4 +1,4 @@
-"""Small browsing commands in the Obsidian CLI's style (docs/design/cli-and-mcp.md §2.2).
+"""Small browsing commands in the Obsidian CLI's style (cli-and-mcp.md §2.2).
 
 Targets resolve like wikilinks; every line names the exact path, the handle for the next
 command. Listings share --count, --paths, --limit, and --cursor.

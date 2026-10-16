@@ -77,7 +77,7 @@ class Engine:
 
     @property
     def topics(self) -> TopicTree:
-        """The topic tree (docs/design/brain-format.md §2)."""
+        """The topic tree (brain-format.md §2)."""
         from brainwiki.index import topic_tree
 
         return topic_tree(self)

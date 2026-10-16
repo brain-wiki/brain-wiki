@@ -1,4 +1,4 @@
-"""`brain schedule`: one OS job per brain that runs `brain commit` (docs/design/write-path.md §5.2).
+"""`brain schedule`: one OS job per brain that runs `brain commit` (write-path.md §5.2).
 
 The OS scheduler is the source of truth: a user crontab block on Linux, a LaunchAgent on macOS.
 Backends run commands through an injected runner, so tests never touch the real ones.

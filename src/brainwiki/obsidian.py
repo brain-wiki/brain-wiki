@@ -1,4 +1,4 @@
-"""Open a brain's folder as a vault in Obsidian (docs/design/visualizer.md §11).
+"""Open a brain's folder as a vault in Obsidian (visualizer.md §11).
 
 A folder Obsidian already knows opens through an `obsidian://` link, which keeps the user's
 last workspace. Obsidian offers no public way to add a new folder as a vault, so for an

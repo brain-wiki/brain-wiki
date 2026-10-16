@@ -3,7 +3,7 @@
 Every curated change (consolidation, review accept, rule change, `lint --fix`, import apply,
 `mv`, undo) goes through `Run.commit()`, so all of them get the same guarantees: base hashes are
 checked under the brain's write lock, pre-images are kept for undo, and a git commit holds
-exactly the touched files (docs/design/write-path.md §7.3).
+exactly the touched files (write-path.md §7.3).
 """
 
 from __future__ import annotations

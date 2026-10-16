@@ -1,4 +1,4 @@
-"""Parsers and line-preserving writers for the brain format (docs/design/brain-format.md)."""
+"""Parsers and line-preserving writers for the brain format (brain-format.md)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""The per-user config file: where brains live and per-host choices (docs/design/config-and-storage.md §2)."""
+"""The per-user config file: where brains live and per-host choices (config-and-storage.md §2)."""
 
 from __future__ import annotations
 
@@ -93,7 +93,7 @@ def _brain_id(root: Path) -> str | None:
 
 def _moved(old: Path, new: Path) -> bool:
     """A name may follow its brain to a new folder: the old folder is no longer a brain, or
-    both hold the same brain (docs/design/config-and-storage.md §5, Move)."""
+    both hold the same brain (config-and-storage.md §5, Move)."""
     old_id = _brain_id(old.expanduser())
     return old_id is None or old_id == _brain_id(new)
 

@@ -1,8 +1,8 @@
-"""`brain` entry point (docs/design/cli-and-mcp.md §2). Typer parses; handlers are imported only when used.
+"""`brain` entry point (cli-and-mcp.md §2). Typer parses; handlers are imported only when used.
 
 A command does no work itself: it returns a `_Call`, naming the handler and the namespace of
 arguments the handler reads. `main` runs the handler outside Typer, so the exit codes and the
-error lines of docs/design/cli-and-mcp.md §2.3 stay this module's, not Click's.
+error lines of cli-and-mcp.md §2.3 stay this module's, not Click's.
 """
 
 import importlib
@@ -1474,7 +1474,8 @@ def main(argv: list[str] | None = None) -> int:
     except (KeyboardInterrupt, EOFError):  # Ctrl-C, or Ctrl-D at a prompt
         print(file=sys.stderr)
         return 130
-    except Exception:  # a bug: keep the trace in the log, not on the user's screen (docs/design/cli-and-mcp.md §2.3)
+    # A bug: keep the trace in the log, not on the user's screen (cli-and-mcp.md §2.3).
+    except Exception:
         return _internal_error(parsed.command)
 
 

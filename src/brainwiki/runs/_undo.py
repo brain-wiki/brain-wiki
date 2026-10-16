@@ -1,4 +1,4 @@
-"""Undo a run, and roll back runs a crash left half-applied (docs/design/write-path.md §8, §10)."""
+"""Undo a run, and roll back runs a crash left half-applied (write-path.md §8, §10)."""
 
 from __future__ import annotations
 

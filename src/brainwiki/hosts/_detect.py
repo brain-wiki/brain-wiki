@@ -1,4 +1,4 @@
-"""Which agent host is calling (docs/design/agent-integrations.md §2)."""
+"""Which agent host is calling (agent-integrations.md §2)."""
 
 from __future__ import annotations
 

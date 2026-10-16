@@ -1,4 +1,4 @@
-"""The evaluation bench: synthetic brains, suites, and reports (docs/design/eval-bench.md)."""
+"""The evaluation bench: synthetic brains, suites, and reports (eval-bench.md)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Body links: `[[wikilinks]]`, embeds, and Markdown links to notes (docs/design/brain-format.md §6.5)."""
+"""Body links: `[[wikilinks]]`, embeds, and Markdown links to notes (brain-format.md §6.5)."""
 
 from __future__ import annotations
 

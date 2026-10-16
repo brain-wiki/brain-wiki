@@ -1,4 +1,4 @@
-"""Status normalization shared by lint fixes and import (docs/design/import.md §4)."""
+"""Status normalization shared by lint fixes and import (import.md §4)."""
 
 from __future__ import annotations
 

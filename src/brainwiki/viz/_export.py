@@ -1,4 +1,6 @@
-"""Graph export for the visualizer: JSON, GraphML, and a self-contained HTML page (docs/design/visualizer.md §5)."""
+"""Graph export for the visualizer: JSON, GraphML, and a self-contained HTML page
+(visualizer.md §5).
+"""
 
 from __future__ import annotations
 

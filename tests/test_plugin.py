@@ -85,7 +85,8 @@ def test_mcp_server_entries_per_host():
 
 
 def test_bundle_ships_no_hooks_and_an_always_on_rule():
-    """Agents learn the brains from the instruction block and brain_list (docs/design/agent-integrations.md §3); hooks are
+    """Agents learn the brains from the instruction block and brain_list
+    (agent-integrations.md §3); hooks are
     opt-in through `brain connect`, which writes them with the installed `brain`."""
     assert not (ROOT / "hooks.json").exists() and not (ROOT / "hooks").exists()
     assert "hooks" not in load("plugin.json")["extensions"]["com.openai"]

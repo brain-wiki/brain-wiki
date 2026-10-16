@@ -1,4 +1,4 @@
-"""Run records and pre-images under `<state>/brains/<key>/runs/<run>/` (docs/design/write-path.md §8)."""
+"""Run records and pre-images under `<state>/brains/<key>/runs/<run>/` (write-path.md §8)."""
 
 from __future__ import annotations
 
