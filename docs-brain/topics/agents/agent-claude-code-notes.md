@@ -12,8 +12,9 @@ source: "docs/design/agents/claude-code.md#notes"
   instructions are cut past 2,048 characters, so the important sentence
   comes first.
 - Tool results are capped at 25k tokens by default. Search and read stay
-  well below; the consolidation packet sets
-  `_meta["anthropic/maxResultSizeChars"]` and is budgeted at 15k tokens.
+  well below; `brain_consolidate_prepare` and `brain_harvest_prepare` set
+  `_meta["anthropic/maxResultSizeChars"]`, and the consolidation packet is
+  budgeted at 15k tokens.
 - Claude Code strips HTML comments before loading instructions, so the
   block's markers cost no tokens.
 - The transcript format is documented as internal and changes between

@@ -14,10 +14,11 @@ self-contained commits. Later milestones depend only on earlier ones.
 
 Order rationale: M1–M4 are the foundation everything else touches; M5 and
 M6 are the core value; M7 makes it usable in hosts; M8–M10 widen adoption
-and trust.
+and trust. M13 replaced parts of M1, M5, and M12 (claims, relations, ops,
+checked edits).
 
 ## Subsections
-- [[14-11-status-2026-10-11]]: Status (2026-10-11)
+- [[14-11-status-2026-10-15]]: Status (2026-10-15)
 
 ## Items
 - [[m0]]: M0: Skeleton
@@ -33,3 +34,4 @@ and trust.
 - [[m10]]: M10: Visualizer
 - [[m11]]: M11: Release readiness
 - [[m12]]: M12: Agent context and discovery (D25–D28)
+- [[m13]]: M13: Format 3 (D32–D35)

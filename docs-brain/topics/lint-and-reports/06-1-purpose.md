@@ -16,7 +16,8 @@ fixes what is safe to fix.
 | Where lint runs | Scope | Profile |
 |---|---|---|
 | `brain lint` | Whole brain (or given paths) | From `brain.toml` |
-| Inside every apply (consolidation, review accept, rule change, fix) | Touched files only, after the in-memory apply; only errors the change introduces block it, so a note a person broke by hand does not stall every later run that touches it | Always `strict` for new content |
+| `brain validate` ([[05-23-direct-edits\|05 §2.3]]) | The notes an agent changed: the frontmatter rules only (`SCHEMA_CODES`, §3) | Always `strict` |
+| Inside runs that rewrite notes (`lint --fix`, `mv`, `import --into`) | Touched files only, after the in-memory change; only errors the change introduces block it, so a note a person broke by hand does not stall every later run that touches it ([[05-72-lint-gate\|05 §7.2]]) | Always `strict` for new content |
 | Git pre-commit hook (optional) | Staged files | From `brain.toml` |
 | Indexer | Parse-level problems only (BW1xx), stored in `diagnostics` | — |
 

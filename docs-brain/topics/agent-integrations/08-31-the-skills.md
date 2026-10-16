@@ -8,7 +8,8 @@ source: "docs/design/08-agent-integrations.md#31-the-skills"
 ---
 # The skills (Agent integrations)
 
-The plugin ships three skills, `brain` (everyday use), `brain-setup`
-(onboarding and reconfiguration), and `brain-maintain` (harvest,
-consolidation, review, health). Their design and the onboarding flow are in
+The plugin ships three skills, `brain` (everyday use, including editing
+notes and validating them), `brain-setup` (onboarding and reconfiguration),
+and `brain-maintain` (harvest, the consolidation helper, rule review, lint,
+commit). Their design and the onboarding flow are in
 [[skills-and-onboarding|15]].

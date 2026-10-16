@@ -20,7 +20,7 @@ scan(brain):
     if row is None:                         -> parse and insert
     elif (mtime_ns, size) == row:           -> unchanged
     else: hash it; if sha256 == row.sha256  -> update mtime only
-          else                              -> re-parse, replace node/claims/edges/docs
+          else                              -> re-parse, replace node/edges/docs
   for each row not seen:                    -> delete (cascade), remember (id, path) in path_history
   ids that disappeared at one path and appeared at another are renames
   re-resolve edges whose raw_target matched a changed name key

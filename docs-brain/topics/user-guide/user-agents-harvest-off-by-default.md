@@ -15,7 +15,7 @@ brain harvest enable claude-code codex   # or disable; also: antigravity
 brain harvest --status           # per host: on or off, sessions not yet harvested
 brain harvest                    # dry run: sessions, target brain, token estimate
 brain harvest --apply            # distill with the preset above (--distill to override)
-brain harvest --apply --raw      # no model: excerpts that consolidation distills later
+brain harvest --apply --raw      # no model: excerpts to distill when consolidating
 ```
 
 Inside an agent, "harvest my recent sessions" runs the same steps with the

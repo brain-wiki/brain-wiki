@@ -20,9 +20,9 @@ client) share one brain: a folder of Markdown notes they search before
 answering and keep up to date as they work. It runs on your machine, needs no
 server or API keys, and opens in Obsidian.
 
-- **Plain files.** Read, edit, diff, and sync the brain like any folder, or adopt an Obsidian vault as it is.
-- **Knows what changed.** Search returns a note together with the notes that replace or contradict it.
-- **Safe to let agents write.** Changes are checked, logged, and undoable, and committed when the brain is a git repository.
+- **Plain files.** A note is an ordinary Markdown page: metadata in frontmatter, facts and links in the body. Read, edit, and diff the brain like any folder, or adopt an Obsidian vault as it is.
+- **Knows what changed.** Search returns a note together with the note that replaced it.
+- **Agents write notes directly.** They edit the Markdown, then `brain validate` checks it; `brain commit` (by hand or on a schedule) keeps every edit in git.
 - **No network calls.** Your own agent does the thinking; brain-wiki stores and checks.
 
 ## Quick start
@@ -65,21 +65,26 @@ brains, both ask which one, or name it: `brain viz work`.
 ## How it works
 
 ```text
-agents ──log──► inbox ──consolidate──► notes (topics/*.md) ◄── you, in Obsidian
-  ▲                   (checked ops)            │
-  └────────────── search · read ───────────────┘
+agents ──edit + validate──► notes (topics/*.md) ◄── you, in Obsidian
+  │  ▲                            ▲       │
+  │  └──── search · read ─────────┼───────┘
+  └─log─► inbox ──consolidate─────┘       brain commit ──► git
 ```
 
-Agents log what they learn to an inbox. When you ask, your agent folds the
-inbox into topic notes through small operations that brain-wiki checks before
-writing, and `brain undo` reverses any change.
+Agents search and read the brain, and write what they learn straight into
+topic notes, then validate them. Something they cannot place yet goes to an
+inbox, which your agent folds into notes when you ask. In a git brain,
+`brain commit` snapshots direct edits (run it by hand, or schedule it with
+`brain schedule add commit`), and `brain undo` reverses brain-wiki's own
+changes.
 
 ## Status
 
 Alpha: expect breaking changes before 1.0. Known limits:
 
 - No access scopes inside a brain: every connected agent reads all of it. Keep work and personal notes in separate brains.
-- Maintenance runs when you ask; there is no scheduler.
+- Maintenance runs when you ask; only `brain commit` runs on a schedule.
+- To use a brain on several machines, push it to a git remote; do not sync one `.git` folder with a sync tool.
 - Chat apps that need a remote MCP server (ChatGPT, claude.ai, the Gemini app) are not supported yet.
 
 ## Learn more

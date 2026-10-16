@@ -17,11 +17,11 @@ starts with a stable code:
 | `not_found` | Target, brain, or run does not exist |
 | `ambiguous` | Target matches several notes; the message lists them |
 | `forbidden` | Not allowed by the profile or host limits |
-| `invalid_ops` | Validation failed; a list of `{op_index, check, message}` follows |
-| `stale` | Notes changed since the packet was prepared, or files since the run read them; prepare again |
+| `invalid_ops` | Harvest entries failed validation, or a run's lint gate refused the change; the problems follow |
+| `stale` | Files changed since the run read them; run the command again |
 | `conflict` | The change collides with something already there (a registered name, an existing file) |
 | `budget_exceeded` | `rules.md` would exceed its budget |
-| `expired` | The run handle is older than its expiry |
+| `expired` | The harvest run handle is older than one hour |
 | `busy` | The brain's write lock could not be taken in time |
 | `not_available` | An episode's origin conversation is not on this device or was deleted by the host |
 | `unsupported_host` | brain-wiki has no session reader for the calling host; use the fallback recipe |

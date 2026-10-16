@@ -11,7 +11,7 @@ source: "docs/design/06-lint-and-reports.md#2-profiles-and-severities"
 | Profile | For | Behavior |
 |---|---|---|
 | `strict` | New brains and everything brain-wiki writes | All rules at their listed severity. |
-| `migrate` | Imported vaults and legacy folders | Rules that legacy content commonly breaks (missing ids, non-standard status, alias verbs, orphan notes) drop to `info`. Rules that break parsing, safety, or retrieval correctness stay errors. |
+| `migrate` | Imported vaults and legacy folders | Rules that legacy content commonly breaks drop to `warning` or `info`: missing ids, non-standard status, format 1 and 2 fields, unknown `bw-` fields, orphan notes. Rules that break parsing, safety, or retrieval correctness stay errors. |
 
 Per-path overrides let a brain mix both:
 

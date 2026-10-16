@@ -10,6 +10,6 @@ source: "docs/design/09-import.md#3-overlay"
 
 
 ## Subsections
-- [[09-31-pipeline]]: Pipeline (Import)
+- [[09-31-pipeline]]: Pipeline
 - [[09-32-phases]]: Phases
 - [[09-33-safety]]: Safety (Import)

@@ -19,3 +19,4 @@ of the way:
 | Online-only placeholders look like missing files | v0.1 has no sync engine that could propagate a "delete". A future sync component must treat a missing local file as unknown, not deleted, inside known cloud-drive folders. |
 | Temporary files from atomic writes | Prefix `.brain-tmp-`; dot files are ignored by brain-wiki and by most sync tools' default rules. |
 | Two devices consolidating the same episodes | Possible across sync gaps; see [[05-9-concurrency-and-multiple-devices\|05 §9]]. |
+| A git brain whose `.git` folder the sync tool copies while two machines commit | Not mitigated: the repository can be corrupted. Share git brains through origin (§6.2). |

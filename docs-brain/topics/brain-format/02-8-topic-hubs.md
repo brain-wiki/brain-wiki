@@ -16,22 +16,21 @@ folder. Hubs give a person or an agent a one-page entry point.
 id: 01J9Z7M3…
 type: hub
 title: Search
-bw-related_to: "[[storage]]"
 ---
 # Search
 
-How local search works in this project and why.
+How local search works in this project and why. Storage details are in
+[[storage]].
 
 ## Notes
 - [[Use SQLite FTS5 for local search]]: why FTS5 over alternatives
 - [[SQLite version policy]]: minimum versions and fallbacks
 ```
 
-- Hubs have no length limit. Detail belongs in notes
-  (`bw-part_of: "[[hub]]"`); the hub links them, one line each.
-- A parent topic's hub need not list its sub-topics: the folder makes each
-  sub-topic's hub `part_of` it (§2). A crowded topic splits into
-  sub-topics.
-- `## Notes` lists the topic's notes with a short gloss. It stays in the
-  body because it is navigation people read, not data. `brain lint --fix`
-  can add missing entries; it never removes lines a person wrote.
+- Hubs have no length limit. Detail belongs in notes in the topic's
+  folder; the hub links them, one line each.
+- A parent topic's hub need not list its sub-topics: the folders already
+  form the topic tree (§2). A crowded topic splits into sub-topics.
+- `## Notes` lists the topic's notes with a short gloss. It is navigation
+  people read, not data. `brain lint --fix` can add missing entries; it
+  never removes lines a person wrote.

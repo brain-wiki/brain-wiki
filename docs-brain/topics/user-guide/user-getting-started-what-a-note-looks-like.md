@@ -7,26 +7,39 @@ source: "docs/user/getting-started.md#what-a-note-looks-like"
 ---
 # What a note looks like
 
+A note is an ordinary Markdown page in `topics/<topic>/`. Frontmatter holds
+metadata only; what the note knows, and how it connects to other notes, is
+in the body:
+
 ```markdown
 ---
 id: 01JA0C5D8E2F4G6H8J0K2M4N6P
+type: decision
 title: Use SQLite FTS5 for local search
-bw-part_of: "[[search]]"
-bw-supersedes: "[[ripgrep]]"
-bw-conflicts_with: "[[vector-only]] (unless: embeddings enabled)"
-bw-claims:
-  - "SQLite FTS5 is the default search backend. {id: c-…; src: inbox/episodes/2026/10/….md#L11-L12; at: 2026-10-07}"
-bw-claims-superseded:
-  - "Search shells out to ripgrep. {id: c-…; by: c-…}"
+bw-sources:
+  - "[[archive/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7]]"
+updated: 2026-10-09
 ---
 # Use SQLite FTS5 for local search
 
-Free prose. brain-wiki never rewrites it.
+Lumen searches notes with SQLite FTS5 instead of shelling out to ripgrep.
+
+- FTS5 is the default search backend since Lumen 0.4.
+- Trigram search needs SQLite 3.34 or newer; see [[SQLite version policy]].
+- Tried ripgrep over 10k notes: 1.8 s per query, too slow for search-as-you-type.
+
+Replaced the earlier [[Use ripgrep for search]] approach.
 ```
 
-Claims and relations are frontmatter fields named `bw-…`, so Obsidian shows
-them as properties, and its links work. The body stays yours.
+- `status` (`active`, `superseded`, `archived`) and `bw-superseded_by`
+  mark a note that a newer one replaced; search then shows the newer note
+  first. `bw-sources` lists where the note's knowledge came from.
+- brain-wiki reads only the body's headings and links, never its meaning.
+  The suggested shape (a summary paragraph, one fact per bullet, links
+  inside sentences) is a convention, not a rule.
 
-You can edit notes by hand in any editor. `brain lint` tells you if
-something no longer follows the format, and `brain lint --fix` repairs what
-is safe to repair, as one undoable run.
+Edit notes in any editor, then run `brain validate` (it checks the notes git
+sees as changed, or the paths you name). `brain lint` checks the whole
+brain, and `brain lint --fix` repairs what is safe to repair, as one
+undoable run. Notes from brain-wiki 0.1 (format 1 or 2) still work;
+`brain lint --fix` converts them ([[user-maintenance-convert-notes-from-brain-wiki-01|Maintenance]]).

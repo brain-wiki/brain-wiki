@@ -1,5 +1,62 @@
 # Changelog
 
+## 0.2.0 (unreleased)
+
+Format 3: a note is an ordinary Markdown page. This release changes the file
+format and several commands; convert existing brains with `brain lint --fix
+--dry-run`, then `brain lint --fix`.
+
+- **Notes as content.** Frontmatter holds metadata only: `id`, `type`,
+  `title`, `aliases`, `tags`, `status`, `bw-superseded_by`, `bw-sources`,
+  `bw-stage`, `created`, `updated`. Facts and connections are body Markdown,
+  and notes connect through `[[wikilinks]]`. brain-wiki indexes body words,
+  headings, and where links point; it no longer reads claims or typed
+  relations.
+- **Converting a brain.** `brain lint --fix` turns format 1 and 2 notes into
+  format 3 as one undoable run: claims become a `## Facts` list (superseded
+  ones a struck-through `## History`), relations become a `## Related` list,
+  claim sources become `bw-sources`, and a note another note supersedes gets
+  `status: superseded` and `bw-superseded_by`. Until a note is converted,
+  its old claim text stays searchable and lint reports BW117. Episodes are
+  not converted.
+- **Agents edit notes directly.** An agent whose profile has `edit` creates
+  and edits notes, then runs `brain validate` (MCP `brain_validate`), which
+  checks frontmatter: fields and values, ids, `bw-superseded_by` and
+  `bw-sources` links, supersession cycles, and files that are never edited
+  directly. By default it checks the notes git sees as changed. Orientation
+  shows agents that may edit a short "Writing notes" guide.
+- **Git keeps the history of direct edits.** `brain commit` snapshots
+  changed notes into a commit, fetches and rebases onto origin, and with
+  `--push` pushes. `brain schedule add commit [--every 15m] [--push]` runs it
+  from crontab (Linux) or a LaunchAgent (macOS), one job per brain;
+  `brain schedule list` and `remove commit` manage the jobs.
+- **Consolidation is a helper.** `brain consolidate --prepare` (MCP
+  `brain_consolidate_prepare`) gathers pending episodes with candidate notes
+  and guidance; the agent edits notes and validates them; `brain consolidate
+  --done EPISODE...` (MCP `brain_consolidate_done`) archives the episodes as
+  one undoable run.
+- **Removed, and what replaces them:** `brain check` / `brain_check` →
+  `brain validate` / `brain_validate`; `brain restore` → git; `brain
+  consolidate --apply` / `brain_consolidate_apply` → edit notes, then
+  `--done`; `brain search --intent` and `brain neighbors --rel` → plain
+  search and `brain neighbors` (links and backlinks); the `consolidate` and
+  `review` capabilities (an old `brain.toml` that names them still loads);
+  topic `review` and `agent_edits` policies; the `contradictions` and
+  `unverified` reports. `brain review` lists rule proposals only.
+- `brain import --overlay` keeps phases 0 (adopt), 1 (ids and status), and
+  2 (hubs); the relation and claim phases are gone, and link properties such
+  as `up:` stay yours.
+- Supersession is metadata: a hit on a superseded note still comes with the
+  note that replaced it, now found through `bw-superseded_by`. The `stale`
+  report lists active notes that link to superseded or archived notes other
+  than the ones they replaced.
+- The visualizer draws wikilinks, supersession, and sources, and flags
+  superseded, stale, orphan, and lint-error notes.
+- The MCP server rereads `brain.toml` on every call, so `brain agents grant`
+  and `revoke` apply to the next tool call without a restart.
+- An MCP client that calls itself OpenCode is recognized as the `opencode`
+  host.
+
 ## 0.1.1 (2026-10-14)
 
 - `brain viz --host ADDRESS` serves the map beyond this machine, for example

@@ -11,4 +11,5 @@ source: "docs/design/13-engineering.md#7-code-quality"
 - `ruff` for linting and formatting, with the `S` (bandit) rules on, which
   flag `shell=True`, `eval`, and similar calls.
 - No type checker runs and there is no coverage target.
-- No network access in core code: a convention, not a check.
+- No network access in core code, except the fetch and push `brain commit`
+  asks `git` to make to the brain's own remote: a convention, not a check.

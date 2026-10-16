@@ -11,7 +11,7 @@ source: "docs/design/04-index-and-retrieval.md#61-inputs"
 | Parameter | Default | Meaning |
 |---|---|---|
 | `query` | `""` | Free text. **Empty means browse**: no text matching, results ordered by `sort` (default `recent`) within the filters. |
-| `limit` | 8 | Primary results, before expansion and guards. Max 50 (the CLI refuses more rather than clamping). |
+| `limit` | 8 | Results per page; guard notes come on top. Max 50 (the CLI refuses more rather than clamping). |
 | `topic` | all | Restrict to one or more topics, each with its sub-topics. Slugs match case-insensitively; an unknown slug is `not_found`, not an empty result. |
 | `type` | any | Restrict to note types (`decision`, `release`, `person`…), as in frontmatter. |
 | `tag` | any | Restrict to notes carrying all of these tags. |
@@ -19,7 +19,6 @@ source: "docs/design/04-index-and-retrieval.md#61-inputs"
 | `include_episodes` | on for a query, off when browsing | Pending episodes are searchable; a browse lists curated notes unless episodes are asked for. |
 | `include_archived` | false | Also return notes with `status: archived`. |
 | `include_archived_episodes` | false | Also return consolidated episodes (CLI `--include archived_episodes` only). |
-| `intent` | `context` | Graph expansion, §6.4. |
 | `since`, `until` | none | Only nodes updated on or after / on or before a date. Relative forms `7d`, `4w`, `3m` are accepted. |
 | `sort` | `relevance` (`recent` when the query is empty) | `relevance`, `recent` (newest `updated` first), or `title` (CLI only, for listings). |
 | `cursor` | none | Opaque handle from a previous result's `next_cursor`, for the next page. |

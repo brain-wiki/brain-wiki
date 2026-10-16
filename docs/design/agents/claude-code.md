@@ -13,7 +13,7 @@ plugin bundle, the instruction block, harvest, `brain connect`) are in
 | Skills | `brain`, `brain-setup`, `brain-maintain` from the plugin |
 | Rule confirmation | `brain_propose_rule` carries `_meta["anthropic/requiresUserInteraction"]`, so the user approves each call; elicitation support is not tested (T-8) |
 | Harvest | `~/.claude/projects/<working-dir slug>/<session-id>.jsonl` |
-| Headless preset | `claude --bare -p --output-format json --json-schema …` ([08 §7](../08-agent-integrations.md#7-headless-presets)) |
+| Headless preset | `claude --bare -p --output-format json` ([08 §7](../08-agent-integrations.md#7-headless-presets)) |
 
 ## Notes
 
@@ -22,8 +22,9 @@ plugin bundle, the instruction block, harvest, `brain connect`) are in
   instructions are cut past 2,048 characters, so the important sentence
   comes first.
 - Tool results are capped at 25k tokens by default. Search and read stay
-  well below; the consolidation packet sets
-  `_meta["anthropic/maxResultSizeChars"]` and is budgeted at 15k tokens.
+  well below; `brain_consolidate_prepare` and `brain_harvest_prepare` set
+  `_meta["anthropic/maxResultSizeChars"]`, and the consolidation packet is
+  budgeted at 15k tokens.
 - Claude Code strips HTML comments before loading instructions, so the
   block's markers cost no tokens.
 - The transcript format is documented as internal and changes between

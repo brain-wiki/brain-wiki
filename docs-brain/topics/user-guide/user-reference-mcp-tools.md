@@ -9,7 +9,8 @@ source: "docs/user/reference.md#mcp-tools"
 
 What a connected agent can call. Write tools need the matching capability in
 the agent's profile, and `brain_read_origin` needs `read_origin = true`
-([[user-privacy-agent-profiles|privacy.md]]).
+([[user-privacy-agent-profiles|privacy.md]]). Agents edit notes with their own
+file tools; `edit` decides whether orientation tells them they may.
 
 | Tool | Does | Needs |
 |---|---|---|
@@ -17,15 +18,16 @@ the agent's profile, and `brain_read_origin` needs `read_origin = true`
 | `brain_orient` | The briefing: rules, topics, recent changes, inbox | — |
 | `brain_search` | Search, or browse with an empty query and filters | — |
 | `brain_read` | Read a note, hub, or episode (outline, full, section, raw) | — |
-| `brain_neighbors` | Follow a note's relations | — |
-| `brain_check` | Validate and record notes the agent edited directly | `edit` |
+| `brain_neighbors` | Follow a note's links and backlinks | — |
+| `brain_validate` | Check the frontmatter of notes the agent created or edited | — |
 | `brain_log_episode` | Record a learning in the inbox | `episodes` |
 | `brain_propose_rule` | Propose a standing rule; you confirm it | `propose_rules` |
-| `brain_consolidate_prepare`, `brain_consolidate_apply` | Fold inbox episodes into notes | `consolidate` |
+| `brain_consolidate_prepare` | Pending episodes with candidate notes and guidance | — |
+| `brain_consolidate_done` | Archive the episodes folded into notes | `edit` |
 | `brain_read_origin` | Read the conversation behind an episode | `read_origin = true` |
 | `brain_harvest_prepare`, `brain_harvest_apply` | Turn this agent's past sessions into episodes | `harvest` |
 
-Exit codes: 0 success; 1 problems found (lint errors, invalid ops), a path
+Exit codes: 0 success; 1 problems found (lint or validation errors, a commit conflict), a path
 that cannot be read or written, or an ambiguous target (the candidates are
 printed); 2 usage; 3 not found; 4 conflict (`conflict`: a name or file
 already there; `stale`: changed since it was read; `busy`: lock); 5 forbidden

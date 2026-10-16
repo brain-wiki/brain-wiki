@@ -33,5 +33,5 @@ source: "docs/design/agents/antigravity.md#notes"
   it to `mcp_<server>_<tool>` before the untrusted-tool rules (T-3).
 - Headless runs cannot drop tools, and a denied tool call ends the turn
   with no output, so the preset's prompt starts by saying not to use tools
-  (T-5). `--json-schema` drops undeclared fields, so the preset relies on
-  the prompt and the validator.
+  (T-5). `--json-schema` drops undeclared fields, so the preset never
+  passes a schema.

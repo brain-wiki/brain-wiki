@@ -20,3 +20,9 @@ source: "docs/design/05-write-path-and-consolidation.md#31-fields"
 They are separate because they vary independently: an agent can produce a
 summary of the user's own notes (`agent`, `local`) or of a web page
 (`agent`, `external`).
+
+Both fields live on episodes, set by the code path that wrote them (§2.1).
+Notes carry no per-fact provenance: a note may list where its content came
+from in `bw-sources` (episodes, other notes, URLs;
+[[02-61-frontmatter|02 §6.1]]), and git records when each
+line changed.

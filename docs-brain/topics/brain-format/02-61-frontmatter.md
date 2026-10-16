@@ -1,16 +1,16 @@
 ---
 id: 01M3250V003YS64ZYNPR0B97X3
 type: design
-title: "Frontmatter (Brain format)"
+title: "Frontmatter"
 aliases: ["02 §6.1"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#61-frontmatter"
 ---
-# Frontmatter (Brain format)
+# Frontmatter
 
 ```yaml
 ---
-id: 01J9Z7Q2V8K3M4N5P6R7S8T9U0
+id: 01J9Z7Q2V8K3M4N5P6R7S8T9W0
 type: decision
 title: Use SQLite FTS5 for local search
 status: active
@@ -18,34 +18,33 @@ aliases: [FTS5 decision]
 tags: [search, storage]
 created: 2026-10-07
 updated: 2026-10-09
-bw-part_of: "[[search]]"
-bw-depends_on:
-  - "[[SQLite version policy]] — needs the trigram tokenizer"
-bw-conflicts_with:
-  - "[[Vector-only search proposal]] (unless: embeddings enabled)"
-bw-supersedes:
-  - "[[Use ripgrep for search]]"
-bw-claims:
-  - "SQLite FTS5 is the default search backend. {id: c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; src: inbox/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7.md#L4-L6; origin: agent; at: 2026-10-07}"
-  - "Trigram search needs SQLite 3.34 or newer."
-bw-claims-superseded:
-  - "Search shells out to ripgrep. {id: c-01J8XQ4R6S8T0V2W4X6Y8Z0A2B; by: c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; at: 2026-10-07}"
+bw-sources:
+  - "[[archive/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7]]"
+  - "https://sqlite.org/fts5.html"
 ---
 ```
 
 | Field | Required | Values | Notes |
 |---|---|---|---|
-| `id` | yes in `strict`, minted by `lint --fix` | ULID | |
+| `id` | yes in `strict`, minted by `lint --fix` | ULID | Unique in the brain (§5). |
 | `type` | no (default `note`) | lowercase string | Open vocabulary. Suggested: `note`, `hub`, `concept`, `decision`, `howto`, `reference`, `person`, `project`, `source`, `meeting`. |
 | `title` | no | string | Default: first `# ` heading, else file name without `.md`. |
-| `status` | no (default `active`) | `active` \| `superseded` \| `archived` | Closed set; the retrieval engine only reasons about these three. |
 | `aliases` | no | list of strings | Same meaning as in Obsidian; used for link resolution and search. |
 | `tags` | no | list of strings | Without `#`. |
-| `created`, `updated` | no | ISO 8601 date or date-time | Writers set `updated` when they change a note. |
+| `status` | no (default `active`) | `active` \| `superseded` \| `archived` | Closed set; the retrieval engine only reasons about these three (§6.3). |
+| `bw-superseded_by` | only with `status: superseded` | one link, `"[[note]]"` | The note that replaced this one (§6.3). |
+| `bw-sources` | no | list of `"[[note or episode]]"` links or URLs | Where the note's knowledge came from (§6.4). |
 | `bw-stage` | no | string | Free workflow state (`draft`, `shipped`, `abandoned`…). Importers move non-standard `status` values here. |
-| `bw-<verb>` | no | string or list of strings | Relations, one field per canonical verb (§6.4). |
-| `bw-claims`, `bw-claims-superseded` | no | list of strings | Current claims, and claims that were superseded or retracted (§6.3). |
+| `created`, `updated` | no | ISO 8601 date or date-time | Writers set `updated` when they change a note. |
 
-Any other scalar or list property MAY be present and is preserved and
-stored (for example `source`, `url`, `author`). Fields reserved for future
-use: `valid_from`, `valid_until`, `confidence`.
+- Any other scalar or list property MAY be present (for example `source`,
+  `url`, `author`). It is the user's: preserved, indexed for `--where`
+  filters, never validated. Fields reserved for future use: `valid_from`,
+  `valid_until`, `confidence`.
+- Any other `bw-` field on a note is an error (BW118).
+- Format 2 fields (`bw-claims`, `bw-claims-superseded`, `bw-<verb>`
+  relations, and `bw-superseded_by` written as a list) are reported as
+  BW117, with the command that converts them (§13).
+- `brain validate` checks these rules for the files an agent changed;
+  `brain lint` checks them for the whole brain
+  ([[lint-and-reports|06]]).

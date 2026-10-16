@@ -9,8 +9,9 @@ source: "docs/user/maintenance.md#git"
 
 When the brain is a git work tree, each run commits exactly the files it
 touched, with your identity and hooks and `Brain-Run:` / `Brain-Agent:`
-trailers. brain-wiki never pushes, pulls, or switches branches. Episodes
-are committed with the run that consolidates them.
+trailers. Direct edits are committed by `brain commit`, the only command
+that fetches, rebases, or pushes; brain-wiki never switches branches.
+Episodes are committed with the run that archives them.
 
 If git refuses a run's commit (for example, the pre-commit hook from
 `brain lint --install-hook` finds an error), the run is still applied and

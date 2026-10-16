@@ -12,5 +12,5 @@ The engine reads and writes brain files only through `LocalStore`: paths are
 resolved and checked to stay inside the brain root, writes are atomic
 (temporary file, `fsync`, rename), new files are created with `O_EXCL`, and
 a write can name the content hash it expects to replace, so a file changed
-since it was read is never overwritten. Consolidation's "write only if
-unchanged" check uses this ([[05-73-apply|05 §7.3]]).
+since it was read is never overwritten. Every run uses this, so a run never
+overwrites a file someone edited after the run read it.

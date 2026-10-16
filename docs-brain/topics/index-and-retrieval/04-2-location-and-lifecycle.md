@@ -19,7 +19,6 @@ source: "docs/design/04-index-and-retrieval.md#2-location-and-lifecycle"
 - Opening the index checks `meta.schema_version`, `meta.brain_id`, and
   `meta.config_hash` (a hash of the `brain.toml` settings that affect
   indexing: layout and topics). A mismatch triggers a full rebuild. So does
-  a database file SQLite cannot open. Rebuilds are logged, never prompted;
-  recorded note versions (`baselines`) are carried over.
+  a database file SQLite cannot open. Rebuilds are logged, never prompted.
 - Pragmas: `journal_mode=WAL`, `synchronous=NORMAL`, `foreign_keys=ON`,
   `busy_timeout=5000`.

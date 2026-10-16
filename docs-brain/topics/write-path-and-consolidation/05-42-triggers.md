@@ -8,11 +8,12 @@ source: "docs/design/05-write-path-and-consolidation.md#42-triggers"
 ---
 # Triggers
 
-| Trigger | Backend | How |
-|---|---|---|
-| User asks their agent ("consolidate my brain") | `agent` | The skill drives `brain_consolidate_prepare` / `brain_consolidate_apply` over MCP. |
-| User drives it from a terminal | `agent` | `brain consolidate --prepare` prints the instructions and packet (`--out FILE` writes the same JSON document `--json` prints: `run`, `instructions`, `packet`); any model or person produces the ops; `brain consolidate --apply OPS.json --run RUN` validates and applies them. Exit codes follow [[07-23-exit-codes\|07 §2.3]]: 0 applied or dry run, 1 invalid ops (including a file that is not JSON) or routed to review, 4 stale (prepare again). |
+| Trigger | How |
+|---|---|
+| User asks their agent ("consolidate my brain") | The skill, or the `consolidate` MCP prompt, drives `brain_consolidate_prepare`, direct edits, `brain_validate`, and `brain_consolidate_done`, repeating while episodes remain. |
+| User drives it from a terminal | `brain consolidate --prepare` prints the guidance followed by the packet (`--json` prints the packet alone; `--out FILE` writes `{guidance, packet}` as JSON); any model or person edits the notes; `brain consolidate --done EPISODE…` archives the episodes handled. |
 
-v0.1 never consolidates on its own in the background. Running an LLM costs
-money and attention, and the user should choose when. Scheduled, headless
-consolidation was removed before 0.1 ([[proposal-scheduled-maintenance|proposal]]).
+brain-wiki never consolidates on its own in the background. Running an LLM
+costs money and attention, and the user should choose when. Scheduled,
+headless consolidation was removed before 0.1
+([[proposal-scheduled-maintenance|proposal]]).

@@ -13,7 +13,7 @@ it. Settings that belong to a user or a machine (where brains are, which
 brain is the default) live in the user config ([[config-and-storage|03]]).
 
 ```toml
-format = 2                                  # format version (required, §13)
+format = 3                                  # format version (required, §13)
 id = "01J9Z7M0W4K8P2R6T9V3X5Z7A1"           # brain id, a ULID (required, never changes)
 name = "personal"                           # display name (optional)
 description = "Personal notes and projects" # one line shown by brain_list (optional)
@@ -45,10 +45,7 @@ kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7, archived_episode =
 recency_half_life_days = 180
 
 [consolidate]
-review  = "auto"                            # auto (review only when checks trigger) | always
-review_external = false                     # route runs with external-input sources to review
-max_episodes_per_run = 50
-max_supersede_ratio  = 0.25                 # above this, a run is routed to review (see 05)
+max_episodes_per_run = 50                   # episodes one `brain consolidate --prepare` returns (see 05)
 
 [reports]
 after_consolidate = true
@@ -61,14 +58,12 @@ mode = "auto"                               # auto | off ; auto = commit when th
 path        = "topics/search"               # default: the folder with this slug, at any depth
 title       = "Search"
 description = "How local search works and why."
-review      = "always"                      # per-topic override
-agent_edits = "allow"                       # allow | review | deny for checked agent edits (05 §2.3)
 
 [agents.default]                            # profile for unknown hosts
 write       = ["episodes", "edit"]
 
 [agents.claude-code]                        # profile for one host id
-write       = ["episodes", "edit", "propose_rules", "consolidate", "review"]
+write       = ["episodes", "edit", "propose_rules", "harvest"]
 ```
 
 Rules:
@@ -78,9 +73,16 @@ Rules:
 - Inline tables (`status_factor = { … }`) are TOML, not frontmatter; the
   flat-values rule in §4 applies to note frontmatter only.
 - A topic that exists on disk but is not declared still works: its slug is
-  its folder name, title is taken from the hub, and its policies are its
-  parent's. Declaring a topic lets the user set description, review mode,
-  agent edits, or a path (for imported vaults). A declaration without
-  `path` applies to the folder whose slug matches, wherever it sits.
+  its folder name and its title is taken from the hub. Declaring a topic
+  lets the user set a title, a description, or a path (for imported
+  vaults). A declaration without `path` applies to the folder whose slug
+  matches, wherever it sits.
 - Topic slugs match `^[a-z0-9][a-z0-9-]{0,63}$`.
 - Agent profile names are host ids ([[08-2-host-ids|08]]).
+  The write capabilities are `episodes`, `edit`, `propose_rules`, and
+  `harvest` ([[07-1-agent-profiles|07 §1]]).
+- Settings from 0.1 that format 3 dropped (`[consolidate]` `review`,
+  `review_external`, `max_supersede_ratio`; topic `review` and
+  `agent_edits`) are unknown keys: preserved, reported by lint (BW109), and
+  ignored. The old capability names `consolidate` and `review` load and are
+  ignored.

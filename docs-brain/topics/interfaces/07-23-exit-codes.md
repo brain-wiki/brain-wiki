@@ -11,10 +11,10 @@ source: "docs/design/07-interfaces.md#23-exit-codes"
 | Code | Meaning |
 |---|---|
 | 0 | Success |
-| 1 | The command ran and found problems (lint errors, invalid ops, review required), or a path could not be read or written (`os_error`) |
+| 1 | The command ran and found problems (lint or validate errors, a change a run's lint gate refused, a rebase conflict in `brain commit`), or a path could not be read or written (`os_error`) |
 | 2 | Usage error: an unknown command or option, a bad value, or a flag the command would ignore. Parse errors print the command's usage line, then `brain <command>: error: <message>`; `brain` alone prints the help |
 | 3 | Not found (brain, note, run) |
-| 4 | Conflict: `conflict` (a name or file already there, an edited block), `stale` (notes changed since prepare, files changed since a run), `expired`, or `busy` (lock timeout) |
+| 4 | Conflict: `conflict` (a name or file already there, an edited block), `stale` (files changed since a run read them or since the run being undone), `expired`, or `busy` (lock timeout) |
 | 5 | Forbidden by profile or host limits |
 | 10 | Internal error (bug): one line, `internal: unexpected error; details are in <log>`, with the trace in `<state>/logs/brain-wiki.log` |
 

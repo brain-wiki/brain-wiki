@@ -31,10 +31,13 @@ write to, stored as plain Markdown in a folder the user owns.
 
 A **brain** is a directory of Markdown files with a small manifest. It holds:
 
-- **Topic notes**: curated, self-contained pages grouped into topics, each
-  topic with a short hub page.
-- **Typed relations** between notes, written as a bullet list at the bottom
-  of each note.
+- **Topic notes**: curated, self-contained Markdown pages grouped into
+  topic folders, each topic with a short hub page. Frontmatter holds
+  metadata; facts and wikilinks to other notes are ordinary Markdown in the
+  body.
+- **Supersession**: a note that a newer note replaced says so in its
+  metadata (`status: superseded`, `bw-superseded_by`), and retrieval always
+  returns the newer note with it.
 - **An inbox of episodes**: raw, append-only observations written by agents
   (or the user) during work.
 - **Rules**: a short list of standing directives from the user.

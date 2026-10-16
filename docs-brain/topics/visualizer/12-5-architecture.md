@@ -43,7 +43,8 @@ browser   ─► built app (index.html + assets/) ─► /api/world, /api/topic/
   bundle.
 - **Exports:** `--export brain.html` writes one self-contained file: the
   same app with every asset inlined (CSP hashes) and the world plus every
-  topic embedded; the inspector shows what the topic data carries, without
-  claim text, and the preview says note text is not included.
+  topic embedded; the inspector shows what the topic data carries (links
+  and backlinks among the mapped notes, no summary or banners) and says note
+  text is not included.
   `--export graph.json` and `--export graph.graphml` are unchanged, for
   other tools. Exports contain every note title.

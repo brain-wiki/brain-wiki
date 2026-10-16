@@ -68,13 +68,13 @@ starts it at once.
 |---|---|
 | `brain_list` | Which brains this agent may use, what each holds, which is the default here |
 | `brain_orient` | One brain's briefing: rules, what it holds, topics, recent changes, inbox, example queries |
-| `brain_search` | Search, or browse with filters (type, tag, property, date) and `sort: recent`; warnings when a hit is superseded or contradicted |
-| `brain_read` | Read a note, hub, or episode, with the path of every related note |
-| `brain_neighbors` | Follow a note's relations: what a release shipped, what depends on a decision |
-| `brain_check` | Validate and record notes the agent edited directly (needs `edit`) |
-| `brain_log_episode` | Record durable learnings in the inbox |
+| `brain_search` | Search, or browse with filters (type, tag, property, date) and `sort: recent`; a warning and the newer note when a hit is superseded |
+| `brain_read` | Read a note, hub, or episode, with the path of every note it links to and every note linking to it |
+| `brain_neighbors` | Follow a note's links and backlinks, up to 3 hops |
+| `brain_validate` | Check the frontmatter of notes the agent created or edited |
+| `brain_log_episode` | Record a learning in the inbox when it has no place in a note yet |
 | `brain_propose_rule` | Propose a rule; you confirm before anything is written |
-| `brain_consolidate_prepare` / `_apply` | Fold the inbox into notes |
+| `brain_consolidate_prepare` / `_done` | Fold the inbox into notes: gather episodes, then archive them once the notes are edited (`_done` needs `edit`) |
 | `brain_harvest_prepare` / `_apply` | Turn past sessions into episodes |
 | `brain_read_origin` | Show the conversation an episode came from |
 
@@ -83,34 +83,36 @@ block. The plugin also ships three skills: `brain` (everyday use), `brain-setup`
 
 ## Direct edits
 
-An agent whose profile includes `edit` may correct a note directly (a
-person's new role, a wrong fact) and then run `brain_check`. The check
-compares the file with the note's last recorded version and refuses deleted
-or reworded claims (claims change only by superseding), protected files,
-and large removals. A clean check is recorded as a run, so
-`brain undo` reverses it; claims the agent added are marked unverified.
-Per topic, `agent_edits = "review"` sends agent edits to you
-(`brain review accept`), and `"deny"` refuses them.
+An agent whose profile includes `edit` writes knowledge straight into notes
+with its own file tools: it updates a note (a person's new role, a wrong
+fact) or creates one under `topics/<topic>/`, then runs `brain_validate` and
+fixes what it reports. Orientation shows such an agent the frontmatter
+fields and the suggested body shape.
 
-Your own edits in Obsidian or an editor are never blocked. `brain check`
-lists notes that differ from their recorded version, `brain check --adopt
-PATH` records one as yours (with an undo point), and `brain restore PATH`
-puts a note back.
+- Agents never edit `rules.md`, `brain.toml`, `log.md`, `AGENTS.md`, or
+  anything under `inbox/`, `archive/`, or `reports/`; `brain validate`
+  reports it when one of those is passed to it.
+- Direct edits are not runs, so `brain undo` does not reverse them. In a git
+  brain, `brain commit` (or its scheduled job) records them, and git
+  reverts them ([Maintenance](maintenance.md#commit-direct-edits)). Without
+  git there is no record of them.
+- Your own edits in Obsidian or an editor follow the same path.
 
 ## Which agent may do what
 
 Each agent acts with a **profile** in `brain.toml`. Every agent reads the
-whole brain; by default it may log episodes and correct notes it checks with
-`brain check`. Grant more per host:
+whole brain; by default it may log episodes and edit notes. Grant more per
+host:
 
 ```sh
 brain agents                                       # what each app may do
-brain agents grant claude-code consolidate propose_rules --dry-run
-brain agents grant claude-code consolidate propose_rules
+brain agents grant claude-code propose_rules --dry-run
+brain agents grant claude-code propose_rules
 brain agents revoke claude-code propose_rules
 ```
 
-Each change is a run that `brain undo` reverses. When an agent asks for
+Each change is a run that `brain undo` reverses, and applies to the agent's
+next tool call. When an agent asks for
 something its profile does not allow, brain-wiki refuses and names the
 `brain agents grant` command that allows it. The capabilities, and
 how to limit which brains an agent may use, are in
@@ -126,7 +128,7 @@ brain harvest enable claude-code codex   # or disable; also: antigravity
 brain harvest --status           # per host: on or off, sessions not yet harvested
 brain harvest                    # dry run: sessions, target brain, token estimate
 brain harvest --apply            # distill with the preset above (--distill to override)
-brain harvest --apply --raw      # no model: excerpts that consolidation distills later
+brain harvest --apply --raw      # no model: excerpts to distill when consolidating
 ```
 
 Inside an agent, "harvest my recent sessions" runs the same steps with the

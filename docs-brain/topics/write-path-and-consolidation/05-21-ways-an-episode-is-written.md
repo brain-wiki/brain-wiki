@@ -26,6 +26,11 @@ the original conversation later (§4.6). They never contain file paths, and
 an episode must make sense without its origin, because hosts delete old
 transcripts.
 
+An episode's `## Claims`, `## Negative findings`, and `## Open questions`
+sections are body text written from the writer's arguments
+([[02-9-episodes|02 §9]]). Nothing parses them into
+structured facts; consolidation reads them like any other prose.
+
 All writers go through one function, `write_episode()`, which:
 
 1. Mints the ULID and path (UTC year and month).
@@ -44,6 +49,11 @@ All writers go through one function, `write_episode()`, which:
    atomically, leaves a marker for the episode in the device's state
    directory (`written/<id>`, holding the content's hash), then updates the
    index (write-through).
+
+Episode writes are not runs: they create one new file and change nothing
+else, so there is nothing to undo, and they are not committed on their own.
+A `brain commit` snapshot (§5) or the `consolidate --done` run that archives
+the episode puts it in git.
 
 The scanner trusts an episode's declared provenance only when its marker
 matches its content. Anything else under `inbox/episodes/` (written by

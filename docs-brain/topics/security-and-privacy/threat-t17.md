@@ -8,8 +8,8 @@ source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T17: A direct agent edit damages a note
 
-**A direct agent edit damages a note.** A manipulated or careless agent rewrites a note or drops claims.
+**A direct agent edit damages a note.** A manipulated or careless agent rewrites a note or drops facts. Direct edits are the main write path in format 3.
 
-**Mitigations:** Only profiles with `edit` (agents have it by default; a profile can drop it), and only in topics whose `agent_edits` allows it; `brain check` refuses deleted or reworded claims (they must be superseded), protected files, and large deletions; every recorded edit is a run with an undo point and a git commit; claims an agent adds are marked unverified ([[05-23-checked-agent-edits|05 §2.3]]).
+**Mitigations:** Only profiles with `edit` are told they may edit (agents have it by default; a profile can drop it), and brain-wiki's own writers enforce it. `brain validate` checks frontmatter and reports protected files (BW121). Recovery is git: `brain commit` snapshots direct edits, by hand or from a job `brain schedule` installs, and setup recommends git and offers the job ([[05-23-direct-edits|05 §2.3]], [[03-62-v01-local-folder-with-optional-git|03 §6.2]]).
 
-**Residual risk:** An agent can skip `brain check`: the change then shows as a pending edit with its diff until it is adopted or restored, but nothing blocks the write itself, because files are the user's.
+**Residual risk:** There is no loss guard: nothing blocks deleting or rewording facts, because files are the user's. Edits made since the last snapshot have no history yet, and a brain without git has no recovery for direct edits.

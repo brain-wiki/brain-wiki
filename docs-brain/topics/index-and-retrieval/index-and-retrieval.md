@@ -6,7 +6,7 @@ source: "docs/design/04-index-and-retrieval.md"
 ---
 # Index and retrieval
 
-SQLite schema, freshness, search ranking, guard co-retrieval, read, orientation
+SQLite schema, freshness, search ranking, the supersession guard, read, neighbors, orientation
 
 Generated from `docs/design/04-index-and-retrieval.md`.
 
@@ -15,7 +15,7 @@ Generated from `docs/design/04-index-and-retrieval.md`.
 - [[04-2-location-and-lifecycle]]: Location and lifecycle
 - [[04-3-schema]]: Schema
 - [[04-4-freshness]]: Freshness
-- [[04-5-guard-co-retrieval]]: Guard co-retrieval
+- [[04-5-supersession-guard]]: Supersession guard (Index and retrieval)
 - [[04-6-search]]: Search
   - [[04-61-inputs]]: Inputs
   - [[04-62-matching]]: Matching

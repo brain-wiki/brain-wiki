@@ -17,12 +17,15 @@ source: "docs/design/01-overview.md#4-non-goals-for-v01"
   A direct-API backend is a later addition behind the same interface.
 - **Scheduled maintenance.** Harvest and consolidation run when the user
   asks; the scheduled version was removed before 0.1
-  ([[proposal-scheduled-maintenance|proposal]]).
-- **Required embeddings.** Search is lexical (SQLite FTS5) plus graph
-  expansion. Vector search is an optional later addition.
+  ([[proposal-scheduled-maintenance|proposal]]). The one scheduled
+  job, `brain schedule`, only commits direct edits to git.
+- **Required embeddings.** Search is lexical (SQLite FTS5) plus the
+  supersession guard. Vector search is an optional later addition.
 - **Remote storage backends.** v0.1 supports a local directory, optionally a
-  git repo. Private git remotes and object storage (GCS, S3 via fsspec) are
-  designed in a [[proposal-remote-sync|proposal]] but not built.
+  git repo; `brain commit` can fetch from and push to the repo's own
+  `origin`. Managed private git remotes and object storage (GCS, S3 via
+  fsspec) are designed in a [[proposal-remote-sync|proposal]] but not
+  built.
 - **Automatic web ingestion, email or chat importers.** Importers in v0.1
   cover existing Markdown folders (including Obsidian vaults) only.
 - **Encryption.** Documented recipes only ([[security-and-privacy|10]]).

@@ -34,7 +34,8 @@ Host ids: `claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`,
 - **Permissions:** plugin tools are named
   `mcp__plugin_brain-wiki_brain-wiki__<tool>`. To stop prompts for the read
   tools, add `mcp__plugin_brain-wiki_brain-wiki__brain_search` (and
-  `…__brain_list`, `…__brain_orient`, `…__brain_read`, `…__brain_neighbors`)
+  `…__brain_list`, `…__brain_orient`, `…__brain_read`, `…__brain_neighbors`,
+  `…__brain_validate`)
   to `permissions.allow` in the user's
   settings, or choose "always allow" when asked. `brain_propose_rule` always
   asks the user; that is intended.

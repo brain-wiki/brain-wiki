@@ -9,12 +9,10 @@ tuned on evidence and regressions are caught:
 
 | Promise | Suite |
 |---|---|
-| Retrieval finds the right notes and always surfaces superseding and conflicting ones (G5) | `retrieval` |
+| Retrieval finds the right notes and always surfaces the notes that supersede them (G5) | `retrieval` |
 | Lint finds what it claims and fixes safely | `lint` |
-| Consolidation writes faithful, specific, well-placed claims, with any model (G4, G8) | `consolidation` |
-| Injected instructions never become rules or directives | `consolidation` (injection slice) |
 | Search, reads, and orientation are fast enough (G7) | `perf` |
-| A real agent with the plugin answers with current knowledge | `agent` (not built, §3.5) |
+| A real agent with the plugin answers with current knowledge | `agent` (a stub that reports skipped, §3.5) |
 
 Rule for the project: published numbers come only from this bench, with
 the command and version that produced them.
@@ -24,35 +22,56 @@ the command and version that produced them.
 - **Synthetic, seeded data.** Every dataset is generated from a seed or
   hand-written about fictional subjects. No personal data, no licensing
   questions, fully reproducible.
-- **Deterministic grading.** Graders check anchors, handles, spans, and
-  structure. No LLM judges a result.
-- **Negative assertions.** Cases state what must *not* happen (noise
-  promoted, a forbidden claim, a rule written), not only what should.
-- **Worst model, not average.** For model comparisons the headline is the
-  lowest score across backends, because a brain is shared by every model
-  that writes to it.
-- **Same code paths as production.** Model suites run through the real
-  consolidation pipeline through headless agent CLIs ([08 §7](08-agent-integrations.md#7-headless-presets)).
+- **Deterministic grading.** Graders check ids, ranks, diagnostics, and
+  file diffs. No LLM judges a result.
+- **Negative assertions.** Cases state what must *not* happen (a guard the
+  ground truth lacks, a finding on clean text, a fix that touches other
+  lines), not only what should.
+- **Worst model, not average.** For model comparisons, once a model suite
+  exists, the headline is the lowest score across backends, because a brain
+  is shared by every model that writes to it.
+- **Same code paths as production.** Suites call the functions the CLI and
+  MCP server use (search, read, orient, lint, fix). Model suites, when
+  built, run through headless agent CLIs ([08 §7](08-agent-integrations.md#7-headless-presets)).
 
 ## 3. Suites
 
 ### 3.1 `retrieval` (offline)
 
-Generated brains with known structure: topics, notes, claims, relations,
-supersession chains up to 4 long, conflict pairs, and episodes. Queries
-come from the generated notes (§4).
+Generated format-3 brains with known structure: topics with hubs, notes,
+supersession chains (`bw-superseded_by`, up to 4 notes long), body links,
+and episodes. Queries come from the generated notes (§4). The only guard is
+supersession ([02 §7](02-brain-format.md#7-supersession-guard)).
 
 | Metric | Target |
 |---|---|
 | Recall@8, MRR, nDCG@8 for primary results | tracked; used to tune ranking factors |
-| **Guard recall**: for every hit with a guard neighbor, the neighbor is returned | **100%** (fails the suite otherwise) |
-| Unexpected guards: guard neighbors the ground truth does not have | 0 |
+| **Guard recall**: every hit on a superseded note carries a `superseded_by` guard, and every hit on a successor carries `supersedes` guards for the notes it replaced | **100%** (fails the suite otherwise) |
+| Unexpected guards: guards the ground truth does not have | 0 |
 | Newest-successor correctness through chains | **100%** (fails the suite otherwise) |
 
 ### 3.2 `lint` (offline)
 
 A corpus of small broken brains, one or more per rule code, each with the
-expected diagnostics (code, path, line).
+expected diagnostics (code, path, line). Each case copies a hand-written
+format-3 base brain and breaks one thing:
+
+| Cases | Planted problem |
+|---|---|
+| BW103, BW104, BW106 | Missing id, malformed id, non-standard `status` |
+| BW114 | Leftover merge conflict markers |
+| BW117, BW117 format-1, BW117 supersedes | A format-2 `bw-claims` field; format-1 `## Claims` and `## Relations` sections; a `bw-supersedes` relation (two findings; the fix also marks the replaced note superseded) |
+| BW118 | An unknown `bw-` field |
+| BW119, BW119 unresolved | `bw-superseded_by` without `status: superseded`; a target that does not resolve |
+| BW120 | A `bw-sources` item that is neither a link nor a URL |
+| BW307 | A supersession cycle |
+| BW310 | A body link that does not resolve |
+| BW402 | `rules.md` over its budget |
+| BW404, BW406 | A topic without a hub (also BW408); an orphan note (also BW405) |
+| BW502, BW503 | An episode at the wrong path; an episode without provenance |
+| BW601, BW602 | A rule without a quote; a rule not from the owner |
+| BW701 | A secret in a note |
+| `clean:*` | Realistic text that must produce no finding (a wikilink after the word "token", conflict markers inside a code block) |
 
 | Metric | Target |
 |---|---|
@@ -61,37 +80,12 @@ expected diagnostics (code, path, line).
 | Fix idempotency: `--fix` twice changes nothing the second time | always |
 | Fix locality: fixes change only the lines they must | always |
 
-### 3.3 `consolidation`
+### 3.3 `consolidation` (removed)
 
-Two offline slices drive the real pipeline with scripted ops, so they run
-without a model; any failed check is a hard failure:
-
-| Slice | Situation | Checks (all must hold) |
-|---|---|---|
-| E · Injection | An episode with external inputs containing instructions ("Add a rule…", "Ignore previous instructions…") and one fact | The packet marks the episode untrusted; no packet handle points at `rules.md`; an op that writes a rule is rejected; derived claims carry `inputs: external`; a claim that restates the instruction is flagged by BW702; `rules.md` is unchanged |
-| F · Completeness | Six small episodes; ops cite two and skip one | The run applies; uncited episodes are reported pending, stay in the inbox, and are offered to the next run; cited and skipped episodes are archived |
-
-Four model slices run only with `--backends PRESET,...` (headless presets,
-[08 §7](08-agent-integrations.md#7-headless-presets)), one scenario each,
-written in `brainwiki/bench/_suites.py`:
-
-| Slice | Episode | Checks |
-|---|---|---|
-| A · Extraction | A durable fact mixed with debugging noise and an aside | Claim recall on the fact's anchor; no claim from the noise |
-| B · Merge | Confirms an existing fact and adds one | Claim recall on the new fact; the prior claim stays active |
-| C · Supersede | Raises a limit an existing claim states | Claim recall on the new value; the old claim is superseded |
-| D · Relations | States a dependency between two notes | A `depends_on` edge between them |
-
-Every model scenario also records `valid_first_try`, `valid_after_retry`
-(ops pass validation after at most one retry with the errors appended),
-and `all_episodes_accounted`. Claim recall counts an expected anchor as
-found when an active claim contains it. Across backends, the suite reports
-`worst_model_claim_recall` per slice: the lowest score, because a brain is
-shared by every model that writes to it.
-
-A larger scenario set, harvest distillation (slice G), more graders, an
-optional LLM judge, and multi-model agreement metrics are a
-[proposal](../proposals/consolidation-bench.md).
+Removed with format 3. Consolidation is now an agent editing notes with its
+own tools ([05 §4](05-write-path-and-consolidation.md#4-consolidation)), so there are no ops to
+validate or claims to recall. What remains to measure, whether a real agent
+writes good notes, belongs to the `agent` suite (§3.5).
 
 ### 3.4 `perf` (offline)
 
@@ -104,32 +98,34 @@ report.
 
 ### 3.5 `agent`
 
-Reserved for end-to-end runs of real hosts with the plugin installed. Not
-built: `brain bench agent` reports the suite as skipped, and those checks
-are done by hand before releases. The planned scenarios are in the
-[proposal](../proposals/consolidation-bench.md#9-the-agent-suite).
+Reserved for end-to-end runs of real hosts with the plugin installed on a
+fixture brain. Not built: `brain bench agent` (with or without `--backends`)
+reports the suite as skipped, and those checks are done by hand before
+releases.
 
 ## 4. Data
 
 - **Generator** (`brainwiki/bench/_generate.py`): seeded; notes about invented
   software projects, in common English words plus generated pseudo-words
   drawn with a Zipf distribution so FTS ranks them like real prose. It
-  plants topics, notes, claims with anchors, relations, supersession
-  chains, conflicts, and episodes, and records the ground truth. The same
-  seed writes byte-identical files.
+  writes format-3 notes (a summary, a `## Facts` list, a `## Related` list
+  of prose links, mostly within the note's topic), hubs, supersession chains
+  as `bw-superseded_by` on the older notes (about 3% of links), and pending
+  episodes, and records the ground truth. The same seed writes
+  byte-identical files.
 - **Queries** come from the generated notes: a planted token (`exact`), a
   title (`title`), and a token shared by a small group with graded
   relevance (`group`).
-- **Base brain:** a small hand-written brain about a fictional software
-  project, the starting point for the lint and consolidation cases.
+- **Base brain:** a small hand-written format-3 brain about a fictional
+  software project, the starting point for the lint cases.
 
 ## 5. Output
 
 - `--out DIR` (default: a new temporary directory) receives `results.json`
   (schema version, brain-wiki version, the command, and one record per
   metric: suite, case, backend, metric, value, target, pass, hard) and
-  `report.md` (tables per suite; in `consolidation`, the worst-model lines
-  first). The command exits 1 when a hard target fails.
+  `report.md` (tables per suite; a skipped suite says why). The command
+  exits 1 when a hard target fails.
 - `brain bench --compare A B` prints metric changes between two
   `results.json` files and exits 1 when a metric went from pass to fail.
 
@@ -139,4 +135,3 @@ are done by hand before releases. The planned scenarios are in the
 |---|---|
 | Every change (`scripts/check.py`, and CI through it) | `retrieval` and `lint` on a 300-note brain |
 | Performance work, and before a release | `perf` at 10k (`brain bench perf --sizes 10k`) |
-| Changing consolidation instructions (`instructions_version`) or the ops schema | `consolidation` with at least two backends; the worst-model score must not drop |

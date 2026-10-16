@@ -25,12 +25,13 @@ Generated from `docs/design/14-roadmap-and-open-questions.md`.
   - [[m10]]: M10: Visualizer
   - [[m11]]: M11: Release readiness
   - [[m12]]: M12: Agent context and discovery (D25–D28)
-  - [[14-11-status-2026-10-11]]: Status (2026-10-11)
+  - [[m13]]: M13: Format 3 (D32–D35)
+  - [[14-11-status-2026-10-15]]: Status (2026-10-15)
 - [[14-2-decisions-needed-from-the-maintainer]]: Decisions needed from the maintainer
   - [[q1]]: Q1: How should session capture work when enabled?
   - [[q2]]: Q2: Should sources with external inputs route consolidation runs to review…
   - [[q3]]: Q3: Privacy inside a brain
-  - [[q4]]: Q4: Hidden guard counts reveal that a restricted superseding or conflicting…
+  - [[q4]]: Q4: Hidden guard counts reveal that a restricted superseding note exists
   - [[q5]]: Q5: Windows support level for v0.1
   - [[q6]]: Q6: npm launcher (npx brain-wiki)
   - [[q7]]: Q7: Publishing identity

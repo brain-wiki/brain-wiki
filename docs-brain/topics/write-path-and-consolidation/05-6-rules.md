@@ -15,7 +15,8 @@ session. They get the strictest path.
 |---|---|
 | `brain rules add "…"` | The person running the CLI is the user. Written immediately, `origin: owner`, `quote` defaults to the text. With `--as <host>`, it needs `propose_rules` and is saved as a proposal instead ([[07-1-agent-profiles\|07 §1]]). |
 | MCP `brain_propose_rule {text, user_quote, replaces?}` | Requires `propose_rules` in the profile's `write` list. The server asks the user to confirm, showing the exact rule: through an input-required result carrying an elicitation request on 2026-07-28 connections, or a pushed elicitation on older sessions, whichever the client advertises. The tool is also annotated as destructive and, for hosts that honor it, as requiring user interaction (`_meta["anthropic/requiresUserInteraction"]`), so the call itself is approved by the user. Confirmed → written with `origin: owner`, `via: mcp`. Declined → nothing. If the client supports neither form of confirmation, the rule is written as a proposal (`inbox/proposals/rule-<id>.md`) and orientation shows "1 rule awaiting confirmation: `brain rules accept <id>`". |
-| Consolidation | Never. If an episode looks like a preference ("user prefers X"), the instructions say to record it as a claim in a `preferences` topic; promoting it to a rule is a separate, user-confirmed step. |
+| Direct edits | Never: `rules.md` is protected (§2.3), and `brain validate` reports an edit to it (BW121). |
+| Consolidation | Never. If an episode looks like a preference ("user prefers X"), the guidance says to record it in a note in a `preferences` topic; promoting it to a rule is a separate, user-confirmed step. |
 
 Replacing a rule (`replaces: r-…`) moves the old line to `archive/rules.md`.
 Budget overflow is an error that tells the user which rules are longest.

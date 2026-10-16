@@ -16,3 +16,6 @@ source: "docs/design/03-config-and-storage.md#8-failure-modes"
 | `brain.toml` has a newer `format` | Refused with a message to upgrade brain-wiki ([[02-13-format-versioning\|02 §13]]). |
 | State directory lost | Undo history gone; everything else works. |
 | Git commit fails (hook rejects, detached HEAD, merge in progress) | The write itself already succeeded; the run is recorded with `git_commit: null` and the error; `brain doctor` lists uncommitted runs. |
+| `brain commit` hits a rebase conflict, or a push is rejected twice | Exit 1 naming the files; the rebase is aborted, so commits and files are as before. Later rounds commit locally and report it until the user resolves it. |
+| `brain commit` cannot reach origin (offline, credentials) | The local commit stays; outcome `offline`, exit 0 with a warning; `brain doctor` reports a brain that has not synced for a day. |
+| A commit job names a brain that is no longer registered | The job's `brain commit` fails; `brain doctor` reports the job and how to remove it. |

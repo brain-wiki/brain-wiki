@@ -14,40 +14,41 @@ guessing.
 
 | Mode | Returns |
 |---|---|
-| `outline` (default for hubs) | Frontmatter summary, headings, active claims (each with its `inputs`, and `[unverified]` in the text when not `local`), relations with resolved titles |
-| `full` (default for notes) | The body, then the current claims (unverified ones marked) and a count of superseded ones; no metadata |
-| `section` | One heading's content; `claims` gives the claims block. Asking for a `section` implies this mode; the mode without a section, or a section with another mode, is a usage error |
-| `raw` | The file exactly as on disk (for agents about to edit it, [[05-23-checked-agent-edits\|05 §2.3]]); an episode stays in its untrusted envelope |
+| `outline` (default for hubs) | The summary (the first paragraph, up to 600 characters), headings, links, and backlinks |
+| `full` (default for notes) | The body without frontmatter or HTML comments, then the "Links:" and "Linked from:" handle lists below a `---` line |
+| `section` | One heading's content, matched by heading text, case-insensitively. Asking for a `section` implies this mode; the mode without a section, or a section with another mode, is a usage error |
+| `raw` | The file exactly as on disk, for agents about to edit it; an episode stays in its untrusted envelope |
 
-Every relation and backlink in the result carries its handle: `id` and
-`path` in the structured result, and the path after the title in the text,
-so the next call is exact:
+Every mode except `raw` starts with the banners from §5 (a `raw` read still
+carries them in the structured result, but its text is the file alone). An
+outline:
 
 ```
-Relations:
-- part_of "Gateway" (topics/gateway/index.md)
-- depends_on "Upgrade bundled npm to 12.1.0" (topics/install/pr-…md)
+↳ supersedes "Use ripgrep for search" (topics/search/ripgrep.md).
 
+# Use SQLite FTS5 for local search
+decision · active · topics/search/fts5.md
+
+Lumen searches notes with SQLite FTS5 instead of shelling out to ripgrep.
+
+Sections: Use SQLite FTS5 for local search
+
+Links:
+- links_to "SQLite version policy" (topics/search/sqlite-versions.md)
 Linked from:
-- related_to "Kai Keller" (topics/people/person-kai-keller.md)
+- supersedes "Use ripgrep for search" (topics/search/ripgrep.md)
+- linked_from "Search" (topics/search/index.md)
 ```
 
-`full` mode appends the same handles after the note, below a `---` line,
-since the file's own wikilinks carry no paths. Backlinks list typed
-relations before plain links, at most 10, with a count and a pointer to
-`brain_neighbors` for the rest.
+Every link and backlink carries its handle: the path after the title in
+the text, and in the structured result:
 
-Guard banners show at most three in full, then a count with a pointer to
-`brain_neighbors` for the rest, so a note with many conflicts does not bury
-its own content. Search results render their banners the same way.
+| Field | Items | Order and limit |
+|---|---|---|
+| `links` | `{relation, target, id, title, path, resolved}`; `relation` is `superseded_by`, `cites`, or `links_to`; `target` is the link as written; `id`, `title`, and `path` are null when it does not resolve | Metadata links first, then body links in file order; one entry per target. Text shows 20, then a pointer to `brain_neighbors("<path>", direction="out")` |
+| `backlinks` | `{id, title, path, relation}`; `relation` is `supersedes`, `cited_by`, or `linked_from` | Supersession first, then most recently updated; one entry per note; at most 10, with `backlinks_total` and a pointer to `brain_neighbors("<path>", direction="in")` |
 
-Every mode except `raw` starts with banners computed by §5 (a `raw` read
-still carries them in the structured result, but its text is the file alone):
-
-```
-⚠ SUPERSEDED by "Use SQLite FTS5 for local search" (topics/search/fts5.md), 2026-10-09
-⚠ CONFLICTS WITH "Vector-only search proposal" (unless: embeddings enabled)
-```
-
-Claims whose `inputs` are `external` or `unknown` are shown with an
-`[unverified]` marker, so an agent can weigh them accordingly.
+`full` mode carries the same `links` and `backlinks`; it appends the handle
+lists to notes and hubs, since the file's own wikilinks carry no paths. An
+episode's result adds its `agent`, `inputs`, `origin`, `session`, and
+`origin_turns`.

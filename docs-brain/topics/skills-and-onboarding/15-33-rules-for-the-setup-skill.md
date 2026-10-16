@@ -10,8 +10,8 @@ source: "docs/design/15-skills-and-onboarding.md#33-rules-for-the-setup-skill"
 
 - **Every step is a subcommand.** `brain setup` is only a convenience for
   terminal users: each change it makes is a `brain` subcommand (`init`,
-  `import --overlay`, `connect`, `brains limit`, `agents grant`,
-  `harvest enable|route`), calling the same code, so an agent following the
+  `import --overlay`, `schedule add commit`, `connect`, `brains limit`,
+  `agents grant`, `harvest enable|route`), calling the same code, so an agent following the
   guide can do all of it. The guide changes settings only through those
   commands, never by editing `brain.toml` or the user config.
 - **One decision at a time, batched sensibly.** Ask the few questions a step
@@ -24,5 +24,5 @@ source: "docs/design/15-skills-and-onboarding.md#33-rules-for-the-setup-skill"
   only; later phases are offered, not applied.
 - **Resumable.** If the session ends halfway, the next run of setup picks up
   from `doctor`'s view of the state.
-- **Plain language.** No internal terms (provenance, profiles, ops) unless the
+- **Plain language.** No internal terms (provenance, profiles, frontmatter) unless the
   user asks; the references hold the details.

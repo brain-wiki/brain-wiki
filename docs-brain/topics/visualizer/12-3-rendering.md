@@ -13,9 +13,9 @@ source: "docs/design/12-visualizer.md#3-rendering"
   (how much the note holds: the fourth root of its lines), color (topic
   hue), brightness (recency), ghosting
   (superseded or archived), and a halo ring per health flag, all in one
-  shader. Trails are solid fat lines; directed relations add slow pulses
-  running along them (prerequisite → dependent, old → new), so motion shows
-  direction without breaking the line into dashes.
+  shader. Trails are solid fat lines; supersession adds slow pulses running
+  along them (old → new), so motion shows direction without breaking the
+  line into dashes.
 - **Post-processing:** bloom, ACES tone mapping, vignette, depth fog, a
   starfield backdrop. Camera moves are eased flights, not jumps.
 - **Navigation is a 2.5D map,** not a free 3D camera: the view keeps a fixed
@@ -68,15 +68,15 @@ source: "docs/design/12-visualizer.md#3-rendering"
   since every folder stays inside its wedge, no link crosses another or runs
   through a folder it does not join. Each nesting level sits one tier farther
   back from the camera, straight along the view, so depth never moves a star
-  on screen. Typed links are drawn but do not move stars outside their
+  on screen. Links are drawn but do not move stars outside their
   folder. The same brain always produces the same map, and no layout ever
   spans the whole brain.
 - **Labels say what things are.** The galaxy is the look, not the vocabulary:
   the interface says Overview, Group (of topics), Topic, and Note, never
   galaxy or constellation; *issues*, not flags; *session captures*, not
-  episodes; *Facts*, not claims; the topic index, not the hub. Relations read
-  as plain verbs (Part of, Contains, Depends on, Enables, Conflicts with,
-  Replaces, Replaced by, Related to), and every number names its unit.
+  episodes; *Sources*, not `bw-sources`; the topic index, not the hub. Links
+  read as plain verbs (Links to, Replaced by, Cites; from the other end: links
+  here, replaced by this, cites this), and every number names its unit.
 - **The hierarchy follows the folders.** Inside a topic, the map's tree is
   the folder tree, as Obsidian shows it: a sub-folder is a branch, and its
   folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is its core, where
@@ -84,15 +84,15 @@ source: "docs/design/12-visualizer.md#3-rendering"
   note at the core, or, when it holds only sub-folders, an empty junction.
   Each folder is labeled just above its topmost note. A folder's label
   drops the leading ` · ` parts its parent folders' titles already say
-  ("Lumen guide · Sync · Conflicts" reads "Conflicts"). A written `part_of` that
-  points elsewhere is a relation, not the note's place.
-- **Encoding of relations:**
+  ("Lumen guide · Sync · Conflicts" reads "Conflicts"). A link to a note in
+  another folder is a link, not the note's place.
+- **Encoding of links.** The folder tree is always drawn: one line from each
+  folder's core to its parent's, brighter at the parent end; a note's place
+  in its folder's cluster says which folder holds it. Links between notes
+  form three families, each a dock chip, all on by default:
 
-| Relation | Trail |
-|---|---|
-| `part_of` | The folder tree (the dock's **Folders** chip, on by default): one line from each folder's core to its parent's, brighter at the parent end; a note's place in its folder's cluster says which folder holds it, so notes draw no lines |
-| `depends_on` | Blue, flowing prerequisite → dependent |
-| `conflicts_with` | Red, always shown when either end is visible |
-| `supersedes` | Amber, flowing old → new |
-| `related_to` | Faint violet |
-| Wikilinks (`links_to`) | Hidden by default; a dock toggle |
+| Family (dock chip) | From | Trail |
+|---|---|---|
+| **Links** | A wikilink in the body (`links_to`) | Faint violet: the main structure |
+| **Replaces** | `bw-superseded_by` (`superseded_by`) | Amber, flowing old → new |
+| **Sources** | A `bw-sources` entry (`source`) | Muted grey-blue, faint, citing → cited |

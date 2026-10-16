@@ -11,16 +11,18 @@ source: "docs/design/01-overview.md#5-design-principles"
 1. **Files are the API.** The on-disk format is the contract. Every other
    component (index, MCP, plugins, visualizer) is a view over it and can be
    rebuilt or replaced.
-2. **The write path is the security boundary.** We cannot stop an agent
-   with file access from editing files. We can make the sanctioned paths
-   safe, make every curated change attributable and reversible, and make
-   lint catch what bypasses them.
-3. **The engine decides; the LLM proposes.** Everything that must be
-   correct (parsing, validation, budgets, provenance, undo) is deterministic
-   code. The LLM only produces structured proposals that the engine accepts
-   or rejects.
-4. **Change is first-class.** Supersession and contradiction are typed
-   relations with retrieval rules, not prose.
+2. **Validate edits; gate only what steers every session.** An agent with
+   file access edits files anyway, so direct edits are the sanctioned path:
+   `brain validate` checks them, git records them, and lint catches what
+   slips through. Rules, which load into every session, still need the
+   user's own words.
+3. **The engine checks; the LLM writes.** Everything that must be correct
+   (parsing, validation, budgets, episode provenance, undo) is
+   deterministic code. The LLM writes notes as Markdown. The engine reads
+   frontmatter, headings, and links, and never extracts meaning from the
+   body.
+4. **Change is first-class.** Supersession is metadata with a retrieval
+   rule, not prose.
 5. **Small core, optional edges.** The core is format + index + CLI + MCP.
    Plugins, the visualizer, the bench, and importers depend on the
    core, never the other way round.

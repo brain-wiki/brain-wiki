@@ -1,12 +1,16 @@
 # Remote sync and object storage
 
-Status: designed, not scheduled · Extends [03 §6](../design/03-config-and-storage.md#6-storage-and-sync)
+Status: designed, not scheduled; the git case is partly covered by `brain commit` · Extends [03 §6](../design/03-config-and-storage.md#6-storage-and-sync)
 
-Today a brain is a local folder, optionally a git work tree, and brain-wiki
-never pushes or pulls ([03 §6.2](../design/03-config-and-storage.md#62-v01-local-folder-with-optional-git)).
-This proposal adds remote replicas of that folder, built in order: a private
-git remote, then object storage (GCS, S3), then a server mode that reads a
-brain from object storage with no local copy.
+Today a brain is a local folder, optionally a git work tree
+([03 §6.2](../design/03-config-and-storage.md#62-v01-local-folder-with-optional-git)).
+For a git brain whose branch tracks a branch on `origin`, `brain commit`
+fetches and rebases, and with `--push` pushes
+([05 §5](../design/05-write-path-and-consolidation.md#5-committing-direct-edits)),
+so a private git remote already works as a replica. This proposal adds the
+rest, built in order: `brain sync` and `brain remote` for setting up and
+inspecting a git remote, then object storage (GCS, S3), then a server mode
+that reads a brain from object storage with no local copy.
 
 The local working copy stays the only thing the engine reads and writes
 ([03 §6.1](../design/03-config-and-storage.md#61-model-a-local-working-copy-always));

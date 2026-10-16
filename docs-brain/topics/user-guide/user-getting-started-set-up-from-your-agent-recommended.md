@@ -27,8 +27,9 @@ If the plugin is already installed from your agent's marketplace
 
 | Choice | What to know |
 |---|---|
-| Where the brain lives | An ordinary folder of Markdown you own, such as `~/brains/personal`. Keep it outside code repositories; a synced folder works. Or adopt an existing Obsidian vault in place ([[user-import\|Import]]). |
-| Git | Recommended. Every change becomes a commit you can see and revert, and you can push the brain to a private remote to use it on another machine. Without git, `brain undo` still works on this machine. |
+| Where the brain lives | An ordinary folder of Markdown you own, such as `~/brains/personal`. Keep it outside code repositories. Or adopt an existing Obsidian vault in place ([[user-import\|Import]]). |
+| Git | Strongly recommended. Agents edit notes directly, and git is how you see and revert those edits. To use the brain on another machine, push it to a private remote; do not sync a git brain with a sync tool ([[user-maintenance-share-a-brain-between-machines\|Maintenance]]). Without git, `brain undo` still reverses brain-wiki's own changes on this machine, but not direct edits. |
+| Commit job | With git: a job that runs `brain commit` every 15 minutes, so agents' edits land in history; whether it also pushes (off by default). |
 | Other agents | Which agent apps on this machine to connect ([[user-agents\|Agents]]). |
-| What agents may do | Log what they learn and correct notes: on by default. Consolidate the inbox and propose rules: off until you turn them on for an app. |
+| What agents may do | Log what they learn and edit notes: on by default. Propose rules and harvest their own sessions: off until you turn them on for an app. |
 | Harvest | Whether to turn past sessions into episodes, and which brain each project's sessions go to. |

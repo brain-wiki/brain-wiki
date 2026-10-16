@@ -6,7 +6,7 @@ source: "docs/design/11-eval-bench.md"
 ---
 # Eval bench
 
-Retrieval, lint, consolidation, and performance suites
+Retrieval, lint, and performance suites
 
 Generated from `docs/design/11-eval-bench.md`.
 
@@ -16,7 +16,7 @@ Generated from `docs/design/11-eval-bench.md`.
 - [[11-3-suites]]: Suites
   - [[11-31-retrieval-offline]]: `retrieval` (offline)
   - [[11-32-lint-offline]]: `lint` (offline)
-  - [[11-33-consolidation]]: `consolidation`
+  - [[11-33-consolidation-removed]]: `consolidation` (removed)
   - [[11-34-perf-offline]]: `perf` (offline)
   - [[11-35-agent]]: `agent`
 - [[11-4-data]]: Data (Eval bench)

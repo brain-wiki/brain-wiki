@@ -10,9 +10,9 @@ source: "docs/design/05-write-path-and-consolidation.md#11-alternatives-consider
 
 | Option | Why not |
 |---|---|
-| LLM rewrites the whole note | Silent loss; unreviewable diffs; no provenance per fact. |
-| LLM edits with file tools (search/replace) | Same risks, plus the model needs write access to the brain. |
-| Nightly multi-phase "dreaming" with clustering and saliency scores | Too much machinery to tune before there is data; the op-based run covers the need. Clustering can come back as a selection heuristic. |
-| Watermark file for progress | Extra state to sync and corrupt; location already encodes it (D13). |
-| Partial application of valid ops in a batch | Harder to reason about and undo; resubmission with errors is cheap. |
+| Validated operations as the only way knowledge enters notes (format 2) | A heavy protocol for the common case, and agents with file access write files anyway. The validator checked shape, not quality: a verbatim copy of a bundled episode line passed. |
+| Recording every direct edit as a run (checked edits, a loss guard) | Duplicates what git does, and needs a "last recorded version" per note that drifts from the files. |
+| `brain validate` commits or records on success | A check with side effects surprises agents; committing is a separate, schedulable step (§5). |
+| Nightly multi-phase "dreaming" with clustering and saliency scores | Too much machinery to tune before there is data. Clustering can come back as a selection heuristic for prepare. |
+| Watermark file for consolidation progress | Extra state to sync and corrupt; location already encodes it (D13). |
 | Built-in API clients | Requires keys, adds dependencies; the user's agent already has a model (D8). |

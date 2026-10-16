@@ -24,16 +24,16 @@ Later phases are optional, each one a separate undoable run:
 
 | Phase | Changes |
 |---|---|
-| `--phase 1` | Relation-like properties (`up`, `parent`, `related`, …) also become `bw-` relations (`bw-part_of`, `bw-related_to`, …); the properties are kept |
-| `--phase 2` | Notes without an `id` get one; non-standard `status` values (`draft`, `done`, …) move to `bw-stage` |
-| `--phase 3` | Topics without a hub get one; notes missing from their hub are listed |
+| `--phase 1` | Notes without an `id` get one; non-standard `status` values (`draft`, `done`, …) move to `bw-stage` |
+| `--phase 2` | Topics without a hub get one; notes missing from their hub are listed |
 
 ```sh
-brain import ~/notes --overlay --phase 2            # see the diff
-brain import ~/notes --overlay --phase 2 --apply
+brain import ~/notes --overlay --phase 1            # see the diff
+brain import ~/notes --overlay --phase 1 --apply
 ```
 
-The ids a phase 2 dry run shows are the ids the apply writes.
+The ids a phase 1 dry run shows are the ids the apply writes. Properties
+such as `up:` or `related:` stay yours and are left as they are.
 
 If the folder is a git repository with uncommitted changes, apply stops so
 the import diff stays clean.

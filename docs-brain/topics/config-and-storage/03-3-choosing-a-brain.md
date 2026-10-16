@@ -38,6 +38,6 @@ exist for this user, resolution silently continues with the next source.
 employer's knowledge and a personal life) differ in who owns them, where
 they may be stored, and which models may process them. Separate brains
 make that boundary a directory boundary, which every tool understands,
-and keep relations from crossing it. Every host that may use a brain reads
+and keep links from crossing it. Every host that may use a brain reads
 all of it; finer-grained privacy inside a brain is being redesigned
 ([[proposal-privacy|proposal]]).

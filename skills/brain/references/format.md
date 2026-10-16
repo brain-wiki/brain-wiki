@@ -1,114 +1,107 @@
 # brain-wiki file format (for direct edits)
 
-Use this when you edit a note directly. Afterwards run `brain_check` (or
-`brain check PATH`) on what you changed and fix what it reports. Never edit
-rules, episodes, or log.md.
+Use this when you create or edit a note directly. Afterwards run
+`brain_validate` (or `brain validate PATH…`) on what you changed and fix what
+it reports. Never edit `rules.md`, `brain.toml`, `log.md`, `AGENTS.md`, or
+anything under `inbox/`, `archive/`, or `reports/`.
 
 ## Notes
 
-A note is a Markdown file under `topics/`. Frontmatter values are scalars or
-lists of scalars; never nest mappings. Claims and relations live in
-frontmatter fields named `bw-…`; the body is free prose.
+A note is an ordinary Markdown page under `topics/<topic>/`. Frontmatter
+holds metadata only; what the note knows, and how it connects to other
+notes, is in the body.
 
 ```markdown
 ---
 id: 01J9Z7Q2V8K3M4N5P6R7S8T9U0
 type: decision
 title: Store Lumen attachments as files
-status: active
 tags: [storage]
+bw-sources:
+  - "[[archive/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7]]"
+  - "https://lumen.example/docs/attachments"
 created: 2026-10-07
 updated: 2026-10-09
-bw-part_of: "[[storage]]"
-bw-supersedes:
-  - "[[Store Lumen attachments as blobs]]"
-bw-claims:
-  - "Lumen stores attachments as files under attachments/. {id: c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; src: inbox/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7.md#L4-L6; origin: agent; at: 2026-10-07}"
-bw-claims-superseded:
-  - "Lumen stores attachments as SQLite blobs. {id: c-01J8XQ4R6S8T0V2W4X6Y8Z0A2B; by: c-01J9Z8A3QK7T0V5W2X4Y6Z8B1C; at: 2026-10-07}"
 ---
 # Store Lumen attachments as files
 
-Free prose: context, reasoning. Anything may go here.
+Lumen keeps attachments as files under attachments/, because backups of the
+SQLite database with blobs became slow.
+
+- Backing up the 4 GB database with blobs took about 20 minutes.
+- Tried compressing blobs in SQLite: size dropped only 8%, backups stayed slow.
+- Attachment paths are relative, which [[Obsidian compatibility]] requires.
+- Deduplicating attachments by content hash is still open.
+
+Replaces [[Store Lumen attachments as blobs]].
 ```
 
-- Never change an `id`. Ids are permanent, even when a file moves.
-- `status` is one of `active`, `superseded`, `archived`. Free workflow
-  states go in `bw-stage`.
-- Write `bw-` values double-quoted, one list item per line. Other `bw-`
-  fields than those listed here are errors.
-- To move or rename a note, use `brain mv SRC DST`, which also fixes links.
-- Topics nest: a folder with its own `index.md` hub inside a topic is a
-  sub-topic. Folders without a hub just organize notes. `brain mv` also moves a whole topic folder.
+## Frontmatter
 
-## Claims
+Values are scalars or lists of scalars; never nest mappings.
 
-One string in `bw-claims` per fact, with a trailing metadata block:
+| Field | Required | Values |
+|---|---|---|
+| `id` | yes | A ULID, unique in the brain. Never change one, even when the file moves. For a new note, `brain validate` reports a fresh one to add (`brain lint --fix` adds it itself). |
+| `type` | no (default `note`) | A lowercase word: `note`, `hub`, `decision`, `howto`, `person`, `project`, `reference`, … |
+| `title` | no | Default: the first `# ` heading, else the file name |
+| `aliases`, `tags` | no | Lists of strings, as in Obsidian |
+| `status` | no (default `active`) | `active`, `superseded`, or `archived` |
+| `bw-superseded_by` | only with `status: superseded` | One link, `"[[newer note]]"`, that resolves |
+| `bw-sources` | no | A list of `"[[note or episode]]"` links or URLs |
+| `bw-stage` | no | Free workflow state (`draft`, `in review`, …) |
+| `created`, `updated` | no | ISO 8601 date or date-time; set `updated` when you edit |
+
+- Any other property is the user's: leave it as it is.
+- Other `bw-` fields are errors. Quote `bw-` link values.
+
+## Body
+
+Free Markdown. brain-wiki reads only its headings and links, never its
+meaning. The recommended shape:
+
+- **A summary paragraph first.** Search snippets and outlines show it.
+- **One fact per bullet, specific**: numbers, versions, dates, names. What
+  failed is a fact too.
+- **Links inside sentences**, so the reason sits next to the link:
+  `Trigram search needs SQLite 3.34; see [[SQLite version policy]].`
+- To change a fact, edit its bullet; git keeps the history. Keep the user's
+  prose, and do not reorder lines you are not changing.
+
+Notes converted from brain-wiki 0.1 have `## Facts`, `## History` (struck
+through), and `## Related` sections; keep using them in those notes.
+
+## Supersession
+
+When a newer note replaces an older one, mark the older note:
 
 ```yaml
-bw-claims:
-  - "<text> {id: …; src: …; origin: …; at: …}"
-bw-claims-superseded:
-  - "<old text> {id: …; by: <new claim id>; reason: …; at: …}"
+status: superseded
+bw-superseded_by: "[[Store Lumen attachments as files]]"
 ```
 
-| Key | Meaning |
-|---|---|
-| `id` | Claim id, `c-` plus a ULID. A claim you add may omit the block; `brain_check` adds one marking it as yours and unverified. |
-| `src` | Sources, comma-separated: `<brain path>#L<start>-L<end>` for episode lines, `<host>:<session>#T<start>-T<end>` for turns of an agent conversation, or a URL. |
-| `origin` | `owner`, `agent`, `import`, or `system`. |
-| `inputs` | `external` or `unknown` when a source read outside content or was unchecked; omitted when `local`. |
-| `at` | Date or date-time the claim was last asserted. |
-| `by` | For a superseded claim: the id of the claim that replaced it. |
-| `status` | `retracted` for a claim that was wrong with no replacement; otherwise omitted. |
-| `reason` | Why it was superseded or retracted. |
+- Every search hit on the older note comes with the newer one; chains are
+  followed to the newest.
+- The newer note may link back to the one it replaced in its body.
+- No cycles. Use `status: archived` for a note that is outdated with no
+  successor.
 
-- To change a claim, supersede it: move the old item to
-  `bw-claims-superseded` with `by:`, and add the new claim to `bw-claims`.
-  Never reword or delete a claim in place; `brain_check` rejects that.
-- Quote a value that contains `;` inside the block: `reason: "a; b"`.
+## Sources
 
-## Relations
+`bw-sources` says where the note's knowledge came from: an episode, another
+note, or a URL. It covers the whole note, not single facts. Consolidated
+episodes move to `archive/`, so cite the `archive/` path.
 
-One string per relation, in the field for its verb, written from the point
-of view of the note that holds it:
+## Topics and hubs
 
-```yaml
-bw-<verb>:
-  - "[[target]] (<qualifier>, key=value) — optional note"
-```
-
-| Field on note A | Meaning | Inverse, on B | Retrieval guard |
-|---|---|---|---|
-| `bw-part_of: "[[B]]"` | A is a part, child, or member of B | `bw-has_part` | no |
-| `bw-depends_on: "[[B]]"` | A requires, builds on, or is caused by B | `bw-enables` | no |
-| `bw-conflicts_with: "[[B]]"` | A contradicts B, or B is an exception to A | `bw-conflicts_with` | yes |
-| `bw-supersedes: "[[B]]"` | A replaces B; B is outdated | `bw-superseded_by` | yes |
-| `bw-related_to: "[[B]]"` | Related, without a stronger claim | `bw-related_to` | no |
-
-- Declare a relation on either side; never on both with different verbs.
-- Guard relations are always shown together with the notes they qualify.
-- If A `bw-supersedes` B, set B's `status: superseded`.
-- Put conditions and domain meaning in qualifiers:
-  `bw-conflicts_with: "[[Vector-only search]] (unless: embeddings enabled)"`.
-  Reserved keys: `weight` (−1 to 1), `sign` (`+`/`-`), `lag`, `since`,
-  `until`, `unless`.
-- Accepted synonym fields (`bw-requires`…), which lint moves to the
-  canonical field:
-
-| Synonyms | Canonical |
-|---|---|
-| `parent`, `child_of`, `member_of`, `in` | `part_of` |
-| `contains`, `parent_of` | `has_part` |
-| `requires`, `builds_on`, `uses`, `caused_by` | `depends_on` |
-| `drives`, `causes`, `supports`, `unblocks` | `enables` |
-| `contradicts`, `unless`, `invalidated_by`, `refutes`, `exception` | `conflicts_with` |
-| `replaces`, `obsoletes` | `supersedes` |
-| `replaced_by`, `obsoleted_by` | `superseded_by` |
-| `related`, `see_also`, `similar_to`, `analogous_to` | `related_to` |
-
-Older notes may still hold `## Claims` and `## Relations` sections (format
-1). They work as before; `brain lint --fix` converts them.
+- A topic is a folder under `topics/` with a hub, `index.md`. A note belongs
+  to the topic of its folder.
+- Topics nest: a folder with its own `index.md` inside a topic is a
+  sub-topic. Folders without a hub just organize notes.
+- A hub's `## Notes` list is navigation: add a line for a new note.
+  `brain lint --fix` adds missing entries and never removes lines.
+- To move or rename a note or a topic folder, use `brain mv SRC DST`, which
+  also fixes links.
 
 ## Links
 
@@ -116,10 +109,18 @@ Older notes may still hold `## Claims` and `## Relations` sections (format
   `[label](relative/path.md)`.
 - Write file-name links so they also work in Obsidian.
 
+## Older notes
+
+Notes from brain-wiki 0.1 may hold `bw-claims`, `bw-claims-superseded`, or
+`bw-<verb>` relation fields (format 2), or `## Claims` and `## Relations`
+sections (format 1). Validation reports them as BW117. Do not convert them
+by hand: `brain lint --fix --dry-run`, then `brain lint --fix`, moves facts
+to `## Facts`, relations to `## Related`, and claim sources to `bw-sources`.
+
 ## Episodes
 
-Episodes are the inbox, at `inbox/episodes/<YYYY>/<MM>/<ULID>.md`. Prefer
-`brain_log_episode` or `brain log`, which set the frontmatter for you.
+Episodes are the inbox, at `inbox/episodes/<YYYY>/<MM>/<ULID>.md`. Write
+them with `brain_log_episode` or `brain log`, which set the frontmatter.
 Episodes are never edited after they are written.
 
 ```markdown
@@ -146,4 +147,5 @@ Moved Lumen's attachments out of SQLite after backups became slow.
 ```
 
 `## Claims`, `## Negative findings`, and `## Open questions` are suggested
-sections; none is required. An episode keeps its claims in the body.
+sections; none is required. Episodes keep this format; they are not
+converted.

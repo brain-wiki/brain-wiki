@@ -44,7 +44,7 @@ show the diff with `--dry-run` and record each change as a run that
 
 ```bash
 brain agents                                        # what each app may do
-brain agents grant claude-code consolidate propose_rules
+brain agents grant claude-code propose_rules harvest
 brain agents revoke claude-code propose_rules
 ```
 
@@ -55,18 +55,20 @@ The result in `brain.toml`:
 write       = ["episodes", "edit"]
 
 [agents.claude-code]
-write       = ["episodes", "edit", "propose_rules", "consolidate", "harvest", "review"]
+write       = ["episodes", "edit", "propose_rules", "harvest"]
 read_origin = false
 ```
 
 | Setting | Meaning | Default |
 |---|---|---|
-| `write` | What it may do: `episodes` (record), `edit` (correct notes directly, then `brain check` them), `propose_rules` (suggest rules, always confirmed by the user), `consolidate` (fold episodes into notes), `harvest` (summarize its own past sessions), `review` (handle proposals). | `["episodes", "edit"]` |
+| `write` | What it may do: `episodes` (record in the inbox), `edit` (create and edit notes directly, then `brain validate` them; also `brain mv`, `brain lint --fix`, and archiving consolidated episodes), `propose_rules` (suggest rules, always confirmed by the user), `harvest` (summarize its own past sessions). Older names (`consolidate`, `review`) are ignored. | `["episodes", "edit"]` |
 | `read_origin` | May reread the original conversation behind an episode. Conversations hold far more than the episode kept, so this is off unless needed. | `false` |
 
 Profiles prevent accidents and limit what a confused or misled agent can
-change. They are not a lock against other programs running as the user,
-which can read and write the files anyway.
+change. They are not a lock: `edit` decides what orientation tells an agent,
+and an agent with file access, or any program running as the user, can
+still write the files. Git history (with a commit job) is how the user sees
+and reverts what agents wrote.
 
 ## What harvest sends
 
@@ -74,4 +76,4 @@ Harvest reads an agent app's saved sessions on this machine, drops tool
 output, removes secrets, and sends the condensed text to a model for
 summarizing: the agent you are talking to (its provider sees it) or the
 command-line model configured for headless runs. `brain harvest --raw`
-sends nothing and leaves summarizing to consolidation.
+sends nothing and leaves summarizing for when the inbox is consolidated.

@@ -12,32 +12,33 @@ for your shell.
 | Command | Does |
 |---|---|
 | `brain init [PATH] [--name N] [--git] [--no-register]` | Create a brain and register it |
-| `brain brains [list \| add NAME PATH \| remove NAME [--purge-state] \| rename OLD NEW \| default NAME \| limit HOST BRAIN… \| unlimit HOST]` | Bare `brain brains` lists the brains you (or `--as HOST`) may use, with what each holds. The rest manage registered brains, and which ones each agent app may use. Names use lowercase letters, digits, and hyphens; `rename` also renames the brain in the default, `[hosts.*]`, and harvest routes |
-| `brain agents [list \| grant HOST CAP… [--dry-run] \| revoke HOST CAP… [--dry-run]]` | What each agent app may do in a brain, and changing it (undoable). CAP is a write capability or `read_origin`; an unknown host id gets a warning |
+| `brain brains [list \| add NAME PATH \| remove NAME [--purge-state] \| rename OLD NEW \| default NAME \| limit HOST BRAIN… \| unlimit HOST]` | Bare `brain brains` lists the brains you (or `--as HOST`) may use, with what each holds. The rest manage registered brains, and which ones each agent app may use. Names use lowercase letters, digits, and hyphens; `rename` also renames the brain in the default, `[hosts.*]`, harvest routes, and its commit job; `remove` also drops it from the default, host defaults, host brain limits (a list it empties stays empty, so that host sees no brain), and harvest routes, and deletes its commit job |
+| `brain agents [list \| grant HOST CAP… [--dry-run] \| revoke HOST CAP… [--dry-run]]` | What each agent app may do in a brain, and changing it (undoable). CAP is `episodes`, `edit`, `propose_rules`, `harvest`, or `read_origin`; an unknown host id gets a warning |
 | `brain doctor` | Check configuration, brains, SQLite, and agents |
 | `brain setup [--guide]` | Set up step by step in the terminal; `--guide` prints the steps for an AI agent to walk you through |
 | `brain orient` | The briefing, as agents see it |
 | `brain topics [SLUG]` | The topic tree with note counts |
-| `brain search [QUERY] [--topic T] [--type T] [--tag T] [--where K=V] [--since D] [--until D] [--sort relevance\|recent\|title] [--intent …] [--count] [--facets] [--paths] [--limit N] [--cursor C] [--no-episodes \| --include archived,episodes,archived_episodes]` | Search, or browse with an empty query: `brain search "" --since 7d` lists recent notes, newest first. `--limit` is 1–50; `--where` matches any frontmatter key (a list matches any item); an unknown `--topic` is not found |
-| `brain read TARGET [--mode outline\|full\|section\|raw] [--section H]` | Read a note, hub, or episode; `--mode outline` shows its headings and claims. `raw` prints the file byte for byte, without banners; `--section` alone implies `--mode section` |
-| `brain neighbors TARGET [--rel R] [--direction out\|in\|both] [--depth N] [--limit N] [--paths]` | Follow a note's relations by their meaning (e.g. what depends on it), not by which file declares them (`--depth` 1–3, `--limit` 1–100) |
-| `brain links`, `backlinks`, `tags`, `types`, `orphans`, `unresolved` | Quick listings: `links` is what a note links to as written in its file (body links and typed relations), `backlinks` what links to it from other files. They take `--count`, `--paths`, `--limit`, `--cursor`; `tags` and `types` take `--counts`, and their `--paths` prints one name per line |
-| `brain check [PATH…] [--adopt] [--allow-shrink]` | Record notes you edited by hand: validates each one, then records it; refuses edits that add lint errors. With no paths, lists hand edits not yet recorded |
-| `brain restore PATH` | Put a note back to its last recorded version |
+| `brain search [QUERY] [--topic T] [--type T] [--tag T] [--where K=V] [--since D] [--until D] [--sort relevance\|recent\|title] [--count] [--facets] [--paths] [--limit N] [--cursor C] [--no-episodes \| --include archived,episodes,archived_episodes]` | Search, or browse with an empty query: `brain search "" --since 7d` lists recent notes, newest first. `--limit` is 1–50; `--where` matches any frontmatter key (a list matches any item); an unknown `--topic` is not found |
+| `brain read TARGET [--mode outline\|full\|section\|raw] [--section H]` | Read a note, hub, or episode; `--mode outline` shows its summary, headings, links, and backlinks. `raw` prints the file byte for byte, without banners; `--section` alone implies `--mode section` |
+| `brain neighbors TARGET [--direction out\|in\|both] [--depth N] [--limit N] [--paths]` | Follow a note's links: what it links to (`out`), what links to it (`in`); a superseded note's replacement comes first (`--depth` 1–3, `--limit` 1–100) |
+| `brain links`, `backlinks`, `tags`, `types`, `orphans`, `unresolved` | Quick listings: `links` is what a note links to as written in its file (body links, `bw-superseded_by`, and `bw-sources`), `backlinks` what links to it from other files. They take `--count`, `--paths`, `--limit`, `--cursor`; `tags` and `types` take `--counts`, and their `--paths` prints one name per line |
+| `brain validate [PATH…]` | Check the frontmatter of notes you created or edited (default: the Markdown files git sees as changed; every note without git); exit 1 on problems |
+| `brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run]` | Commit direct edits in a git brain (files changed within `--settle` wait), then fetch and rebase onto origin, and push with `--push`; exit 1 on a rebase conflict |
+| `brain schedule [list] \| add commit [--every 15m] [--push] [--dry-run] \| remove commit [--dry-run]` | An OS job that runs `brain commit` for the brain: a crontab block on Linux, a LaunchAgent on macOS. One job per brain; `--every` is 5m–30m or 1h–24h; push is off unless `--push`. Not allowed with `--as` |
 | `brain index [--rebuild \| --status]` | Inspect or rebuild the index |
 | `brain log [TEXT \| -] [--topic T] [--claim C] [--agent HOST] [--inputs …]` | Write an episode; warns when a `--topic` does not exist yet |
 | `brain rules add TEXT [--quote Q] [--replaces ID] \| list \| accept ID \| reject ID` | Rules; with `--as HOST`, `add` saves a proposal |
-| `brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE.json]`, `--apply OPS.json --run RUN [--dry-run]` | Drive consolidation yourself (agents use `brain_consolidate_*`) |
-| `brain review list \| show ID \| accept ID \| reject ID` | Proposals waiting for you: consolidations and edits (`run-…`) and agents' rule proposals (`r-…`); `list` marks each one's kind |
+| `brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE.json]`, `--done EPISODE…` | Gather pending episodes with candidate notes and guidance; after editing the notes, archive the episodes handled as one undoable run (agents use `brain_consolidate_*`) |
+| `brain review list \| show ID \| accept ID \| reject ID` | Agents' rule proposals (`r-…`) waiting for you |
 | `brain runs [list \| show [RUN]]`, `brain undo [RUN] [--force]` | Run history and undo |
-| `brain lint [PATH…] [--fix [--dry-run]] [--profile strict\|migrate] [--select C] [--ignore C] [--staged] [--changed] [--install-hook]` | Check the format; unknown codes are a usage error |
+| `brain lint [PATH…] [--fix [--dry-run]] [--profile strict\|migrate] [--select C] [--ignore C] [--staged] [--changed] [--install-hook]` | Check the format; `--fix` also converts format 1 and 2 notes to format 3; unknown codes are a usage error |
 | `brain report` | Regenerate `reports/` |
 | `brain mv SRC DST [--dry-run]` | Move a note, or a topic folder with its notes, and rewrite links and the topic's `brain.toml` entry |
 | `brain harvest [--from HOST] [--since 30d] [--project P] [--raw \| --distill PRESET] [--apply [--dry-run]] [--status]` | Harvest sessions; without `--apply`, list them; with `--apply --dry-run`, list the turn ranges it would write |
 | `brain harvest enable HOST… \| disable HOST… \| route PATTERN BRAIN` | Turn harvest on or off per app; send sessions from matching folders to a brain |
 | `brain origin EPISODE [--turns A-B]` | Show an episode's original conversation; EPISODE is an id or a path (in the brain, or absolute); A-B must lie within the session |
 | `brain connect HOST [--scope user\|project] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent; each scope is connected and uninstalled on its own |
-| `brain import PATH (--overlay [--phase N] \| --into BRAIN \| --to-episodes [--agent HOST] [--untrusted]) [--topic T] [--apply]`, `brain import --from HOST [PATH] [--topic T] [--apply]` | Import; without `--apply`, a dry run |
+| `brain import PATH (--overlay [--phase 0\|1\|2] \| --into BRAIN \| --to-episodes [--agent HOST] [--untrusted]) [--topic T] [--apply]`, `brain import --from HOST [PATH] [--topic T] [--apply]` | Import; without `--apply`, a dry run |
 | `brain viz [BRAIN] [--topic T] [--port P] [--host ADDRESS] [--no-open] [--export FILE.html\|.json\|.graphml]` | The brain map: of BRAIN, the only brain, or the one you pick; `--host 0.0.0.0` lets other machines open it |
 | `brain obsidian [BRAIN]` | Open the brain's folder as a vault in Obsidian: BRAIN, the only brain, or the one you pick |
 | `brain bench [SUITE…] [--sizes 1k,10k] [--backends …] [--out DIR] [--compare A B] [-q]` | Evaluation bench (default suites: retrieval, lint, perf); `-q` prints a summary, failures, and regressions only |
@@ -47,7 +48,8 @@ for your shell.
 
 What a connected agent can call. Write tools need the matching capability in
 the agent's profile, and `brain_read_origin` needs `read_origin = true`
-([privacy.md](privacy.md#agent-profiles)).
+([privacy.md](privacy.md#agent-profiles)). Agents edit notes with their own
+file tools; `edit` decides whether orientation tells them they may.
 
 | Tool | Does | Needs |
 |---|---|---|
@@ -55,15 +57,16 @@ the agent's profile, and `brain_read_origin` needs `read_origin = true`
 | `brain_orient` | The briefing: rules, topics, recent changes, inbox | — |
 | `brain_search` | Search, or browse with an empty query and filters | — |
 | `brain_read` | Read a note, hub, or episode (outline, full, section, raw) | — |
-| `brain_neighbors` | Follow a note's relations | — |
-| `brain_check` | Validate and record notes the agent edited directly | `edit` |
+| `brain_neighbors` | Follow a note's links and backlinks | — |
+| `brain_validate` | Check the frontmatter of notes the agent created or edited | — |
 | `brain_log_episode` | Record a learning in the inbox | `episodes` |
 | `brain_propose_rule` | Propose a standing rule; you confirm it | `propose_rules` |
-| `brain_consolidate_prepare`, `brain_consolidate_apply` | Fold inbox episodes into notes | `consolidate` |
+| `brain_consolidate_prepare` | Pending episodes with candidate notes and guidance | — |
+| `brain_consolidate_done` | Archive the episodes folded into notes | `edit` |
 | `brain_read_origin` | Read the conversation behind an episode | `read_origin = true` |
 | `brain_harvest_prepare`, `brain_harvest_apply` | Turn this agent's past sessions into episodes | `harvest` |
 
-Exit codes: 0 success; 1 problems found (lint errors, invalid ops), a path
+Exit codes: 0 success; 1 problems found (lint or validation errors, a commit conflict), a path
 that cannot be read or written, or an ambiguous target (the candidates are
 printed); 2 usage; 3 not found; 4 conflict (`conflict`: a name or file
 already there; `stale`: changed since it was read; `busy`: lock); 5 forbidden
@@ -78,9 +81,9 @@ facet lines with `--facets`.
 
 | Where | What |
 |---|---|
-| `<brain>/brain.toml` | Settings that travel with the brain: topics, agent profiles, lint, consolidation, budgets |
+| `<brain>/brain.toml` | Settings that travel with the brain: format, topics, agent profiles, lint, consolidation, budgets |
 | `~/.config/brain-wiki/config.toml` | Per machine: registered brains, default brain, per-host brain choice, harvest |
-| `~/.local/state/brain-wiki/` | Run records and pre-images (undo), locks, markers for episodes brain-wiki wrote, session and harvest state, connect records, logs |
+| `~/.local/state/brain-wiki/` | Run records and pre-images (undo), locks, markers for episodes brain-wiki wrote, session and harvest state, connect records, commit-job state (`schedule/`), logs |
 | `~/.cache/brain-wiki/` | The search index (rebuilt automatically when missing) |
 | `~/.local/share/brain-wiki/plugin/<host>/` | Plugin copies written by `brain connect` |
 
@@ -96,3 +99,5 @@ of them with `BRAIN_WIKI_CONFIG`, `BRAIN_WIKI_STATE_DIR`,
 | Search misses a note you just edited | Wait a second (freshness checks run at most once per second), or `brain index --rebuild` |
 | A run was interrupted | `brain doctor` rolls it back |
 | A git commit failed after a run | The files changed anyway; `brain doctor` lists the run; commit by hand |
+| `brain commit` reports a conflict | Run `git pull --rebase` in the brain, resolve, and commit; later runs commit locally until then |
+| Lint reports BW117 | The note is from brain-wiki 0.1: `brain lint --fix --dry-run`, then `brain lint --fix` |

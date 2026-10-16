@@ -12,8 +12,7 @@ source: "docs/design/07-interfaces.md#31-protocol-target"
 - It serves clients on the current stateless revision (2026-07-28) and
   clients still on the 2025-11-25 handshake, which is most hosts today.
 - The server keeps no per-connection state. Anything that spans calls
-  (consolidation runs) is a server-minted handle passed as a tool
-  argument, which is how the current revision expects cross-call state to
+  (harvest runs) is a server-minted handle passed as a tool argument, which is how the current revision expects cross-call state to
   work.
 - No sampling, no roots, no reliance on server-to-client requests or
   logging notifications, all deprecated in the current revision.

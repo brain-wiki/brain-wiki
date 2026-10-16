@@ -1,6 +1,6 @@
 ---
 name: brain-setup
-description: Set up, connect, or reconfigure brain-wiki. Install the CLI, create a brain or adopt an existing Obsidian or Markdown vault, connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor), choose which agents see which brain and what each may do, and turn on harvest. Use when the user asks to install, set up, onboard, connect, or import brain-wiki, or when brain-wiki says it is not configured.
+description: Set up, connect, or reconfigure brain-wiki. Install the CLI, create a brain or adopt an existing Obsidian or Markdown vault, connect other agents (Claude Code, Codex, Antigravity, OpenClaw, Cursor), choose which agents see which brain and what each may do, turn on harvest, and schedule commits for a git brain. Use when the user asks to install, set up, onboard, connect, or import brain-wiki, or when brain-wiki says it is not configured.
 ---
 # Set up brain-wiki
 
@@ -21,15 +21,15 @@ current state and offers only what is missing.
   live in the references; use them when the user asks.
 - **Resumable.** If setup stopped halfway, start again from step 1; `doctor`
   shows what is already done.
-- **Change settings with `brain` commands** (`brain init`, `brain connect`,
-  `brain brains`, `brain agents`, `brain harvest`), not by editing
+- **Change settings with `brain` commands** (`brain init`, `brain schedule`,
+  `brain connect`, `brain brains`, `brain agents`, `brain harvest`), not by editing
   `brain.toml` or the user config, so every change can be shown first and
   undone.
 
 ## Steps
 
 ```
-1 Check ─► 2 Install ─► 3 Brain ─► 4 Connect ─► 5 Permissions ─► 6 Harvest ─► 7 Verify ─► 8 Summary
+1 Check ─► 2 Install ─► 3 Brain (+ commit job) ─► 4 Connect ─► 5 Permissions ─► 6 Harvest ─► 7 Verify ─► 8 Summary
 ```
 
 ### 1. Check
@@ -38,7 +38,10 @@ Run `brain doctor --json`. If the command is not found, go to step 2.
 
 Read from the result:
 
-- `brains`: existing brains, which is the default, pending episodes;
+- `brains`: existing brains, which is the default, pending episodes,
+  `git`, and `format` (below 3: notes from brain-wiki 0.1; offer
+  `brain lint --fix --dry-run`, and convert with `brain lint --fix` after a
+  yes);
 - `hosts`: agent apps found on this machine, which are `connected`, and
   whether `harvest` is on;
 - `problems` and `next_steps`: what is missing, with the fixing command.
@@ -63,13 +66,14 @@ let the user decide:
 
 - **Where it lives.** A brain is an ordinary folder of Markdown the user
   owns. Suggest `~/brains/personal`. Keep it outside code repositories, so
-  project history and team members never see it. A synced folder (iCloud,
-  Dropbox, Syncthing) works too.
+  project history and team members never see it.
 - **Name.** Short, used to pick the brain: `personal`.
-- **Git.** Recommended: every change brain-wiki makes becomes a commit, so
-  history is visible and any change can be reverted with plain git as well
-  as `brain undo`, and the brain can be pushed to a private remote to use on
-  another machine. Without git, `brain undo` still works on this machine.
+- **Git.** Recommend it strongly: agents edit notes directly, and git is
+  the only way to see or revert those edits. To use the brain on another
+  machine, push it to a private remote. Do not put a git brain in a folder a
+  sync tool (iCloud, Dropbox, Syncthing) copies between machines: two
+  machines committing into one `.git` can corrupt it. Without git,
+  `brain undo` reverses only brain-wiki's own changes.
 
 Then run `brain init PATH --name NAME`, adding `--git` if they chose it. It
 makes a first commit, so a clone is a working brain.
@@ -81,8 +85,19 @@ makes a first commit, so a clone is a working brain.
    a `brain.toml`, an inbox), and anything it could not read.
 3. After a yes, run `brain import PATH --overlay --apply`. This adds files
    and never moves, renames, or deletes the user's notes.
-4. Mention that later import steps (typed relations, claims) exist and can
-   be done later; do not apply them now.
+4. Mention that later import steps (ids and status, topic hubs) exist and
+   can be done later; do not apply them now.
+
+**Commit job** (only when the brain uses git). Explain: agents' direct
+edits reach git history through `brain commit`, and a job can run it every
+15 minutes (a crontab entry on Linux, a LaunchAgent on macOS).
+
+1. Ask whether to schedule it, and whether the job should also push to the
+   brain's remote (default no: pushing publishes the brain).
+2. Run `brain schedule add commit --dry-run` (with `--push` if they chose
+   it), show the job, and after a yes run it without `--dry-run`.
+
+If they decline (or on Windows), mention running `brain commit` by hand.
 
 ### 4. Connect
 
@@ -116,18 +131,17 @@ To limit an app: `brain brains limit APP BRAIN...` (`brain brains --as APP`
 shows the result).
 
 **What each agent may do.** By default every agent may log what it learns
-and correct notes directly (each correction is checked and can be undone).
-Two more abilities are off until the user turns them on, per agent app:
+and edit notes directly (in a git brain, every edit lands in history). One
+more ability is off until the user turns it on, per agent app:
 
 | Ability | What it allows |
 |---|---|
-| `consolidate` | When the user asks ("consolidate my brain"), fold the inbox into notes through checked, undoable steps |
 | `propose_rules` | Suggest a standing rule when the user asks for one; the user confirms every rule |
 
-Ask which apps should have them. For each yes, run
-`brain agents grant APP consolidate propose_rules --dry-run` (only the
-abilities they chose), show the diff, and after a yes run it again without
-`--dry-run`. `brain agents` shows what each app may do.
+Ask which apps should have it. For each yes, run
+`brain agents grant APP propose_rules --dry-run`, show the diff, and after a
+yes run it again without `--dry-run`. To keep an app from editing notes,
+`brain agents revoke APP edit`. `brain agents` shows what each app may do.
 
 Details and the exact settings: [references/privacy.md](references/privacy.md).
 Show every config change as a diff before writing it.
@@ -169,8 +183,8 @@ later, or never.
    "Setup check: brain-wiki works from HOST."
 2. Search for "setup check" with `brain_search` and confirm it comes back.
 3. Show the orientation (`brain_orient`).
-4. Leave the test episode in the inbox: consolidation skips it, since it
-   holds nothing durable.
+4. Leave the test episode in the inbox; consolidation skips it as holding
+   nothing durable.
 
 If the MCP tools are not available yet (new install), use `brain log`,
 `brain search`, and `brain orient` instead.
@@ -186,3 +200,4 @@ List what was set up, where it lives, and how to undo each part:
 | Agent permissions | `brain undo RUN`, or `brain agents revoke APP CAPABILITY` |
 | Agent app connected | `brain connect HOST --uninstall` (restores the previous config) |
 | Harvest | `brain harvest disable APP` |
+| Commit job | `brain schedule remove commit` |

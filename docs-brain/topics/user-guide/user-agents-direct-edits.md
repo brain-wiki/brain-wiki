@@ -7,16 +7,17 @@ source: "docs/user/agents.md#direct-edits"
 ---
 # Direct edits (Agents)
 
-An agent whose profile includes `edit` may correct a note directly (a
-person's new role, a wrong fact) and then run `brain_check`. The check
-compares the file with the note's last recorded version and refuses deleted
-or reworded claims (claims change only by superseding), protected files,
-and large removals. A clean check is recorded as a run, so
-`brain undo` reverses it; claims the agent added are marked unverified.
-Per topic, `agent_edits = "review"` sends agent edits to you
-(`brain review accept`), and `"deny"` refuses them.
+An agent whose profile includes `edit` writes knowledge straight into notes
+with its own file tools: it updates a note (a person's new role, a wrong
+fact) or creates one under `topics/<topic>/`, then runs `brain_validate` and
+fixes what it reports. Orientation shows such an agent the frontmatter
+fields and the suggested body shape.
 
-Your own edits in Obsidian or an editor are never blocked. `brain check`
-lists notes that differ from their recorded version, `brain check --adopt
-PATH` records one as yours (with an undo point), and `brain restore PATH`
-puts a note back.
+- Agents never edit `rules.md`, `brain.toml`, `log.md`, `AGENTS.md`, or
+  anything under `inbox/`, `archive/`, or `reports/`; `brain validate`
+  reports it when one of those is passed to it.
+- Direct edits are not runs, so `brain undo` does not reverse them. In a git
+  brain, `brain commit` (or its scheduled job) records them, and git
+  reverts them ([[user-maintenance-commit-direct-edits|Maintenance]]). Without
+  git there is no record of them.
+- Your own edits in Obsidian or an editor follow the same path.

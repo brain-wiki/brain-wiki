@@ -10,16 +10,16 @@ source: "docs/design/README.md#reading-order"
 | # | Document | What it settles |
 |---|---|---|
 | 01 | [[overview\|Overview]] | Problem, goals, non-goals, principles, scenarios, glossary |
-| 02 | [[brain-format\|Brain format]] | The on-disk contract: layout, manifest, notes, claims, relations, episodes, rules (normative) |
+| 02 | [[brain-format\|Brain format]] | The on-disk contract: layout, manifest, notes, links, supersession, episodes, rules (normative) |
 | 03 | [[config-and-storage\|Config and storage]] | User config, multiple brains, brain selection, machine state, git, desktop sync tools |
-| 04 | [[index-and-retrieval\|Index and retrieval]] | SQLite schema, freshness, search ranking, guard co-retrieval, read, orientation |
-| 05 | [[write-path-and-consolidation\|Write path and consolidation]] | Episodes, provenance and inputs, ops, consolidation backends, validation, review, undo |
+| 04 | [[index-and-retrieval\|Index and retrieval]] | SQLite schema, freshness, search ranking, the supersession guard, read, neighbors, orientation |
+| 05 | [[write-path-and-consolidation\|Write path and consolidation]] | Direct edits and `brain validate`, episodes and provenance, the consolidation helper, `brain commit` and `brain schedule`, runs and undo, rules |
 | 06 | [[lint-and-reports\|Lint and reports]] | Rules, profiles, fixes, generated reports, pre-commit use |
 | 07 | [[interfaces\|Interfaces]] | CLI commands, MCP tools and schemas, agent profiles, error model |
 | 08 | [[agent-integrations\|Agent integrations]] | Plugin bundle, instruction block, `brain connect`, harvest; one page per host in `agents/` |
 | 09 | [[import\|Import]] | Adopting existing Markdown folders and Obsidian vaults |
 | 10 | [[security-and-privacy\|Security and privacy]] | Threat model and mitigations |
-| 11 | [[eval-bench\|Eval bench]] | Retrieval, lint, consolidation, and performance suites |
+| 11 | [[eval-bench\|Eval bench]] | Retrieval, lint, and performance suites |
 | 12 | [[visualizer\|Visualizer]] | 3D brain map |
 | 13 | [[engineering\|Engineering]] | Repo layout, dependencies, packaging, testing, performance budgets, release |
 | 14 | [[roadmap-and-open-questions\|Roadmap and open questions]] | Implementation milestones and status, decisions needed, verification items |

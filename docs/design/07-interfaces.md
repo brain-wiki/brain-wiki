@@ -1,6 +1,6 @@
 # 07 · Interfaces: CLI, MCP, agent profiles
 
-Status: draft for review · Tool schemas in §3 are normative for v0.1
+Status: draft for review · Tool schemas in §3 are normative for v0.2
 
 Three interfaces expose the same engine:
 
@@ -22,23 +22,27 @@ with the brain ([02 §3](02-brain-format.md#3-braintoml)).
 write       = ["episodes", "edit"]
 
 [agents.claude-code]
-write       = ["episodes", "propose_rules", "consolidate"]
+write       = ["episodes", "edit", "propose_rules", "harvest"]
 ```
 
 | Field | Meaning | Built-in default |
 |---|---|---|
-| `write` | Subset of `episodes`, `edit`, `propose_rules`, `consolidate`, `harvest`, `review`. `edit` allows checked direct edits of notes ([05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits)). | `["episodes", "edit"]`; the owner profile has everything |
+| `write` | Subset of `episodes` (log episodes), `edit` (edit notes directly, [05 §2.3](05-write-path-and-consolidation.md#23-direct-edits), and run brain-wiki's writers that change notes: `mv`, `lint --fix`, `consolidate --done`, `commit --as`), `propose_rules`, `harvest` (the in-agent harvest recipe). | `["episodes", "edit"]`; the owner profile has everything |
 | `read_origin` | May read the original agent conversations behind episodes ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)). Transcripts hold much more than the episodes kept, so this is off by default. | `false` |
 
 `brain agents grant|revoke HOST CAPABILITY…` edits these tables as one undoable
 `config` run (comments kept; a new table starts from what the host may already
-do). `read_origin` is granted and revoked the same way, as a flag. A host id
-that is not a known host (`claude-code`, `codex`, `antigravity`, `openclaw`,
-`cursor`, `generic`, `default`) and has no table yet gets a warning, since it
-is most likely a typo, but the change is made. The command also refreshes the `AGENTS.md` block when the default profile's `edit`
-changes, since that block tells file-reading agents whether they may edit.
+do). `read_origin` is granted and revoked the same way, as a flag. Granting
+an unknown capability is a usage error. The 0.1 capabilities `consolidate`
+and `review` no longer exist: a `brain.toml` that still lists them loads, and
+they are ignored. A host id that is not a known host (`claude-code`,
+`codex`, `antigravity`, `openclaw`, `cursor`, `generic`, `default`) and has
+no table yet gets a warning, since it is most likely a typo, but the change
+is made. The command also refreshes the `AGENTS.md` block when the default
+profile's `edit` changes, since that block tells file-reading agents whether
+they may edit.
 A refusal names the command that allows the action for that host alone, e.g.
-`brain agents grant claude-code consolidate`.
+`brain agents grant claude-code edit`.
 
 Resolution: `--host <id>` → `[agents.<id>]` → `[agents.default]` →
 built-in default. The CLI acts as `owner` (everything allowed) because the
@@ -50,15 +54,19 @@ write does what that host could do through MCP, or is refused:
 |---|---|
 | `log` | Needs `episodes`; recorded as `origin: agent`, `inputs: unknown` (or `external`), with the host as agent, like `brain_log_episode` |
 | `rules add` | Needs `propose_rules`; saved as a proposal for `brain rules accept` (or `brain review accept`), like `brain_propose_rule` without a way to ask |
-| `check`, `mv`, `lint --fix` | Need `edit`: they change notes directly (`--dry-run` previews need nothing) |
-| `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `undo` | Refused: these are the user's decisions. An agent undoing runs could undo the user's own work, so no capability allows it |
+| `mv`, `lint --fix`, `consolidate --done` | Need `edit`: they change notes or the inbox (`--dry-run` previews need nothing) |
+| `commit` | Needs `edit`; the trailer names the host; `--push` is refused, since pushing publishes the brain |
+| `validate`, `consolidate --prepare`, reads | Need nothing |
+| `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `schedule`, `undo` | Refused: these are the user's decisions. An agent undoing runs could undo the user's own work, so no capability allows it |
 
 Enforcement points, all in the engine so every interface gets them:
 
 - Writes: tools absent from `write` are refused with `forbidden`. Write
   functions check the profile themselves (`move_note`, `lint.fix`,
-  `accept_rule`, `reject_rule`, `profile_run`), so a new interface inherits
-  the checks.
+  `consolidate.done`, `accept_rule`, `reject_rule`, `profile_run`), so a new
+  interface inherits the checks.
+- Profiles are read from `brain.toml` on every MCP call (§3.7), so a grant
+  or revoke applies to the agent's next tool call.
 - Host brain limits from the user config ([03 §3](03-config-and-storage.md#3-choosing-a-brain)).
 
 Profiles are not authentication. A local stdio server trusts the `--host`
@@ -83,29 +91,30 @@ brain setup [--guide]                                    # onboarding wizard; --
 
 brain orient
 brain search [QUERY] [--limit N] [--topic T]... [--type T]... [--tag T]... [--where KEY=VALUE]...
-             [--since D] [--until D] [--sort relevance|recent|title] [--cursor C] [--intent I]
+             [--since D] [--until D] [--sort relevance|recent|title] [--cursor C]
              [--include archived,episodes,archived_episodes] [--no-episodes] [--count] [--facets] [--paths]
 brain read TARGET [--mode outline|full|section|raw] [--section HEADING]
-brain neighbors TARGET [--rel R]... [--direction out|in|both] [--depth N] [--limit N]
+brain neighbors TARGET [--direction out|in|both] [--depth N] [--limit N] [--paths]
 
 brain topics [TOPIC]                                     # the topic tree with note counts
-brain links TARGET | backlinks TARGET                    # links as written: in its file / in others
+brain links TARGET | backlinks TARGET                    # what it links to (body links, bw-superseded_by, bw-sources) / what links to it
 brain tags [--counts] | types [--counts]
 brain orphans | unresolved                               # notes nothing links to; dead links
 
-brain check [PATH]... [--adopt] [--allow-shrink]         # validate and record direct edits (05 §2.3)
-brain restore PATH                                       # put back the last recorded version
+brain validate [PATH]...                                 # check the frontmatter of edited notes (05 §2.3)
+brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run]   # snapshot direct edits into git (05 §5)
+brain schedule [list] | add commit [--every 15m] [--push] [--dry-run] | remove commit [--dry-run]
 
 brain log [TEXT | -] [--topic T]... [--claim C]... [--agent HOST] [--inputs local|external|unknown]
 brain rules add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID   # `rule` is a hidden alias
 
-brain consolidate --prepare [--topic T] [--max-episodes N] [--out PACKET.json]
-brain consolidate --apply OPS.json --run RUN [--dry-run]
+brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE.json]
+brain consolidate --done EPISODE...                      # archive the episodes handled (05 §4.4)
 brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--apply [--dry-run]]   # list, or harvest
 brain harvest --status                                   # per host: enabled, sessions left to harvest
 brain harvest enable HOST... | disable HOST... | route PATTERN BRAIN   # user config (05 §2.2)
 brain origin EPISODE [--turns A-B]
-brain review list | show ID | accept ID | reject ID     # consolidation, edit, and rule proposals
+brain review list | show ID | accept ID | reject ID     # rule proposals
 brain runs [list] | show [RUN]
 brain undo [RUN] [--force]
 
@@ -115,7 +124,7 @@ brain report
 brain index [--rebuild | --status]
 brain mv SRC DST [--dry-run]                             # a note, or a topic folder with its notes
 
-brain import PATH --overlay [--phase N] [--dry-run | --apply]
+brain import PATH --overlay [--phase 0|1|2] [--dry-run | --apply]   # adopt; ids and status; hubs
 brain import PATH --into BRAIN [--topic SLUG] [--dry-run | --apply]
 brain import PATH --to-episodes [--untrusted] [--agent HOST] [--dry-run | --apply]
 brain import [PATH] --from HOST [--dry-run | --apply]     # a host's memory files; PATH overrides where they are
@@ -137,13 +146,22 @@ its own `--help` (`-h`).
 Browsing has no commands of its own beyond the link and tag listings:
 `brain search ""` with filters lists notes (`brain search "" --since 7d` for
 recent ones; browsing sorts by `recent` unless `--sort` says otherwise), and
-`brain read TARGET --mode outline` shows a note's headings and claims.
+`brain read TARGET --mode outline` shows a note's summary, headings, links,
+and backlinks.
 
-`brain review` is the one queue of proposals awaiting the user: consolidation
-and edit proposals (`run-…` ids) and rule proposals (`r-…` ids, also handled
-by `brain rules accept|reject`). `review list` marks each with its kind
-(`consolidation`, `edit`, or `rule`); rule proposals show their text, quote,
-and the rule they replace.
+Command details where format 3 changed the surface:
+
+| Command | Behavior |
+|---|---|
+| `search` | FTS over title, aliases, tags, headings, and body with filters; a superseded hit carries the note that replaced it ([04 §6](04-index-and-retrieval.md#6-search)). There is no `--intent` and no graph expansion; `neighbors` follows links. |
+| `neighbors` | Follows links: `out` is what the note links to, `in` what links to it, up to 3 hops; supersession comes first. There is no relation filter (`--rel` is gone, [04 §9.2](04-index-and-retrieval.md#92-neighbors)). |
+| `links` / `backlinks` | `links`: what a note links to, as written in its file: body links, `bw-superseded_by`, and `bw-sources`. `backlinks`: what links to it, as written in other files. |
+| `validate` | Runs the frontmatter rules on the paths given, default the Markdown files git sees as changed (every note without git). Exit 0 valid, 1 otherwise; writes nothing ([05 §2.3](05-write-path-and-consolidation.md#23-direct-edits)). |
+| `consolidate` | `--prepare` prints the guidance and a packet of pending episodes with candidate notes (`--json`: the packet; `--out`: `{guidance, packet}`); `--done` archives the named episodes as one undoable run and needs `edit`. Exactly one of the two is required ([05 §4](05-write-path-and-consolidation.md#4-consolidation)). |
+| `commit` | Snapshots changed files into git, then fetches and rebases (and pushes with `--push`); exit 1 on a rebase conflict or a second push rejection ([05 §5.1](05-write-path-and-consolidation.md#51-brain-commit)). |
+| `schedule` | Installs, removes, or lists the per-brain OS job that runs `brain commit` (crontab on Linux, a LaunchAgent on macOS); bare `brain schedule` lists ([05 §5.2](05-write-path-and-consolidation.md#52-brain-schedule)). |
+| `review` | Rule proposals only (`r-…` ids, also handled by `brain rules accept\|reject`); `list` shows each proposal's text, quote, and the rule it replaces. |
+| `import --overlay` | Phase 0 adopts the folder as a brain (the default), phase 1 normalizes ids and status, phase 2 creates hubs; phases 1 and 2 are runs ([09 §3.2](09-import.md#32-phases)). |
 
 ### 2.2 Conventions
 
@@ -151,9 +169,10 @@ and the rule they replace.
   shape (the same shapes as the MCP structured results).
 - Commands that change many files or files outside the brain support
   `--dry-run`, which prints what they would change: `lint --fix`, `mv`,
-  `consolidate --apply`, `harvest`, `import`, and `connect`. Single-step
-  writes (`log`, `rules`, `check`, `restore`, `review accept`, `undo`) have
-  none; every curated one is a run that `brain undo` reverses.
+  `agents grant|revoke`, `harvest`, `import`, `connect`, `commit`, and
+  `schedule`. Single-step writes (`log`, `rules`, `consolidate --done`,
+  `review accept`, `undo`) have none; every one of them except `log` is a
+  run that `brain undo` reverses.
 - Paths printed are brain-relative; `--json` also includes absolute paths.
 - Targets follow the Obsidian CLI convention: a title, alias, or file name
   resolves like a wikilink, and an exact path or id resolves exactly. Results
@@ -176,10 +195,10 @@ and the rule they replace.
 | Code | Meaning |
 |---|---|
 | 0 | Success |
-| 1 | The command ran and found problems (lint errors, invalid ops, review required), or a path could not be read or written (`os_error`) |
+| 1 | The command ran and found problems (lint or validate errors, a change a run's lint gate refused, a rebase conflict in `brain commit`), or a path could not be read or written (`os_error`) |
 | 2 | Usage error: an unknown command or option, a bad value, or a flag the command would ignore. Parse errors print the command's usage line, then `brain <command>: error: <message>`; `brain` alone prints the help |
 | 3 | Not found (brain, note, run) |
-| 4 | Conflict: `conflict` (a name or file already there, an edited block), `stale` (notes changed since prepare, files changed since a run), `expired`, or `busy` (lock timeout) |
+| 4 | Conflict: `conflict` (a name or file already there, an edited block), `stale` (files changed since a run read them or since the run being undone), `expired`, or `busy` (lock timeout) |
 | 5 | Forbidden by profile or host limits |
 | 10 | Internal error (bug): one line, `internal: unexpected error; details are in <log>`, with the trace in `<state>/logs/brain-wiki.log` |
 
@@ -225,8 +244,7 @@ annotations`), which halves the time Typer spends reading them.
 - It serves clients on the current stateless revision (2026-07-28) and
   clients still on the 2025-11-25 handshake, which is most hosts today.
 - The server keeps no per-connection state. Anything that spans calls
-  (consolidation runs) is a server-minted handle passed as a tool
-  argument, which is how the current revision expects cross-call state to
+  (harvest runs) is a server-minted handle passed as a tool argument, which is how the current revision expects cross-call state to
   work.
 - No sampling, no roots, no reliance on server-to-client requests or
   logging notifications, all deprecated in the current revision.
@@ -269,14 +287,14 @@ name allowed for this host). Unknown arguments are rejected. All return structur
 |---|---|---|
 | `brain_list` | read-only, idempotent, closed-world | Brains this host may use ([04 §9.1](04-index-and-retrieval.md#91-brain-list)) |
 | `brain_orient` | read-only, idempotent, closed-world | One brain's briefing ([04 §8](04-index-and-retrieval.md#8-orientation-the-briefing)) |
-| `brain_search` | read-only, idempotent, closed-world | Search or browse with filters, expansion, and guards ([04 §6](04-index-and-retrieval.md#6-search)) |
-| `brain_read` | read-only, idempotent, closed-world | Read a note, hub, or episode, with handles on every relation ([04 §7](04-index-and-retrieval.md#7-read)) |
-| `brain_neighbors` | read-only, idempotent, closed-world | Follow a node's relations ([04 §9.2](04-index-and-retrieval.md#92-neighbors)) |
-| `brain_check` | not read-only, not destructive (reversible), idempotent, closed-world | Validate and record direct edits; requires `edit` ([05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits)) |
+| `brain_search` | read-only, idempotent, closed-world | Search or browse with filters and supersession guards ([04 §6](04-index-and-retrieval.md#6-search)) |
+| `brain_read` | read-only, idempotent, closed-world | Read a note, hub, or episode, with handles on every link and backlink ([04 §7](04-index-and-retrieval.md#7-read)) |
+| `brain_neighbors` | read-only, idempotent, closed-world | Follow a note's links in either direction ([04 §9.2](04-index-and-retrieval.md#92-neighbors)) |
+| `brain_validate` | read-only, idempotent, closed-world | Check the frontmatter of notes the agent created or edited; needs no capability ([05 §2.3](05-write-path-and-consolidation.md#23-direct-edits)) |
 | `brain_log_episode` | not read-only, not destructive, idempotent (with `dedupe_key`), closed-world | Write an episode ([05 §2.1](05-write-path-and-consolidation.md#21-ways-an-episode-is-written)) |
 | `brain_propose_rule` | destructive, not idempotent, closed-world; `_meta["anthropic/requiresUserInteraction"] = true` | Add or replace a rule with user confirmation ([05 §6](05-write-path-and-consolidation.md#6-rules)) |
-| `brain_consolidate_prepare` | not read-only, not destructive, closed-world | Start an agent-backend run; returns instructions and packet |
-| `brain_consolidate_apply` | destructive (reversible), idempotent per run, closed-world | Validate and apply ops for a run |
+| `brain_consolidate_prepare` | read-only, idempotent, closed-world | Gather pending episodes with candidate notes; returns the guidance and the packet ([05 §4.3](05-write-path-and-consolidation.md#43-selecting-and-packaging-work)) |
+| `brain_consolidate_done` | not read-only, not destructive (reversible), not idempotent, closed-world | Archive the episodes the agent handled as one run; requires `edit` ([05 §4.4](05-write-path-and-consolidation.md#44-archiving-handled-episodes)) |
 | `brain_read_origin` | read-only, idempotent, closed-world | Read a bounded window of the conversation an episode came from; requires `read_origin` ([05 §4.6](05-write-path-and-consolidation.md#46-origin-context)) |
 | `brain_harvest_prepare` | not read-only, not destructive, closed-world | Start an agent-backend harvest of the calling host's sessions; returns instructions and a packet of condensed, scrubbed turns; requires `harvest` ([05 §2.2](05-write-path-and-consolidation.md#22-harvesting-sessions)) |
 | `brain_harvest_apply` | not read-only, not destructive, idempotent per run, closed-world | Validate the agent's per-session results and write episodes with server-set provenance |
@@ -307,7 +325,6 @@ in 04 and 05):
       "count_only": {"type": "boolean", "default": false},
       "facets": {"type": "boolean", "default": false},
       "format": {"enum": ["text", "paths"], "default": "text"},
-      "intent": {"enum": ["none", "context", "why", "impact", "history", "related"], "default": "context"},
       "include_episodes": {"type": "boolean", "description": "Default: on for a query, off when browsing."},
       "include_archived": {"type": "boolean", "default": false},
       "brain":  {"type": "string"}}},
@@ -315,17 +332,15 @@ in 04 and 05):
   "brain_neighbors": {"type": "object", "additionalProperties": false, "required": ["target"],
     "properties": {
       "target":    {"type": "string", "description": "id, path, file name, alias, or title"},
-      "relations": {"type": "array", "items": {"enum": ["part_of", "depends_on", "conflicts_with", "supersedes", "related_to", "links_to"]}},
       "direction": {"enum": ["out", "in", "both"], "default": "both"},
       "depth":     {"type": "integer", "minimum": 1, "maximum": 3, "default": 1},
       "limit":     {"type": "integer", "minimum": 1, "maximum": 100, "default": 30},
       "brain":     {"type": "string"}}},
 
-  "brain_check": {"type": "object", "additionalProperties": false,
+  "brain_validate": {"type": "object", "additionalProperties": false,
     "properties": {
-      "paths": {"type": "array", "items": {"type": "string"}, "maxItems": 50,
-                "description": "Brain-relative paths you edited; empty lists pending edits without recording."},
-      "allow_shrink": {"type": "boolean", "default": false},
+      "paths": {"type": "array", "items": {"type": "string"}, "maxItems": 100, "default": [],
+                "description": "Brain-relative paths you created or edited; empty checks the notes git sees as changed (every note without git)."},
       "brain": {"type": "string"}}},
 
   "brain_read": {"type": "object", "additionalProperties": false, "required": ["target"],
@@ -341,7 +356,7 @@ in 04 and 05):
                          "description": "What happened and what was learned, in Markdown."},
       "claims":         {"type": "array", "maxItems": 50, "items": {"type": "string", "maxLength": 500}},
       "open_questions": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
-      "topics":         {"type": "array", "maxItems": 5, "items": {"type": "string"}},
+      "topics":         {"type": "array", "maxItems": 5, "items": {"type": "string", "maxLength": 100}},
       "dedupe_key":     {"type": "string", "maxLength": 200},
       "session":        {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,200}$",
                          "description": "Host session id this episode summarizes, if known (recorded as a hint)."},
@@ -362,12 +377,11 @@ in 04 and 05):
       "max_episodes": {"type": "integer", "minimum": 1, "maximum": 100},
       "brain":        {"type": "string"}}},
 
-  "brain_consolidate_apply": {"type": "object", "additionalProperties": false, "required": ["run", "ops"],
+  "brain_consolidate_done": {"type": "object", "additionalProperties": false, "required": ["episodes"],
     "properties": {
-      "run":     {"type": "string", "pattern": "^run-[0-9A-HJKMNP-TV-Z]{26}$"},
-      "ops":     {"type": "array", "description": "Operations, see the instructions from prepare."},
-      "dry_run": {"type": "boolean", "default": false},
-      "brain":   {"type": "string", "description": "Optional; the server finds the brain that holds the run."}}},
+      "episodes": {"type": "array", "minItems": 1, "maxItems": 200, "items": {"type": "string"},
+                   "description": "Episode paths (inbox/...) or ids, as brain_consolidate_prepare listed them."},
+      "brain":    {"type": "string"}}},
 
   "brain_read_origin": {"type": "object", "additionalProperties": false, "required": ["episode"],
     "properties": {
@@ -399,24 +413,29 @@ in 04 and 05):
                                                  "turns": {"type": "string", "pattern": "^[0-9]+-[0-9]+$"}}}},
           "negative_findings": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
           "open_questions":    {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
-          "topics":            {"type": "array", "maxItems": 5, "items": {"type": "string"}}}}}}}
+          "topics":            {"type": "array", "maxItems": 5, "items": {"type": "string", "maxLength": 100}}}}}}}
 }
 ```
 
 Notes:
 
 - `brain_log_episode` assembles the episode body from `summary`, `claims`,
-  and `open_questions`; the provenance fields are set by the server, never
-  by arguments ([05 §3](05-write-path-and-consolidation.md#3-provenance-and-inputs)).
+  and `open_questions`; `claims` become a `## Claims` list in the body,
+  plain text that nothing parses later. The provenance fields are set by
+  the server, never by arguments ([05 §3](05-write-path-and-consolidation.md#3-provenance-and-inputs)).
 - `session` and `origin_turns` on `brain_log_episode` are hints from the
   model (used by the fallback harvest recipe); the episode records them but
   keeps `bw-captured: mcp` and `bw-inputs: unknown`. In `brain_harvest_apply`, by
   contrast, every provenance field comes from the server's own parse of the
   session.
-- `brain_consolidate_apply` validates `ops` against the schema in
-  [05 §5](05-write-path-and-consolidation.md#5-operations) itself, so a
-  malformed op produces a precise, model-correctable error rather than a
-  generic protocol failure.
+- `brain_validate` writes nothing and checks no capability: any agent may
+  check files. It returns the lint result (`problems`, counts) plus
+  `checked`, the paths it checked (`null` for the whole brain).
+- `brain_consolidate_prepare` returns the guidance and packet as text and
+  counts (`episodes`, `pending`, `notes`) as structured content. Notes are
+  edited with the agent's own file tools; no MCP tool writes a note.
+- `brain_consolidate_done` returns `{run, archived}`; `brain undo RUN` puts
+  the episodes back.
 
 ### 3.5 Prompts
 
@@ -426,7 +445,7 @@ naming):
 
 | Prompt | Does |
 |---|---|
-| `consolidate` | Asks the agent to run the agent-backend consolidation flow and report what changed. |
+| `consolidate` | Asks the agent to call `brain_consolidate_prepare`, edit or create notes, run `brain_validate`, call `brain_consolidate_done`, repeat while episodes remain, and report what changed. |
 | `capture` | Asks the agent to summarize the current session's durable learnings and log them as one episode. |
 | `harvest` | Asks the agent to run the harvest recipe: prepare, distill each session, apply, repeat until no sessions remain or the user stops; fall back to the self-read recipe if the host is unsupported. |
 
@@ -441,11 +460,11 @@ starts with a stable code:
 | `not_found` | Target, brain, or run does not exist |
 | `ambiguous` | Target matches several notes; the message lists them |
 | `forbidden` | Not allowed by the profile or host limits |
-| `invalid_ops` | Validation failed; a list of `{op_index, check, message}` follows |
-| `stale` | Notes changed since the packet was prepared, or files since the run read them; prepare again |
+| `invalid_ops` | Harvest entries failed validation, or a run's lint gate refused the change; the problems follow |
+| `stale` | Files changed since the run read them; run the command again |
 | `conflict` | The change collides with something already there (a registered name, an existing file) |
 | `budget_exceeded` | `rules.md` would exceed its budget |
-| `expired` | The run handle is older than its expiry |
+| `expired` | The harvest run handle is older than one hour |
 | `busy` | The brain's write lock could not be taken in time |
 | `not_available` | An episode's origin conversation is not on this device or was deleted by the host |
 | `unsupported_host` | brain-wiki has no session reader for the calling host; use the fallback recipe |
@@ -462,6 +481,9 @@ as `internal` with a log reference, never with internal details.
   scans again if more than a second has passed ([04 §4](04-index-and-retrieval.md#4-freshness)).
 - Brain selection can change per call (`brain` argument), within the
   host's limits; indexes are opened lazily and cached per brain.
+- Each call re-reads the brain's `brain.toml` and refreshes the cached
+  engine from it, so a profile grant or revoke, or any other manifest
+  change, applies to the next call without restarting the server.
 - The server exits on stdin EOF, as the transport requires.
 
 ### 3.8 Not in v0.1

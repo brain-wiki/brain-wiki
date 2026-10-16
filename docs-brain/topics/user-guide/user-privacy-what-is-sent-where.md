@@ -13,5 +13,5 @@ when an agent you use reads it:
 | Action | Sent to |
 |---|---|
 | Search and read from an agent | That agent's model provider |
-| Consolidation | The model provider of the agent that consolidates |
+| Editing notes and consolidation | The model provider of the agent doing it |
 | Harvest with distillation | The distill preset's provider, or your in-session agent; `--raw` sends nothing |

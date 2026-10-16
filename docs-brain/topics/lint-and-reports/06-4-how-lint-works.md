@@ -12,24 +12,35 @@ source: "docs/design/06-lint-and-reports.md#4-how-lint-works"
 lint(paths, profile):
   scan()                                    # index freshness (04 §4)
   per-file rules: re-parse each file in scope (fast, line-oriented)
-  cross-file rules: query the index (ids, names, edges, claims, budgets)
+  cross-file rules: query the index (ids, names, edges, budgets)
   merge, apply profile and overrides, sort by path and line
 ```
 
 - File rules depend only on a file's content and the manifest, so their
-  results are cached in the index by content hash; whole-brain lint
-  re-checks only files that changed.
-- Cross-file rules (BW105, BW110, BW112, BW2xx sources, BW3xx resolution,
-  BW4xx structure, BW5xx inbox) use the index, so whole-brain lint stays
-  under a second at 10k notes.
+  results are cached in the index by content hash (keyed with
+  `LINT_VERSION`, now `"2"`, and the budgets); whole-brain lint re-checks
+  only files that changed.
+- Cross-file rules use the index, so whole-brain lint stays under a second
+  at 10k notes:
+  - duplicate ids (BW105), case clashes (BW110), conflict copies (BW112),
+    database files (BW115);
+  - link resolution over the `edges` table
+    ([[04-3-schema|04 §3]]): an unresolved or
+    ambiguous body link is BW310, a `bw-superseded_by` link BW119, a
+    `bw-sources` link BW122. A `bw-sources` link to `archive/episodes/…`
+    whose episode is still under `inbox/episodes/` is not reported: it is
+    the path the consolidation packet gives, valid once `brain consolidate
+    --done` archives the episode;
+  - `bw-superseded_by` naming its own note (BW119) and cycles along
+    `bw-superseded_by` (BW307). Chains without a cycle are fine;
+  - structure (BW4xx) and inbox (BW5xx).
 - `--staged` (pre-commit) lints staged versions from git, not the working
   tree, so it checks exactly what will be committed.
 - `--changed` lints files changed since the last run, for editor
   integrations.
 
-`brain check` ([[05-23-checked-agent-edits|05 §2.3]])
-reuses the per-file rules for the notes an agent edited and adds checks that
-need the note's last recorded version: claims deleted or reworded in place,
-large deletions, and protected files. Pending edits (a
-note that differs from its last recorded version) are reported by `brain
-check`, not by lint, so hand edits never raise warnings.
+`brain validate` ([[05-23-direct-edits|05 §2.3]])
+is lint with `--profile strict --select` set to `SCHEMA_CODES`, on the
+paths given or the Markdown files git sees as changed (every note without
+git). It adds BW121 for any protected path it is asked to check, and exits 1
+only on errors.

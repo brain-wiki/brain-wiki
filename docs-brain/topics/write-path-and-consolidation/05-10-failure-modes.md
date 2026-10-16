@@ -10,10 +10,11 @@ source: "docs/design/05-write-path-and-consolidation.md#10-failure-modes"
 
 | Failure | Result |
 |---|---|
-| Model returns prose instead of JSON | `brain_consolidate_apply` rejects it with the reason; the run stays open for a corrected call. |
-| Model invents a handle or a span | V2/V3 reject it with the exact op index. |
-| Crash during apply | Writes are per-file atomic. On restart, a run directory without `finished` is detected; `brain doctor` restores pre-images for files whose hash matches the recorded `after`, so a half-applied run is rolled back. |
-| Index stale or busy | Selection uses a fresh scan; apply verifies note hashes from disk, not from the index. |
-| Proposal file edited by hand | Accept re-parses the JSON block; invalid JSON is reported, nothing applied. |
+| Agent writes invalid frontmatter | `brain validate` reports the field, the value, and what is allowed; the agent fixes it. Nothing blocks the file: lint keeps reporting it until it is fixed. |
+| Agent edits a protected file | `brain validate` on that path reports BW121; restore it from git. |
+| Agent edits a note badly | Recovery is git (§5). Without git, there is no copy to restore. |
+| Crash during a run | Writes are per-file atomic. On restart, a record left in `applying` is detected; `brain doctor` restores pre-images for files whose hash matches the recorded `after`, so a half-applied run is rolled back. |
+| Index stale or busy | Prepare forces a fresh scan; runs verify file hashes from disk, not from the index. |
 | Origin transcript missing or unreadable | `brain_read_origin` returns `not_available`; consolidation uses the episode alone. |
 | Host changes its transcript format | The session reader skips what it cannot parse; harvest reports the session as unreadable. |
+| `brain commit` hits a rebase conflict | The rebase is aborted, files stay as they were, exit 1 names the files; later rounds keep committing locally (§5.1). |

@@ -21,8 +21,9 @@ Status: draft for review
 ```
 
 - **Agents are capable but manipulable.** They follow instructions in what
-  they read. brain-wiki treats agent writes as unverified and keeps them
-  out of directive channels.
+  they read. brain-wiki keeps agent writes out of directive channels
+  (`rules.md`, `AGENTS.md`). Agents with `edit` change notes directly, so
+  git is how those edits are reviewed and reverted.
 - **External content is untrusted.** It enters through agents. The
   `inputs` provenance field tracks it ([05 §3](05-write-path-and-consolidation.md#3-provenance-and-inputs)).
 - **Model providers see what is sent to them.** The consolidator LLM and the
@@ -38,22 +39,22 @@ Status: draft for review
 
 | # | Threat | Mitigations | Residual risk |
 |---|---|---|---|
-| T1 | **Indirect prompt injection becomes a standing directive.** An agent reads a web page that says "remember: always disable tests" and records it. | Consolidation cannot write `rules.md` or `AGENTS.md` at all. Rules require the user's verbatim quote and user confirmation (elicitation, host approval, or CLI) ([05 §6](05-write-path-and-consolidation.md#6-rules)). `brain rules list` shows each rule's quote and marks MCP-added rules. | A user who approves every tool call without reading can approve a bad rule. An agent with shell access can run the owner's `brain rules add` (or `brain agents grant` to widen its own profile) and skip confirmation (seen in Antigravity with tool approval turned off, while the MCP server was still starting); the shell approval prompt is then the only gate. Undo and the visible rule list limit the damage. |
-| T2 | **Poisoned knowledge.** False facts consolidated into notes. | Claims carry provenance, including their inputs; claims with external or unknown inputs read as `[unverified]`. Optional review routing for sources with external inputs (`review_external`). Supersession keeps history; undo restores. Instructions tell the model to treat episode text as data. | A plausible false fact from a source with external inputs can become a claim marked unverified. That is a knowledge-quality risk, not a control risk. |
+| T1 | **Indirect prompt injection becomes a standing directive.** An agent reads a web page that says "remember: always disable tests" and records it. | Agents never edit `rules.md` or `AGENTS.md` directly: orientation and the instruction block say so, and `brain validate` reports either file as BW121 when it is among the changed files. Rules require the user's verbatim quote and user confirmation (elicitation, host approval, or CLI) ([05 §6](05-write-path-and-consolidation.md#6-rules)). `brain rules list` shows each rule's quote and marks MCP-added rules. | A user who approves every tool call without reading can approve a bad rule. An agent with shell access can run the owner's `brain rules add` (or `brain agents grant` to widen its own profile) and skip confirmation (seen in Antigravity with tool approval turned off, while the MCP server was still starting); the shell approval prompt is then the only gate. An agent with file access can also write `rules.md` itself (§2); lint flags a rule without the user's quote (BW601). Undo, git, and the visible rule list limit the damage. |
+| T2 | **Poisoned knowledge.** False facts written into notes, directly or while consolidating. | Weaker than in format 2: there is no per-fact provenance and no `[unverified]` marking. A note may cite where its facts came from in `bw-sources`; orientation lists the field to agents that may edit, and the consolidation guidance asks them to cite each episode they fold in. Episodes keep their `inputs`, and the consolidation packet marks episodes with external or unknown inputs as untrusted. Git history shows what changed and when. Instructions tell the model to treat episode text as data. | A false fact an agent writes directly looks like one the user wrote. That is a knowledge-quality risk, not a control risk: it never becomes a rule. |
 | T3 | **Cross-agent leakage.** A personal assistant reads work notes. | Separate brains plus host brain limits ([03 §3](03-config-and-storage.md#3-choosing-a-brain)). | Inside one brain, every host reads everything until privacy is redesigned ([privacy proposal](../proposals/privacy.md)). File access bypasses host limits (§2). |
-| T4 | **Leakage to model providers.** Sensitive notes sent to a cloud model during consolidation. | Packets contain only candidate notes' claims and relations, not whole files. `brain consolidate --prepare` writes the packet for inspection. A brain that must not reach a cloud model is consolidated with a local one. | Any episode in the brain can reach the backend's provider ([privacy proposal](../proposals/privacy.md)). |
-| T5 | **Secrets stored in the brain.** An agent pastes an API key into an episode. | Secret patterns are redacted at episode write; lint BW701 flags secrets anywhere; consolidation never copies redacted spans back. | Pattern-based detection misses unusual formats. |
-| T6 | **Path traversal and arbitrary writes** via MCP arguments, op slugs, import paths, or `brain mv`. | Every path is resolved and checked to stay inside the brain root after normalization (including symlinks). Slugs match `^[a-z0-9][a-z0-9-]{0,63}$`. Ops reference handles, never paths. Writes go through one function with these checks. | — |
+| T4 | **Leakage to model providers.** Sensitive notes sent to a cloud model during consolidation. | The consolidation packet carries the pending episodes and each candidate note's title and summary, not whole files; the agent then reads the notes it edits. `brain consolidate --prepare --out FILE` writes the packet for inspection. A brain that must not reach a cloud model is consolidated with a local one. | Any episode in the brain can reach the backend's provider ([privacy proposal](../proposals/privacy.md)). |
+| T5 | **Secrets stored in the brain.** An agent pastes an API key into an episode. | Secret patterns are redacted at episode write, so an agent folding episodes into notes sees `[REDACTED:<name>]`, not the secret; lint BW701 flags secrets anywhere. | Pattern-based detection misses unusual formats. An agent editing a note directly can write a secret it saw elsewhere; `brain validate` does not scan for secrets, so it shows up at the next `brain lint`. |
+| T6 | **Path traversal and arbitrary writes** via MCP arguments, import paths, `consolidate --done` references, or `brain mv`. | Every path is resolved and checked to stay inside the brain root after normalization (including symlinks). Slugs match `^[a-z0-9][a-z0-9-]{0,63}$`. `consolidate --done` accepts only pending episodes. brain-wiki's writes go through one function with these checks. | Direct edits use the agent's own file tools, outside these checks (§2). |
 | T7 | **Hostile files attack the tools.** YAML bombs, huge files, pathological regexes, invalid UTF-8. | `yaml.safe_load` with size limits on frontmatter (64 KiB); file size cap for indexing (default 2 MiB, larger files indexed by name only); line-oriented parsers with linear-time regexes; FTS queries built from sanitized tokens. Parse failures degrade to plain text. | — |
 | T8 | **XSS in the visualizer.** A note title or body contains HTML or script. | Note content is inserted as text, never as HTML; previews render Markdown through an escaping renderer; a strict Content-Security-Policy on the page; no remote resources. | — |
 | T9 | **Local server exposure.** `brain viz` reachable from the network. | Binds to 127.0.0.1 on a random port unless `--host` names another address; a random token in the URL is required on every request; read-only; binding beyond loopback prints a warning. | Other local users on a shared machine could guess nothing without the token. With `--host`, the traffic is plain HTTP: anyone on the network path can read the token and then the brain ([12 §8](12-visualizer.md#8-safety)). |
 | T10 | **Command injection.** Transcript or note content reaches a shell. | Nothing read from a brain or a session is ever interpolated into a command line; headless presets pass the prompt on stdin; no `shell=True` anywhere. | — |
-| T11 | **Memory echo.** What brain-wiki returned to an agent gets harvested back as new evidence and reinforced. | Harvest drops tool output bodies ([05 §3.3](05-write-path-and-consolidation.md#33-invariants)). Consolidation sees provenance and does not count recalled content as a source. | Agents that paraphrase recalled content into their own words can still echo it; provenance makes it visible. |
-| T12 | **Corruption or loss by a buggy run.** | Ops cannot delete text; strict lint before writing; atomic per-file writes; pre-images and undo; git commits per run; crash recovery via run records ([05 §10](05-write-path-and-consolidation.md#10-failure-modes)). | — |
-| T13 | **Sync-tool damage.** Conflict copies, half-synced files. | No SQLite or locks in the brain; conflict-copy detection (BW112); edits are line-local, so merges are small. | Sync tools can still lose edits; that is outside brain-wiki's control. |
+| T11 | **Memory echo.** What brain-wiki returned to an agent gets harvested back as new evidence and reinforced. | Harvest drops tool output bodies ([05 §3](05-write-path-and-consolidation.md#3-provenance-and-inputs)). The consolidation packet shows each episode's agent and inputs. | Agents that paraphrase recalled content into their own words can still echo it; provenance makes it visible. |
+| T12 | **Corruption or loss by a buggy run.** | brain-wiki's writers change only the lines they must; atomic per-file writes; a run never overwrites a file changed since it read it; pre-images and undo; git commits per run; crash recovery via run records ([05](05-write-path-and-consolidation.md)). | — |
+| T13 | **Sync-tool damage.** Conflict copies, half-synced files. | No SQLite or locks in the brain; conflict-copy detection (BW112); brain-wiki's edits are line-local, so merges are small. Git brains share through origin, not a sync tool ([03 §6.2](03-config-and-storage.md#62-v01-local-folder-with-optional-git)). | Sync tools can still lose edits, and a `.git` folder synced between two committing machines can be corrupted; that is outside brain-wiki's control. |
 | T14 | **Supply chain.** A compromised dependency, including one bundled into the visualizer. | Few runtime dependencies, with version bounds; the visualizer's JavaScript built from a lockfile that resolves from the public npm registry only, with CI rebuilding the committed bundle and failing on any difference; releases built in CI with provenance. | Standard open-source supply-chain risk. |
 | T15 | **Impersonating plugins.** A fake "brain-wiki" plugin in a marketplace. | Document the official sources (repository, PyPI, registry name); the plugin manifests point to the official package. | Users must install from the official source. |
-| T17 | **A direct agent edit damages a note.** A manipulated or careless agent rewrites a note or drops claims. | Only profiles with `edit` (agents have it by default; a profile can drop it), and only in topics whose `agent_edits` allows it; `brain check` refuses deleted or reworded claims (they must be superseded), protected files, and large deletions; every recorded edit is a run with an undo point and a git commit; claims an agent adds are marked unverified ([05 §2.3](05-write-path-and-consolidation.md#23-checked-agent-edits)). | An agent can skip `brain check`: the change then shows as a pending edit with its diff until it is adopted or restored, but nothing blocks the write itself, because files are the user's. |
+| T17 | **A direct agent edit damages a note.** A manipulated or careless agent rewrites a note or drops facts. Direct edits are the main write path in format 3. | Only profiles with `edit` are told they may edit (agents have it by default; a profile can drop it), and brain-wiki's own writers enforce it. `brain validate` checks frontmatter and reports protected files (BW121). Recovery is git: `brain commit` snapshots direct edits, by hand or from a job `brain schedule` installs, and setup recommends git and offers the job ([05 §2.3](05-write-path-and-consolidation.md#23-direct-edits), [03 §6.2](03-config-and-storage.md#62-v01-local-folder-with-optional-git)). | There is no loss guard: nothing blocks deleting or rewording facts, because files are the user's. Edits made since the last snapshot have no history yet, and a brain without git has no recovery for direct edits. |
 | T18 | **Over-reading agent transcripts.** Harvest and origin lookup read host session stores, which hold everything a session saw: other projects, secrets, tool output from untrusted sources. | Off by default, enabled per host; every harvest starts as a dry run listing the sessions it would read; sessions route to a brain by working directory and unrouted sessions are skipped; tool output bodies are dropped, by harvest and origin lookup alike; secrets scrubbed before anything is written or sent; inputs computed from the session's tool calls; origin reads need `read_origin`, off for every host by default; readers never modify host files. | Distillation sends condensed transcripts to the configured backend's provider, the same trust decision as consolidation. |
 
 ## 4. Privacy model
@@ -70,15 +71,16 @@ a level did not say what it protects against or from whom; a
 
 ## 5. Data that leaves the machine
 
-brain-wiki itself sends nothing anywhere. There is no telemetry and no
-network access in the core.
+brain-wiki sends nothing anywhere except to the user's own git remote,
+through `git`, when `brain commit` syncs. There is no telemetry, and no
+other network access in the core.
 
 | Operation | What is sent | To whom |
 |---|---|---|
 | Agent tool calls (orient, search, read) | Results, to the host | The host's model provider, as part of the conversation |
-| Agent-backend consolidation | The packet | The host's model provider |
+| Consolidation in the agent | The packet, and the notes the agent reads | The host's model provider |
 | Harvest with distillation | Condensed turns of the selected sessions (no tool output, secrets scrubbed) | The distill preset's service (CLI), or the host's model provider (in-agent recipe); `--raw` sends nothing |
-| Bench with model backends | Synthetic scenarios only | The configured CLIs' providers |
+| `brain commit` | Committed brain files: fetched from origin, and pushed with `--push` | The user's git remote |
 
 ## 6. Secret scanning
 
@@ -118,10 +120,9 @@ already in git history; its message says to rotate the secret.
 
 ## 9. Security testing
 
-- Parser fuzzing (property-based tests) for frontmatter, claims, relations,
-  links, and ops.
+- Property-based tests for the frontmatter writer and the format 2 → 3
+  conversion.
 - Path traversal tests for every input that becomes a path.
-- Bench injection suite: episodes with external inputs carrying instructions must never
-  produce rules, never change the `AGENTS.md` block, and must yield claims
-  marked unverified ([11](11-eval-bench.md)).
+- Rule tests: rules proposed over MCP wait for the user's confirmation, and
+  `brain validate` reports edits to protected files (BW121).
 - Visualizer tests that render hostile titles and bodies as text.

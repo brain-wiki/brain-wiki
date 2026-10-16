@@ -15,7 +15,7 @@ when higher ones are missing.
 |---|---|---|
 | 0 · Files | The brain's own `AGENTS.md` ([[02-11-agentsmd\|02 §11]]) | Any file-reading agent opened in the brain folder can read and log episodes. |
 | 1 · Skills | `skills/brain`, `skills/brain-setup`, `skills/brain-maintain` in the plugin | Knows when and how to use, set up, and maintain the brain, through the CLI or MCP ([[skills-and-onboarding\|15]]). |
-| 2 · MCP | `brain mcp --host <id>` (stdio) | Orient, search with guards, read, log, propose rules, consolidate. |
+| 2 · MCP | `brain mcp --host <id>` (stdio) | Orient, search with the supersession guard, read, validate edited notes, log, propose rules, consolidate (prepare and done). |
 | 3 · Hooks | Host lifecycle hooks | Not in v0.1: built and removed before release ([[proposal-hooks\|proposal]]). |
 | 4 · Native memory | Host-specific memory APIs | Not built ([[proposal-readme-backlog\|backlog]]). |
 

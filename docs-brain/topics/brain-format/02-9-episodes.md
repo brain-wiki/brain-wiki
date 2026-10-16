@@ -1,12 +1,12 @@
 ---
 id: 01M3250V00W3XAEV6QS3CQ5TX8
 type: design
-title: "Episodes (Brain format)"
+title: "Episodes"
 aliases: ["02 §9"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#9-episodes"
 ---
-# Episodes (Brain format)
+# Episodes
 
 Episodes are the inbox. They capture what happened in a session, raw and
 unpolished, so nothing has to be decided at capture time.
@@ -54,23 +54,24 @@ Rules:
   accept both.
 - `bw-session`, `bw-turns`, and `bw-device` point back to the conversation the
   episode came from, so tools on that device can show it
-  ([[05-46-origin-context|05 §4.6]]). They
+  ([[write-path-and-consolidation|05]]). They
   never hold file paths. An episode must be understandable on its own:
   hosts delete old transcripts, and transcripts stay on the device that
   produced them.
 - `bw-dedupe` holds the writer's idempotency key
-  ([[05-21-ways-an-episode-is-written|05 §2.1]]).
+  ([[write-path-and-consolidation|05]]).
   Episodes imported from documents carry `bw-source`, the original file
   and heading ([[09-6-to-episodes-and-from-agents|09 §6]]).
 - The body is free Markdown. `## Claims`, `## Negative findings` (what was
   tried and did not work, so later agents do not repeat it), and
-  `## Open questions` are suggested sections that consolidation prompts
-  look for; none is required. Unlike a note, an episode keeps its claims
-  in the body: it is raw capture that consolidation reads as text.
-- Consolidation moves processed episodes to `archive/episodes/` with the
-  same relative path. Archived episodes are kept as provenance: claim `src`
-  references still resolve.
+  `## Open questions` are suggested sections that the consolidation
+  guidance looks for; none is required. They are body text: `## Claims`
+  in an episode is an ordinary heading, not format 1's reserved section,
+  and episodes are never converted (§13).
+- `brain consolidate --done` moves processed episodes to
+  `archive/episodes/` with the same relative path. Archived episodes are
+  kept as provenance: `bw-sources` links to them (§6.4) still resolve.
 - Files dropped into `inbox/agents/<agent>/` by host-native memory features
   are treated as episodes by consolidation without needing frontmatter.
-  Their origin is `agent` and their inputs are `unknown`. Consolidation
-  archives them to `archive/agents/<agent>/` unchanged.
+  Their origin is `agent` and their inputs are `unknown`. `brain
+  consolidate --done` archives them to `archive/agents/<agent>/` unchanged.

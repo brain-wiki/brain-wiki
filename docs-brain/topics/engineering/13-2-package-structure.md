@@ -12,12 +12,14 @@ source: "docs/design/13-engineering.md#2-package-structure"
 src/brainwiki/
 ├── cli/            Typer entry point; one module per command; lazy imports
 ├── config/         user config, brain.toml, brain resolution, platform dirs
-├── format/         parsers and writers: frontmatter, claims, relations, links, episodes, rules
+├── format/         parsers and writers: frontmatter, links, episodes, rules, the AGENTS.md block;
+│                   format 1/2 → 3 conversion (_convert.py; legacy claim and relation parsers read the old formats)
 ├── store/          LocalStore (atomic writes, O_EXCL creates, expected-hash writes)
-├── index/          SQLite schema, scanner, queries (search, guards, read, orient)
-├── lint/           rules, profiles, fixes, reports
-├── write/          episode writer, secret scrubber, rule writer, checked edits, mv
-├── consolidate/    selection, packets, ops schema and validator, applier, review, headless presets
+├── index/          SQLite schema, scanner, queries (search, supersession guard, read, neighbors, orient)
+├── lint/           rules, profiles, fixes, reports, `brain validate` (_validate.py)
+├── write/          episode writer, secret scrubber, rule writer, agent profiles, mv
+├── consolidate/    --prepare (episodes with candidate notes, _prepare.py), --done (archive as a run, _done.py)
+├── schedule/       `brain commit` (snapshot and sync), crontab and LaunchAgent jobs, doctor checks
 ├── runs/           run records, pre-images, undo, locks, git integration
 ├── importer/       overlay, into, to-episodes, from-host presets
 ├── mcp/            MCP server (the only package that imports the SDK)
@@ -25,13 +27,14 @@ src/brainwiki/
 ├── viz/            graph export, level-of-detail API, local server; app/ is the built front end (committed)
 ├── bench/          generator, suites with their graders and scenarios, report
 ├── assets/         prompts (consolidate, distill, harvest); plugin files are copied in at build time
-└── *.py            top-level modules: engine, lifecycle, harvest, origin, doctor, setup_wizard, ids, errors, logs
+└── *.py            top-level modules: engine, lifecycle, harvest, presets (headless host CLIs for harvest
+                    distillation), origin, doctor, setup_wizard, obsidian, ids, errors, logs
 ```
 
 Dependency direction (an arrow means "may import"):
 
 ```
-cli ─► mcp, hosts, viz, bench, importer ─► consolidate, lint ─► index, write, runs ─► format, store, config
+cli ─► mcp, hosts, viz, bench, importer ─► consolidate, lint, schedule ─► index, write, runs ─► format, store, config
 ```
 
 `format`, `store`, and `config` import nothing from the rest. The MCP SDK,

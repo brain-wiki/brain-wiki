@@ -12,4 +12,3 @@ source: "docs/design/11-eval-bench.md#6-when-the-bench-runs"
 |---|---|
 | Every change (`scripts/check.py`, and CI through it) | `retrieval` and `lint` on a 300-note brain |
 | Performance work, and before a release | `perf` at 10k (`brain bench perf --sizes 10k`) |
-| Changing consolidation instructions (`instructions_version`) or the ops schema | `consolidation` with at least two backends; the worst-model score must not drop |

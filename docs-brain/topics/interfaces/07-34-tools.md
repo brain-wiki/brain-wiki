@@ -16,14 +16,14 @@ name allowed for this host). Unknown arguments are rejected. All return structur
 |---|---|---|
 | `brain_list` | read-only, idempotent, closed-world | Brains this host may use ([[04-91-brain-list\|04 §9.1]]) |
 | `brain_orient` | read-only, idempotent, closed-world | One brain's briefing ([[04-8-orientation-the-briefing\|04 §8]]) |
-| `brain_search` | read-only, idempotent, closed-world | Search or browse with filters, expansion, and guards ([[04-6-search\|04 §6]]) |
-| `brain_read` | read-only, idempotent, closed-world | Read a note, hub, or episode, with handles on every relation ([[04-7-read\|04 §7]]) |
-| `brain_neighbors` | read-only, idempotent, closed-world | Follow a node's relations ([[04-92-neighbors\|04 §9.2]]) |
-| `brain_check` | not read-only, not destructive (reversible), idempotent, closed-world | Validate and record direct edits; requires `edit` ([[05-23-checked-agent-edits\|05 §2.3]]) |
+| `brain_search` | read-only, idempotent, closed-world | Search or browse with filters and supersession guards ([[04-6-search\|04 §6]]) |
+| `brain_read` | read-only, idempotent, closed-world | Read a note, hub, or episode, with handles on every link and backlink ([[04-7-read\|04 §7]]) |
+| `brain_neighbors` | read-only, idempotent, closed-world | Follow a note's links in either direction ([[04-92-neighbors\|04 §9.2]]) |
+| `brain_validate` | read-only, idempotent, closed-world | Check the frontmatter of notes the agent created or edited; needs no capability ([[05-23-direct-edits\|05 §2.3]]) |
 | `brain_log_episode` | not read-only, not destructive, idempotent (with `dedupe_key`), closed-world | Write an episode ([[05-21-ways-an-episode-is-written\|05 §2.1]]) |
 | `brain_propose_rule` | destructive, not idempotent, closed-world; `_meta["anthropic/requiresUserInteraction"] = true` | Add or replace a rule with user confirmation ([[05-6-rules\|05 §6]]) |
-| `brain_consolidate_prepare` | not read-only, not destructive, closed-world | Start an agent-backend run; returns instructions and packet |
-| `brain_consolidate_apply` | destructive (reversible), idempotent per run, closed-world | Validate and apply ops for a run |
+| `brain_consolidate_prepare` | read-only, idempotent, closed-world | Gather pending episodes with candidate notes; returns the guidance and the packet ([[05-43-selecting-and-packaging-work\|05 §4.3]]) |
+| `brain_consolidate_done` | not read-only, not destructive (reversible), not idempotent, closed-world | Archive the episodes the agent handled as one run; requires `edit` ([[05-44-archiving-handled-episodes\|05 §4.4]]) |
 | `brain_read_origin` | read-only, idempotent, closed-world | Read a bounded window of the conversation an episode came from; requires `read_origin` ([[05-46-origin-context\|05 §4.6]]) |
 | `brain_harvest_prepare` | not read-only, not destructive, closed-world | Start an agent-backend harvest of the calling host's sessions; returns instructions and a packet of condensed, scrubbed turns; requires `harvest` ([[05-22-harvesting-sessions\|05 §2.2]]) |
 | `brain_harvest_apply` | not read-only, not destructive, idempotent per run, closed-world | Validate the agent's per-session results and write episodes with server-set provenance |
@@ -54,7 +54,6 @@ in 04 and 05):
       "count_only": {"type": "boolean", "default": false},
       "facets": {"type": "boolean", "default": false},
       "format": {"enum": ["text", "paths"], "default": "text"},
-      "intent": {"enum": ["none", "context", "why", "impact", "history", "related"], "default": "context"},
       "include_episodes": {"type": "boolean", "description": "Default: on for a query, off when browsing."},
       "include_archived": {"type": "boolean", "default": false},
       "brain":  {"type": "string"}}},
@@ -62,17 +61,15 @@ in 04 and 05):
   "brain_neighbors": {"type": "object", "additionalProperties": false, "required": ["target"],
     "properties": {
       "target":    {"type": "string", "description": "id, path, file name, alias, or title"},
-      "relations": {"type": "array", "items": {"enum": ["part_of", "depends_on", "conflicts_with", "supersedes", "related_to", "links_to"]}},
       "direction": {"enum": ["out", "in", "both"], "default": "both"},
       "depth":     {"type": "integer", "minimum": 1, "maximum": 3, "default": 1},
       "limit":     {"type": "integer", "minimum": 1, "maximum": 100, "default": 30},
       "brain":     {"type": "string"}}},
 
-  "brain_check": {"type": "object", "additionalProperties": false,
+  "brain_validate": {"type": "object", "additionalProperties": false,
     "properties": {
-      "paths": {"type": "array", "items": {"type": "string"}, "maxItems": 50,
-                "description": "Brain-relative paths you edited; empty lists pending edits without recording."},
-      "allow_shrink": {"type": "boolean", "default": false},
+      "paths": {"type": "array", "items": {"type": "string"}, "maxItems": 100, "default": [],
+                "description": "Brain-relative paths you created or edited; empty checks the notes git sees as changed (every note without git)."},
       "brain": {"type": "string"}}},
 
   "brain_read": {"type": "object", "additionalProperties": false, "required": ["target"],
@@ -88,7 +85,7 @@ in 04 and 05):
                          "description": "What happened and what was learned, in Markdown."},
       "claims":         {"type": "array", "maxItems": 50, "items": {"type": "string", "maxLength": 500}},
       "open_questions": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
-      "topics":         {"type": "array", "maxItems": 5, "items": {"type": "string"}},
+      "topics":         {"type": "array", "maxItems": 5, "items": {"type": "string", "maxLength": 100}},
       "dedupe_key":     {"type": "string", "maxLength": 200},
       "session":        {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,200}$",
                          "description": "Host session id this episode summarizes, if known (recorded as a hint)."},
@@ -109,12 +106,11 @@ in 04 and 05):
       "max_episodes": {"type": "integer", "minimum": 1, "maximum": 100},
       "brain":        {"type": "string"}}},
 
-  "brain_consolidate_apply": {"type": "object", "additionalProperties": false, "required": ["run", "ops"],
+  "brain_consolidate_done": {"type": "object", "additionalProperties": false, "required": ["episodes"],
     "properties": {
-      "run":     {"type": "string", "pattern": "^run-[0-9A-HJKMNP-TV-Z]{26}$"},
-      "ops":     {"type": "array", "description": "Operations, see the instructions from prepare."},
-      "dry_run": {"type": "boolean", "default": false},
-      "brain":   {"type": "string", "description": "Optional; the server finds the brain that holds the run."}}},
+      "episodes": {"type": "array", "minItems": 1, "maxItems": 200, "items": {"type": "string"},
+                   "description": "Episode paths (inbox/...) or ids, as brain_consolidate_prepare listed them."},
+      "brain":    {"type": "string"}}},
 
   "brain_read_origin": {"type": "object", "additionalProperties": false, "required": ["episode"],
     "properties": {
@@ -146,21 +142,26 @@ in 04 and 05):
                                                  "turns": {"type": "string", "pattern": "^[0-9]+-[0-9]+$"}}}},
           "negative_findings": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
           "open_questions":    {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
-          "topics":            {"type": "array", "maxItems": 5, "items": {"type": "string"}}}}}}}
+          "topics":            {"type": "array", "maxItems": 5, "items": {"type": "string", "maxLength": 100}}}}}}}
 }
 ```
 
 Notes:
 
 - `brain_log_episode` assembles the episode body from `summary`, `claims`,
-  and `open_questions`; the provenance fields are set by the server, never
-  by arguments ([[05-3-provenance-and-inputs|05 §3]]).
+  and `open_questions`; `claims` become a `## Claims` list in the body,
+  plain text that nothing parses later. The provenance fields are set by
+  the server, never by arguments ([[05-3-provenance-and-inputs|05 §3]]).
 - `session` and `origin_turns` on `brain_log_episode` are hints from the
   model (used by the fallback harvest recipe); the episode records them but
   keeps `bw-captured: mcp` and `bw-inputs: unknown`. In `brain_harvest_apply`, by
   contrast, every provenance field comes from the server's own parse of the
   session.
-- `brain_consolidate_apply` validates `ops` against the schema in
-  [[05-5-operations|05 §5]] itself, so a
-  malformed op produces a precise, model-correctable error rather than a
-  generic protocol failure.
+- `brain_validate` writes nothing and checks no capability: any agent may
+  check files. It returns the lint result (`problems`, counts) plus
+  `checked`, the paths it checked (`null` for the whole brain).
+- `brain_consolidate_prepare` returns the guidance and packet as text and
+  counts (`episodes`, `pending`, `notes`) as structured content. Notes are
+  edited with the agent's own file tools; no MCP tool writes a note.
+- `brain_consolidate_done` returns `{run, archived}`; `brain undo RUN` puts
+  the episodes back.

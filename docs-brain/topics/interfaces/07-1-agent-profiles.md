@@ -18,23 +18,27 @@ with the brain ([[02-3-braintoml|02 §3]]).
 write       = ["episodes", "edit"]
 
 [agents.claude-code]
-write       = ["episodes", "propose_rules", "consolidate"]
+write       = ["episodes", "edit", "propose_rules", "harvest"]
 ```
 
 | Field | Meaning | Built-in default |
 |---|---|---|
-| `write` | Subset of `episodes`, `edit`, `propose_rules`, `consolidate`, `harvest`, `review`. `edit` allows checked direct edits of notes ([[05-23-checked-agent-edits\|05 §2.3]]). | `["episodes", "edit"]`; the owner profile has everything |
+| `write` | Subset of `episodes` (log episodes), `edit` (edit notes directly, [[05-23-direct-edits\|05 §2.3]], and run brain-wiki's writers that change notes: `mv`, `lint --fix`, `consolidate --done`, `commit --as`), `propose_rules`, `harvest` (the in-agent harvest recipe). | `["episodes", "edit"]`; the owner profile has everything |
 | `read_origin` | May read the original agent conversations behind episodes ([[05-46-origin-context\|05 §4.6]]). Transcripts hold much more than the episodes kept, so this is off by default. | `false` |
 
 `brain agents grant|revoke HOST CAPABILITY…` edits these tables as one undoable
 `config` run (comments kept; a new table starts from what the host may already
-do). `read_origin` is granted and revoked the same way, as a flag. A host id
-that is not a known host (`claude-code`, `codex`, `antigravity`, `openclaw`,
-`cursor`, `generic`, `default`) and has no table yet gets a warning, since it
-is most likely a typo, but the change is made. The command also refreshes the `AGENTS.md` block when the default profile's `edit`
-changes, since that block tells file-reading agents whether they may edit.
+do). `read_origin` is granted and revoked the same way, as a flag. Granting
+an unknown capability is a usage error. The 0.1 capabilities `consolidate`
+and `review` no longer exist: a `brain.toml` that still lists them loads, and
+they are ignored. A host id that is not a known host (`claude-code`,
+`codex`, `antigravity`, `openclaw`, `cursor`, `generic`, `default`) and has
+no table yet gets a warning, since it is most likely a typo, but the change
+is made. The command also refreshes the `AGENTS.md` block when the default
+profile's `edit` changes, since that block tells file-reading agents whether
+they may edit.
 A refusal names the command that allows the action for that host alone, e.g.
-`brain agents grant claude-code consolidate`.
+`brain agents grant claude-code edit`.
 
 Resolution: `--host <id>` → `[agents.<id>]` → `[agents.default]` →
 built-in default. The CLI acts as `owner` (everything allowed) because the
@@ -46,15 +50,19 @@ write does what that host could do through MCP, or is refused:
 |---|---|
 | `log` | Needs `episodes`; recorded as `origin: agent`, `inputs: unknown` (or `external`), with the host as agent, like `brain_log_episode` |
 | `rules add` | Needs `propose_rules`; saved as a proposal for `brain rules accept` (or `brain review accept`), like `brain_propose_rule` without a way to ask |
-| `check`, `mv`, `lint --fix` | Need `edit`: they change notes directly (`--dry-run` previews need nothing) |
-| `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `undo` | Refused: these are the user's decisions. An agent undoing runs could undo the user's own work, so no capability allows it |
+| `mv`, `lint --fix`, `consolidate --done` | Need `edit`: they change notes or the inbox (`--dry-run` previews need nothing) |
+| `commit` | Needs `edit`; the trailer names the host; `--push` is refused, since pushing publishes the brain |
+| `validate`, `consolidate --prepare`, reads | Need nothing |
+| `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `schedule`, `undo` | Refused: these are the user's decisions. An agent undoing runs could undo the user's own work, so no capability allows it |
 
 Enforcement points, all in the engine so every interface gets them:
 
 - Writes: tools absent from `write` are refused with `forbidden`. Write
   functions check the profile themselves (`move_note`, `lint.fix`,
-  `accept_rule`, `reject_rule`, `profile_run`), so a new interface inherits
-  the checks.
+  `consolidate.done`, `accept_rule`, `reject_rule`, `profile_run`), so a new
+  interface inherits the checks.
+- Profiles are read from `brain.toml` on every MCP call (§3.7), so a grant
+  or revoke applies to the agent's next tool call.
 - Host brain limits from the user config ([[03-3-choosing-a-brain|03 §3]]).
 
 Profiles are not authentication. A local stdio server trusts the `--host`

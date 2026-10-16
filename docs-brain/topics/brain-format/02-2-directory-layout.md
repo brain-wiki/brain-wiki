@@ -48,8 +48,8 @@ Rules:
 - Nothing in the brain depends on the index or on machine-local state. The
   brain is complete by itself.
 
-**Why topics are folders.** A topic is the unit people browse, the unit of
-topic policies (review, agent edits), and the unit a hub summarizes. A folder makes that
+**Why topics are folders.** A topic is the unit people browse, the unit
+search filters by, and the unit a hub summarizes. A folder makes that
 visible in every file browser and in Obsidian without extra tooling. Notes
 MAY also live outside any topic (for example in an imported vault); they
 belong to no topic and lint can warn about it.
@@ -61,16 +61,15 @@ belong to no topic and lint can warn about it.
   levels: `people/` and `people/rin-sato/` are both topics.
 - A folder without a hub inside a topic is plain organization; its notes
   belong to the enclosing topic.
-- A topic's **parent** is the nearest enclosing topic. A sub-topic's hub is
-  `part_of` its parent's hub without anyone writing it (an implicit
-  relation, §6.4); an explicit `bw-part_of` adds further parents.
+- A topic's **parent** is the nearest enclosing topic. Membership is the
+  folder: a note belongs to the topic whose folder holds it, and a
+  sub-topic belongs to its parent the same way. No frontmatter field
+  declares membership.
 - Every topic has a **slug**, unique in the brain: its folder name,
   slugified (`01 People` → `people`). When two folders would get the same
   slug, the deeper one takes its parent's slug as a prefix (`rin-sato-notes`).
   Declaring a topic in `brain.toml` (§3) can name it. The slug, not the
   path, is the topic's identity.
-- **Policies inherit down the tree.** A topic without its own `review` or
-  `agent_edits` setting takes its nearest ancestor's.
 - **Reorganizing is moving folders.** `brain mv` moves a topic folder with
   its notes and rewrites the links that named them by path, as one undoable
   run; a move by hand works too, and `brain lint --fix` repairs path links

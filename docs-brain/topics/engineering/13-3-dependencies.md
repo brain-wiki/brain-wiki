@@ -14,7 +14,6 @@ source: "docs/design/13-engineering.md#3-dependencies"
 | `PyYAML` | Frontmatter parsing | `CSafeLoader` when available. Writers edit frontmatter line by line instead of dumping YAML, so formatting is preserved. |
 | `tomlkit` | Editing `config.toml` and `brain.toml` without losing comments | Reading uses stdlib `tomllib`. |
 | `filelock` | Cross-platform advisory locks | Imported when a lock is taken: it loads `asyncio` (~40 ms), which read-only commands never need. |
-| `jsonschema` | Validating ops and plugin manifests | Already required by `mcp`. |
 | `typer` | The CLI parser: nested subcommands, typed validation, shell completion ([[07-24-parser-and-startup-cost\|07 §2.4]]) | Vendors Click, and installs rich and shellingham; rich markup is off, so rich is never imported. `typer-slim` is now only an alias that installs `typer`. |
 
 Standard library for everything else: `sqlite3`, `tomllib`, `json`, `re`, `hashlib`, `gzip`, `subprocess`, `http.server`. ULIDs are

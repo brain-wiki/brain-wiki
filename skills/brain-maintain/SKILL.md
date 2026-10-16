@@ -1,19 +1,20 @@
 ---
 name: brain-maintain
-description: Maintain a brain-wiki brain. Harvest recent agent sessions into the inbox, consolidate pending episodes into notes, review proposals, check health (contradictions, stale notes, lint), and undo a bad run. Use when the user asks to consolidate, harvest, clean up, review, or check their brain.
+description: Maintain a brain-wiki brain. Harvest recent agent sessions into the inbox, fold pending episodes into notes, review rule proposals, check health (lint, stale links, orphans), commit direct edits to git, and undo a bad run. Use when the user asks to consolidate, harvest, clean up, review, check, or commit their brain.
 ---
 # Maintain a brain-wiki brain
 
 Episodes (raw notes from sessions) collect in the brain's inbox. Upkeep
-turns them into curated notes and keeps the brain healthy:
+folds them into notes and keeps the brain healthy and committed:
 
 | Task | What it does | How |
 |---|---|---|
 | Harvest | Turns this agent's past sessions into episodes | `brain_harvest_prepare` → `brain_harvest_apply` |
-| Consolidate | Folds pending episodes into notes | `brain_consolidate_prepare` → `brain_consolidate_apply` |
-| Review | Accepts or rejects runs held for the user, and agents' rule proposals | `brain review …` |
-| Health | Finds contradictions, stale notes, broken links | `brain lint`, `brain report` |
-| Undo | Reverts a run | `brain undo RUN` |
+| Consolidate | Folds pending episodes into notes | `brain_consolidate_prepare` → edit notes → `brain_validate` → `brain_consolidate_done` |
+| Rule proposals | Accepts or rejects rules agents proposed | `brain review …` |
+| Health | Finds broken links, stale links, orphans; converts older notes | `brain lint`, `brain report` |
+| Commit | Records direct edits in git | `brain commit`, `brain schedule` |
+| Undo | Reverts a brain-wiki run | `brain undo RUN` |
 
 Run maintenance when the user asks for it in a conversation.
 
@@ -41,73 +42,91 @@ Full instructions, including the fallback: [references/harvest.md](references/ha
 ## 2. Consolidate
 
 1. Call `brain_consolidate_prepare` (optional: `topic`, `max_episodes`).
-   It returns instructions and a packet of episodes and candidate notes.
-   If it reports nothing pending, say so and stop.
-2. Produce `{"ops": [...]}` following the instructions. The contract and
-   examples: [references/consolidate.md](references/consolidate.md).
+   It returns guidance and a packet of pending episodes, each with candidate
+   notes. If it reports nothing pending, say so and stop.
+2. For each episode, add its durable knowledge to a candidate note, create a
+   note, or skip it as holding nothing durable. Edit the Markdown files
+   directly, following the guidance
+   ([references/consolidate.md](references/consolidate.md)): prefer existing
+   notes, one fact per bullet, the episode's `archive/` path in
+   `bw-sources`.
 3. If an episode is marked `origin_available: true` and its meaning is
    unclear without the conversation, call `brain_read_origin` with its
    handle. `not_available` or `forbidden` is normal; continue from the
    episode alone.
-4. Call `brain_consolidate_apply` with the `run` and the ops. To preview,
-   pass `"dry_run": true` first.
-
-Handle the result:
+4. Call `brain_validate` with the files you changed; fix what it reports.
+5. Call `brain_consolidate_done` with every episode you handled, skipped
+   ones included. It archives them as one run (`brain undo` returns them to
+   the inbox). Report notes created and changed, and episodes archived.
 
 | Result | What to do |
 |---|---|
-| applied | Report notes created and changed, and episodes archived. |
-| `invalid_ops` | Fix exactly the listed ops and call apply again with the same run. Give up after two attempts and report the problems. |
-| `stale` | Notes changed since the packet was made. Prepare again and redo the ops. |
-| review | The run was held for the user (large or risky change). Tell the user and offer to review it (step 3). |
-| `expired` | The run is too old. Prepare again. |
+| `forbidden` (on done) | This agent may not edit this brain. The error names the command that allows it for this agent alone (`brain agents grant APP edit`). Offer to run it: show the `--dry-run` diff, and run it after the user says yes. |
 | `busy` | Another write is running. Try again once in a minute. |
-| `forbidden` (on prepare) | This agent may not consolidate in this brain. The error names the command that allows it for this agent alone (`brain agents grant APP consolidate`). Offer to run it: show the `--dry-run` diff, and run it after the user says yes. |
 
-## 3. Review proposals
+## 3. Rule proposals
 
-1. `brain review list` shows what waits for the user: runs held for review
-   (`run-…`) and rules agents proposed (`r-…`), each marked with its kind.
-2. `brain review show ID` shows a run's summary, diff, and why it was held,
-   or a proposed rule's text and the user's words behind it. Summarize it
-   for the user in a few lines: what changes, and any warning.
+1. `brain review list` shows the rules agents proposed (`r-…`).
+2. `brain review show ID` shows a proposal's text and the user's words
+   behind it. Summarize it for the user in a line or two.
 3. Only on the user's decision: `brain review accept ID` or
-   `brain review reject ID`. Accepting a run re-checks the changes against
-   the current notes before applying.
+   `brain review reject ID`.
 
 ## 4. Health
 
 - `brain lint` checks every file. Output lists `error`, `warning`, and
-  `info` findings by file, with a code (such as `BW304`) and whether it is
+  `info` findings by file, with a code (such as `BW310`) and whether it is
   fixable.
 - `brain lint --fix --dry-run` shows the safe fixes as a diff. After the
   user agrees, `brain lint --fix` applies them as one run that can be undone.
   Fixes that need judgment (an ambiguous link, a secret in a note, conflict
   copies from sync) are never automatic: show them and ask.
+- **Older notes.** BW117 marks a note from brain-wiki 0.1 (claims or
+  relations outside the body). `brain lint --fix` converts them to the
+  current format (facts to `## Facts`, relations to `## Related`, sources to
+  `bw-sources`); always show the `--dry-run` diff first.
 - `brain report` regenerates pages under `reports/` that the user can browse
   in Obsidian:
 
 | Page | Shows |
 |---|---|
-| `reports/contradictions.md` | Notes that contradict each other |
-| `reports/stale.md` | Notes that depend on outdated notes |
-| `reports/unverified.md` | Notes with claims from untrusted or unchecked sources |
+| `reports/stale.md` | Active notes that link to superseded or archived notes |
 | `reports/inbox.md` | Pending episodes by age and agent; open proposals |
-| `reports/duplicates.md` | Claims citing the same source |
 | `reports/orphans.md` | Notes nothing links to |
 | `reports/lint.md` | The latest lint results |
 
 To summarize health without changing anything, use `brain_orient` and
-`brain_search`; report open contradictions, old pending episodes, and
-unharvested sessions, and suggest the commands above.
+`brain_search`; report old pending episodes, stale links, and unharvested
+sessions, and suggest the commands above.
 
-## 5. Undo
+## 5. Commit
+
+Direct edits are not runs; in a git brain they reach history through
+`brain commit`.
+
+- After a batch of edits: `brain commit --dry-run` lists what it would
+  commit; `brain commit` commits it, then fetches and rebases onto origin.
+  Files changed in the last 2 minutes wait for the next run.
+- On a conflict it restores everything and exits 1, naming the files; the
+  user resolves it with `git pull --rebase` in the brain. Push only when the
+  user asks (`brain commit --push`).
+- `brain schedule` lists commit jobs. To add one:
+  `brain schedule add commit --every 15m --dry-run`, show it, ask whether it
+  should also push (default no; `--push`), then run it without `--dry-run`.
+  `brain schedule remove commit` removes it. Scheduling is the user's
+  decision; it is refused under `--as`.
+
+## 6. Undo
 
 1. `brain runs list` shows recent runs; `brain runs show RUN` shows the
-   files a run changed.
+   files a run changed. Runs are brain-wiki's own changes: `lint --fix`,
+   `mv`, `consolidate --done`, rules, profiles, imports.
 2. Explain to the user what undo will restore and which files it touches.
 3. On confirmation, `brain undo RUN` (no argument: the latest run on this
    device). In a git brain this reverts the run's commit.
 4. If files changed since the run, undo refuses and lists them. Only with
    the user's explicit agreement, `brain undo RUN --force` saves the current
    versions aside and then restores.
+
+Direct edits are reverted with git, after the user agrees; without git they
+cannot be undone.

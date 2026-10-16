@@ -14,22 +14,30 @@ outside the markers is preserved.
 
 ```markdown
 <!-- brain-wiki:begin (generated; edit outside these markers) -->
-# This folder is a brain-wiki brain
-- Read `rules.md` first. Topics: (table of slug, title, description)
-- To record something new, add `inbox/episodes/YYYY/MM/<ULID>.md` (or call
-  `brain_log_episode`). To correct a note, edit it, then run `brain check <path>`
-  and fix what it reports. Never edit `rules.md`, episodes, or `log.md`.
-- Relations are `bw-<verb>` fields: part_of, depends_on, conflicts_with, …
+# This folder is a brain-wiki brain: personal
+- Read `rules.md` first: standing directives from the user.
+- Knowledge lives in `topics/<topic>/`; each topic has a hub (`index.md`).
+- To add or correct knowledge, edit or create a note, then run
+  `brain validate <path>` (MCP: `brain_validate`) and fix what it reports. Something
+  not organized yet goes in `inbox/episodes/YYYY/MM/<ULID>.md` (or the MCP tool
+  `brain_log_episode`). Never edit `rules.md`, episodes, or `log.md`.
+- A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note
+  with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
+
+(table of topic slug, hub, and description)
 <!-- brain-wiki:end -->
 ```
 
 Agents that only read files have no profile of their own, so the block
 follows `[agents.default]`: without `edit` in its `write` list, the
-correction sentence becomes "Never edit `topics/` or `rules.md` directly;
-consolidation folds episodes into notes." This matches the host instruction
+correction sentence becomes "To record something, add a new file under
+`inbox/episodes/YYYY/MM/<ULID>.md` (or call `brain_log_episode`). Never
+edit `topics/` or `rules.md` directly." This matches the host instruction
 block ([[08-32-the-static-instruction-block|08 §3.2]]).
 
-`brain lint --fix` and every consolidation run regenerate the block. Total
+Agents never edit `AGENTS.md`, inside or outside the markers; the user
+may. `brain lint --fix`, `brain mv`, and a grant or revoke that changes
+whether `[agents.default]` has `edit` regenerate the block. Total
 length is limited by `budgets.agents_md_max_lines`. When the topic table
 would not fit, it is truncated to the most recently updated topics with a
 pointer to the hubs.

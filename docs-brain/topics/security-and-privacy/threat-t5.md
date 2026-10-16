@@ -10,6 +10,6 @@ source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 
 **Secrets stored in the brain.** An agent pastes an API key into an episode.
 
-**Mitigations:** Secret patterns are redacted at episode write; lint BW701 flags secrets anywhere; consolidation never copies redacted spans back.
+**Mitigations:** Secret patterns are redacted at episode write, so an agent folding episodes into notes sees `[REDACTED:<name>]`, not the secret; lint BW701 flags secrets anywhere.
 
-**Residual risk:** Pattern-based detection misses unusual formats.
+**Residual risk:** Pattern-based detection misses unusual formats. An agent editing a note directly can write a secret it saw elsewhere; `brain validate` does not scan for secrets, so it shows up at the next `brain lint`.

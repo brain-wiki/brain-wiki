@@ -15,14 +15,14 @@ Generated from `docs/design/06-lint-and-reports.md`.
 - [[06-2-profiles-and-severities]]: Profiles and severities
 - [[06-3-rule-catalog]]: Rule catalog
   - [[06-bw1xx-files-and-frontmatter]]: BW1xx: files and frontmatter
-  - [[06-bw2xx-claims]]: BW2xx: claims
-  - [[06-bw3xx-relations-and-links]]: BW3xx: relations and links
+  - [[06-bw3xx-links]]: BW3xx: links
   - [[06-bw4xx-structure-and-budgets]]: BW4xx: structure and budgets
   - [[06-bw5xx-inbox]]: BW5xx: inbox
   - [[06-bw6xx-rules]]: BW6xx: rules
   - [[06-bw7xx-safety]]: BW7xx: safety
 - [[06-4-how-lint-works]]: How lint works
 - [[06-5-fixes]]: Fixes
+  - [[06-51-converting-format-1-and-2-notes-bw117]]: Converting format 1 and 2 notes (BW117)
 - [[06-6-output]]: Output (Lint and reports)
 - [[06-7-reports]]: Reports
 - [[06-8-pre-commit-integration]]: Pre-commit integration

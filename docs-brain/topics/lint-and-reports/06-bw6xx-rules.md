@@ -7,7 +7,7 @@ source: "docs/design/06-lint-and-reports.md#bw6xx-rules"
 ---
 # BW6xx: rules
 
-| Code | Rule | Severity | Fix |
+| Code | Rule | Severity (strict / migrate) | Fix |
 |---|---|---|---|
 | BW601 | Rule has no `quote`. | error / warning | — |
 | BW602 | Rule `origin` is not `owner`. | error / error | — |

@@ -14,7 +14,7 @@ must never see belong outside its reach, not only outside its brain list.
 ## Agent profiles
 
 A profile says what an agent may change. Agents without their own profile
-may log episodes and correct notes they check with `brain check`. Change
+may log episodes and edit notes. Change
 profiles with `brain agents grant HOST CAPABILITY…` and `brain agents revoke`
 (each change can be undone); the result in `brain.toml` looks like this:
 
@@ -23,18 +23,19 @@ profiles with `brain agents grant HOST CAPABILITY…` and `brain agents revoke`
 write = ["episodes", "edit"]
 
 [agents.claude-code]
-write = ["episodes", "edit", "propose_rules", "consolidate", "harvest", "review"]
+write = ["episodes", "edit", "propose_rules", "harvest"]
 read_origin = false       # may it read the conversations episodes came from?
 ```
 
 | Capability | Lets the agent |
 |---|---|
 | `episodes` | Log what it learned to the inbox |
-| `edit` | Correct notes directly, then record the change with `brain check` |
+| `edit` | Create and edit notes directly (then `brain validate`); also needed for `brain mv`, `brain lint --fix`, and archiving consolidated episodes |
 | `propose_rules` | Propose a standing rule; you always confirm it |
-| `consolidate` | Fold inbox episodes into notes |
 | `harvest` | Turn its own past sessions into episodes |
-| `review` | Accept or reject runs that wait for review |
+
+Profiles from brain-wiki 0.1 may list `consolidate` or `review`; those
+names are ignored now.
 
 ## Several brains
 
@@ -55,9 +56,10 @@ under `[hosts.<app>] brains`.
 
 | Risk | Protection |
 |---|---|
-| A web page tells an agent to "remember" an instruction | Rules need your words and your confirmation; consolidation cannot write rules; text from untrusted sources is marked and treated as data |
+| A web page tells an agent to "remember" an instruction | Rules need your words and your confirmation; agents never edit `rules.md`; episodes from untrusted sources are marked and treated as data |
+| An agent writes a false fact into a note | Partly. A note does not record where each fact came from, so a fact an agent wrote looks like one you wrote. You can trace it through `bw-sources` on the note, the git history of each edit (with a commit job), and the archived episodes it came from |
 | A secret pasted into a session | Secret patterns are redacted before an episode is written; lint flags secrets anywhere in the brain |
-| A model loses detail by rewriting notes | Models only propose small operations; nothing is deleted; every run can be undone |
+| An agent loses detail by rewriting a note | In a git brain, `brain commit` keeps every version and git restores any of them; without git, nothing does. brain-wiki's own changes are runs that `brain undo` reverses |
 | The visualizer reachable from the network | It listens on 127.0.0.1 unless you pass `--host`, needs a random token, and is read-only; with `--host`, the connection is not encrypted, so use it only on networks you trust |
 
 ## What is sent where
@@ -68,5 +70,5 @@ when an agent you use reads it:
 | Action | Sent to |
 |---|---|
 | Search and read from an agent | That agent's model provider |
-| Consolidation | The model provider of the agent that consolidates |
+| Editing notes and consolidation | The model provider of the agent doing it |
 | Harvest with distillation | The distill preset's provider, or your in-session agent; `--raw` sends nothing |

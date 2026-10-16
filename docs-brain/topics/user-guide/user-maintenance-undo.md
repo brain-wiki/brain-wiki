@@ -14,6 +14,10 @@ brain undo                 # the latest run
 brain undo RUN [--force]   # --force keeps a copy of files changed since
 ```
 
-In a git brain, undo reverts the run's commit. Elsewhere it restores the
-files the run changed, and refuses if you edited them since unless you pass
-`--force`.
+Runs are the changes brain-wiki itself makes (`lint --fix`, `mv`,
+`consolidate --done`, rules, profiles, imports). In a git brain, undo
+reverts the run's commit. Elsewhere it restores the files the run changed,
+and refuses if you edited them since unless you pass `--force`.
+
+Direct edits are not runs: revert them with git. Without git there is no
+history to go back to.

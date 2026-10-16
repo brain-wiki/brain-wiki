@@ -9,7 +9,7 @@ source: "docs/design/04-index-and-retrieval.md#63-ranking"
 # Ranking
 
 ```
-lexical = -bm25(fts, 8.0, 6.0, 3.0, 2.0, 1.0, 0.2)   # title, aliases, tags, headings, body, history
+lexical = -bm25(fts, 8.0, 6.0, 3.0, 2.0, 1.0)   # title, aliases, tags, headings, body
 score   = lexical × status_factor × kind_factor × recency_factor
 
 status_factor  = active 1.0 · superseded 0.35 · archived 0.2

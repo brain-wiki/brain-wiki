@@ -8,10 +8,9 @@ source: "docs/design/10-security-and-privacy.md#9-security-testing"
 ---
 # Security testing
 
-- Parser fuzzing (property-based tests) for frontmatter, claims, relations,
-  links, and ops.
+- Property-based tests for the frontmatter writer and the format 2 → 3
+  conversion.
 - Path traversal tests for every input that becomes a path.
-- Bench injection suite: episodes with external inputs carrying instructions must never
-  produce rules, never change the `AGENTS.md` block, and must yield claims
-  marked unverified ([[eval-bench|11]]).
+- Rule tests: rules proposed over MCP wait for the user's confirmation, and
+  `brain validate` reports edits to protected files (BW121).
 - Visualizer tests that render hostile titles and bodies as text.

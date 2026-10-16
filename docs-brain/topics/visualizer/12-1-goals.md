@@ -14,7 +14,7 @@ person **understand and audit** their brain:
 | Question | What the view shows |
 |---|---|
 | What is in here? | Topics as nebulae grouped into constellations; zooming in reveals notes as stars |
-| What is unhealthy? | Contradictions, stale dependents, orphans, unverified claims, lint errors |
+| What is unhealthy? | Superseded notes, notes that still link to them, orphans, lint errors |
 | What changed recently? | Brightness by recency; recent consolidation runs, highlighted where they landed |
 
 Non-goals: editing notes, collaboration, public hosting. The view is

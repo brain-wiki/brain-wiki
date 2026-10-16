@@ -13,12 +13,10 @@ tuned on evidence and regressions are caught:
 
 | Promise | Suite |
 |---|---|
-| Retrieval finds the right notes and always surfaces superseding and conflicting ones (G5) | `retrieval` |
+| Retrieval finds the right notes and always surfaces the notes that supersede them (G5) | `retrieval` |
 | Lint finds what it claims and fixes safely | `lint` |
-| Consolidation writes faithful, specific, well-placed claims, with any model (G4, G8) | `consolidation` |
-| Injected instructions never become rules or directives | `consolidation` (injection slice) |
 | Search, reads, and orientation are fast enough (G7) | `perf` |
-| A real agent with the plugin answers with current knowledge | `agent` (not built, §3.5) |
+| A real agent with the plugin answers with current knowledge | `agent` (a stub that reports skipped, §3.5) |
 
 Rule for the project: published numbers come only from this bench, with
 the command and version that produced them.

@@ -16,6 +16,6 @@ source: "docs/proposals/scheduled-maintenance.md#2-why-it-was-removed"
 - **Desktop schedulers are not configurable from outside.** Most routines
   were printed steps for the user to click through, with per-host quirks
   (session-scoped schedules, catch-up runs, tool approval prompts).
-- **In-session work fits the product better.** Agents now correct notes
-  directly with `brain check`, and consolidate when the user asks, where the
-  user can see and steer it.
+- **In-session work fits the product better.** Agents now edit notes
+  directly, and consolidate when the user asks, where the user can see and
+  steer it.

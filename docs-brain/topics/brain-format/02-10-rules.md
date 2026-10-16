@@ -23,6 +23,7 @@ orientation, so it is short by construction.
   and `origin`. Rules with `origin` other than `owner` are invalid.
 - Replacing a rule moves the old line to `archive/rules.md` with
   `status:superseded; by:<new id>`.
-- Consolidation can never write `rules.md`. Rules are added by the user
-  through the CLI, or by an agent through an MCP tool that the host gates
+- Agents never edit `rules.md` directly (`brain validate` reports BW121
+  when asked to check it), and consolidation never writes it. Rules are
+  added by the user through the CLI, or by an agent through an MCP tool that the host gates
   with a user confirmation ([[05-6-rules|05 §6]]).

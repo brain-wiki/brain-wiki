@@ -10,9 +10,10 @@ source: "docs/design/13-engineering.md#6-testing"
 
 | Layer | What | Tools |
 |---|---|---|
-| Unit | Parsers, writers, link resolution, ops validation, profile filtering, path safety | pytest |
-| Property | Parse → write → parse round trips; writers never change untouched lines; ops never delete text | hypothesis |
-| Index | Schema, freshness (edits, renames, deletes), guard queries in both directions and through chains | pytest on temp brains |
+| Unit | Parsers, writers, format 1/2 → 3 conversion, `brain validate`, link resolution, profile filtering, path safety | pytest |
+| Property | Parse → write → parse round trips; writers never change untouched lines; conversion keeps every claim's text | hypothesis |
+| Index | Schema, freshness (edits, renames, deletes), supersession guards in both directions and through chains | pytest on temp brains |
+| Commit and schedule | `brain commit` on temp git repositories with a local origin; crontab and LaunchAgent backends through an injected command runner, never the real crontab or launchd | pytest |
 | CLI | Every command end to end on temp brains with `BRAIN_WIKI_*_DIR` overrides | pytest + subprocess |
 | MCP | Every tool via the SDK's in-memory client; error codes; schema conformance | `mcp.Client(server)` |
 | Session readers | Synthetic sessions per host → normalized turns, routing, inputs | pytest |

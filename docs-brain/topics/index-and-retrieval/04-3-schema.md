@@ -9,7 +9,7 @@ source: "docs/design/04-index-and-retrieval.md#3-schema"
 # Schema
 
 `src/brainwiki/index/_schema.py` is authoritative; this copy matches
-`SCHEMA_VERSION` 11. Any schema change bumps the version, and an index with
+`SCHEMA_VERSION` 12. Any schema change bumps the version, and an index with
 another version is rebuilt (§2). Values in comments are what the code
 writes; the schema itself has no CHECK constraints.
 
@@ -78,40 +78,16 @@ CREATE TABLE path_history (
   PRIMARY KEY (node_id, path)
 );
 
-CREATE TABLE claims (
-  id            TEXT NOT NULL,      -- c-ULID; human claims without ids are not stored here
-  node_id       TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-  line          INTEGER NOT NULL,
-  text          TEXT NOT NULL,
-  status        TEXT NOT NULL,      -- active, superseded, retracted
-  superseded_by TEXT,
-  origin        TEXT,
-  inputs        TEXT,
-  asserted_at   TEXT,
-  sources       TEXT NOT NULL DEFAULT '[]',  -- JSON array of 'path#Lx-Ly', origin sources, or URLs
-  PRIMARY KEY (node_id, id)         -- a copied claim id is a lint finding, not an index error
-);
-CREATE INDEX claims_id ON claims(id);
-CREATE INDEX claims_unverified ON claims(node_id)
-  WHERE status = 'active' AND inputs IN ('external', 'unknown');
-
--- Typed relations (canonical direction) and untyped body links.
+-- Where links point (02 §6.5): body links, plus the links in bw-superseded_by and bw-sources.
 CREATE TABLE edges (
   id          INTEGER PRIMARY KEY,
-  src         TEXT,                 -- node id; NULL until a flipped relation's target resolves
-  dst         TEXT,                 -- node id, NULL when unresolved
-  rel         TEXT NOT NULL,        -- part_of, depends_on, conflicts_with, supersedes, related_to, links_to
-  is_guard    INTEGER NOT NULL,     -- 1 for conflicts_with, supersedes
-  symmetric   INTEGER NOT NULL,     -- 1 for conflicts_with, related_to
-  verb        TEXT NOT NULL,        -- canonical verb from the declaring note: enables, superseded_by, ...
-  written     TEXT NOT NULL,        -- as written: an alias such as drives, a link kind, or 'folder'
-  qualifier   TEXT,                 -- first bare qualifier word
-  attrs       TEXT NOT NULL DEFAULT '{}',   -- key=value qualifiers, JSON
-  note        TEXT,                 -- free text after the separator
+  src         TEXT,                 -- node id of the note that holds the link (= declared_in)
+  dst         TEXT,                 -- node id the link resolves to (= other), NULL when unresolved
+  rel         TEXT NOT NULL,        -- links_to (body), superseded_by, source (bw-sources)
+  written     TEXT NOT NULL,        -- link form: wiki, md, embed; 'field' for metadata links
   declared_in TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-  other       TEXT,                 -- the resolved node at the far end from declared_in
-  flip        INTEGER NOT NULL DEFAULT 0,   -- 1 when stored from the target to the declaring note
-  line        INTEGER NOT NULL,     -- 0 for the implicit part_of of a sub-topic's hub
+  other       TEXT,                 -- the resolved node at the far end, NULL when unresolved
+  line        INTEGER NOT NULL,
   raw_target  TEXT NOT NULL,
   ambiguous   INTEGER NOT NULL DEFAULT 0
 );
@@ -119,7 +95,6 @@ CREATE INDEX edges_src      ON edges(src, rel);
 CREATE INDEX edges_dst      ON edges(dst, rel);
 CREATE INDEX edges_declared ON edges(declared_in);
 CREATE INDEX edges_other    ON edges(other);
-CREATE INDEX edges_rel      ON edges(rel, src, dst);
 
 -- Full-text search: an external-content table plus FTS5 views over it.
 CREATE TABLE docs (
@@ -129,12 +104,11 @@ CREATE TABLE docs (
   aliases  TEXT NOT NULL,           -- space-joined
   tags     TEXT NOT NULL,           -- space-joined
   headings TEXT NOT NULL,           -- all headings, newline-joined
-  body     TEXT NOT NULL,           -- prose without frontmatter or metadata, plus the
-                                    -- text of current claims
-  history  TEXT NOT NULL            -- superseded claims, for low-weight matching
+  body     TEXT NOT NULL            -- the body without frontmatter or HTML comments; for an
+                                    -- unconverted format 2 note, plus the text of its bw-claims
 );
 CREATE VIRTUAL TABLE fts USING fts5(
-  title, aliases, tags, headings, body, history,
+  title, aliases, tags, headings, body,
   content='docs', content_rowid='rowid',
   tokenize='porter unicode61 remove_diacritics 2'
 );
@@ -163,15 +137,6 @@ CREATE TABLE episode_hashes (
   first_seen TEXT NOT NULL
 );
 
--- The last recorded version of each note (05 §2.3). A NULL sha256 records the note as absent.
--- Kept across rebuilds: they are the only record of unchecked edits.
-CREATE TABLE baselines (
-  path    TEXT PRIMARY KEY,
-  sha256  TEXT,
-  content BLOB,
-  since   TEXT NOT NULL
-);
-
 -- File-local lint results keyed by content hash, so whole-brain lint re-checks only changes.
 CREATE TABLE lint_cache (
   path     TEXT PRIMARY KEY,
@@ -185,11 +150,19 @@ Notes on the schema:
 - **Node ids for notes without frontmatter ids** use `path:<path>`. They are
   stable as long as the file does not move. This keeps imported vaults
   fully searchable before anyone runs `lint --fix`.
-- **Edges store the canonical direction** (02 §6.4): a `superseded_by [[A]]`
-  line on B is stored as `src=A, dst=B, rel='supersedes', verb='superseded_by',
-  flip=1, declared_in=B, other=A`. If both sides declare the same relation, the two rows are
-  kept (each has its own `declared_in` and line) and de-duplicated at query
-  time.
+- **Edges keep the direction they were written in.** `src` is always the
+  note that holds the link and `dst` the note it points to: a
+  `bw-superseded_by: "[[A]]"` on B is stored as `src=B, dst=A,
+  rel='superseded_by'`. Each end reads an edge with its own label:
+
+  | `rel` | Seen from `src` | Seen from `dst` |
+  |---|---|---|
+  | `links_to` | `links_to` | `linked_from` |
+  | `superseded_by` | `superseded_by` | `supersedes` |
+  | `source` | `cites` | `cited_by` |
+
+  Reads, `brain_neighbors`, and backlinks use these labels (§7, §9.2).
+  Links in other frontmatter properties (`up:`) are not edges (02 §4).
 - **FTS sync.** The engine writes `docs` and the FTS tables in the same
   transaction. For a changed row it first issues the FTS5 external-content
   delete command (`INSERT INTO fts(fts, rowid, ...) VALUES('delete', ...)`)
@@ -203,7 +176,7 @@ Notes on the schema:
   fatal error with a clear message; no trigram sets `meta.fts_trigram = 0`.
   Trigram options that only newer releases accept (such as
   `remove_diacritics`) are not used.
-- **Why `history` is a separate column.** Text that was superseded should
-  still be findable ("what did we used to think about X?"), but must not
-  outrank current text or appear in snippets. A separate column with a low
-  bm25 weight does both.
+- **Body text is indexed as written.** A struck-through history bullet is
+  ordinary text: it is found, and ranks by the same body weight as the
+  rest. Superseded notes, not superseded lines, are what ranking demotes
+  (§6.3).

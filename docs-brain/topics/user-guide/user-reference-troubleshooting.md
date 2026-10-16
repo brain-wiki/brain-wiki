@@ -13,3 +13,5 @@ source: "docs/user/reference.md#troubleshooting"
 | Search misses a note you just edited | Wait a second (freshness checks run at most once per second), or `brain index --rebuild` |
 | A run was interrupted | `brain doctor` rolls it back |
 | A git commit failed after a run | The files changed anyway; `brain doctor` lists the run; commit by hand |
+| `brain commit` reports a conflict | Run `git pull --rebase` in the brain, resolve, and commit; later runs commit locally until then |
+| Lint reports BW117 | The note is from brain-wiki 0.1: `brain lint --fix --dry-run`, then `brain lint --fix` |

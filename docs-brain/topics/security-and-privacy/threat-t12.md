@@ -10,6 +10,6 @@ source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 
 **Corruption or loss by a buggy run.**
 
-**Mitigations:** Ops cannot delete text; strict lint before writing; atomic per-file writes; pre-images and undo; git commits per run; crash recovery via run records ([[05-10-failure-modes|05 §10]]).
+**Mitigations:** brain-wiki's writers change only the lines they must; atomic per-file writes; a run never overwrites a file changed since it read it; pre-images and undo; git commits per run; crash recovery via run records ([[write-path-and-consolidation|05]]).
 
 **Residual risk:** —

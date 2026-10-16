@@ -11,5 +11,5 @@ source: "docs/design/09-import.md#4-normalization-rules"
 
 ## Subsections
 - [[09-41-status]]: Status
-- [[09-42-relation-like-properties]]: Relation-like properties
-- [[09-43-other-fixes-offered]]: Other fixes offered
+- [[09-42-link-properties]]: Link properties
+- [[09-43-other-fixes]]: Other fixes

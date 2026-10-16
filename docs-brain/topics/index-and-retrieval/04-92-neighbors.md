@@ -8,30 +8,31 @@ source: "docs/design/04-index-and-retrieval.md#92-neighbors"
 ---
 # Neighbors
 
-`neighbors(target, relations, direction, depth, limit)` follows a node's
-typed edges without reading bodies: `relations` defaults to every typed
-family, `direction` is `out`, `in`, or `both` (default `both`), `depth` is
-1–3 (default 1), and `limit` caps nodes (default 30, max 100). It returns a
-small subgraph:
+`neighbors(target, direction, depth, limit)` follows a node's resolved
+edges without reading bodies: `direction` is `out` (what it links to),
+`in` (what links to it), or `both` (default), `depth` is 1–3 (default 1),
+and `limit` caps nodes (default 30, max 100). There is no filter by
+relation. It returns a small subgraph:
 
 ```json
-{"root": "01J9…",
- "nodes": [{"id": "01J9…", "title": "…", "depth": 0, "…": "…"},
-           {"id": "…", "path": "…", "title": "…", "type": "…", "topic": "…",
-            "status": "active", "flags": ["conflict"], "depth": 1,
-            "via": {"from": "01J9…", "relation": "has_part"}}],
- "edges": [{"rel": "part_of", "src": "…", "dst": "01J9…"}],
+{"brain": "personal", "root": "01J9…", "direction": "both", "depth": 1,
+ "nodes": [{"id": "01J9…", "path": "…", "title": "…", "type": "decision",
+            "topic": "search", "status": "active", "depth": 0},
+           {"id": "01J8…", "path": "…", "title": "…", "type": "decision",
+            "topic": "search", "status": "superseded", "depth": 1,
+            "via": {"from": "01J9…", "relation": "supersedes"}}],
+ "edges": [{"rel": "superseded_by", "src": "01J8…", "dst": "01J9…"}],
  "truncated": false}
 ```
 
 The root comes first, at depth 0. `via.relation` reads from the node it was
-reached from, so an incoming `part_of` reads `has_part`, an incoming
-`depends_on` reads `enables`, and an incoming body link reads `linked_from`;
-`edges` keep the stored direction. Within a depth, guards come first, then
-dependencies, containment, and plain links, newest first, so `limit` keeps
-what matters. `flags` mark nodes in an active conflict and active nodes that a
-newer note supersedes.
+reached from, with the labels in §3: an outgoing body link reads
+`links_to` and an incoming one `linked_from`; `superseded_by` reads
+`supersedes` from the newer note; a `bw-sources` link reads `cites` or
+`cited_by`. `edges` keep the stored direction. Within a depth, supersession
+comes first, then body links, then citations, each newest first, so
+`limit` keeps what matters.
 
-Typical uses: what a release shipped (`depends_on`, `out`), what depends on
-a decision (`depends_on`, `in`), how a fact evolved (`supersedes`, `both`,
-depth 3).
+Typical uses: what a hub lists (`out`), what refers to a decision (`in`),
+how a note evolved (`both`, depth 3; supersession edges are listed
+first at each depth).

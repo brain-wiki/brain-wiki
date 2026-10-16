@@ -1,13 +1,19 @@
 # Scheduled maintenance
 
 Status: built during development and removed before 0.1. Not scheduled;
-the design below needs rethinking first (§3).
+the design below needs rethinking first (§3). Since format 3, `brain schedule`
+exists for one job only: running `brain commit` from crontab or a
+LaunchAgent ([05 §5.2](../design/05-write-path-and-consolidation.md#52-brain-schedule)).
+Maintenance routines remain unbuilt.
 
 Maintenance today runs when the user asks for it: an agent harvests and
 consolidates in the session ([05 §4](../design/05-write-path-and-consolidation.md#4-consolidation)),
-and corrects notes directly with `brain check`
-([05 §2.3](../design/05-write-path-and-consolidation.md#23-checked-agent-edits)).
-This proposal is what ran it on a schedule instead.
+and edits notes directly, then validates them
+([05 §2.3](../design/05-write-path-and-consolidation.md#23-direct-edits)).
+This proposal is what ran maintenance on a schedule instead. Its command
+name, `brain schedule show|install|list|remove`, described the removed
+design; the name `brain schedule` now belongs to the commit jobs, so a
+revival needs another name or new subcommands.
 
 ## 1. What was built
 
@@ -72,9 +78,9 @@ array, and retried once with the validator's errors. Routines checked
 - **Desktop schedulers are not configurable from outside.** Most routines
   were printed steps for the user to click through, with per-host quirks
   (session-scoped schedules, catch-up runs, tool approval prompts).
-- **In-session work fits the product better.** Agents now correct notes
-  directly with `brain check`, and consolidate when the user asks, where the
-  user can see and steer it.
+- **In-session work fits the product better.** Agents now edit notes
+  directly, and consolidate when the user asks, where the user can see and
+  steer it.
 
 ## 3. Open questions
 

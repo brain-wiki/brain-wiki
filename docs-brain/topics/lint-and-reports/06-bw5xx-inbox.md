@@ -7,7 +7,7 @@ source: "docs/design/06-lint-and-reports.md#bw5xx-inbox"
 ---
 # BW5xx: inbox
 
-| Code | Rule | Severity | Fix |
+| Code | Rule | Severity (strict / migrate) | Fix |
 |---|---|---|---|
 | BW501 | Episode changed after it was created (compared with the first hash the index saw; runs that edit an episode update it). | error / error | — |
 | BW502 | Episode path does not match `YYYY/MM/<ulid>.md` for its id. | error / warning | move it |

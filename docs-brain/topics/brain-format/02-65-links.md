@@ -14,8 +14,11 @@ Body links of either form are recognized:
 - `[label](relative/path.md)`, including `#heading` fragments
 - `![[embed]]` embeds are recorded as links
 
-Untyped body links are stored as `links_to` edges. They feed backlinks,
-orphan detection, and the visualizer, but carry no retrieval rule.
+Body links are stored as `links_to` edges; `bw-superseded_by` and
+`bw-sources` add `superseded_by` and `source` edges
+([[04-3-schema|04 §3]]). Edges feed backlinks,
+`brain_neighbors`, orphan detection, link repair, and the visualizer. Only
+`superseded_by` carries a retrieval rule (§7).
 
 **Resolution order** for a link target `t` (all comparisons on Unicode
 case-folded strings, `.md` optional):

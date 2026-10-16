@@ -15,16 +15,15 @@ and are never indexed as knowledge or injected into prompts.
 
 | File | Contents |
 |---|---|
-| `reports/index.md` | Counts, last consolidation, links to the other reports |
-| `reports/contradictions.md` | Active `conflicts_with` pairs, with the qualifier and note |
-| `reports/stale.md` | Active notes that depend on superseded or archived notes |
-| `reports/unverified.md` | Notes with claims whose `inputs` are external or unknown, by count |
-| `reports/inbox.md` | Pending episodes by age and agent; open proposals |
-| `reports/duplicates.md` | Claims citing the same source span (BW206) |
-| `reports/orphans.md` | Notes with no incoming links and not in a hub |
+| `reports/index.md` | Counts (notes, hubs, links, pending and archived episodes), last consolidation, lint totals, links to the other reports |
+| `reports/stale.md` | Active notes (not hubs) that link to superseded or archived notes, except a link from a note to the note it replaced. Hubs list their topic's history, and a successor naming its predecessor is not stale. The visualizer's `stale` flag uses the same query |
+| `reports/inbox.md` | Pending episodes by agent and age; open proposals |
+| `reports/orphans.md` | Notes nothing links to and no hub lists |
 | `reports/lint.md` | The latest lint results |
 
-`brain report` regenerates them; consolidation runs regenerate them when
-`[reports] after_consolidate = true` (default). Report files are excluded
-from git commits made by brain-wiki unless the user opts in, because they
-churn on every run.
+`brain report` regenerates them, and `brain consolidate --done` does when
+`[reports] after_consolidate = true` (default). Both write the files
+directly, outside any run, so brain-wiki's run commits never include them;
+a `brain commit` snapshot ([[05-5-committing-direct-edits|05 §5]])
+includes them like any other changed file. `brain init` marks
+`reports/**` as `-diff` in `.gitattributes`, because they churn.

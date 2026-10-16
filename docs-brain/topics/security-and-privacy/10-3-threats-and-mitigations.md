@@ -15,7 +15,7 @@ source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
 - [[threat-t3]]: T3: Cross-agent leakage
 - [[threat-t4]]: T4: Leakage to model providers
 - [[threat-t5]]: T5: Secrets stored in the brain
-- [[threat-t6]]: T6: Path traversal and arbitrary writes via MCP arguments, op slugs, import…
+- [[threat-t6]]: T6: Path traversal and arbitrary writes via MCP arguments, import paths,…
 - [[threat-t7]]: T7: Hostile files attack the tools
 - [[threat-t8]]: T8: XSS in the visualizer
 - [[threat-t9]]: T9: Local server exposure

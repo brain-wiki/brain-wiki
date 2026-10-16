@@ -16,8 +16,9 @@ source: "docs/design/10-security-and-privacy.md#2-trust-boundaries"
 ```
 
 - **Agents are capable but manipulable.** They follow instructions in what
-  they read. brain-wiki treats agent writes as unverified and keeps them
-  out of directive channels.
+  they read. brain-wiki keeps agent writes out of directive channels
+  (`rules.md`, `AGENTS.md`). Agents with `edit` change notes directly, so
+  git is how those edits are reviewed and reverted.
 - **External content is untrusted.** It enters through agents. The
   `inputs` provenance field tracks it ([[05-3-provenance-and-inputs|05 §3]]).
 - **Model providers see what is sent to them.** The consolidator LLM and the

@@ -50,3 +50,13 @@ hosts   = ["claude-code"]
   remove | rename | default | limit`, which preserve comments and formatting.
   `add` and `rename` take names of lowercase letters, digits, and hyphens.
   An edit that fails changes nothing.
+- `brain brains remove NAME` drops every reference to the brain in the same
+  write:
+  - `default`, when it names the brain;
+  - `[hosts.*] brain`, when a host default names it;
+  - the brain's entry in each `[hosts.*] brains` limit. A limit list that
+    becomes empty stays empty, so that host may use no brain; removing a
+    brain never widens a host's access;
+  - `[harvest.routes]` entries that route to it.
+- No schedule settings live here. The OS scheduler holds the commit jobs
+  (§6.2), so there is nothing in the config to drift from them.

@@ -53,12 +53,14 @@ checks this.
 src/brainwiki/
 ├── cli/            Typer entry point; one module per command; lazy imports
 ├── config/         user config, brain.toml, brain resolution, platform dirs
-├── format/         parsers and writers: frontmatter, claims, relations, links, episodes, rules
+├── format/         parsers and writers: frontmatter, links, episodes, rules, the AGENTS.md block;
+│                   format 1/2 → 3 conversion (_convert.py; legacy claim and relation parsers read the old formats)
 ├── store/          LocalStore (atomic writes, O_EXCL creates, expected-hash writes)
-├── index/          SQLite schema, scanner, queries (search, guards, read, orient)
-├── lint/           rules, profiles, fixes, reports
-├── write/          episode writer, secret scrubber, rule writer, checked edits, mv
-├── consolidate/    selection, packets, ops schema and validator, applier, review, headless presets
+├── index/          SQLite schema, scanner, queries (search, supersession guard, read, neighbors, orient)
+├── lint/           rules, profiles, fixes, reports, `brain validate` (_validate.py)
+├── write/          episode writer, secret scrubber, rule writer, agent profiles, mv
+├── consolidate/    --prepare (episodes with candidate notes, _prepare.py), --done (archive as a run, _done.py)
+├── schedule/       `brain commit` (snapshot and sync), crontab and LaunchAgent jobs, doctor checks
 ├── runs/           run records, pre-images, undo, locks, git integration
 ├── importer/       overlay, into, to-episodes, from-host presets
 ├── mcp/            MCP server (the only package that imports the SDK)
@@ -66,13 +68,14 @@ src/brainwiki/
 ├── viz/            graph export, level-of-detail API, local server; app/ is the built front end (committed)
 ├── bench/          generator, suites with their graders and scenarios, report
 ├── assets/         prompts (consolidate, distill, harvest); plugin files are copied in at build time
-└── *.py            top-level modules: engine, lifecycle, harvest, origin, doctor, setup_wizard, ids, errors, logs
+└── *.py            top-level modules: engine, lifecycle, harvest, presets (headless host CLIs for harvest
+                    distillation), origin, doctor, setup_wizard, obsidian, ids, errors, logs
 ```
 
 Dependency direction (an arrow means "may import"):
 
 ```
-cli ─► mcp, hosts, viz, bench, importer ─► consolidate, lint ─► index, write, runs ─► format, store, config
+cli ─► mcp, hosts, viz, bench, importer ─► consolidate, lint, schedule ─► index, write, runs ─► format, store, config
 ```
 
 `format`, `store`, and `config` import nothing from the rest. The MCP SDK,
@@ -100,7 +103,6 @@ re-export is used outside its package.
 | `PyYAML` | Frontmatter parsing | `CSafeLoader` when available. Writers edit frontmatter line by line instead of dumping YAML, so formatting is preserved. |
 | `tomlkit` | Editing `config.toml` and `brain.toml` without losing comments | Reading uses stdlib `tomllib`. |
 | `filelock` | Cross-platform advisory locks | Imported when a lock is taken: it loads `asyncio` (~40 ms), which read-only commands never need. |
-| `jsonschema` | Validating ops and plugin manifests | Already required by `mcp`. |
 | `typer` | The CLI parser: nested subcommands, typed validation, shell completion ([07 §2.4](07-interfaces.md#24-parser-and-startup-cost)) | Vendors Click, and installs rich and shellingham; rich markup is off, so rich is never imported. `typer-slim` is now only an alias that installs `typer`. |
 
 Standard library for everything else: `sqlite3`, `tomllib`, `json`, `re`, `hashlib`, `gzip`, `subprocess`, `http.server`. ULIDs are
@@ -165,9 +167,10 @@ test checks what `brain --help` imports, but no check measures time.
 
 | Layer | What | Tools |
 |---|---|---|
-| Unit | Parsers, writers, link resolution, ops validation, profile filtering, path safety | pytest |
-| Property | Parse → write → parse round trips; writers never change untouched lines; ops never delete text | hypothesis |
-| Index | Schema, freshness (edits, renames, deletes), guard queries in both directions and through chains | pytest on temp brains |
+| Unit | Parsers, writers, format 1/2 → 3 conversion, `brain validate`, link resolution, profile filtering, path safety | pytest |
+| Property | Parse → write → parse round trips; writers never change untouched lines; conversion keeps every claim's text | hypothesis |
+| Index | Schema, freshness (edits, renames, deletes), supersession guards in both directions and through chains | pytest on temp brains |
+| Commit and schedule | `brain commit` on temp git repositories with a local origin; crontab and LaunchAgent backends through an injected command runner, never the real crontab or launchd | pytest |
 | CLI | Every command end to end on temp brains with `BRAIN_WIKI_*_DIR` overrides | pytest + subprocess |
 | MCP | Every tool via the SDK's in-memory client; error codes; schema conformance | `mcp.Client(server)` |
 | Session readers | Synthetic sessions per host → normalized turns, routing, inputs | pytest |
@@ -187,7 +190,8 @@ best-effort and not tested in CI.
 - `ruff` for linting and formatting, with the `S` (bandit) rules on, which
   flag `shell=True`, `eval`, and similar calls.
 - No type checker runs and there is no coverage target.
-- No network access in core code: a convention, not a check.
+- No network access in core code, except the fetch and push `brain commit`
+  asks `git` to make to the brain's own remote: a convention, not a check.
 
 ## 8. Continuous integration
 
