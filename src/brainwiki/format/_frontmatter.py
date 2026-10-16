@@ -159,6 +159,13 @@ def set_fields(text: str, values: dict[str, Any], *, order_first: tuple[str, ...
     return "".join(lines)
 
 
+def set_raw(text: str, key: str, rendered: str, *, order_first: tuple[str, ...] = ()) -> str:
+    """Set one key to an already rendered YAML value, such as a double-quoted link."""
+    token = "brainwiki-placeholder-value"  # noqa: S105 - not a secret
+    out = set_fields(text, {key: token}, order_first=order_first)
+    return out.replace(f"{key}: {token}", f"{key}: {rendered}", 1)
+
+
 def remove_field(text: str, key: str) -> str:
     if not text.startswith("---"):
         return text

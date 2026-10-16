@@ -5,8 +5,6 @@ title: "Agent profiles (Interfaces: CLI, MCP, agent profiles)"
 aliases: ["07 §1"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#1-agent-profiles"
-bw-part_of:
-  - "[[interfaces]]"
 ---
 # Agent profiles (Interfaces: CLI, MCP, agent profiles)
 

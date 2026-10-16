@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import difflib
-import json
 import re
 from collections import defaultdict
 from collections.abc import Callable
@@ -35,8 +34,6 @@ _STRICT_CONFLICT = re.compile(
 _LOOSE_CONFLICT = re.compile(r"^(?P<stem>.+?)(?: \(\d+\)| \d+)(?P<ext>\.md)$")
 _DB_SUFFIXES = (".sqlite", ".sqlite3", ".db", "-wal", "-shm")
 _EPISODE_REF = re.compile(r"inbox/episodes/\d{4}/\d{2}/[0-9A-HJKMNP-TV-Z]{26}\.md")
-_SPAN = re.compile(r"^(?P<path>[^#]+)#L(?P<start>\d+)(?:-L(?P<end>\d+))?$")
-_WORD = re.compile(r"\w+")
 
 
 def cross_checks(engine: Engine, ctx: FileContext, *, fixes: bool = False) -> list[Problem]:
@@ -45,8 +42,7 @@ def cross_checks(engine: Engine, ctx: FileContext, *, fixes: bool = False) -> li
     problems += _manifest_checks(engine)
     problems += _tree_checks(engine, conn)
     problems += _duplicate_ids(conn)
-    problems += _claim_checks(engine, conn)
-    problems += _edge_checks(conn)
+    problems += _edge_checks(engine, conn)
     problems += _structure_checks(engine, conn, ctx, fixes)
     problems += _inbox_checks(engine, conn)
     return problems
@@ -144,88 +140,6 @@ def _duplicate_ids(conn: sqlite3.Connection) -> list[Problem]:
     return out
 
 
-# -- claims --------------------------------------------------------------
-def _claim_checks(engine: Engine, conn: sqlite3.Connection) -> list[Problem]:
-    out: list[Problem] = []
-    layout = engine.manifest.layout
-    rows = conn.execute(
-        """SELECT c.id, c.node_id, c.line, c.text, c.status, c.superseded_by, c.sources, n.path
-           FROM claims c JOIN nodes n ON n.id = c.node_id ORDER BY n.path, c.line"""
-    ).fetchall()
-    ids = {row["id"] for row in rows}
-    first_seen: dict[str, str] = {}
-    line_counts = {
-        r["path"]: r["line_count"] for r in conn.execute("SELECT path, line_count FROM nodes")
-    }
-    files = {r["path"] for r in conn.execute("SELECT path FROM files")}
-    spans: dict[str, list[sqlite3.Row]] = defaultdict(list)
-    for row in rows:
-        owner = first_seen.setdefault(row["id"], row["node_id"])
-        if owner != row["node_id"]:
-            out.append(
-                Problem(
-                    "BW202",
-                    row["path"],
-                    row["line"],
-                    f"claim id {row['id']} is used in another note",
-                )
-            )
-        if row["superseded_by"] and row["superseded_by"] not in ids:
-            out.append(
-                Problem(
-                    "BW203",
-                    row["path"],
-                    row["line"],
-                    f"by: {row['superseded_by']} does not match any claim",
-                )
-            )
-        for src in json.loads(row["sources"]):
-            match = _SPAN.match(src)
-            if not match or "://" in src or ":" in match.group("path"):
-                continue
-            target = match.group("path")
-            if target not in files and target.startswith(layout.episodes_dir + "/"):
-                target = layout.archive_episodes_dir + target[len(layout.episodes_dir) :]
-            if target not in files:
-                out.append(
-                    Problem(
-                        "BW204", row["path"], row["line"], f"src {src} points to a missing file"
-                    )
-                )
-                continue
-            end = int(match.group("end") or match.group("start"))
-            total = line_counts.get(target)
-            if total is not None and end > total:
-                out.append(
-                    Problem(
-                        "BW204",
-                        row["path"],
-                        row["line"],
-                        f"src {src} is outside the file ({total} lines)",
-                    )
-                )
-            if row["status"] == "active":
-                spans[src].append(row)
-    for group in spans.values():
-        for i, later in enumerate(group):
-            words = set(_WORD.findall(later["text"].lower()))
-            for earlier in group[:i]:
-                other = set(_WORD.findall(earlier["text"].lower()))
-                union = words | other
-                if union and len(words & other) / len(union) >= 0.6:
-                    out.append(
-                        Problem(
-                            "BW206",
-                            later["path"],
-                            later["line"],
-                            f"cites the same span as near-identical claim {earlier['id']} in {earlier['path']} "
-                            "(consolidated twice?)",
-                        )
-                    )
-                    break
-    return out
-
-
 # -- relations and links -------------------------------------------------
 def _history_fix(
     conn: sqlite3.Connection, history: dict[str, str], edge: sqlite3.Row
@@ -251,19 +165,14 @@ def _history_fix(
     return Fix(f"point the link at {new}", edit)
 
 
-_EDGE_COLS = (
-    "e.id, e.src, e.dst, e.rel, e.verb, e.declared_in, e.other, e.line, e.raw_target, e.ambiguous"
-)
-_SET_SUPERSEDED = Fix(
-    "set status: superseded",
-    lambda t: set_fields(t, {"status": "superseded"}, order_first=("id", "type", "title")),
-)
+_EDGE_COLS = "e.id, e.src, e.dst, e.rel, e.declared_in, e.other, e.line, e.raw_target, e.ambiguous"
 
 
-def _edge_checks(conn: sqlite3.Connection) -> list[Problem]:
+def _edge_checks(engine: Engine, conn: sqlite3.Connection) -> list[Problem]:
     """Targeted queries per rule, so cost follows the number of suspicious edges, not all edges."""
     out: list[Problem] = []
     node_cache: dict[str, sqlite3.Row | None] = {}
+    layout = engine.manifest.layout
 
     def node(node_id: str | None) -> sqlite3.Row | None:
         if node_id is None:
@@ -277,7 +186,7 @@ def _edge_checks(conn: sqlite3.Connection) -> list[Problem]:
 
     unresolved = conn.execute(
         f"SELECT {_EDGE_COLS}, n.path AS from_path FROM edges e JOIN nodes n ON n.id = e.declared_in "  # noqa: S608
-        "WHERE e.other IS NULL AND e.line > 0"  # a folder edge's missing hub is BW404's to report
+        "WHERE e.other IS NULL"
     ).fetchall()
     if unresolved:
         history: dict[str, str] = {}
@@ -285,79 +194,47 @@ def _edge_checks(conn: sqlite3.Connection) -> list[Problem]:
             history[norm_key(row["path"])] = row["node_id"]
             history.setdefault(norm_key(row["path"].rsplit("/", 1)[-1]), row["node_id"])
         titles = sorted({r[0] for r in conn.execute("SELECT title FROM nodes")})
+        files = {r[0] for r in conn.execute("SELECT path FROM files")}
         resolver = Resolver(conn)
         for index, edge in enumerate(unresolved):
             path, line, raw = edge["from_path"], edge["line"], edge["raw_target"]
-            is_link = edge["rel"] == "links_to"
-            noun = "link" if is_link else "relation"
+            code, noun = {
+                "superseded_by": ("BW119", "bw-superseded_by target"),
+                "source": ("BW122", "bw-sources link"),
+            }.get(edge["rel"], ("BW310", "link target"))
+            if code == "BW122":
+                pending = layout.inbox_dir + raw.removeprefix(layout.archive_dir).removesuffix(
+                    ".md"
+                )
+                if raw.startswith(layout.archive_dir + "/") and f"{pending}.md" in files:
+                    continue  # an episode `brain consolidate --done` has not archived yet
             if edge["ambiguous"]:
                 candidates = resolver.resolve(raw, path).candidates
-                listed = ", ".join(n["path"] for c in candidates[:5] if (n := node(c)) is not None)
-                out.append(
-                    Problem(
-                        "BW310" if is_link else "BW305",
-                        path,
-                        line,
-                        f"{noun} target {raw!r} is ambiguous: {listed}",
-                    )
-                )
+                paths = sorted(n["path"] for c in candidates if (n := node(c)) is not None)
+                listed = ", ".join(paths[:5])
+                out.append(Problem(code, path, line, f"{noun} {raw!r} is ambiguous: {listed}"))
                 continue
             guess = difflib.get_close_matches(raw, titles, n=1, cutoff=0.6) if index < 200 else []
             hint = f'; did you mean "{guess[0]}"?' if guess else ""
             out.append(
                 Problem(
-                    "BW310" if is_link else "BW304",
+                    code,
                     path,
                     line,
-                    f"{noun} target {raw!r} not found{hint}",
-                    fix=_history_fix(conn, history, edge),
+                    f"{noun} {raw!r} not found{hint}",
+                    fix=_history_fix(conn, history, edge) if code == "BW310" else None,
                 )
             )
+    replaced_by: dict[str, list[sqlite3.Row]] = defaultdict(list)
     for edge in conn.execute(
         f"SELECT {_EDGE_COLS}, n.path AS from_path FROM edges e JOIN nodes n ON n.id = e.declared_in "  # noqa: S608
-        "WHERE e.other = e.declared_in AND e.rel != 'links_to'"
+        "WHERE e.rel = 'superseded_by' AND e.other IS NOT NULL"
     ):
-        out.append(
-            Problem(
-                "BW306", edge["from_path"], edge["line"], f"note relates to itself ({edge['verb']})"
-            )
-        )
-    supersedes: dict[str, list[sqlite3.Row]] = defaultdict(list)
-    for edge in conn.execute(
-        f"""SELECT {_EDGE_COLS}, o.path AS old_path, o.status AS old_status, o.kind AS old_kind,
-                   w.title AS new_title
-            FROM edges e JOIN nodes o ON o.id = e.dst JOIN nodes w ON w.id = e.src
-            WHERE e.rel = 'supersedes' AND e.src != e.dst"""  # noqa: S608
-    ):
-        supersedes[edge["src"]].append(edge)
-        if edge["old_status"] == "active" and edge["old_kind"] in ("note", "hub"):
-            out.append(
-                Problem(
-                    "BW308",
-                    edge["old_path"],
-                    None,
-                    f'superseded by "{edge["new_title"]}" but status is "active"',
-                    fix=_SET_SUPERSEDED,
-                )
-            )
-    part_of: set[tuple[str, str]] = set()
-    for edge in conn.execute(
-        f"SELECT {_EDGE_COLS} FROM edges e WHERE e.rel = 'part_of' AND e.src IS NOT NULL "  # noqa: S608
-        "AND e.dst IS NOT NULL AND e.src != e.dst ORDER BY e.id"
-    ):
-        if (edge["dst"], edge["src"]) in part_of:
-            a, b = node(edge["src"]), node(edge["dst"])
-            declared = node(edge["declared_in"])
-            out.append(
-                Problem(
-                    "BW309",
-                    declared["path"] if declared else "",
-                    edge["line"],
-                    f"{a['path'] if a else edge['src']} and {b['path'] if b else edge['dst']} are part of each other",
-                )
-            )
-        part_of.add((edge["src"], edge["dst"]))
-    out += _supersession_cycles(supersedes, node)
+        if edge["other"] == edge["declared_in"]:
+            out.append(Problem("BW119", edge["from_path"], edge["line"], "names itself"))
+            continue
+        replaced_by[edge["src"]].append(edge)
+    out += _supersession_cycles(replaced_by, node)
     return out
 
 
@@ -462,7 +339,7 @@ def _structure_checks(
             )
             continue
         listed = _hub_listing(engine, conn, hub["id"], hub["path"])
-        reached = _reaches_hub(conn, [n["id"] for n in notes], hub["id"], listed)
+        reached = _reaches_hub(conn, [n["id"] for n in notes], listed)
         for note in notes:
             if note["id"] in listed or note["id"] in reached:
                 continue
@@ -475,9 +352,7 @@ def _structure_checks(
                     f"not listed in {hub['path']} ## Notes",
                     fix=Fix(
                         f"list it in {hub['path']}",
-                        lambda t, line=line: append_to_section(
-                            t, "notes", [line], create_before="relations"
-                        ),
+                        lambda t, line=line: append_to_section(t, "notes", [line]),
                         target=hub["path"],
                     ),
                 )
@@ -536,34 +411,25 @@ def _structure_checks(
     return out
 
 
-def _reaches_hub(
-    conn: sqlite3.Connection, note_ids: list[str], hub_id: str, listed: set[str]
-) -> set[str]:
-    """Notes whose `part_of` chain leads to the hub or to a note the hub lists, so a topic can
-    nest notes under section notes instead of listing every note in one long hub."""
-    parents: dict[str, list[str]] = {}
-    for start in range(0, len(note_ids), 500):
-        chunk = note_ids[start : start + 500]
-        for row in conn.execute(
-            f"SELECT src, dst FROM edges WHERE rel = 'part_of' AND dst IS NOT NULL "  # noqa: S608
-            f"AND src IN ({','.join('?' * len(chunk))})",
-            chunk,
-        ):
-            parents.setdefault(row["src"], []).append(row["dst"])
-    anchors = listed | {hub_id}
-    found: dict[str, bool] = {}
-
-    def reaches(node: str, seen: frozenset[str]) -> bool:
-        if node in found:
-            return found[node]
-        result = any(
-            parent in anchors or (parent not in seen and reaches(parent, seen | {parent}))
-            for parent in parents.get(node, [])
-        )
-        found[node] = result
-        return result
-
-    return {n for n in note_ids if reaches(n, frozenset({n}))}
+def _reaches_hub(conn: sqlite3.Connection, note_ids: list[str], listed: set[str]) -> set[str]:
+    """Notes reached by links from the notes the hub lists, so a topic can nest notes under
+    section notes instead of listing every note in one long hub."""
+    wanted = set(note_ids)
+    reached: set[str] = set()
+    frontier = [n for n in listed if n in wanted]
+    while frontier:
+        marks = ",".join("?" * len(frontier))
+        found = [
+            row["dst"]
+            for row in conn.execute(
+                f"SELECT dst FROM edges WHERE rel = 'links_to' AND src IN ({marks})",  # noqa: S608
+                frontier,
+            )
+            if row["dst"] in wanted and row["dst"] not in listed and row["dst"] not in reached
+        ]
+        reached.update(found)
+        frontier = list(dict.fromkeys(found))
+    return reached
 
 
 def _hub_listing(engine: Engine, conn: sqlite3.Connection, hub_id: str, hub_path: str) -> set[str]:
@@ -578,9 +444,11 @@ def _hub_listing(engine: Engine, conn: sqlite3.Connection, hub_id: str, hub_path
         section_range = range(section.heading_line + 1, section.end_line + 1)
     listed = set()
     for row in conn.execute(
-        "SELECT other, line, rel FROM edges WHERE declared_in=? AND other IS NOT NULL", (hub_id,)
+        "SELECT other, line FROM edges WHERE declared_in=? AND rel = 'links_to' "
+        "AND other IS NOT NULL",
+        (hub_id,),
     ):
-        if row["line"] in section_range or row["rel"] == "part_of":
+        if row["line"] in section_range:
             listed.add(row["other"])
     return listed
 

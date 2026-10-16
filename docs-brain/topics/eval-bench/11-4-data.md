@@ -5,8 +5,6 @@ title: "Data (Eval bench)"
 aliases: ["11 §4"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#4-data"
-bw-part_of:
-  - "[[eval-bench]]"
 ---
 # Data (Eval bench)
 

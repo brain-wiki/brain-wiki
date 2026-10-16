@@ -4,8 +4,6 @@ type: guide
 title: "Agents"
 tags: [user-guide]
 source: "docs/user/agents.md"
-bw-part_of:
-  - "[[user-guide]]"
 ---
 # Agents
 

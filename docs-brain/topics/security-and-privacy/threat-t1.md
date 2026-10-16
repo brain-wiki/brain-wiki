@@ -5,10 +5,6 @@ title: "T1: Indirect prompt injection becomes a standing directive"
 aliases: ["threat T1"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
-bw-related_to:
-  - "[[05-6-rules]]"
 ---
 # T1: Indirect prompt injection becomes a standing directive
 

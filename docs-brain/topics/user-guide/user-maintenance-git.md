@@ -4,8 +4,6 @@ type: guide
 title: "Git"
 tags: [user-guide]
 source: "docs/user/maintenance.md#git"
-bw-part_of:
-  - "[[user-maintenance]]"
 ---
 # Git
 

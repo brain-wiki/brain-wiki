@@ -4,8 +4,6 @@ type: proposal
 title: "Outputs"
 tags: [proposals]
 source: "docs/proposals/hooks.md#12-outputs"
-bw-part_of:
-  - "[[proposal-hooks-1-what-was-built]]"
 ---
 # Outputs
 

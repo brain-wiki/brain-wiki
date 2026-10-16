@@ -38,13 +38,17 @@ def test_scan_indexes_and_resolves(example: Path):
             "SELECT raw_target FROM edges WHERE rel!='links_to' AND other IS NULL"
         ).fetchall()
         assert unresolved == []
-        rows = eng.db.execute("SELECT src, dst, verb FROM edges WHERE rel='depends_on'").fetchall()
-        fts5 = eng.db.execute(
-            "SELECT id FROM nodes WHERE title LIKE 'Use SQLite FTS5%'"
-        ).fetchone()["id"]
-        # both declarations (depends_on on fts5, enables on the policy) store fts5 -> policy
-        assert {(r["src"] == fts5) for r in rows} == {True}
-        assert len(rows) == 2
+        ids = {r["path"]: r["id"] for r in eng.db.execute("SELECT id, path FROM nodes")}
+        fts5, policy = ids["topics/search/fts5.md"], ids["topics/storage/sqlite-version-policy.md"]
+        edges = {
+            (r["src"], r["dst"], r["rel"])
+            for r in eng.db.execute("SELECT src, dst, rel FROM edges WHERE dst IS NOT NULL")
+        }
+        # a body link in each direction, and the metadata links with their own relations
+        assert {(fts5, policy, "links_to"), (policy, fts5, "links_to")} <= edges
+        assert (ids["topics/search/ripgrep.md"], fts5, "superseded_by") in edges
+        episode = ids["archive/episodes/2026/09/01M2Z44880248H248H248H248H.md"]
+        assert (fts5, episode, "source") in edges
 
 
 def test_guard_recall_both_directions(example: Path):
@@ -54,13 +58,12 @@ def test_guard_recall_both_directions(example: Path):
         assert old["guards"][0]["title"] == "Use SQLite FTS5 for local search"
         new = _hit(search(eng, "FTS5 default backend"), "Use SQLite FTS5 for local search")
         labels = sorted(g["label"] for g in new["guards"])
-        assert labels == ["conflicts_with", "supersedes"]
+        assert labels == ["supersedes"]
 
 
 def test_any_host_reads_every_topic(example: Path):
     with engine_for(example, host="someone") as eng:
-        hit = _hit(search(eng, "vector embeddings"), "Vector-only search proposal")
-        assert "No GPU spending this year" in [g["title"] for g in hit["guards"]]
+        assert _hit(search(eng, "GPU purchases frozen"), "No GPU spending this year")
         assert read(eng, "No GPU spending this year")["topic"] == "budget"
 
 
@@ -83,8 +86,9 @@ def test_read_banners_and_modes(example: Path):
         )
         full = read(eng, "FTS5 decision")
         assert "<!--" not in full["content"] and "{id:" not in full["content"]
-        assert "Claims:\n- SQLite FTS5 is the default" in full["content"]
-        assert "(1 superseded or retracted" in full["content"]
+        assert "## Facts\n\n- SQLite FTS5 is the default" in full["content"]
+        assert '\nLinks:\n- cites "01M2Z44880248H248H248H248H"' in full["content"]
+        assert '- supersedes "Use ripgrep for search"' in full["content"]
         ep = read(eng, eng.db.execute("SELECT id FROM nodes WHERE kind='episode'").fetchone()["id"])
         assert ep["content"].startswith("<untrusted-episode")
 
@@ -99,12 +103,8 @@ def test_freshness_picks_up_edits_and_renames(example: Path):
                 "embeddings and a vector index", "embeddings via quokka vectors"
             )
         )
-        assert _hit(
-            search(eng, "quokka", intent="none")
-            if not eng.scan(force=True)
-            else search(eng, "quokka"),
-            "Vector-only search proposal",
-        )
+        eng.scan(force=True)
+        assert _hit(search(eng, "quokka"), "Vector-only search proposal")
         target = example / "topics/storage/sqlite-policy.md"
         (example / "topics/storage/sqlite-version-policy.md").rename(target)
         stats = eng.scan(force=True)
@@ -171,11 +171,11 @@ def test_read_raw_is_the_file_and_section_flags_agree(
     with engine_for(example) as eng:
         raw = read(eng, "ripgrep", mode="raw")
         assert raw["banners"] and format_read_text(raw) == note.read_text()  # no banners (04 §7)
-        assert read(eng, "fts5", section="claims")["mode"] == "section"  # --section implies it
+        assert read(eng, "fts5", section="facts")["mode"] == "section"  # --section implies it
         with pytest.raises(UsageError):
             read(eng, "fts5", mode="section")
         with pytest.raises(UsageError):
-            read(eng, "fts5", mode="full", section="claims")
+            read(eng, "fts5", mode="full", section="facts")
     assert main(["--brain", str(example), "read", "ripgrep", "--mode", "raw"]) == 0
     assert capsys.readouterr().out == note.read_text()
     assert main(["--brain", str(example), "read", "fts5", "--mode", "section"]) == 2

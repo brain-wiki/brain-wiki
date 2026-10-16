@@ -4,8 +4,6 @@ type: guide
 title: "Files"
 tags: [user-guide]
 source: "docs/user/reference.md#files"
-bw-part_of:
-  - "[[user-reference]]"
 ---
 # Files
 

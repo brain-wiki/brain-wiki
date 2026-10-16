@@ -4,8 +4,6 @@ type: design
 title: "Verification (Codex (CLI and ChatGPT desktop))"
 tags: [agents]
 source: "docs/design/agents/codex.md#verification"
-bw-part_of:
-  - "[[agent-codex]]"
 ---
 # Verification (Codex (CLI and ChatGPT desktop))
 

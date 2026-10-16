@@ -5,8 +5,6 @@ title: "Requirements (Config and storage)"
 aliases: ["03 §1"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#1-requirements"
-bw-part_of:
-  - "[[config-and-storage]]"
 ---
 # Requirements (Config and storage)
 

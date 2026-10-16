@@ -4,8 +4,6 @@ type: guide
 title: "Privacy and safety"
 tags: [user-guide]
 source: "docs/user/privacy.md"
-bw-part_of:
-  - "[[user-guide]]"
 ---
 # Privacy and safety
 

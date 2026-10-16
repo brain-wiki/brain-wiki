@@ -5,8 +5,6 @@ title: "Relation-like properties"
 aliases: ["09 §4.2"]
 tags: [import]
 source: "docs/design/09-import.md#42-relation-like-properties"
-bw-part_of:
-  - "[[09-4-normalization-rules]]"
 ---
 # Relation-like properties
 

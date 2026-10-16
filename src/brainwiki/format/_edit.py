@@ -1,4 +1,4 @@
-"""Line-local edits to notes: append to a section, replace one line, insert above a line."""
+"""Line-local edits to notes: append lines to a section."""
 
 from __future__ import annotations
 
@@ -75,20 +75,4 @@ def append_to_section(
     lines[insert_at:insert_at] = new_lines
     if insert_at + len(new_lines) < len(lines) and lines[insert_at + len(new_lines)].strip() != "":
         lines.insert(insert_at + len(new_lines), "")
-    return _join(lines, newline)
-
-
-def replace_line_matching(text: str, original: str, new_line: str, hint: int | None = None) -> str:
-    """Replace the line whose content equals `original`, nearest to `hint` (1-based).
-
-    Locating by content keeps several edits to one file correct even after earlier edits
-    shifted line numbers. Returns the text unchanged when no line matches.
-    """
-    newline = _newline(text)
-    lines = _split(text)
-    matches = [i for i, line in enumerate(lines) if line == original]
-    if not matches:
-        return text
-    target = min(matches, key=lambda i: abs(i + 1 - (hint or i + 1)))
-    lines[target] = new_line
     return _join(lines, newline)

@@ -5,8 +5,6 @@ title: "Purpose (Eval bench)"
 aliases: ["11 §1"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#1-purpose"
-bw-part_of:
-  - "[[eval-bench]]"
 ---
 # Purpose (Eval bench)
 

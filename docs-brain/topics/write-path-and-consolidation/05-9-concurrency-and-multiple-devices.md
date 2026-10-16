@@ -5,8 +5,6 @@ title: "Concurrency and multiple devices"
 aliases: ["05 §9"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#9-concurrency-and-multiple-devices"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # Concurrency and multiple devices
 

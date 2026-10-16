@@ -4,8 +4,6 @@ type: proposal
 title: "More deterministic graders"
 tags: [proposals]
 source: "docs/proposals/consolidation-bench.md#3-more-deterministic-graders"
-bw-part_of:
-  - "[[proposal-consolidation-bench]]"
 ---
 # More deterministic graders
 

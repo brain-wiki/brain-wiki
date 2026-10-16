@@ -16,6 +16,8 @@ class Fix:
     move_to: str | None = None
     create: str | None = None  # full content for a file that does not exist yet
     target: str | None = None  # file the fix changes, when it is not the problem's file
+    target_link: str | None = None  # or the note a link from the problem's file resolves to
+    link_edit: Callable[[str, str], str] | None = None  # edit given the link back, with target_link
 
 
 @dataclass

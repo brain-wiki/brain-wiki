@@ -5,8 +5,6 @@ title: "Dependencies"
 aliases: ["13 §3"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#3-dependencies"
-bw-part_of:
-  - "[[engineering]]"
 ---
 # Dependencies
 

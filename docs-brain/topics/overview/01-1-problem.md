@@ -5,8 +5,6 @@ title: "Problem"
 aliases: ["01 §1"]
 tags: [overview]
 source: "docs/design/01-overview.md#1-problem"
-bw-part_of:
-  - "[[overview]]"
 ---
 # Problem
 

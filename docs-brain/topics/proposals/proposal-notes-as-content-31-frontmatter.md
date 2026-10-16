@@ -4,8 +4,6 @@ type: proposal
 title: "Frontmatter (Notes as content (format 3))"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#31-frontmatter"
-bw-part_of:
-  - "[[proposal-notes-as-content-3-format-3]]"
 ---
 # Frontmatter (Notes as content (format 3))
 

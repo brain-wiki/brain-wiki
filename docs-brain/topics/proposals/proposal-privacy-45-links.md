@@ -4,8 +4,6 @@ type: proposal
 title: "Links (Privacy)"
 tags: [proposals]
 source: "docs/proposals/privacy.md#45-links"
-bw-part_of:
-  - "[[proposal-privacy-4-draft-model]]"
 ---
 # Links (Privacy)
 

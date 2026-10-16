@@ -5,8 +5,6 @@ title: "Two uses"
 aliases: ["01 §2.1"]
 tags: [overview]
 source: "docs/design/01-overview.md#21-two-uses"
-bw-part_of:
-  - "[[01-2-what-brain-wiki-is]]"
 ---
 # Two uses
 

@@ -5,8 +5,6 @@ title: "Alternatives considered (Write path and consolidation)"
 aliases: ["05 §11"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#11-alternatives-considered"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # Alternatives considered (Write path and consolidation)
 

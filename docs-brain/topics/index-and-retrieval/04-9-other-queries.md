@@ -5,8 +5,6 @@ title: "Other queries"
 aliases: ["04 §9"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#9-other-queries"
-bw-part_of:
-  - "[[index-and-retrieval]]"
 ---
 # Other queries
 

@@ -5,8 +5,6 @@ title: "`agent`"
 aliases: ["11 §3.5"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#35-agent"
-bw-part_of:
-  - "[[11-3-suites]]"
 ---
 # `agent`
 

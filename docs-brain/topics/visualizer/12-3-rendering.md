@@ -5,8 +5,6 @@ title: "Rendering"
 aliases: ["12 §3"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#3-rendering"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # Rendering
 

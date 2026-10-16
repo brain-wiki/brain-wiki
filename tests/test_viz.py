@@ -50,10 +50,8 @@ def _node(graph: dict, node_id: str) -> dict:
     return next(n for n in graph["nodes"] if n["id"] == node_id)
 
 
-def _typed(graph: dict) -> set[tuple[str, str, str]]:
-    return {
-        (link["source"], link["target"], link["rel"]) for link in graph["links"] if link["typed"]
-    }
+def _links(graph: dict) -> set[tuple[str, str, str]]:
+    return {(link["source"], link["target"], link["rel"]) for link in graph["links"]}
 
 
 def test_graph_nodes_links_and_flags(example: Path):
@@ -67,31 +65,18 @@ def test_graph_nodes_links_and_flags(example: Path):
     assert kinds[EPISODE] == "episode"
     assert len([k for k in kinds.values() if k in ("note", "hub")]) == 8
 
-    typed = _typed(graph)
-    assert (FTS5, RIPGREP, "supersedes") in typed
-    assert (FTS5, VECTOR, "conflicts_with") in typed
-    assert (GPU, VECTOR, "conflicts_with") in typed
-    depends = [link for link in graph["links"] if link["rel"] == "depends_on"]
-    assert [(link["source"], link["target"]) for link in depends] == [(FTS5, POLICY)]
-    assert depends[0]["verb"] == "depends_on"
-    supersedes = next(link for link in graph["links"] if link["rel"] == "supersedes")
-    assert supersedes["guard"] is True
-    assert supersedes["qualifier"] == "replaced"
-    body = [link for link in graph["links"] if link["rel"] == "links_to"]
-    assert body
-    assert all(not link["typed"] and not link["guard"] for link in body)
+    links = _links(graph)
+    assert (RIPGREP, FTS5, "superseded_by") in links  # from its metadata
+    assert {(FTS5, POLICY, "links_to"), (POLICY, FTS5, "links_to")} <= links
+    assert (FTS5, RIPGREP, "links_to") in links and (GPU, VECTOR, "links_to") in links
+    assert all(set(link) == {"source", "target", "rel"} for link in graph["links"])
 
-    assert "conflict" in _node(graph, FTS5)["flags"]
-    assert "conflict" in _node(graph, VECTOR)["flags"]
-    assert "conflict" in _node(graph, GPU)["flags"]
-    assert "conflict" not in _node(graph, RIPGREP)["flags"]
     assert _node(graph, RIPGREP)["status"] == "superseded"
-    assert not any("stale" in n["flags"] or "orphan" in n["flags"] for n in graph["nodes"])
+    assert _node(graph, RIPGREP)["flags"] == ["superseded"]
+    assert not any(set(n["flags"]) - {"superseded"} for n in graph["nodes"])
 
     fts5 = _node(graph, FTS5)
-    assert fts5["degree"] == 4
-    assert fts5["claims"] == 1
-    assert fts5["superseded_claims"] == 1
+    assert fts5["degree"] == 6
     assert fts5["aliases"] == ["FTS5 decision"]
     assert fts5["updated"] == "2026-10-01"
 
@@ -111,7 +96,7 @@ def test_graph_shows_every_topic_to_any_host(example: Path):
     assert {GPU, BUDGET_HUB, FTS5} <= ids
     assert "budget" in {t["slug"] for t in graph["topics"]}
     assert graph["profile"] == "default"
-    assert "conflict" in _node(graph, VECTOR)["flags"]
+    assert "superseded" in _node(graph, RIPGREP)["flags"]
 
 
 def test_graph_topic_filter(example: Path):
@@ -127,16 +112,13 @@ def test_health_flags(example: Path):
         example,
         "topics/search/legacy-cli.md",
         "---\nid: 01M4KT3JPSB7BP2SNSCAVC2SFC\ntitle: Legacy CLI search\n---\n"
-        "# Legacy CLI search\n\n## Claims\n"
-        "- The CLI pipes results through grep. <!-- id:c-01M4KT3JPSB7BP2SNSCAVC2SFF; inputs:external -->\n\n"
-        "## Relations\n- depends_on [[ripgrep]]\n",
+        "# Legacy CLI search\n\nThe CLI pipes [[ripgrep]] results through grep.\n",
     )
     write(example, "topics/search/broken.md", "---\ntitle: [unclosed\n---\n# Broken\n")
     with engine_for(example) as eng:
         graph = build_graph(eng)
     legacy = _node(graph, "01M4KT3JPSB7BP2SNSCAVC2SFC")
-    assert {"stale", "orphan", "unverified"} <= set(legacy["flags"])
-    assert legacy["unverified_claims"] == 1
+    assert set(legacy["flags"]) == {"stale", "orphan"}
     broken = next(n for n in graph["nodes"] if n["path"] == "topics/search/broken.md")
     assert "lint_error" in broken["flags"]
 
@@ -239,8 +221,8 @@ def test_world_shape_and_totals(example: Path):
         "notes": 5,
         "hubs": 3,
         "episodes": 1,
-        "links": 9,
-        "flagged": 3,
+        "links": 11,
+        "flagged": 1,
     }
     assert world["episodes"] == {"count": 1}
     [only] = world["constellations"]
@@ -253,12 +235,12 @@ def test_world_shape_and_totals(example: Path):
     assert search["hub"] == "01M4KT3JPRY4W6766VT18CQS90"
     assert search["description"] == "How local search works and why."
     assert search["constellation"] == "c1"
-    assert search["flags"] == {"conflict": 2}
-    assert search["flagged"] == 2
+    assert search["flags"] == {"superseded": 1}
+    assert search["flagged"] == 1
     assert len({t["color"] for t in topics.values()}) == 3
     flows = {(f["a"], f["b"]): f for f in world["flows"]}
-    assert flows[("search", "storage")]["rels"] == {"depends_on": 1}
-    assert flows[("budget", "search")]["rels"] == {"conflicts_with": 1}
+    assert flows[("search", "storage")]["rels"] == {"links_to": 2}
+    assert flows[("budget", "search")]["rels"] == {"links_to": 1}
     assert all(f["a"] < f["b"] for f in world["flows"])
 
 
@@ -289,7 +271,7 @@ def test_world_shows_every_topic_to_any_host(example: Path):
     assert world["totals"]["topics"] == 3
     assert atlas.topic("budget") is not None
     health = atlas.health()
-    assert GPU in {item["id"] for items in health["items"].values() for item in items}
+    assert RIPGREP in {item["id"] for items in health["items"].values() for item in items}
     assert GPU in {r["id"] for r in atlas.search_titles("gpu")}
 
 
@@ -302,29 +284,28 @@ def test_topic_payload(example: Path):
     assert {n["id"] for n in topic["nodes"]} >= {FTS5, RIPGREP, VECTOR}
     assert all(n["topic"] == "search" for n in topic["nodes"])
     inner = {(x["source"], x["target"], x["rel"]) for x in topic["links"]}
-    assert (FTS5, RIPGREP, "supersedes") in inner
-    assert any(not x["typed"] and x["rel"] == "links_to" for x in topic["links"])
+    assert {(RIPGREP, FTS5, "superseded_by"), (FTS5, RIPGREP, "links_to")} <= inner
     external = {(x["source"], x["target"]): x for x in topic["external"]}
     assert external[(FTS5, POLICY)] == {
         "source": FTS5,
         "target": POLICY,
-        "rel": "depends_on",
+        "rel": "links_to",
         "topic": "storage",
         "title": "SQLite version policy",
         "dir": "out",
     }
     assert external[(GPU, VECTOR)]["dir"] == "in"
     assert external[(GPU, VECTOR)]["topic"] == "budget"
-    typed = [x["rel"] != "links_to" for x in topic["external"]]
-    assert typed == sorted(typed, reverse=True)
+    metadata_first = [x["rel"] != "links_to" for x in topic["external"]]
+    assert metadata_first == sorted(metadata_first, reverse=True)
     assert atlas.topic("nope") is None
 
 
 def test_health_payload(example: Path):
     health = _atlas(example).health()
-    assert health["counts"] == {"conflict": 3}
-    items = health["items"]["conflict"]
-    assert [i["id"] for i in items] == [GPU, FTS5, VECTOR]
+    assert health["counts"] == {"superseded": 1}
+    items = health["items"]["superseded"]
+    assert [i["id"] for i in items] == [RIPGREP]
     assert set(items[0]) == {"id", "title", "topic"}
 
 
@@ -344,16 +325,13 @@ def test_small_brain_has_one_constellation():
 
 
 def _topic_graph(notes: dict[str, int], edges: list[tuple[str, str]]) -> dict:
-    """A minimal graph: `notes` notes per topic, one typed link per edge between topics."""
+    """A minimal graph: `notes` notes per topic, one link per edge between topics."""
     nodes = [
         {"id": f"{t}-{i}", "kind": "note", "topic": t, "flags": [], "updated": None}
         for t, count in notes.items()
         for i in range(count)
     ]
-    links = [
-        {"source": f"{a}-0", "target": f"{b}-0", "typed": True, "rel": "related_to"}
-        for a, b in edges
-    ]
+    links = [{"source": f"{a}-0", "target": f"{b}-0", "rel": "links_to"} for a, b in edges]
     topics = [{"slug": t, "title": t.title(), "notes": n} for t, n in notes.items()]
     return {
         "brain": "b",
@@ -423,11 +401,11 @@ def test_world_keeps_each_topics_strongest_flows():
         for s in slugs
     ]
     links = [
-        {"source": a, "target": b, "rel": "related_to", "typed": True}
+        {"source": a, "target": b, "rel": "links_to"}
         for i, a in enumerate(slugs)
         for b in slugs[i + 1 :]
     ]
-    links.append({"source": "t00", "target": "t19", "rel": "depends_on", "typed": True})
+    links.append({"source": "t00", "target": "t19", "rel": "superseded_by"})
     graph = {
         "brain": "b",
         "generated": "",
@@ -442,22 +420,22 @@ def test_world_keeps_each_topics_strongest_flows():
         "a": "t00",
         "b": "t19",
         "total": 2,
-        "rels": {"depends_on": 1, "related_to": 1},
+        "rels": {"links_to": 1, "superseded_by": 1},
     }
     assert len(flows) < 190
     for slug in slugs:
         assert sum(slug in (f["a"], f["b"]) for f in flows) >= 8
 
 
-def test_topic_weights_count_typed_cross_topic_links():
+def test_topic_weights_count_cross_topic_links():
     nodes = [{"id": "a", "topic": "x"}, {"id": "b", "topic": "y"}, {"id": "c", "topic": "x"}]
     links = [
-        {"source": "a", "target": "b", "typed": True},
-        {"source": "c", "target": "b", "typed": True},
-        {"source": "a", "target": "b", "typed": False},
-        {"source": "a", "target": "c", "typed": True},
+        {"source": "a", "target": "b", "rel": "links_to"},
+        {"source": "c", "target": "b", "rel": "links_to"},
+        {"source": "a", "target": "b", "rel": "superseded_by"},
+        {"source": "a", "target": "c", "rel": "links_to"},  # within one topic
     ]
-    assert topic_weights(nodes, links) == {"x": {"y": 2}, "y": {"x": 2}}
+    assert topic_weights(nodes, links) == {"x": {"y": 3}, "y": {"x": 3}}
 
 
 def _inline(html: str, tag: str) -> list[str]:
@@ -720,7 +698,7 @@ def test_server_api(server: _VizServer):
     assert _get(server, f"/api/topic/nope?t={server.token}")[0] == 404
     health = _api(server, "/api/health")
     assert isinstance(health, dict)
-    assert GPU in {i["id"] for items in health["items"].values() for i in items}
+    assert RIPGREP in {i["id"] for items in health["items"].values() for i in items}
     assert _get(server, f"/api/graph?t={server.token}")[0] == 404
 
     status, _, body = _get(server, f"/api/note/{FTS5}?t={server.token}")
@@ -728,7 +706,11 @@ def test_server_api(server: _VizServer):
     assert status == 200
     assert note["title"] == "Use SQLite FTS5 for local search"
     assert note["path"] == "topics/search/fts5.md"
-    assert any("SUPERSEDES" in b.upper() or "CONFLICTS" in b for b in note["banners"])
+    assert note["banners"] == ['↳ supersedes "Use ripgrep for search" (topics/search/ripgrep.md).']
+    assert {(x["relation"], x["path"]) for x in note["outlinks"]} >= {
+        ("links_to", "topics/storage/sqlite-version-policy.md"),
+        ("cites", "archive/episodes/2026/09/01M2Z44880248H248H248H248H.md"),
+    }
     assert _get(server, f"/api/note/{GPU}?t={server.token}")[0] == 200
 
 

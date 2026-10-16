@@ -5,8 +5,6 @@ title: "Secret scanning"
 aliases: ["10 §6"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#6-secret-scanning"
-bw-part_of:
-  - "[[security-and-privacy]]"
 ---
 # Secret scanning
 

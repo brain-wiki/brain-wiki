@@ -4,8 +4,6 @@ type: guide
 title: "What is protected"
 tags: [user-guide]
 source: "docs/user/privacy.md#what-is-protected"
-bw-part_of:
-  - "[[user-privacy]]"
 ---
 # What is protected
 

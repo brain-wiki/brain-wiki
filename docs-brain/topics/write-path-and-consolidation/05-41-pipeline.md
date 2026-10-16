@@ -5,8 +5,6 @@ title: "Pipeline (Write path and consolidation)"
 aliases: ["05 §4.1"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#41-pipeline"
-bw-part_of:
-  - "[[05-4-consolidation]]"
 ---
 # Pipeline (Write path and consolidation)
 

@@ -5,8 +5,6 @@ title: "Output (Index and retrieval)"
 aliases: ["04 §6.5"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#65-output"
-bw-part_of:
-  - "[[04-6-search]]"
 ---
 # Output (Index and retrieval)
 

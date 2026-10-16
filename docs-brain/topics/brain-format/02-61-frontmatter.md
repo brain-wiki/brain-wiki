@@ -5,8 +5,6 @@ title: "Frontmatter (Brain format)"
 aliases: ["02 §6.1"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#61-frontmatter"
-bw-part_of:
-  - "[[02-6-notes]]"
 ---
 # Frontmatter (Brain format)
 

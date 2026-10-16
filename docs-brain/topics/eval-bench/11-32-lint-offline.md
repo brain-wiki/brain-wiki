@@ -5,8 +5,6 @@ title: "`lint` (offline)"
 aliases: ["11 §3.2"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#32-lint-offline"
-bw-part_of:
-  - "[[11-3-suites]]"
 ---
 # `lint` (offline)
 

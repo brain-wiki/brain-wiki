@@ -65,17 +65,6 @@ def _create(conn: sqlite3.Connection, root: Path, manifest: Manifest) -> None:
     conn.execute("COMMIT")
 
 
-def _baselines(conn: sqlite3.Connection) -> list[tuple[object, ...]]:
-    """Recorded versions of notes (05 §2.3), which outlive a rebuild: they are the only record
-    of edits nobody has checked yet."""
-    try:
-        return [
-            tuple(r) for r in conn.execute("SELECT path, sha256, content, since FROM baselines")
-        ]
-    except sqlite3.DatabaseError:
-        return []
-
-
 def _meta(conn: sqlite3.Connection) -> dict[str, str]:
     try:
         return {row["key"]: row["value"] for row in conn.execute("SELECT key, value FROM meta")}
@@ -97,19 +86,12 @@ def open_index(
             or meta.get("brain_id") != manifest.id
         )
         if stale:
-            kept = _baselines(conn) if meta.get("brain_id") == manifest.id else []
             conn.close()
             if meta and not rebuild:
                 log.info("rebuilding index for %s (schema or configuration changed)", root)
             _remove(path)
             conn = _connect(path)
             _create(conn, root, manifest)
-            if kept:
-                conn.execute("BEGIN IMMEDIATE")
-                conn.executemany(
-                    "INSERT INTO baselines(path, sha256, content, since) VALUES (?, ?, ?, ?)", kept
-                )
-                conn.execute("COMMIT")
         return conn
     except sqlite3.DatabaseError as exc:
         _remove(path)

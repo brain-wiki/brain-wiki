@@ -5,8 +5,6 @@ title: "Neighbors"
 aliases: ["04 §9.2"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#92-neighbors"
-bw-part_of:
-  - "[[04-9-other-queries]]"
 ---
 # Neighbors
 

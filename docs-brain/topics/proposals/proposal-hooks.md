@@ -4,8 +4,6 @@ type: proposal
 title: "Host hooks: briefing, capture, and recall"
 tags: [proposals]
 source: "docs/proposals/hooks.md"
-bw-part_of:
-  - "[[proposals]]"
 ---
 # Host hooks: briefing, capture, and recall
 

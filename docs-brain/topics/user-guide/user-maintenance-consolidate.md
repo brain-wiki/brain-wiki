@@ -4,8 +4,6 @@ type: guide
 title: "Consolidate"
 tags: [user-guide]
 source: "docs/user/maintenance.md#consolidate"
-bw-part_of:
-  - "[[user-maintenance]]"
 ---
 # Consolidate
 

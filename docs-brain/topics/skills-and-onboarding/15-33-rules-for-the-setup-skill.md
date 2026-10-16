@@ -5,8 +5,6 @@ title: "Rules for the setup skill"
 aliases: ["15 §3.3"]
 tags: [skills-and-onboarding]
 source: "docs/design/15-skills-and-onboarding.md#33-rules-for-the-setup-skill"
-bw-part_of:
-  - "[[15-3-onboarding]]"
 ---
 # Rules for the setup skill
 

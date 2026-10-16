@@ -4,8 +4,6 @@ type: proposal
 title: "Headless consolidation"
 tags: [proposals]
 source: "docs/proposals/scheduled-maintenance.md#12-headless-consolidation"
-bw-part_of:
-  - "[[proposal-scheduled-maintenance-1-what-was-built]]"
 ---
 # Headless consolidation
 

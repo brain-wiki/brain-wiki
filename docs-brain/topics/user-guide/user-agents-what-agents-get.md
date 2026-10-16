@@ -4,8 +4,6 @@ type: guide
 title: "What agents get"
 tags: [user-guide]
 source: "docs/user/agents.md#what-agents-get"
-bw-part_of:
-  - "[[user-agents]]"
 ---
 # What agents get
 

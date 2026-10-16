@@ -4,8 +4,6 @@ type: design
 title: "Verification (Claude Code)"
 tags: [agents]
 source: "docs/design/agents/claude-code.md#verification"
-bw-part_of:
-  - "[[agent-claude-code]]"
 ---
 # Verification (Claude Code)
 

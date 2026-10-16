@@ -5,8 +5,6 @@ title: "Review (Write path and consolidation)"
 aliases: ["05 §7.2"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#72-review"
-bw-part_of:
-  - "[[05-7-validation-and-apply]]"
 ---
 # Review (Write path and consolidation)
 

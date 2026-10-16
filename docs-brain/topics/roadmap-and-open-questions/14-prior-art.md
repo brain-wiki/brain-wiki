@@ -4,8 +4,6 @@ type: design
 title: "Prior art"
 tags: [roadmap-and-open-questions]
 source: "docs/design/14-roadmap-and-open-questions.md#prior-art"
-bw-part_of:
-  - "[[roadmap-and-open-questions]]"
 ---
 # Prior art
 

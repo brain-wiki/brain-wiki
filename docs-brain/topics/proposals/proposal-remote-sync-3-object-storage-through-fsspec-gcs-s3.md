@@ -4,8 +4,6 @@ type: proposal
 title: "Object storage through fsspec (GCS, S3)"
 tags: [proposals]
 source: "docs/proposals/remote-sync.md#3-object-storage-through-fsspec-gcs-s3"
-bw-part_of:
-  - "[[proposal-remote-sync]]"
 ---
 # Object storage through fsspec (GCS, S3)
 

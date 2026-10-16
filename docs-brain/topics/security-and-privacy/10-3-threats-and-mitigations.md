@@ -5,8 +5,6 @@ title: "Threats and mitigations"
 aliases: ["10 §3"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[security-and-privacy]]"
 ---
 # Threats and mitigations
 

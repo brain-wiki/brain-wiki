@@ -5,8 +5,6 @@ title: "Non-goals for v0.1"
 aliases: ["01 §4"]
 tags: [overview]
 source: "docs/design/01-overview.md#4-non-goals-for-v01"
-bw-part_of:
-  - "[[overview]]"
 ---
 # Non-goals for v0.1
 

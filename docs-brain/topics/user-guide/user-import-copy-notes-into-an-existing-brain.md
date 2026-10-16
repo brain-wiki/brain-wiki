@@ -4,8 +4,6 @@ type: guide
 title: "Copy notes into an existing brain"
 tags: [user-guide]
 source: "docs/user/import.md#copy-notes-into-an-existing-brain"
-bw-part_of:
-  - "[[user-import]]"
 ---
 # Copy notes into an existing brain
 

@@ -4,8 +4,6 @@ type: proposal
 title: "Rules for every hook"
 tags: [proposals]
 source: "docs/proposals/hooks.md#15-rules-for-every-hook"
-bw-part_of:
-  - "[[proposal-hooks-1-what-was-built]]"
 ---
 # Rules for every hook
 

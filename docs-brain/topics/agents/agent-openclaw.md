@@ -4,8 +4,6 @@ type: design
 title: "OpenClaw"
 tags: [agents]
 source: "docs/design/agents/openclaw.md"
-bw-part_of:
-  - "[[agents]]"
 ---
 # OpenClaw
 

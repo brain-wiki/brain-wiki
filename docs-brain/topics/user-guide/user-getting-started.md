@@ -4,8 +4,6 @@ type: guide
 title: "Getting started"
 tags: [user-guide]
 source: "docs/user/getting-started.md"
-bw-part_of:
-  - "[[user-guide]]"
 ---
 # Getting started
 

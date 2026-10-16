@@ -4,8 +4,6 @@ type: proposal
 title: "Server mode reading object storage"
 tags: [proposals]
 source: "docs/proposals/remote-sync.md#4-server-mode-reading-object-storage"
-bw-part_of:
-  - "[[proposal-remote-sync]]"
 ---
 # Server mode reading object storage
 

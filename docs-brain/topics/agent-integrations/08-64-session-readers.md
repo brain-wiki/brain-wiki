@@ -5,8 +5,6 @@ title: "Session readers"
 aliases: ["08 §6.4"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#64-session-readers"
-bw-part_of:
-  - "[[08-6-harvest]]"
 ---
 # Session readers
 

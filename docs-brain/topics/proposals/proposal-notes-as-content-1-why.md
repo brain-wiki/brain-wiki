@@ -4,8 +4,6 @@ type: proposal
 title: "Why"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#1-why"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Why
 

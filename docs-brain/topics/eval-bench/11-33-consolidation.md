@@ -5,8 +5,6 @@ title: "`consolidation`"
 aliases: ["11 §3.3"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#33-consolidation"
-bw-part_of:
-  - "[[11-3-suites]]"
 ---
 # `consolidation`
 

@@ -4,8 +4,6 @@ type: reference
 title: "Decision log"
 tags: [decisions]
 source: "docs/design/README.md#decision-log"
-bw-part_of:
-  - "[[decisions]]"
 ---
 # Decision log
 

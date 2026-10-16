@@ -5,8 +5,6 @@ title: "Hosts"
 aliases: ["08 §4"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#4-hosts"
-bw-part_of:
-  - "[[agent-integrations]]"
 ---
 # Hosts
 

@@ -5,8 +5,6 @@ title: "Data (Visualizer)"
 aliases: ["12 §6"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#6-data"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # Data (Visualizer)
 

@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from brainwiki.viz._lod import Atlas
 
 APP_DIR = Path(__file__).parent / "app"
-_SYMMETRIC = {"conflicts_with", "related_to"}
 _MAX_RUNS = 20
 _SKIP_RUN_STATUSES = {"applying", "failed"}
 _XML_INVALID = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
@@ -33,13 +32,11 @@ def build_graph(engine: Engine, *, topics: list[str] | None = None) -> dict[str,
     ids = {row["id"] for row in rows}
     links = _links(engine, ids)
     flags = _flags(engine)
-    claims = _claim_counts(engine)
     degree: dict[str, int] = {}
     for link in links:
-        if link["typed"]:
-            degree[link["source"]] = degree.get(link["source"], 0) + 1
-            degree[link["target"]] = degree.get(link["target"], 0) + 1
-    nodes = [_node(row, degree, flags, claims) for row in rows]
+        degree[link["source"]] = degree.get(link["source"], 0) + 1
+        degree[link["target"]] = degree.get(link["target"], 0) + 1
+    nodes = [_node(row, degree, flags) for row in rows]
     topic_list = _topics(topic_rows(engine), nodes, links, wanted)
     return {
         "brain": engine.brain.display_name,
@@ -66,58 +63,33 @@ def _nodes(engine: Engine, wanted: set[str] | None) -> list[dict[str, Any]]:
 
 
 def _links(engine: Engine, ids: set[str]) -> list[dict[str, Any]]:
+    """Where notes link, one entry per (source, target, relation): body links (`links_to`),
+    `bw-superseded_by` (`superseded_by`), and `bw-sources` (`source`)."""
     rows = engine.db.execute(
-        """SELECT src, dst, rel, is_guard, verb, qualifier, flip FROM edges
+        """SELECT src, dst, rel FROM edges
            WHERE src IS NOT NULL AND dst IS NOT NULL AND src != dst
-           ORDER BY flip, declared_in, line"""
+           ORDER BY declared_in, line"""
     ).fetchall()
     seen: set[tuple[str, str, str]] = set()
     links = []
     for row in rows:
         src, dst, rel = row["src"], row["dst"], row["rel"]
-        if src not in ids or dst not in ids:
+        if src not in ids or dst not in ids or (src, dst, rel) in seen:
             continue
-        a, b = (min(src, dst), max(src, dst)) if rel in _SYMMETRIC else (src, dst)
-        if (a, b, rel) in seen:
-            continue
-        seen.add((a, b, rel))
-        links.append(
-            {
-                "source": src,
-                "target": dst,
-                "rel": rel,
-                "typed": rel != "links_to",
-                "guard": bool(row["is_guard"]),
-                "verb": row["verb"],
-                "qualifier": row["qualifier"],
-            }
-        )
+        seen.add((src, dst, rel))
+        links.append({"source": src, "target": dst, "rel": rel})
     return links
 
 
 def _flags(engine: Engine) -> dict[str, list[str]]:
+    from brainwiki.index import stale_links
+
     conn = engine.db
     queries = {
-        "conflict": (
-            """SELECT a.id, b.id FROM edges e JOIN nodes a ON a.id=e.src JOIN nodes b ON b.id=e.dst
-               WHERE e.rel='conflicts_with' AND a.status='active' AND b.status='active'
-                 AND a.id != b.id""",
-            (),
-        ),
-        "stale": (
-            """SELECT DISTINCT e.src FROM edges e JOIN nodes n ON n.id=e.src JOIN nodes d ON d.id=e.dst
-               WHERE e.rel='depends_on' AND n.status='active'
-                 AND d.status IN ('superseded','archived')""",
-            (),
-        ),
+        "superseded": ("SELECT id FROM nodes WHERE status='superseded'", ()),
         "orphan": (
             """SELECT n.id FROM nodes n WHERE n.kind='note' AND NOT EXISTS
                (SELECT 1 FROM edges e WHERE e.dst=n.id AND e.src IS NOT NULL AND e.src != n.id)""",
-            (),
-        ),
-        "unverified": (
-            """SELECT DISTINCT node_id FROM claims
-               WHERE status='active' AND inputs IN ('external','unknown')""",
             (),
         ),
         "lint_error": (
@@ -125,45 +97,27 @@ def _flags(engine: Engine) -> dict[str, list[str]]:
             (),
         ),
     }
+    found = {
+        flag: [row[0] for row in conn.execute(sql, params)]
+        for flag, (sql, params) in queries.items()
+    }
+    found["stale"] = [row["src"] for row in stale_links(conn)]
     flags: dict[str, list[str]] = {}
-    for flag, (sql, params) in queries.items():
-        for row in conn.execute(sql, params):
-            for node_id in row:
-                bucket = flags.setdefault(node_id, [])
-                if flag not in bucket:
-                    bucket.append(flag)
+    for flag in ("superseded", "stale", "orphan", "lint_error"):
+        for node_id in found[flag]:
+            bucket = flags.setdefault(node_id, [])
+            if flag not in bucket:
+                bucket.append(flag)
     return flags
 
 
-def _claim_counts(engine: Engine) -> dict[str, dict[str, int]]:
-    rows = engine.db.execute(
-        """SELECT node_id,
-                  SUM(status='active') AS active,
-                  SUM(status='superseded') AS superseded,
-                  SUM(status='active' AND inputs IN ('external','unknown')) AS unverified
-           FROM claims GROUP BY node_id"""
-    ).fetchall()
-    return {
-        r["node_id"]: {
-            "claims": r["active"] or 0,
-            "superseded_claims": r["superseded"] or 0,
-            "unverified_claims": r["unverified"] or 0,
-        }
-        for r in rows
-    }
-
-
 def _node(
-    row: dict[str, Any],
-    degree: dict[str, int],
-    flags: dict[str, list[str]],
-    claims: dict[str, dict[str, int]],
+    row: dict[str, Any], degree: dict[str, int], flags: dict[str, list[str]]
 ) -> dict[str, Any]:
     try:
         aliases = [str(a) for a in json.loads(row["aliases"] or "[]")]
     except ValueError:
         aliases = []
-    counts = claims.get(row["id"], {"claims": 0, "superseded_claims": 0, "unverified_claims": 0})
     return {
         "id": row["id"],
         "title": row["title"],
@@ -176,7 +130,6 @@ def _node(
         "aliases": aliases,
         "lines": row["line_count"],
         "degree": degree.get(row["id"], 0),
-        **counts,
         "flags": list(flags.get(row["id"], [])),
     }
 
@@ -281,16 +234,9 @@ _NODE_KEYS = (
     ("status", "string"),
     ("updated", "string"),
     ("degree", "int"),
-    ("claims", "int"),
     ("flags", "string"),
 )
-_EDGE_KEYS = (
-    ("rel", "string"),
-    ("typed", "boolean"),
-    ("guard", "boolean"),
-    ("verb", "string"),
-    ("qualifier", "string"),
-)
+_EDGE_KEYS = (("rel", "string"),)
 
 
 def _xml_text(value: Any) -> str:

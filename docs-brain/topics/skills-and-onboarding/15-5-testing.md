@@ -5,8 +5,6 @@ title: "Testing (Skills and onboarding)"
 aliases: ["15 §5"]
 tags: [skills-and-onboarding]
 source: "docs/design/15-skills-and-onboarding.md#5-testing"
-bw-part_of:
-  - "[[skills-and-onboarding]]"
 ---
 # Testing (Skills and onboarding)
 

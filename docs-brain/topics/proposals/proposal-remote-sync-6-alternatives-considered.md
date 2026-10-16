@@ -4,8 +4,6 @@ type: proposal
 title: "Alternatives considered (Remote sync and object storage)"
 tags: [proposals]
 source: "docs/proposals/remote-sync.md#6-alternatives-considered"
-bw-part_of:
-  - "[[proposal-remote-sync]]"
 ---
 # Alternatives considered (Remote sync and object storage)
 

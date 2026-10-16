@@ -4,8 +4,6 @@ type: guide
 title: "Move a note"
 tags: [user-guide]
 source: "docs/user/maintenance.md#move-a-note"
-bw-part_of:
-  - "[[user-maintenance]]"
 ---
 # Move a note
 

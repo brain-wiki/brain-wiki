@@ -5,8 +5,6 @@ title: "`AGENTS.md`"
 aliases: ["02 §11"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#11-agentsmd"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # `AGENTS.md`
 

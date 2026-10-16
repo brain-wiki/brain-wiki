@@ -5,8 +5,6 @@ title: "T8: XSS in the visualizer"
 aliases: ["threat T8"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
 ---
 # T8: XSS in the visualizer
 

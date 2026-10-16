@@ -5,8 +5,6 @@ title: "Fixes"
 aliases: ["06 §5"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#5-fixes"
-bw-part_of:
-  - "[[lint-and-reports]]"
 ---
 # Fixes
 

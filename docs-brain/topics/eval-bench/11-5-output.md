@@ -5,8 +5,6 @@ title: "Output (Eval bench)"
 aliases: ["11 §5"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#5-output"
-bw-part_of:
-  - "[[eval-bench]]"
 ---
 # Output (Eval bench)
 

@@ -5,8 +5,6 @@ title: "Ranking"
 aliases: ["04 §6.3"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#63-ranking"
-bw-part_of:
-  - "[[04-6-search]]"
 ---
 # Ranking
 

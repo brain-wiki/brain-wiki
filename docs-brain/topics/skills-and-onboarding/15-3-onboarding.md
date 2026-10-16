@@ -5,8 +5,6 @@ title: "Onboarding"
 aliases: ["15 §3"]
 tags: [skills-and-onboarding]
 source: "docs/design/15-skills-and-onboarding.md#3-onboarding"
-bw-part_of:
-  - "[[skills-and-onboarding]]"
 ---
 # Onboarding
 

@@ -5,8 +5,6 @@ title: "Safety (Visualizer)"
 aliases: ["12 §8"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#8-safety"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # Safety (Visualizer)
 

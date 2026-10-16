@@ -31,9 +31,8 @@ def test_generator_is_deterministic_and_realistic(tmp_path: Path):
     assert _files(generate(tmp_path / "c", notes=200, seed=8).root) != _files(a.root)
     mix = a.relation_counts
     total = sum(mix.values())
-    assert 2.5 <= total / 200 <= 3.5
-    assert 0.02 <= mix["supersedes"] / total <= 0.045
-    assert 0.01 <= mix["conflicts_with"] / total <= 0.03
+    assert 1.5 <= total / 200 <= 2.5
+    assert 0.02 <= mix["superseded_by"] / total <= 0.045
     notes = [n for n in a.nodes.values() if n.kind == "note"]
     lines = sum(len((a.root / n.path).read_text().splitlines()) for n in notes) / len(notes)
     assert 30 <= lines <= 50
@@ -59,15 +58,17 @@ def test_lint_suite_finds_every_planted_defect_and_fixes_safely(tmp_path: Path):
         "BW103",
         "BW106",
         "BW114",
-        "BW202",
-        "BW301",
+        "BW117",
+        "BW118",
+        "BW119",
+        "BW120",
         "BW307",
         "BW502",
         "BW701",
     } <= codes
     assert {m.case for m in result.metrics if m.metric == "fix_local"} >= {
         "BW103",
-        "BW303",
+        "BW117",
         "BW502",
     }
 

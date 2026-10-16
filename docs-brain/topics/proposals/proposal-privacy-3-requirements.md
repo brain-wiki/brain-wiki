@@ -4,8 +4,6 @@ type: proposal
 title: "Requirements (Privacy)"
 tags: [proposals]
 source: "docs/proposals/privacy.md#3-requirements"
-bw-part_of:
-  - "[[proposal-privacy]]"
 ---
 # Requirements (Privacy)
 

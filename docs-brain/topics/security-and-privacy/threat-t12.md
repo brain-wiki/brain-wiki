@@ -5,10 +5,6 @@ title: "T12: Corruption or loss by a buggy run"
 aliases: ["threat T12"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
-bw-related_to:
-  - "[[05-10-failure-modes]]"
 ---
 # T12: Corruption or loss by a buggy run
 

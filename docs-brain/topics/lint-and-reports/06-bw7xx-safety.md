@@ -4,8 +4,6 @@ type: design
 title: "BW7xx: safety"
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#bw7xx-safety"
-bw-part_of:
-  - "[[06-3-rule-catalog]]"
 ---
 # BW7xx: safety
 

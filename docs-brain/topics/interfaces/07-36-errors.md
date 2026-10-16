@@ -5,8 +5,6 @@ title: "Errors"
 aliases: ["07 §3.6"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#36-errors"
-bw-part_of:
-  - "[[07-3-mcp-server]]"
 ---
 # Errors
 

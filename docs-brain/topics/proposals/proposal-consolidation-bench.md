@@ -4,8 +4,6 @@ type: proposal
 title: "Consolidation bench, full design"
 tags: [proposals]
 source: "docs/proposals/consolidation-bench.md"
-bw-part_of:
-  - "[[proposals]]"
 ---
 # Consolidation bench, full design
 

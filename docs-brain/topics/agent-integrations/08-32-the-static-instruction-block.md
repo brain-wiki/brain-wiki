@@ -5,8 +5,6 @@ title: "The static instruction block"
 aliases: ["08 §3.2"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#32-the-static-instruction-block"
-bw-part_of:
-  - "[[08-3-the-plugin-bundle]]"
 ---
 # The static instruction block
 

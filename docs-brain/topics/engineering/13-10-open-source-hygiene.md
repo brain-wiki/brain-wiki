@@ -5,8 +5,6 @@ title: "Open-source hygiene"
 aliases: ["13 §10"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#10-open-source-hygiene"
-bw-part_of:
-  - "[[engineering]]"
 ---
 # Open-source hygiene
 

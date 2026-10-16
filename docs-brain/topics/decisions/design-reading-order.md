@@ -4,8 +4,6 @@ type: reference
 title: "Reading order"
 tags: [decisions]
 source: "docs/design/README.md#reading-order"
-bw-part_of:
-  - "[[decisions]]"
 ---
 # Reading order
 

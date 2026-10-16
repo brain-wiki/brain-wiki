@@ -5,8 +5,6 @@ title: "Normalization rules"
 aliases: ["09 §4"]
 tags: [import]
 source: "docs/design/09-import.md#4-normalization-rules"
-bw-part_of:
-  - "[[import]]"
 ---
 # Normalization rules
 

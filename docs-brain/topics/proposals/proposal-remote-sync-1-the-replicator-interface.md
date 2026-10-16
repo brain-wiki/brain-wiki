@@ -4,8 +4,6 @@ type: proposal
 title: "The replicator interface"
 tags: [proposals]
 source: "docs/proposals/remote-sync.md#1-the-replicator-interface"
-bw-part_of:
-  - "[[proposal-remote-sync]]"
 ---
 # The replicator interface
 

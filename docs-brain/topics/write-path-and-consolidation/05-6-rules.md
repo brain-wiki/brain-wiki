@@ -5,8 +5,6 @@ title: "Rules (Write path and consolidation)"
 aliases: ["05 §6"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#6-rules"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # Rules (Write path and consolidation)
 

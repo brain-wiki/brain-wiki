@@ -5,8 +5,6 @@ title: "Triggers"
 aliases: ["05 §4.2"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#42-triggers"
-bw-part_of:
-  - "[[05-4-consolidation]]"
 ---
 # Triggers
 

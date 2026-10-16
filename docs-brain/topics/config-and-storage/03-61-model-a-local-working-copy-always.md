@@ -5,8 +5,6 @@ title: "Model: a local working copy, always"
 aliases: ["03 §6.1"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#61-model-a-local-working-copy-always"
-bw-part_of:
-  - "[[03-6-storage-and-sync]]"
 ---
 # Model: a local working copy, always
 

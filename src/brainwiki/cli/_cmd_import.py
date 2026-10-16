@@ -52,8 +52,8 @@ def _check_flags(args: Any) -> str:
         raise UsageError("--phase works only with --overlay")
     if args.phase is None:
         args.phase = 0
-    if args.phase not in (0, 1, 2, 3):
-        raise UsageError("--phase must be 0 (adopt), 1, 2, or 3")
+    if args.phase not in (0, 1, 2):
+        raise UsageError("--phase must be 0 (adopt), 1, or 2")
     if mode == "--overlay" and args.topic:
         raise UsageError(
             "--topic does not work with --overlay: top-level folders become topics "
@@ -80,7 +80,7 @@ def _overlay(args: Any, source: Path) -> int:
             )
             return 0
         result = overlay.adopt(source, name=args.brain)
-        text = f"Adopted {result['root']} as brain {result['brain']!r}. Next: --phase 1, 2, 3 (each optional)."
+        text = f"Adopted {result['root']} as brain {result['brain']!r}. Next: --phase 1, 2 (each optional)."
         if result["git"] not in (None, "committed"):
             text += f"\nThe added files were not committed: {result['git']}"
         emit(args, result, text)

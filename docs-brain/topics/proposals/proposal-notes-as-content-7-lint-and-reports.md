@@ -4,8 +4,6 @@ type: proposal
 title: "Lint and reports (Notes as content (format 3))"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#7-lint-and-reports"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Lint and reports (Notes as content (format 3))
 

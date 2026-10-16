@@ -5,8 +5,6 @@ title: "Inputs"
 aliases: ["04 §6.1"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#61-inputs"
-bw-part_of:
-  - "[[04-6-search]]"
 ---
 # Inputs
 

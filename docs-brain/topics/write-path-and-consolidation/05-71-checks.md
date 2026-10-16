@@ -5,8 +5,6 @@ title: "Checks"
 aliases: ["05 §7.1"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#71-checks"
-bw-part_of:
-  - "[[05-7-validation-and-apply]]"
 ---
 # Checks
 

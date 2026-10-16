@@ -5,8 +5,6 @@ title: "Safety (Import)"
 aliases: ["09 §3.3"]
 tags: [import]
 source: "docs/design/09-import.md#33-safety"
-bw-part_of:
-  - "[[09-3-overlay]]"
 ---
 # Safety (Import)
 

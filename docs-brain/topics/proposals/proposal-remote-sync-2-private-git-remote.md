@@ -4,8 +4,6 @@ type: proposal
 title: "Private git remote"
 tags: [proposals]
 source: "docs/proposals/remote-sync.md#2-private-git-remote"
-bw-part_of:
-  - "[[proposal-remote-sync]]"
 ---
 # Private git remote
 

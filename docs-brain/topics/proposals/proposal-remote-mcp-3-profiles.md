@@ -4,8 +4,6 @@ type: proposal
 title: "Profiles"
 tags: [proposals]
 source: "docs/proposals/remote-mcp.md#3-profiles"
-bw-part_of:
-  - "[[proposal-remote-mcp]]"
 ---
 # Profiles
 

@@ -5,8 +5,6 @@ title: "Goals (Skills and onboarding)"
 aliases: ["15 §1"]
 tags: [skills-and-onboarding]
 source: "docs/design/15-skills-and-onboarding.md#1-goals"
-bw-part_of:
-  - "[[skills-and-onboarding]]"
 ---
 # Goals (Skills and onboarding)
 

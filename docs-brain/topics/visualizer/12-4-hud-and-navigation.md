@@ -5,8 +5,6 @@ title: "HUD and navigation"
 aliases: ["12 §4"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#4-hud-and-navigation"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # HUD and navigation
 

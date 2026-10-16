@@ -5,8 +5,6 @@ title: "The flow"
 aliases: ["15 §3.2"]
 tags: [skills-and-onboarding]
 source: "docs/design/15-skills-and-onboarding.md#32-the-flow"
-bw-part_of:
-  - "[[15-3-onboarding]]"
 ---
 # The flow
 

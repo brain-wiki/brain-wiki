@@ -160,7 +160,7 @@ def test_question_ranks_by_its_content_words(example: Path):
     assert _content_tokens("why did we pick FTS5?") == ["pick", "fts5"]
     assert _content_tokens("what is it") == ["what", "is", "it"]  # nothing but filler: keep it
     with _engine(example) as eng:
-        found = search(eng, "why did we switch from ripgrep?", intent="none")
+        found = search(eng, "why did we switch from ripgrep?")
     titles = [r["title"] for r in found["results"]]
     assert titles[0] == "Use SQLite FTS5 for local search"
     assert "Vector-only search proposal" not in titles  # shares only filler words ("with")
@@ -179,7 +179,7 @@ def test_text_and_paths_formats(example: Path):
     from brainwiki.index._search import format_search_text, search
 
     with _engine(example) as eng:
-        result = search(eng, "search", limit=2, intent="none")
+        result = search(eng, "search", limit=2)
     text = format_search_text(result)
     assert "topics/search/" in text and "next page: cursor=2" in text
     paths = format_search_text(result, "paths").splitlines()
@@ -201,17 +201,19 @@ def test_cli_search_flags(brain_dir: Path, capsys: pytest.CaptureFixture[str]):
 # -- read handles and neighbors (04 §7, §9.2) ------------------------------------------
 
 
-def test_read_gives_a_handle_for_every_relation_and_backlink(example: Path):
+def test_read_gives_a_handle_for_every_link_and_backlink(example: Path):
     from brainwiki.index._read import format_read_text, read
 
     with _engine(example) as eng:
         outline = read(eng, "fts5", mode="outline")
         full = read(eng, "fts5")
-    relation = next(r for r in outline["relations"] if r["verb"] == "depends_on")
-    assert relation["path"] == "topics/storage/sqlite-version-policy.md" and relation["id"]
+    link = next(r for r in outline["links"] if r["target"] == "sqlite-version-policy")
+    assert link["path"] == "topics/storage/sqlite-version-policy.md" and link["id"]
+    assert link["relation"] == "links_to"
     text = format_read_text(outline)
-    assert '- depends_on "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in text
-    assert '- enables "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in text
+    assert '- links_to "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in text
+    assert '- linked_from "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in text
+    assert '- supersedes "Use ripgrep for search" (topics/search/ripgrep.md)' in text
     assert outline["backlinks_total"] >= 1 and outline["backlinks"][0]["id"]
     assert full["content"].rstrip().endswith(")") and "Linked from:" in full["content"]
 
@@ -219,32 +221,40 @@ def test_read_gives_a_handle_for_every_relation_and_backlink(example: Path):
 def test_banners_show_three_then_point_to_neighbors():
     from brainwiki.index._guards import banners
 
-    guards = [
-        {"label": "conflicts_with", "title": f"Bug {i}", "path": f"t/bug{i}.md"} for i in range(7)
+    guards = [{"label": "superseded_by", "title": "Release 2", "path": "t/r2.md"}]
+    guards += [
+        {"label": "supersedes", "title": f"Bug {i}", "path": f"t/bug{i}.md"} for i in range(6)
     ]
     lines = banners({"guards": guards, "more_guards": 2}, "t/release.md")
-    assert len(lines) == 4 and lines[2].startswith('⚠ CONFLICTS WITH "Bug 2"')
+    assert len(lines) == 4 and lines[0].startswith('⚠ SUPERSEDED by "Release 2" (t/r2.md)')
+    assert lines[2] == '↳ supersedes "Bug 1" (t/bug1.md).'
     assert lines[3].startswith("… 6 more") and 'brain_neighbors("t/release.md"' in lines[3]
 
 
-def test_neighbors_follow_typed_edges_by_direction_and_depth(example: Path):
+def test_neighbors_follow_links_by_direction_and_depth(example: Path):
     from brainwiki.index._neighbors import format_neighbors_text, neighbors
 
     with _engine(example) as eng:
-        out = neighbors(eng, "fts5", relations=["depends_on"], direction="out")
-        into = neighbors(eng, "sqlite-version-policy", relations=["depends_on"], direction="in")
-        history = neighbors(eng, "ripgrep", relations=["supersedes"], depth=3)
-        hub = neighbors(eng, "Search", relations=["part_of"], limit=2)
-    assert [n["title"] for n in out["nodes"]] == [
-        "Use SQLite FTS5 for local search",
-        "SQLite version policy",
+        out = neighbors(eng, "fts5", direction="out")
+        into = neighbors(eng, "sqlite-version-policy", direction="in")
+        history = neighbors(eng, "ripgrep", depth=3)
+        hub = neighbors(eng, "Search", limit=2)
+    assert [(n["title"], n["via"]["relation"]) for n in out["nodes"][1:]] == [
+        ("SQLite version policy", "links_to"),
+        ("Vector-only search proposal", "links_to"),
+        ("Use ripgrep for search", "links_to"),
+        ("01M2Z44880248H248H248H248H", "cites"),
     ]
-    assert into["nodes"][1]["via"]["relation"] == "enables"
-    assert out["edges"] == [{"rel": "depends_on", "src": out["root"], "dst": out["nodes"][1]["id"]}]
-    assert history["nodes"][1]["via"]["relation"] == "superseded_by"
-    assert "conflict" in history["nodes"][1]["flags"]
+    assert {"rel": "links_to", "src": out["root"], "dst": out["nodes"][1]["id"]} in out["edges"]
+    assert {n["path"] for n in into["nodes"][1:]} == {
+        "topics/storage/index.md",
+        "topics/search/fts5.md",
+    }
+    assert {n["via"]["relation"] for n in into["nodes"][1:]} == {"linked_from"}
+    assert history["nodes"][1]["via"]["relation"] == "superseded_by"  # supersession first
+    assert max(n["depth"] for n in history["nodes"]) == 3
     assert hub["truncated"] and len(hub["nodes"]) == 3
-    assert "has_part" in format_neighbors_text(hub)
+    assert '- links_to "Use SQLite FTS5 for local search"' in format_neighbors_text(hub)
 
 
 def test_neighbors_reject_bad_input(example: Path):
@@ -255,12 +265,16 @@ def test_neighbors_reject_bad_input(example: Path):
         with pytest.raises(NotFound):
             neighbors(eng, "no-such-note")
         with pytest.raises(UsageError):
-            neighbors(eng, "fts5", relations=["likes"])
+            neighbors(eng, "fts5", direction="sideways")
 
 
 def test_cli_neighbors(example: Path, capsys: pytest.CaptureFixture[str]):
-    assert main(["neighbors", "fts5", "--rel", "part_of", "--direction", "out", "--paths"]) == 0
-    assert capsys.readouterr().out.split() == ["topics/search/index.md"]
+    assert main(["neighbors", "fts5", "--direction", "in", "--paths"]) == 0
+    assert capsys.readouterr().out.split() == [
+        "topics/search/ripgrep.md",  # supersession first
+        "topics/storage/sqlite-version-policy.md",
+        "topics/search/index.md",
+    ]
 
 
 # -- the briefing (04 §8) ---------------------------------------------------------------
@@ -272,10 +286,20 @@ def test_briefing_describes_the_brain(example: Path):
     with _engine(example, "some-host") as host:
         mine = orient(host)
     assert "## What's in this brain" in mine["text"] and "decision" in mine["text"]
-    assert "Open issues: " in mine["text"] and "active conflicts" in mine["text"]
     assert "**budget**" in mine["text"]
     assert "## How to query" in mine["text"] and 'brain_search("", type=[' in mine["text"]
     assert mine["contents"]["span"][0] <= mine["contents"]["span"][1]
+
+
+def test_briefing_teaches_writing_only_to_agents_that_edit(example: Path):
+    from brainwiki.index._orient import orient
+
+    with _engine(example, "trusted") as editor:
+        text = orient(editor)["text"]
+    assert "## Writing notes" in text and "`topics/<topic>/<slug>.md` (topics: search" in text
+    assert "(active | superseded | archived)" in text and "`brain_validate`" in text
+    with _engine(example, "some-host") as reader:  # the default profile only logs episodes
+        assert "## Writing notes" not in orient(reader)["text"]
 
 
 def test_briefing_truncates_topics_with_a_browse_pointer(example: Path):
@@ -325,9 +349,10 @@ def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
         "topics/search/ripgrep.md",
     ]
     links = run("links", "fts5")
-    assert '- depends_on "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in links
+    assert '- links_to "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in links
     assert run("backlinks", "fts5", "--paths").split() == [
-        "topics/storage/sqlite-version-policy.md",  # typed relations first
+        "topics/search/ripgrep.md",  # supersession first
+        "topics/storage/sqlite-version-policy.md",
         "topics/search/index.md",
     ]
     assert "decision  3" in run("types", "--counts")

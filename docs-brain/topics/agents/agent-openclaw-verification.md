@@ -4,8 +4,6 @@ type: design
 title: "Verification (OpenClaw)"
 tags: [agents]
 source: "docs/design/agents/openclaw.md#verification"
-bw-part_of:
-  - "[[agent-openclaw]]"
 ---
 # Verification (OpenClaw)
 

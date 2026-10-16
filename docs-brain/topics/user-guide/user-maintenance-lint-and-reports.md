@@ -4,8 +4,6 @@ type: guide
 title: "Lint and reports (Maintenance)"
 tags: [user-guide]
 source: "docs/user/maintenance.md#lint-and-reports"
-bw-part_of:
-  - "[[user-maintenance]]"
 ---
 # Lint and reports (Maintenance)
 

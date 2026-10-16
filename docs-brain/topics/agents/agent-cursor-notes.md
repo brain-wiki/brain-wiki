@@ -4,8 +4,6 @@ type: design
 title: "Notes (Cursor and other MCP clients)"
 tags: [agents]
 source: "docs/design/agents/cursor.md#notes"
-bw-part_of:
-  - "[[agent-cursor]]"
 ---
 # Notes (Cursor and other MCP clients)
 

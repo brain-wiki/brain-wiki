@@ -5,8 +5,6 @@ title: "Glossary"
 aliases: ["01 §7"]
 tags: [overview]
 source: "docs/design/01-overview.md#7-glossary"
-bw-part_of:
-  - "[[overview]]"
 ---
 # Glossary
 

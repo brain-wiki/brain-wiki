@@ -5,8 +5,6 @@ title: "Undo (Write path and consolidation)"
 aliases: ["05 §8"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#8-undo"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # Undo (Write path and consolidation)
 

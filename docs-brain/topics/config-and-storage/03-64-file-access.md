@@ -5,8 +5,6 @@ title: "File access"
 aliases: ["03 §6.4"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#64-file-access"
-bw-part_of:
-  - "[[03-6-storage-and-sync]]"
 ---
 # File access
 

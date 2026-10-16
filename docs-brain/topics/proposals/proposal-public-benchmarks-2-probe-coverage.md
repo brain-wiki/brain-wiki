@@ -4,8 +4,6 @@ type: proposal
 title: "Probe coverage"
 tags: [proposals]
 source: "docs/proposals/public-benchmarks.md#2-probe-coverage"
-bw-part_of:
-  - "[[proposal-public-benchmarks]]"
 ---
 # Probe coverage
 

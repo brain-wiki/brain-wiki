@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import quote, unquote
 
-from brainwiki.importer._normalize import convert_relations, identity_and_status
+from brainwiki.importer._normalize import identity_and_status
 from brainwiki.importer._survey import survey
 from brainwiki.index import norm_key, slugify
 from brainwiki.runs import Run, RunRecord
@@ -69,7 +69,7 @@ def plan_into(
             return f"[{match.group('label')}]({quote(rel)}{'#' + anchor if anchor else ''})"
 
         text = _MD.sub(md, _WIKI.sub(wiki, text))
-        text = identity_and_status(convert_relations(text))
+        text = identity_and_status(text)
         run.create(new, text)
     summary = {
         "source": str(source),

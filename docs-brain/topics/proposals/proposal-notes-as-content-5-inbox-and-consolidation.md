@@ -4,8 +4,6 @@ type: proposal
 title: "Inbox and consolidation"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#5-inbox-and-consolidation"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Inbox and consolidation
 

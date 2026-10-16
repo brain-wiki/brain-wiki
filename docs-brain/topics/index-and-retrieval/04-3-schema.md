@@ -5,8 +5,6 @@ title: "Schema"
 aliases: ["04 §3"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#3-schema"
-bw-part_of:
-  - "[[index-and-retrieval]]"
 ---
 # Schema
 

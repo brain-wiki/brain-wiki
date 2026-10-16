@@ -4,8 +4,6 @@ type: proposal
 title: "Routine templates"
 tags: [proposals]
 source: "docs/proposals/scheduled-maintenance.md#11-routine-templates"
-bw-part_of:
-  - "[[proposal-scheduled-maintenance-1-what-was-built]]"
 ---
 # Routine templates
 

@@ -4,8 +4,6 @@ type: proposal
 title: "Remote sync and object storage"
 tags: [proposals]
 source: "docs/proposals/remote-sync.md"
-bw-part_of:
-  - "[[proposals]]"
 ---
 # Remote sync and object storage
 

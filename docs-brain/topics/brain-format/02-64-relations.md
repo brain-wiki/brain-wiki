@@ -5,8 +5,6 @@ title: "Relations"
 aliases: ["02 §6.4"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#64-relations"
-bw-part_of:
-  - "[[02-6-notes]]"
 ---
 # Relations
 

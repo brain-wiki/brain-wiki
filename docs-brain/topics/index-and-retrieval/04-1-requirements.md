@@ -5,8 +5,6 @@ title: "Requirements (Index and retrieval)"
 aliases: ["04 §1"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#1-requirements"
-bw-part_of:
-  - "[[index-and-retrieval]]"
 ---
 # Requirements (Index and retrieval)
 

@@ -5,8 +5,6 @@ title: "Overlay"
 aliases: ["09 §3"]
 tags: [import]
 source: "docs/design/09-import.md#3-overlay"
-bw-part_of:
-  - "[[import]]"
 ---
 # Overlay
 

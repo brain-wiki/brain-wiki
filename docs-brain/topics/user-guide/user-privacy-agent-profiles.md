@@ -4,8 +4,6 @@ type: guide
 title: "Agent profiles (Privacy and safety)"
 tags: [user-guide]
 source: "docs/user/privacy.md#agent-profiles"
-bw-part_of:
-  - "[[user-privacy]]"
 ---
 # Agent profiles (Privacy and safety)
 

@@ -5,8 +5,6 @@ title: "Harvesting sessions"
 aliases: ["05 §2.2"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#22-harvesting-sessions"
-bw-part_of:
-  - "[[05-2-the-write-paths]]"
 ---
 # Harvesting sessions
 

@@ -5,8 +5,6 @@ title: "Guard relations"
 aliases: ["02 §7"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#7-guard-relations"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # Guard relations
 

@@ -5,8 +5,6 @@ title: "Implementation milestones (stage 2)"
 aliases: ["14 §1"]
 tags: [roadmap-and-open-questions]
 source: "docs/design/14-roadmap-and-open-questions.md#1-implementation-milestones-stage-2"
-bw-part_of:
-  - "[[roadmap-and-open-questions]]"
 ---
 # Implementation milestones (stage 2)
 

@@ -5,8 +5,6 @@ title: "Output (Lint and reports)"
 aliases: ["06 §6"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#6-output"
-bw-part_of:
-  - "[[lint-and-reports]]"
 ---
 # Output (Lint and reports)
 

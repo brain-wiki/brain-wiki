@@ -5,8 +5,6 @@ title: "Data that leaves the machine"
 aliases: ["10 §5"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#5-data-that-leaves-the-machine"
-bw-part_of:
-  - "[[security-and-privacy]]"
 ---
 # Data that leaves the machine
 

@@ -4,8 +4,6 @@ type: proposal
 title: "The `agent` suite"
 tags: [proposals]
 source: "docs/proposals/consolidation-bench.md#9-the-agent-suite"
-bw-part_of:
-  - "[[proposal-consolidation-bench]]"
 ---
 # The `agent` suite
 

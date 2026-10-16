@@ -4,8 +4,6 @@ type: guide
 title: "Antigravity notes"
 tags: [user-guide]
 source: "docs/user/agents.md#antigravity-notes"
-bw-part_of:
-  - "[[user-agents-connect]]"
 ---
 # Antigravity notes
 

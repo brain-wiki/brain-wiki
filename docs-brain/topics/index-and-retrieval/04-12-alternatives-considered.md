@@ -5,8 +5,6 @@ title: "Alternatives considered (Index and retrieval)"
 aliases: ["04 §12"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#12-alternatives-considered"
-bw-part_of:
-  - "[[index-and-retrieval]]"
 ---
 # Alternatives considered (Index and retrieval)
 

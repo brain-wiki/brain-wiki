@@ -4,8 +4,6 @@ type: design
 title: "BW4xx: structure and budgets"
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#bw4xx-structure-and-budgets"
-bw-part_of:
-  - "[[06-3-rule-catalog]]"
 ---
 # BW4xx: structure and budgets
 

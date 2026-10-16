@@ -105,19 +105,19 @@ def test_a_hand_written_episode_cannot_claim_trusted_provenance(example: Path):
 
 def test_writing_raises_the_declared_format_one_way(example: Path):
     toml = example / "brain.toml"
-    toml.write_text(toml.read_text().replace("format = 2\n", "format = 1\n", 1))
+    toml.write_text(toml.read_text().replace("format = 3\n", "format = 1\n", 1))
     with eng(example) as e:
         episode = write_episode(
             e, EpisodeContent(summary="Noted."), origin="agent", inputs="local", captured="mcp"
         )
-    assert "format = 2\n" in toml.read_text()
+    assert "format = 3\n" in toml.read_text()
     assert "bw-origin: agent" in (example / episode.path).read_text()
-    toml.write_text(toml.read_text().replace("format = 2\n", "format = 1\n", 1))
+    toml.write_text(toml.read_text().replace("format = 3\n", "format = 1\n", 1))
     with eng(example) as e:
         record = move_note(e, "topics/search/ripgrep.md", "topics/search/rg.md")
-        assert "format = 2\n" in toml.read_text()
+        assert "format = 3\n" in toml.read_text()
         undo(e, record.run)
-    assert "format = 2\n" in toml.read_text()  # undo leaves it: other format 2 files may remain
+    assert "format = 3\n" in toml.read_text()  # undo leaves it: other format 3 files may remain
 
 
 def test_dedupe_and_validation(brain_dir: Path):
@@ -222,7 +222,7 @@ def test_mv_rewrites_links_and_undoes(example: Path):
     write(
         example,
         "topics/storage/links.md",
-        "---\nid: 01M4KT3JPRY4W6766VT18CQS60\n---\n# Links\n\nSee [policy](sqlite-version-policy.md) and [[sqlite-version-policy]].\n\n## Relations\n- part_of [[Storage]]\n",
+        "---\nid: 01M4KT3JPRY4W6766VT18CQS60\n---\n# Links\n\nSee [policy](sqlite-version-policy.md) and [[sqlite-version-policy]].\n\n## Related\n- [[Storage]]\n",
     )
     with eng(example) as e:
         e.scan(force=True)
@@ -232,13 +232,13 @@ def test_mv_rewrites_links_and_undoes(example: Path):
         links = (example / "topics/storage/links.md").read_text()
         assert "[[sqlite-policy]]" in links and "](sqlite-policy.md)" in links
         fts5 = (example / "topics/search/fts5.md").read_text()
-        assert '"[[sqlite-policy]] — needs the trigram tokenizer"' in fts5
+        assert "- Depends on [[sqlite-policy]] — needs the trigram tokenizer" in fts5
         unresolved = e.db.execute("SELECT raw_target FROM edges WHERE other IS NULL").fetchall()
         assert unresolved == []
         undo(e, record.run)
         assert (example / "topics/storage/sqlite-version-policy.md").exists()
         assert (
-            '"[[sqlite-version-policy]] — needs' in (example / "topics/search/fts5.md").read_text()
+            "[[sqlite-version-policy]] — needs" in (example / "topics/search/fts5.md").read_text()
         )
 
 
@@ -295,14 +295,15 @@ def test_as_host_rules_become_proposals_and_decisions_stay_the_users(example: Pa
     for argv in (
         ["rules", "accept", proposal["id"]],
         ["rules", "reject", proposal["id"]],
-        ["agents", "grant", "codex", "consolidate"],
+        ["agents", "grant", "codex", "edit"],
         ["undo"],
-        ["mv", "topics/budget", "topics/money"],
-        ["lint", "--fix"],
     ):
         assert main(["--as", "trusted", *argv]) == 5, argv
         assert "forbidden" in capsys.readouterr().err
-    assert (root / "topics/budget").is_dir() and "consolidate" not in (
+    for argv in (["mv", "topics/budget", "topics/money"], ["lint", "--fix"]):
+        assert main(["--as", "codex", *argv]) == 5, argv  # these need edit
+        assert "forbidden" in capsys.readouterr().err
+    assert (root / "topics/budget").is_dir() and "edit" not in (
         root / "brain.toml"
     ).read_text().split("[agents.codex]")[1]
 

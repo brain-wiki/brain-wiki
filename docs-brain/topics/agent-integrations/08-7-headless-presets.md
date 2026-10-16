@@ -5,8 +5,6 @@ title: "Headless presets"
 aliases: ["08 §7"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#7-headless-presets"
-bw-part_of:
-  - "[[agent-integrations]]"
 ---
 # Headless presets
 

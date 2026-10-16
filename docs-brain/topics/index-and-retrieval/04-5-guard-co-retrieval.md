@@ -5,8 +5,6 @@ title: "Guard co-retrieval"
 aliases: ["04 §5"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#5-guard-co-retrieval"
-bw-part_of:
-  - "[[index-and-retrieval]]"
 ---
 # Guard co-retrieval
 

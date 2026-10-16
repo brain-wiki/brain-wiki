@@ -5,8 +5,6 @@ title: "`perf` (offline)"
 aliases: ["11 §3.4"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#34-perf-offline"
-bw-part_of:
-  - "[[11-3-suites]]"
 ---
 # `perf` (offline)
 

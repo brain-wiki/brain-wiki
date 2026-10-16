@@ -4,8 +4,6 @@ type: proposal
 title: "Inputs from hooks"
 tags: [proposals]
 source: "docs/proposals/hooks.md#14-inputs-from-hooks"
-bw-part_of:
-  - "[[proposal-hooks-1-what-was-built]]"
 ---
 # Inputs from hooks
 

@@ -63,7 +63,8 @@ def test_overlay_phases_run_after_adopt_in_git(git_env: None, tmp_path: Path):
     assert git(root, "status", "--porcelain") == ""
     assert "reports/import-plan.md" in git(root, "ls-files")
     assert main(["import", str(root), "--overlay", "--phase", "1", "--apply"]) == 0
-    assert "bw-related_to" in (root / "Projects/Search.md").read_text()
+    text = (root / "Projects/Search.md").read_text()
+    assert re.search(r"^id: \S+$", text, re.M) and "related: ['[[Sync]]']" in text  # theirs
 
 
 def test_to_episodes_skips_frontmatter(brain_dir: Path, tmp_path: Path):
@@ -150,16 +151,16 @@ def test_from_host_apply_reports_written_and_skipped(
     assert "Wrote 0 episodes from 1 files; skipped 2 already imported." in capsys.readouterr().out
 
 
-def test_overlay_phase2_dry_run_shows_the_applied_ids(
+def test_overlay_phase1_dry_run_shows_the_applied_ids(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ):
     root = notes(tmp_path)
     assert main(["import", str(root), "--overlay", "--apply"]) == 0
     capsys.readouterr()
-    assert main(["import", str(root), "--overlay", "--phase", "2"]) == 0
+    assert main(["import", str(root), "--overlay", "--phase", "1"]) == 0
     planned = set(re.findall(r"^\+id: (\S+)$", capsys.readouterr().out, re.M))
     assert len(planned) == 3
-    assert main(["import", str(root), "--overlay", "--phase", "2", "--apply"]) == 0
+    assert main(["import", str(root), "--overlay", "--phase", "1", "--apply"]) == 0
     applied = {
         m for p in root.rglob("*.md") for m in re.findall(r"^id: (\S+)$", p.read_text(), re.M)
     }
@@ -169,4 +170,4 @@ def test_overlay_phase2_dry_run_shows_the_applied_ids(
 def test_overlay_plan_formats_counts(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
     assert main(["import", str(notes(tmp_path)), "--overlay"]) == 0
     out = capsys.readouterr().out
-    assert "- Relation-like properties: related (2)" in out and "{" not in out.split("##")[0]
+    assert "- Notes: 3 (2 with frontmatter" in out and "{" not in out.split("##")[0]

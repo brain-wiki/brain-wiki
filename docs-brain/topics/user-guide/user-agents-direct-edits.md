@@ -4,8 +4,6 @@ type: guide
 title: "Direct edits (Agents)"
 tags: [user-guide]
 source: "docs/user/agents.md#direct-edits"
-bw-part_of:
-  - "[[user-agents]]"
 ---
 # Direct edits (Agents)
 

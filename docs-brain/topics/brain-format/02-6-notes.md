@@ -5,8 +5,6 @@ title: "Notes (Brain format)"
 aliases: ["02 §6"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#6-notes"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # Notes (Brain format)
 

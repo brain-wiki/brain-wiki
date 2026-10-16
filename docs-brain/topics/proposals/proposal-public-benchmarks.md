@@ -4,8 +4,6 @@ type: proposal
 title: "Public memory benchmarks"
 tags: [proposals]
 source: "docs/proposals/public-benchmarks.md"
-bw-part_of:
-  - "[[proposals]]"
 ---
 # Public memory benchmarks
 

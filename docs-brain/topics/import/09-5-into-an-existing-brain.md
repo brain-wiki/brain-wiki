@@ -5,8 +5,6 @@ title: "Into an existing brain"
 aliases: ["09 §5"]
 tags: [import]
 source: "docs/design/09-import.md#5-into-an-existing-brain"
-bw-part_of:
-  - "[[import]]"
 ---
 # Into an existing brain
 

@@ -5,8 +5,6 @@ title: "Coexisting with desktop sync tools"
 aliases: ["03 §6.3"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#63-coexisting-with-desktop-sync-tools"
-bw-part_of:
-  - "[[03-6-storage-and-sync]]"
 ---
 # Coexisting with desktop sync tools
 

@@ -4,8 +4,6 @@ type: design
 title: "Codex (CLI and ChatGPT desktop)"
 tags: [agents]
 source: "docs/design/agents/codex.md"
-bw-part_of:
-  - "[[agents]]"
 ---
 # Codex (CLI and ChatGPT desktop)
 

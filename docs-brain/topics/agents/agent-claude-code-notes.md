@@ -4,8 +4,6 @@ type: design
 title: "Notes (Claude Code)"
 tags: [agents]
 source: "docs/design/agents/claude-code.md#notes"
-bw-part_of:
-  - "[[agent-claude-code]]"
 ---
 # Notes (Claude Code)
 

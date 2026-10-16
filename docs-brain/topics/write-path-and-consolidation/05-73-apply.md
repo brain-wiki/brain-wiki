@@ -5,8 +5,6 @@ title: "Apply"
 aliases: ["05 §7.3"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#73-apply"
-bw-part_of:
-  - "[[05-7-validation-and-apply]]"
 ---
 # Apply
 

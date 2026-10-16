@@ -5,8 +5,6 @@ title: "v0.1: local folder with optional git"
 aliases: ["03 §6.2"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#62-v01-local-folder-with-optional-git"
-bw-part_of:
-  - "[[03-6-storage-and-sync]]"
 ---
 # v0.1: local folder with optional git
 

@@ -5,8 +5,6 @@ title: "Code quality"
 aliases: ["13 §7"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#7-code-quality"
-bw-part_of:
-  - "[[engineering]]"
 ---
 # Code quality
 

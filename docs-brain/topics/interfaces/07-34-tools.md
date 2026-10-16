@@ -5,8 +5,6 @@ title: "Tools"
 aliases: ["07 §3.4"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#34-tools"
-bw-part_of:
-  - "[[07-3-mcp-server]]"
 ---
 # Tools
 

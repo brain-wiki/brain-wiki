@@ -5,8 +5,6 @@ title: "Brain lifecycle"
 aliases: ["03 §5"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#5-brain-lifecycle"
-bw-part_of:
-  - "[[config-and-storage]]"
 ---
 # Brain lifecycle
 

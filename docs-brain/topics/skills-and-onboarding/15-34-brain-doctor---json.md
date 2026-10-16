@@ -5,8 +5,6 @@ title: "`brain doctor --json`"
 aliases: ["15 §3.4"]
 tags: [skills-and-onboarding]
 source: "docs/design/15-skills-and-onboarding.md#34-brain-doctor---json"
-bw-part_of:
-  - "[[15-3-onboarding]]"
 ---
 # `brain doctor --json`
 

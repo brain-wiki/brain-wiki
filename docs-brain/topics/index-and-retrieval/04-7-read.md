@@ -5,8 +5,6 @@ title: "Read"
 aliases: ["04 §7"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#7-read"
-bw-part_of:
-  - "[[index-and-retrieval]]"
 ---
 # Read
 

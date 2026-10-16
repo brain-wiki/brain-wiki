@@ -4,8 +4,6 @@ type: guide
 title: "Adopt an Obsidian vault or Markdown folder"
 tags: [user-guide]
 source: "docs/user/import.md#adopt-an-obsidian-vault-or-markdown-folder"
-bw-part_of:
-  - "[[user-import]]"
 ---
 # Adopt an Obsidian vault or Markdown folder
 

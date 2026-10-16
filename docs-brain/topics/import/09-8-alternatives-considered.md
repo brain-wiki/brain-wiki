@@ -5,8 +5,6 @@ title: "Alternatives considered (Import)"
 aliases: ["09 §8"]
 tags: [import]
 source: "docs/design/09-import.md#8-alternatives-considered"
-bw-part_of:
-  - "[[import]]"
 ---
 # Alternatives considered (Import)
 

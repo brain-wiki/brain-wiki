@@ -4,8 +4,6 @@ type: proposal
 title: "What was built (Host hooks: briefing, capture, and recall)"
 tags: [proposals]
 source: "docs/proposals/hooks.md#1-what-was-built"
-bw-part_of:
-  - "[[proposal-hooks]]"
 ---
 # What was built (Host hooks: briefing, capture, and recall)
 

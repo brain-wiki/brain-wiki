@@ -4,8 +4,6 @@ type: guide
 title: "Troubleshooting"
 tags: [user-guide]
 source: "docs/user/reference.md#troubleshooting"
-bw-part_of:
-  - "[[user-reference]]"
 ---
 # Troubleshooting
 

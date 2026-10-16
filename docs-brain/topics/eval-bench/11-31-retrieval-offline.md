@@ -5,8 +5,6 @@ title: "`retrieval` (offline)"
 aliases: ["11 §3.1"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#31-retrieval-offline"
-bw-part_of:
-  - "[[11-3-suites]]"
 ---
 # `retrieval` (offline)
 

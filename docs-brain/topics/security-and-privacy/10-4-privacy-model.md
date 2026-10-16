@@ -5,8 +5,6 @@ title: "Privacy model"
 aliases: ["10 §4"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#4-privacy-model"
-bw-part_of:
-  - "[[security-and-privacy]]"
 ---
 # Privacy model
 

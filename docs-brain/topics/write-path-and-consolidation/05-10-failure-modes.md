@@ -5,8 +5,6 @@ title: "Failure modes (Write path and consolidation)"
 aliases: ["05 §10"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#10-failure-modes"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # Failure modes (Write path and consolidation)
 

@@ -5,8 +5,6 @@ title: "Integration ladder"
 aliases: ["08 §1"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#1-integration-ladder"
-bw-part_of:
-  - "[[agent-integrations]]"
 ---
 # Integration ladder
 

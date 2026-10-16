@@ -5,8 +5,6 @@ title: "Detecting external inputs"
 aliases: ["08 §6.3"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#63-detecting-external-inputs"
-bw-part_of:
-  - "[[08-6-harvest]]"
 ---
 # Detecting external inputs
 

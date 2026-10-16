@@ -5,8 +5,6 @@ title: "Pre-commit integration"
 aliases: ["06 §8"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#8-pre-commit-integration"
-bw-part_of:
-  - "[[lint-and-reports]]"
 ---
 # Pre-commit integration
 

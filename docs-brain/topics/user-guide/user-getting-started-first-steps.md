@@ -4,8 +4,6 @@ type: guide
 title: "First steps"
 tags: [user-guide]
 source: "docs/user/getting-started.md#first-steps"
-bw-part_of:
-  - "[[user-getting-started]]"
 ---
 # First steps
 

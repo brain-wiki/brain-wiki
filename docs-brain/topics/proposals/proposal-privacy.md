@@ -4,8 +4,6 @@ type: proposal
 title: "Privacy"
 tags: [proposals]
 source: "docs/proposals/privacy.md"
-bw-part_of:
-  - "[[proposals]]"
 ---
 # Privacy
 

@@ -4,8 +4,6 @@ type: proposal
 title: "Retrieval queries"
 tags: [proposals]
 source: "docs/proposals/consolidation-bench.md#8-retrieval-queries"
-bw-part_of:
-  - "[[proposal-consolidation-bench]]"
 ---
 # Retrieval queries
 

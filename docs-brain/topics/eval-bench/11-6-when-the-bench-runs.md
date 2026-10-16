@@ -5,8 +5,6 @@ title: "When the bench runs"
 aliases: ["11 §6"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#6-when-the-bench-runs"
-bw-part_of:
-  - "[[eval-bench]]"
 ---
 # When the bench runs
 

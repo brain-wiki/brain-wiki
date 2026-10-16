@@ -5,8 +5,6 @@ title: "To episodes, and from agents"
 aliases: ["09 §6"]
 tags: [import]
 source: "docs/design/09-import.md#6-to-episodes-and-from-agents"
-bw-part_of:
-  - "[[import]]"
 ---
 # To episodes, and from agents
 

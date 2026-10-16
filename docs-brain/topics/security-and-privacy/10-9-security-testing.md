@@ -5,8 +5,6 @@ title: "Security testing"
 aliases: ["10 §9"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#9-security-testing"
-bw-part_of:
-  - "[[security-and-privacy]]"
 ---
 # Security testing
 

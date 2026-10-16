@@ -4,8 +4,6 @@ type: proposal
 title: "Levels as allowed sinks"
 tags: [proposals]
 source: "docs/proposals/privacy.md#41-levels-as-allowed-sinks"
-bw-part_of:
-  - "[[proposal-privacy-4-draft-model]]"
 ---
 # Levels as allowed sinks
 

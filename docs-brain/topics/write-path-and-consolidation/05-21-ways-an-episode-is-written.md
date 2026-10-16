@@ -5,8 +5,6 @@ title: "Ways an episode is written"
 aliases: ["05 §2.1"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#21-ways-an-episode-is-written"
-bw-part_of:
-  - "[[05-2-the-write-paths]]"
 ---
 # Ways an episode is written
 

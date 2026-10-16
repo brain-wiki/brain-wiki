@@ -5,8 +5,6 @@ title: "Rules (Brain format)"
 aliases: ["02 §10"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#10-rules"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # Rules (Brain format)
 

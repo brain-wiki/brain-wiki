@@ -5,8 +5,6 @@ title: "How lint works"
 aliases: ["06 §4"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#4-how-lint-works"
-bw-part_of:
-  - "[[lint-and-reports]]"
 ---
 # How lint works
 

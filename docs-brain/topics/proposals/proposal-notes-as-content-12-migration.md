@@ -4,8 +4,6 @@ type: proposal
 title: "Migration"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#12-migration"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Migration
 

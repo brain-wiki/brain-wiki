@@ -4,8 +4,6 @@ type: proposal
 title: "Before bringing it back"
 tags: [proposals]
 source: "docs/proposals/hooks.md#3-before-bringing-it-back"
-bw-part_of:
-  - "[[proposal-hooks]]"
 ---
 # Before bringing it back
 

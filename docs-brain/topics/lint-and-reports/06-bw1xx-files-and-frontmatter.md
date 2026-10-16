@@ -4,8 +4,6 @@ type: design
 title: "BW1xx: files and frontmatter"
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#bw1xx-files-and-frontmatter"
-bw-part_of:
-  - "[[06-3-rule-catalog]]"
 ---
 # BW1xx: files and frontmatter
 

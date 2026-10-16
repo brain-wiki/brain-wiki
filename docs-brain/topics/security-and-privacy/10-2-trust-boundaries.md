@@ -5,8 +5,6 @@ title: "Trust boundaries"
 aliases: ["10 §2"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#2-trust-boundaries"
-bw-part_of:
-  - "[[security-and-privacy]]"
 ---
 # Trust boundaries
 

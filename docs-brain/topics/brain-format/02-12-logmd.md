@@ -5,8 +5,6 @@ title: "`log.md`"
 aliases: ["02 §12"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#12-logmd"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # `log.md`
 

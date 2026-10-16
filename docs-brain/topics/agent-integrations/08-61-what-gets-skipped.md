@@ -5,8 +5,6 @@ title: "What gets skipped"
 aliases: ["08 §6.1"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#61-what-gets-skipped"
-bw-part_of:
-  - "[[08-6-harvest]]"
 ---
 # What gets skipped
 

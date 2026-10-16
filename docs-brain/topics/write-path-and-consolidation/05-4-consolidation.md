@@ -5,8 +5,6 @@ title: "Consolidation"
 aliases: ["05 §4"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#4-consolidation"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # Consolidation
 

@@ -62,8 +62,6 @@ _NOTE_FIELDS = (
     "updated",
     "banners",
     "summary",
-    "claims",
-    "relations",
     "backlinks",
 )
 
@@ -143,7 +141,6 @@ class _VizServer(ThreadingHTTPServer):
                     query,
                     limit=MAX_SEARCH,
                     topics=self.topics,
-                    intent="none",
                     include_episodes=False,
                 )
                 for hit in found["results"]:
@@ -172,6 +169,7 @@ class _VizServer(ThreadingHTTPServer):
             text = self.engine.store.read_text(result["path"])
             links = self._links(result["id"])
         out = {key: result.get(key) for key in _NOTE_FIELDS}
+        out["outlinks"] = result.get("links")
         out["abs_path"] = str(root / result["path"])
         # The preview renders the note like Obsidian: frontmatter as properties, the body as
         # Markdown, and wikilinks resolved to the notes they name.

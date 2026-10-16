@@ -95,22 +95,26 @@ def topics(args: Any) -> int:
     return _listing(args, items, line, empty="(no topics)")
 
 
+_FORWARD = {"links_to": "links_to", "superseded_by": "superseded_by", "source": "cites"}
+_BACKWARD = {"links_to": "linked_from", "superseded_by": "supersedes", "source": "cited_by"}
+
+
 def links(args: Any) -> int:
-    """Everything a note links to: typed relations and body links, resolved or not."""
+    """Everything a note links to: body links and metadata links, resolved or not."""
     from brainwiki.index import resolve_target
 
     with _engine(args) as engine:
         node = resolve_target(engine, args.target)
         rows = []
         for edge in engine.db.execute(
-            """SELECT e.verb, e.rel, e.raw_target, e.line, n.id, n.title, n.path
+            """SELECT e.rel, e.raw_target, e.line, n.id, n.title, n.path
                FROM edges e LEFT JOIN nodes n ON n.id = e.other
                WHERE e.declared_in = ? ORDER BY e.line""",
             (node["id"],),
         ):
             rows.append(
                 {
-                    "relation": edge["verb"],
+                    "relation": _FORWARD.get(edge["rel"], edge["rel"]),
                     "target": edge["raw_target"],
                     "line": edge["line"],
                     "id": edge["id"],
@@ -140,19 +144,19 @@ def backlinks(args: Any) -> int:
         node = resolve_target(engine, args.target)
         rows, seen = [], set()
         for edge in engine.db.execute(
-            """SELECT e.verb, n.id, n.title, n.path
+            """SELECT e.rel, n.id, n.title, n.path
                FROM edges e JOIN nodes n ON n.id = e.declared_in
                WHERE e.other = ? AND e.declared_in != ?
-               ORDER BY e.rel = 'links_to', n.updated DESC""",
+               ORDER BY e.rel != 'superseded_by', n.updated DESC""",
             (node["id"], node["id"]),
         ):
-            key = (edge["id"], edge["verb"])
+            key = (edge["id"], edge["rel"])
             if key in seen:
                 continue
             seen.add(key)
             rows.append(
                 {
-                    "relation": edge["verb"],
+                    "relation": _BACKWARD.get(edge["rel"], edge["rel"]),
                     "id": edge["id"],
                     "title": edge["title"],
                     "path": edge["path"],
@@ -211,13 +215,18 @@ def orphans(args: Any) -> int:
 
 
 def unresolved(args: Any) -> int:
-    """Links and relations that resolve to no note."""
+    """Links that resolve to no note."""
     with _engine(args) as engine:
         where, params = _note_where(engine)
         rows = [
-            {"target": r["raw_target"], "path": r["path"], "line": r["line"], "relation": r["verb"]}
+            {
+                "target": r["raw_target"],
+                "path": r["path"],
+                "line": r["line"],
+                "relation": _FORWARD.get(r["rel"], r["rel"]),
+            }
             for r in engine.db.execute(
-                f"""SELECT e.raw_target, e.line, e.verb, n.path FROM edges e
+                f"""SELECT e.raw_target, e.line, e.rel, n.path FROM edges e
                     JOIN nodes n ON n.id = e.declared_in
                     WHERE e.other IS NULL AND {where} ORDER BY e.raw_target, n.path, e.line""",  # noqa: S608
                 params,

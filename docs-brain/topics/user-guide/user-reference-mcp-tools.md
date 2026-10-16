@@ -4,8 +4,6 @@ type: guide
 title: "MCP tools"
 tags: [user-guide]
 source: "docs/user/reference.md#mcp-tools"
-bw-part_of:
-  - "[[user-reference]]"
 ---
 # MCP tools
 

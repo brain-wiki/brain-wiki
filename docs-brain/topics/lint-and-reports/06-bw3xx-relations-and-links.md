@@ -4,8 +4,6 @@ type: design
 title: "BW3xx: relations and links"
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#bw3xx-relations-and-links"
-bw-part_of:
-  - "[[06-3-rule-catalog]]"
 ---
 # BW3xx: relations and links
 

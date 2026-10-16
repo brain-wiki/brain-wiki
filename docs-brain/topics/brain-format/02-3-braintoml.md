@@ -5,8 +5,6 @@ title: "`brain.toml`"
 aliases: ["02 §3"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#3-braintoml"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # `brain.toml`
 

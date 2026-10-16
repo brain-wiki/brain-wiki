@@ -5,8 +5,6 @@ title: "Server instructions"
 aliases: ["07 §3.3"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#33-server-instructions"
-bw-part_of:
-  - "[[07-3-mcp-server]]"
 ---
 # Server instructions
 

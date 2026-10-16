@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
-import zlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
@@ -13,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 from brainwiki.format import parse_document
 from brainwiki.ids import is_ulid
 from brainwiki.index._resolver import Resolver, name_rows
-from brainwiki.index._topics import TopicTree, hub_name, note_hub_changes, set_hub_files, topic_tree
+from brainwiki.index._topics import TopicTree, note_hub_changes, set_hub_files, topic_tree
 from brainwiki.index._written import is_marked
 from brainwiki.store import sha256_bytes
 
@@ -27,23 +26,6 @@ _BASELINE_KEEP = (
     "INSERT OR IGNORE INTO episode_hashes(episode_id, sha256, path, first_seen) VALUES (?, ?, ?, ?)"
 )
 _BASELINE_REPLACE = "INSERT OR REPLACE INTO episode_hashes(episode_id, sha256, path, first_seen) VALUES (?, ?, ?, ?)"
-_NOTE_BASE = "INSERT OR {mode} INTO baselines(path, sha256, content, since) VALUES (?, ?, ?, ?)"
-_NOTE_KINDS = ("note", "hub")
-
-
-def _set_baseline(
-    conn: sqlite3.Connection, rel: str, data: bytes | None, *, keep: bool = False
-) -> None:
-    """Record `data` (None: absent) as the note's last recorded version; `keep` leaves an existing one."""
-    conn.execute(
-        _NOTE_BASE.format(mode="IGNORE" if keep else "REPLACE"),
-        (
-            rel,
-            sha256_bytes(data) if data is not None else None,
-            zlib.compress(data) if data is not None else None,
-            _iso_from_ns(time.time_ns()),
-        ),
-    )
 
 
 @dataclass
@@ -188,14 +170,11 @@ def scan(
 
     to_parse: list[tuple[str, bytes]] = []
     touch_only: list[tuple[str, int, int]] = []
-    rebase: list[str] = []  # unchanged notes a recorded run vouches for (a checked agent edit)
     for rel in candidates:
         st = seen[rel]
         row = known.get(rel) if rel not in force else None
         if row and row["mtime_ns"] == st.mtime_ns and row["size"] == st.size:
             stats.unchanged += 1
-            if sanctioned:
-                rebase.append(rel)
             continue
         try:
             data = engine.store.read_bytes(rel)
@@ -204,14 +183,10 @@ def scan(
         if row and row["sha256"] == sha256_bytes(data):
             touch_only.append((rel, st.mtime_ns, st.size))
             stats.unchanged += 1
-            if sanctioned:
-                rebase.append(rel)
             continue
         to_parse.append((rel, data))
-    if sanctioned and paths is not None:
-        rebase += [p for p in paths if p not in seen]  # deleted by the run: forget its baseline
 
-    if not to_parse and not deleted and not touch_only and not rebase and not tree_changed:
+    if not to_parse and not deleted and not touch_only and not tree_changed:
         if paths is None:
             engine.last_scan_ns = now_ns
             conn.execute("UPDATE meta SET value=? WHERE key='last_scan_ns'", (str(now_ns),))
@@ -219,9 +194,6 @@ def scan(
         return stats
 
     fresh = not known_any
-    # Until the first full scan finishes, every note found is the version the brain started
-    # from, not an edit: a write-through scan (a first `brain log`) may have run before it.
-    adopt_all = conn.execute("SELECT value FROM meta WHERE key='last_scan_ns'").fetchone()[0] == "0"
     if fresh:
         # Filling an empty index deletes nothing, so cascades have nothing to do; enforcing
         # foreign keys here cost about a third of a 10k-note rebuild.
@@ -232,8 +204,6 @@ def scan(
         removed_ids: dict[str, str] = {}
         orphaned: list[int] = []  # edges whose target node was deleted and maybe re-inserted
         for rel in deleted:
-            if sanctioned:
-                conn.execute("DELETE FROM baselines WHERE path=?", (rel,))
             node_id = known[rel]["node_id"]
             if node_id:
                 fm_id = conn.execute("SELECT fm_id FROM nodes WHERE id=?", (node_id,)).fetchone()
@@ -247,11 +217,6 @@ def scan(
             stats.removed += 1
         for rel, mtime_ns, size in touch_only:
             conn.execute("UPDATE files SET mtime_ns=?, size=? WHERE path=?", (mtime_ns, size, rel))
-        for rel in rebase:
-            if rel not in seen:
-                conn.execute("DELETE FROM baselines WHERE path=?", (rel,))
-            elif classify(engine, rel, topics) in _NOTE_KINDS:
-                _set_baseline(conn, rel, engine.store.read_bytes(rel))
         parsed_nodes: list[tuple[str, str]] = []
         for rel, data in to_parse:
             st = seen[rel]
@@ -260,11 +225,6 @@ def scan(
             node_id, changed_names = _index_file(
                 engine, conn, rel, data, st.mtime_ns, st.size, kind, tree, sanctioned, orphaned
             )
-            if kind in _NOTE_KINDS:
-                if sanctioned or adopt_all:
-                    _set_baseline(conn, rel, data, keep=not sanctioned)
-                else:  # changed outside a run: keep the recorded version; a new file was absent
-                    _set_baseline(conn, rel, None, keep=True)
             names_changed = names_changed or changed_names
             if node_id:
                 parsed_nodes.append((node_id, rel))
@@ -279,11 +239,6 @@ def scan(
                 stats.renamed += 1
                 stats.removed -= 1
                 stats.added = max(0, stats.added - 1)
-                if not sanctioned:  # a rename by hand carries the recorded version along
-                    conn.execute(
-                        "UPDATE OR REPLACE baselines SET path=? WHERE path=?",
-                        (row["path"], old_path),
-                    )
             target_id = row["id"] if row else fm_id
             conn.execute(
                 "INSERT OR REPLACE INTO path_history(node_id, path, last_seen) VALUES (?, ?, ?)",
@@ -317,11 +272,6 @@ def scan(
     return stats
 
 
-def _bare_key(target: str) -> str:
-    key = target.split("|", 1)[0].strip().casefold()
-    return key[:-3] if key.endswith(".md") else key
-
-
 def _retopic(conn: sqlite3.Connection, tree: TopicTree, stored: str | None) -> list[str]:
     """Notes and hubs to re-index after the topic tree changed: their topic is different now, or
     their topic moved or gained a parent."""
@@ -337,7 +287,7 @@ def _retopic(conn: sqlite3.Connection, tree: TopicTree, stored: str | None) -> l
 
 def _delete_node(conn: sqlite3.Connection, node_id: str, orphaned: list[int] | None = None) -> None:
     row = conn.execute(
-        "SELECT rowid, title, aliases, tags, headings, body, history FROM docs WHERE node_id=?",
+        "SELECT rowid, title, aliases, tags, headings, body FROM docs WHERE node_id=?",
         (node_id,),
     ).fetchone()
     if row:
@@ -348,10 +298,9 @@ def _delete_node(conn: sqlite3.Connection, node_id: str, orphaned: list[int] | N
             row["tags"],
             row["headings"],
             row["body"],
-            row["history"],
         )
         conn.execute(
-            "INSERT INTO fts(fts, rowid, title, aliases, tags, headings, body, history) VALUES ('delete', ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO fts(fts, rowid, title, aliases, tags, headings, body) VALUES ('delete', ?, ?, ?, ?, ?, ?)",
             values,
         )
         if _has_tri(conn):
@@ -362,10 +311,7 @@ def _delete_node(conn: sqlite3.Connection, node_id: str, orphaned: list[int] | N
     conn.execute("DELETE FROM nodes WHERE id=?", (node_id,))
     if orphaned is not None:
         orphaned += [r[0] for r in conn.execute("SELECT id FROM edges WHERE other=?", (node_id,))]
-    conn.execute(
-        "UPDATE edges SET other=NULL, src=CASE WHEN flip=1 THEN NULL ELSE src END, dst=CASE WHEN flip=0 THEN NULL ELSE dst END WHERE other=?",
-        (node_id,),
-    )
+    conn.execute("UPDATE edges SET other=NULL, dst=NULL WHERE other=?", (node_id,))
 
 
 def _has_tri(conn: sqlite3.Connection) -> bool:
@@ -414,7 +360,6 @@ def _index_file(
     if size > _MAX_INDEX_BYTES:
         text = ""
     doc = parse_document(rel, text)
-    manifest = engine.manifest
     fm = doc.fm
     topic = tree.for_path(rel) if kind in ("note", "hub") else None
     fm_id = str(fm.get("id")) if fm.get("id") is not None else None
@@ -525,76 +470,28 @@ def _index_file(
     conn.executemany("INSERT OR IGNORE INTO names(key, kind, node_id) VALUES (?, ?, ?)", new_names)
     if {(k, kind_) for k, kind_, _ in new_names} != old_names:
         names_changed = True
-    for claim in doc.claims:
-        if not claim.id:
-            continue
-        conn.execute(
-            """INSERT OR REPLACE INTO claims(id, node_id, line, text, status, superseded_by, origin, inputs, asserted_at, sources)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                claim.id,
-                node_id,
-                claim.line,
-                claim.text,
-                claim.status,
-                claim.meta.get("by"),
-                claim.meta.get("origin"),
-                None if claim.inputs == "local" else claim.inputs,
-                claim.meta.get("at"),
-                json.dumps(claim.sources),
-            ),
-        )
-    for relation in doc.relations:
-        conn.execute(
-            """INSERT INTO edges(src, dst, rel, is_guard, symmetric, verb, written, qualifier, attrs, note,
-                                 declared_in, other, flip, line, raw_target)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)""",
-            (
-                None if relation.flip else node_id,
-                node_id if relation.flip else None,
-                relation.rel,
-                int(relation.is_guard),
-                int(relation.symmetric),
-                relation.verb,
-                relation.written_verb,
-                relation.qualifier,
-                json.dumps(relation.attrs),
-                relation.note,
-                node_id,
-                int(relation.flip),
-                relation.line,
-                relation.target,
-            ),
-        )
-    parent = tree.parent(topic) if kind == "hub" and topic else None
-    if parent and parent in tree.paths:
-        # The folder makes a sub-topic's hub part_of its parent's hub (02 §2); no line holds it.
-        parent_hub = f"{tree.paths[parent]}/{hub_name(manifest.layout, tree.paths[parent])}"
-        written = {_bare_key(r.target) for r in doc.relations if r.verb == "part_of"}
-        if _bare_key(parent_hub) not in written:
-            conn.execute(
-                """INSERT INTO edges(src, dst, rel, is_guard, symmetric, verb, written, qualifier, attrs,
-                                     note, declared_in, other, flip, line, raw_target)
-                   VALUES (?, NULL, 'part_of', 0, 0, 'part_of', 'folder', NULL, '{}', NULL, ?, NULL, 0, 0, ?)""",
-                (node_id, node_id, parent_hub),
-            )
     for link in doc.links:
         conn.execute(
-            """INSERT INTO edges(src, dst, rel, is_guard, symmetric, verb, written, qualifier, attrs, note,
-                                 declared_in, other, flip, line, raw_target)
-               VALUES (?, NULL, 'links_to', 0, 0, 'links_to', ?, NULL, '{}', NULL, ?, NULL, 0, ?, ?)""",
+            """INSERT INTO edges(src, dst, rel, written, declared_in, other, line, raw_target)
+               VALUES (?, NULL, 'links_to', ?, ?, NULL, ?, ?)""",
             (node_id, "embed" if link.embed else link.kind, node_id, link.line, link.target),
+        )
+    for rel_name, link in doc.meta_links:
+        conn.execute(
+            """INSERT INTO edges(src, dst, rel, written, declared_in, other, line, raw_target)
+               VALUES (?, NULL, ?, 'field', ?, NULL, ?, ?)""",
+            (node_id, rel_name, node_id, link.line, link.target),
         )
     headings = "\n".join(h[2] for h in doc.headings)
     body = doc.body_text
     cur = conn.execute(
-        "INSERT INTO docs(node_id, title, aliases, tags, headings, body, history) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (node_id, doc.title, " ".join(aliases), " ".join(tags), headings, body, doc.history_text),
+        "INSERT INTO docs(node_id, title, aliases, tags, headings, body) VALUES (?, ?, ?, ?, ?, ?)",
+        (node_id, doc.title, " ".join(aliases), " ".join(tags), headings, body),
     )
     rowid = cur.lastrowid
     conn.execute(
-        "INSERT INTO fts(rowid, title, aliases, tags, headings, body, history) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (rowid, doc.title, " ".join(aliases), " ".join(tags), headings, body, doc.history_text),
+        "INSERT INTO fts(rowid, title, aliases, tags, headings, body) VALUES (?, ?, ?, ?, ?, ?)",
+        (rowid, doc.title, " ".join(aliases), " ".join(tags), headings, body),
     )
     if _has_tri(conn):
         conn.execute(
@@ -624,21 +521,15 @@ def _apply_resolution(
     conn: sqlite3.Connection, edge: sqlite3.Row, resolver: Resolver, from_path: str
 ) -> None:
     res = resolver.resolve(edge["raw_target"], from_path)
-    other = res.node_id
-    declared = edge["declared_in"]
-    if edge["flip"]:
-        src, dst = other, declared
-    else:
-        src, dst = declared, other
     conn.execute(
-        "UPDATE edges SET other=?, src=?, dst=?, ambiguous=? WHERE id=?",
-        (other, src, dst, int(res.ambiguous), edge["id"]),
+        "UPDATE edges SET other=?, dst=?, ambiguous=? WHERE id=?",
+        (res.node_id, res.node_id, int(res.ambiguous), edge["id"]),
     )
 
 
 def _resolve_edges_of(conn: sqlite3.Connection, resolver: Resolver, node_id: str, rel: str) -> None:
     for edge in conn.execute(
-        "SELECT id, raw_target, declared_in, flip FROM edges WHERE declared_in=?", (node_id,)
+        "SELECT id, raw_target, declared_in FROM edges WHERE declared_in=?", (node_id,)
     ).fetchall():
         _apply_resolution(conn, edge, resolver, rel)
 
@@ -650,7 +541,7 @@ def _resolve_edge_ids(conn: sqlite3.Connection, resolver: Resolver, edge_ids: li
     for start in range(0, len(edge_ids), 500):
         chunk = edge_ids[start : start + 500]
         rows = conn.execute(
-            f"SELECT id, raw_target, declared_in, flip FROM edges WHERE id IN ({','.join('?' * len(chunk))})",  # noqa: S608 - placeholders only
+            f"SELECT id, raw_target, declared_in FROM edges WHERE id IN ({','.join('?' * len(chunk))})",  # noqa: S608 - placeholders only
             chunk,
         ).fetchall()
         for edge in rows:
@@ -664,5 +555,5 @@ def _resolve_edge_ids(conn: sqlite3.Connection, resolver: Resolver, edge_ids: li
 def _reresolve_all(conn: sqlite3.Connection) -> None:
     resolver = Resolver(conn, preload=True)
     paths = {row["id"]: row["path"] for row in conn.execute("SELECT id, path FROM nodes")}
-    for edge in conn.execute("SELECT id, raw_target, declared_in, flip FROM edges").fetchall():
+    for edge in conn.execute("SELECT id, raw_target, declared_in FROM edges").fetchall():
         _apply_resolution(conn, edge, resolver, paths.get(edge["declared_in"], ""))

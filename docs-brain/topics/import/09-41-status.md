@@ -5,8 +5,6 @@ title: "Status"
 aliases: ["09 §4.1"]
 tags: [import]
 source: "docs/design/09-import.md#41-status"
-bw-part_of:
-  - "[[09-4-normalization-rules]]"
 ---
 # Status
 

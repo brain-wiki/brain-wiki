@@ -4,8 +4,6 @@ type: proposal
 title: "Multi-model metrics"
 tags: [proposals]
 source: "docs/proposals/consolidation-bench.md#5-multi-model-metrics"
-bw-part_of:
-  - "[[proposal-consolidation-bench]]"
 ---
 # Multi-model metrics
 

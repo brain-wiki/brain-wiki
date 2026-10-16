@@ -5,8 +5,6 @@ title: "The write paths"
 aliases: ["05 §2"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#2-the-write-paths"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # The write paths
 

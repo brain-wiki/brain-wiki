@@ -5,8 +5,6 @@ title: "Protocol target"
 aliases: ["07 §3.1"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#31-protocol-target"
-bw-part_of:
-  - "[[07-3-mcp-server]]"
 ---
 # Protocol target
 

@@ -5,8 +5,6 @@ title: "Entry points"
 aliases: ["15 §3.1"]
 tags: [skills-and-onboarding]
 source: "docs/design/15-skills-and-onboarding.md#31-entry-points"
-bw-part_of:
-  - "[[15-3-onboarding]]"
 ---
 # Entry points
 

@@ -4,8 +4,6 @@ type: design
 title: "Verification (Antigravity (desktop, IDE, CLI))"
 tags: [agents]
 source: "docs/design/agents/antigravity.md#verification"
-bw-part_of:
-  - "[[agent-antigravity]]"
 ---
 # Verification (Antigravity (desktop, IDE, CLI))
 

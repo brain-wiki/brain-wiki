@@ -4,8 +4,6 @@ type: proposal
 title: "Open questions (Privacy)"
 tags: [proposals]
 source: "docs/proposals/privacy.md#6-open-questions"
-bw-part_of:
-  - "[[proposal-privacy]]"
 ---
 # Open questions (Privacy)
 

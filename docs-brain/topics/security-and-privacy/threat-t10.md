@@ -5,8 +5,6 @@ title: "T10: Command injection"
 aliases: ["threat T10"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
 ---
 # T10: Command injection
 

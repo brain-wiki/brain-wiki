@@ -4,8 +4,6 @@ type: proposal
 title: "Enforcement points"
 tags: [proposals]
 source: "docs/proposals/privacy.md#44-enforcement-points"
-bw-part_of:
-  - "[[proposal-privacy-4-draft-model]]"
 ---
 # Enforcement points
 

@@ -5,10 +5,6 @@ title: "T4: Leakage to model providers"
 aliases: ["threat T4"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
-bw-related_to:
-  - "[[proposal-privacy]]"
 ---
 # T4: Leakage to model providers
 

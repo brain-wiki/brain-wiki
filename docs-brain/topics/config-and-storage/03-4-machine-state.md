@@ -5,8 +5,6 @@ title: "Machine state"
 aliases: ["03 §4"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#4-machine-state"
-bw-part_of:
-  - "[[config-and-storage]]"
 ---
 # Machine state
 

@@ -4,8 +4,6 @@ type: proposal
 title: "Why it was removed (Scheduled maintenance)"
 tags: [proposals]
 source: "docs/proposals/scheduled-maintenance.md#2-why-it-was-removed"
-bw-part_of:
-  - "[[proposal-scheduled-maintenance]]"
 ---
 # Why it was removed (Scheduled maintenance)
 

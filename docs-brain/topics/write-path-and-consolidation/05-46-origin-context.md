@@ -5,8 +5,6 @@ title: "Origin context"
 aliases: ["05 §4.6"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#46-origin-context"
-bw-part_of:
-  - "[[05-4-consolidation]]"
 ---
 # Origin context
 

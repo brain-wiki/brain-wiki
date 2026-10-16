@@ -5,8 +5,6 @@ title: "Users and scenarios"
 aliases: ["01 §6"]
 tags: [overview]
 source: "docs/design/01-overview.md#6-users-and-scenarios"
-bw-part_of:
-  - "[[overview]]"
 ---
 # Users and scenarios
 

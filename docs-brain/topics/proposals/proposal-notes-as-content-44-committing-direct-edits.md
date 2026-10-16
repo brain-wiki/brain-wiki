@@ -4,8 +4,6 @@ type: proposal
 title: "Committing direct edits"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#44-committing-direct-edits"
-bw-part_of:
-  - "[[proposal-notes-as-content-4-writing-notes]]"
 ---
 # Committing direct edits
 

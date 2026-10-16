@@ -5,8 +5,6 @@ title: "Failure modes (Index and retrieval)"
 aliases: ["04 §11"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#11-failure-modes"
-bw-part_of:
-  - "[[index-and-retrieval]]"
 ---
 # Failure modes (Index and retrieval)
 

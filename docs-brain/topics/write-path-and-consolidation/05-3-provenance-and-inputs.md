@@ -5,8 +5,6 @@ title: "Provenance and inputs"
 aliases: ["05 §3"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#3-provenance-and-inputs"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # Provenance and inputs
 

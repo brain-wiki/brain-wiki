@@ -5,8 +5,6 @@ title: "Concurrency and locking summary"
 aliases: ["03 §7"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#7-concurrency-and-locking-summary"
-bw-part_of:
-  - "[[config-and-storage]]"
 ---
 # Concurrency and locking summary
 

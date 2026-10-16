@@ -4,8 +4,6 @@ type: guide
 title: "Review (Maintenance)"
 tags: [user-guide]
 source: "docs/user/maintenance.md#review"
-bw-part_of:
-  - "[[user-maintenance]]"
 ---
 # Review (Maintenance)
 

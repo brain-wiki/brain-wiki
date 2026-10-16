@@ -5,8 +5,6 @@ title: "Checked agent edits"
 aliases: ["05 §2.3"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#23-checked-agent-edits"
-bw-part_of:
-  - "[[05-2-the-write-paths]]"
 ---
 # Checked agent edits
 

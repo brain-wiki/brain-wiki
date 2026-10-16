@@ -5,8 +5,6 @@ title: "Directory layout"
 aliases: ["02 §2"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#2-directory-layout"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # Directory layout
 

@@ -5,8 +5,6 @@ title: "Goals (Visualizer)"
 aliases: ["12 §1"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#1-goals"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # Goals (Visualizer)
 

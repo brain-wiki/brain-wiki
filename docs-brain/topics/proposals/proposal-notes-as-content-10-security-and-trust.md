@@ -4,8 +4,6 @@ type: proposal
 title: "Security and trust"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#10-security-and-trust"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Security and trust
 

@@ -4,8 +4,6 @@ type: proposal
 title: "Open questions (Scheduled maintenance)"
 tags: [proposals]
 source: "docs/proposals/scheduled-maintenance.md#3-open-questions"
-bw-part_of:
-  - "[[proposal-scheduled-maintenance]]"
 ---
 # Open questions (Scheduled maintenance)
 

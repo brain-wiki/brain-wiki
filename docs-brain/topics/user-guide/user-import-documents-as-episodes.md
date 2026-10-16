@@ -4,8 +4,6 @@ type: guide
 title: "Documents as episodes"
 tags: [user-guide]
 source: "docs/user/import.md#documents-as-episodes"
-bw-part_of:
-  - "[[user-import]]"
 ---
 # Documents as episodes
 

@@ -5,8 +5,6 @@ title: "Profiles and severities"
 aliases: ["06 §2"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#2-profiles-and-severities"
-bw-part_of:
-  - "[[lint-and-reports]]"
 ---
 # Profiles and severities
 

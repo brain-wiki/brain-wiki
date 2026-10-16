@@ -27,12 +27,10 @@ _Adjacency = dict[str, dict[str, float]]
 
 
 def topic_weights(nodes: list[dict[str, Any]], links: list[dict[str, Any]]) -> _Adjacency:
-    """Undirected topic graph: weight = typed links between two different topics."""
+    """Undirected topic graph: weight = links between two different topics."""
     topic_of = {n["id"]: n["topic"] for n in nodes}
     adj: _Adjacency = {}
     for link in links:
-        if not link["typed"]:
-            continue
         a, b = topic_of.get(link["source"]), topic_of.get(link["target"])
         if a is None or b is None or a == b:
             continue
@@ -250,7 +248,7 @@ class Atlas:
     def _build_world(self) -> dict[str, Any]:
         g = self.graph
         flagged = [n for n in self.notes if n["flags"]]
-        typed = [link for link in g["links"] if link["typed"]]
+        links = g["links"]
         constellations = []
         for i, group in enumerate(self.groups):
             ranked = sorted(group, key=lambda s: (-self.topics[s]["notes"], s))
@@ -275,12 +273,12 @@ class Atlas:
                 "notes": sum(1 for n in self.notes if n["kind"] == "note"),
                 "hubs": sum(1 for n in self.notes if n["kind"] == "hub"),
                 "episodes": self._episode_count(),
-                "links": len(typed),
+                "links": len(links),
                 "flagged": len(flagged),
             },
             "constellations": constellations,
             "topics": self._topic_summaries(),
-            "flows": self._flows(typed),
+            "flows": self._flows(links),
             "episodes": {"count": self._episode_count()},
             "runs": [self._run(r) for r in g["runs"]],
         }
@@ -292,7 +290,7 @@ class Atlas:
         return tops[0] if len(tops) == 1 and len(group) > 1 else None
 
     def _hub_topic(self, group: list[str]) -> str | None:
-        """The topic typed-linked to at least half of the others in its group (a plugins topic
+        """The topic linked to at least half of the others in its group (a plugins topic
         and each plugin, people and each person), or None when no topic holds the group together."""
         if len(group) < 3:
             return None
@@ -338,9 +336,9 @@ class Atlas:
                 )
         return out
 
-    def _flows(self, typed: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _flows(self, links: list[dict[str, Any]]) -> list[dict[str, Any]]:
         flows: dict[tuple[str, str], dict[str, int]] = {}
-        for link in typed:
+        for link in links:
             a, b = self._topic_of.get(link["source"]), self._topic_of.get(link["target"])
             if a is None or b is None or a == b:
                 continue
@@ -385,7 +383,7 @@ class Atlas:
             return None
         external = []
         outer = self._outer.get(slug, [])
-        for link in [x for x in outer if x["typed"]] + [x for x in outer if not x["typed"]]:
+        for link in sorted(outer, key=lambda x: x["rel"] == "links_to"):
             out = self._topic_of[link["source"]] == slug
             other = self.nodes[link["target"] if out else link["source"]]
             external.append(

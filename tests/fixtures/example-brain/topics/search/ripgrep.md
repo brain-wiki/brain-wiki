@@ -4,8 +4,7 @@ type: decision
 title: Use ripgrep for search
 status: superseded
 created: 2026-03-01
-bw-part_of:
-  - "[[Search]]"
+bw-superseded_by: "[[fts5]]"
 ---
 # Use ripgrep for search
 

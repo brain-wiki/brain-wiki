@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
-from brainwiki.format import claim_value, quote, relation_value, replace_block
+from brainwiki.format import quote, replace_block
 from brainwiki.lifecycle import default_agents_block, init_brain
 
 _BRAIN_EXTRA = """
@@ -100,7 +100,6 @@ class Truth:
     root: Path
     nodes: dict[str, Node] = field(default_factory=dict)
     supersedes: list[tuple[str, str]] = field(default_factory=list)  # (newer, older)
-    conflicts: list[tuple[str, str]] = field(default_factory=list)
     queries: list[Query] = field(default_factory=list)
     relation_counts: Counter[str] = field(default_factory=Counter)
 
@@ -110,13 +109,9 @@ class Truth:
     def _index(self) -> None:
         self.newer: dict[str, list[str]] = defaultdict(list)
         self.older: dict[str, list[str]] = defaultdict(list)
-        self.conflicting: dict[str, list[str]] = defaultdict(list)
         for new, old in self.supersedes:
             self.newer[old].append(new)
             self.older[new].append(old)
-        for a, b in self.conflicts:
-            self.conflicting[a].append(b)
-            self.conflicting[b].append(a)
 
     def chain(self, node_id: str) -> list[str]:
         """Successors from the direct one to the newest."""
@@ -129,7 +124,6 @@ class Truth:
     def expected_guards(self, node_id: str) -> set[tuple[str, str]]:
         """The guards (label, id) a hit must carry (doc 04 §5); `superseded_by` is the newest."""
         shown = {("supersedes", other) for other in self.older.get(node_id, [])}
-        shown |= {("conflicts_with", other) for other in self.conflicting.get(node_id, [])}
         chain = self.chain(node_id)
         if chain:
             shown.add(("superseded_by", chain[-1]))
@@ -210,10 +204,9 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
     for n in order:
         by_topic[n.topic or ""].append(n)
 
-    # Guards: supersession chains (3% of relations) and conflicts (2%).
+    # Supersession chains (3% of links, about two per note).
     used: set[str] = set()
-    target_sup = round(0.03 * 3 * notes)
-    target_conf = round(0.02 * 3 * notes)
+    target_sup = round(0.03 * 2 * notes)
 
     def free(pool: list[Node], k: int) -> list[Node] | None:
         options = [n for n in pool if n.id not in used]
@@ -236,12 +229,6 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
         members = free(pool, rng.choice((2, 2, 3, 3, 4)))  # chains of 1-3 supersessions
         if members:
             chain_of(members)
-    tries = 0
-    while len(truth.conflicts) < target_conf and tries < 10 * notes:
-        tries += 1
-        pair = free(order, 2)
-        if pair:
-            truth.conflicts.append((pair[0].id, pair[1].id))
     truth._index()
     # Dates follow supersession: newer notes are updated later.
     day = {n.id: rng.randrange(0, 200) for n in order}
@@ -251,29 +238,20 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
         for newer in truth.chain(node_id):
             day[newer] = max(day[newer], day[node_id] + 1)
 
-    # Relations, declared in the newer note for supersession.
+    # Related notes, written as body links; the older note names its replacement in metadata.
     relations: dict[str, list[tuple[str, str]]] = defaultdict(list)  # note -> (verb, link)
+    replaced_by: dict[str, str] = {}  # older note -> newer note's link
     linked: dict[str, set[str]] = defaultdict(set)
 
     def link_name(n: Node) -> str:
         return n.slug
 
-    def declare(a: Node, verb: str, b: Node) -> None:
-        relations[a.id].append((verb, link_name(b)))
-        linked[a.id].add(b.id)
-        linked[b.id].add(a.id)
-
     for new, old in truth.supersedes:
-        declare(truth.nodes[new], "supersedes", truth.nodes[old])
-        truth.relation_counts["supersedes"] += 1
-    for x, y in truth.conflicts:
-        declare(truth.nodes[x], "conflicts_with", truth.nodes[y])
-        truth.relation_counts["conflicts_with"] += 1
+        replaced_by[old] = link_name(truth.nodes[new])
+        linked[old].add(new)
+        linked[new].add(old)
+        truth.relation_counts["superseded_by"] += 1
     for n in order:
-        relations[n.id].insert(
-            0, ("part_of", f"topics/{n.topic}/index|{hubs[n.topic or ''].title}")
-        )
-        truth.relation_counts["part_of"] += 1
         same = by_topic[n.topic or ""]
         for _ in range(2 if rng.random() < 0.85 else 1):
             pick = rng.random()
@@ -303,7 +281,19 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
 
     # Write notes.
     for n in order:
-        _write(root / n.path, _note_text(g, n, day[n.id], plants[n.id], order, relations[n.id]))
+        _write(
+            root / n.path,
+            _note_text(
+                g,
+                n,
+                day[n.id],
+                plants[n.id],
+                order,
+                by_topic[n.topic or ""],
+                relations[n.id],
+                replaced_by.get(n.id),
+            ),
+        )
 
     # Hubs list their notes.
     for t in topic_slugs:
@@ -366,7 +356,9 @@ def _note_text(
     day: int,
     plants: list[str],
     order: list[Node],
+    same: list[Node],
     relations: list[tuple[str, str]],
+    replaced_by: str | None = None,
 ) -> str:
     rng = g.rng
     when = date(2026, 1, 1) + timedelta(days=day)
@@ -380,8 +372,14 @@ def _note_text(
     ]
     if n.status != "active":
         fm.append(f"status: {n.status}")
-    targets = [o for o in rng.sample(order, min(12, len(order))) if o is not n]
-    links = [f"[[{o.slug}]]" for o in targets[:5]]
+    if replaced_by:
+        fm.append(f"bw-superseded_by: {quote(f'[[{replaced_by}]]')}")
+    links = []
+    for _ in range(5):  # prose links mostly stay in the note's own topic, as people write them
+        pool = same if rng.random() < 0.8 and len(same) > 1 else order
+        other = pool[rng.randrange(len(pool))]
+        if other is not n:
+            links.append(f"[[{other.slug}]]")
     extras = plants + links
     rng.shuffle(extras)
     n_lines = rng.randrange(14, 26)
@@ -393,24 +391,20 @@ def _note_text(
         if i and i % 5 == 0:
             body.append("")
         body.append(g.sentence(rng.randrange(8, 15), per_line[i]))
-    claims = []
+    facts = []
     for _ in range(rng.randrange(2, 6)):
         subject = " ".join(g.words(3))
-        claim = f"{subject.capitalize()} {rng.choice(_CLAIM_VERBS)} {' '.join(g.words(4))}."
-        cid = "c-" + g.ulid(_EPOCH + timedelta(days=day))
-        claims.append(claim_value(claim, {"id": cid, "at": f"{when:%Y-%m-%d}"}))
-    by_verb: dict[str, list[str]] = defaultdict(list)
-    for verb, link in relations:
-        by_verb[verb].append(relation_value(link))
-    for verb, values in by_verb.items():
-        fm += [f"bw-{verb}:", *[f"  - {quote(v)}" for v in values]]
-    fm += ["bw-claims:", *[f"  - {quote(c)}" for c in claims], "---"]
-    return "\n".join([*fm, f"# {n.title}", "", *body]) + "\n"
+        facts.append(f"- {subject.capitalize()} {rng.choice(_CLAIM_VERBS)} {' '.join(g.words(4))}.")
+    related = [f"- {verb.replace('_', ' ').capitalize()} [[{link}]]" for verb, link in relations]
+    body += ["", "## Facts", "", *facts]
+    if related:
+        body += ["", "## Related", "", *related]
+    return "\n".join([*fm, "---", f"# {n.title}", "", *body]) + "\n"
 
 
 def _plant_queries(g: _Gen, truth: Truth, order: list[Node]) -> None:
     rng = g.rng
-    guarded = {x for pair in truth.supersedes + truth.conflicts for x in pair}
+    guarded = {x for pair in truth.supersedes for x in pair}
     sample = rng.sample(order, max(30, len(order) // 10))
     ids = dict.fromkeys([*sorted(guarded), *(n.id for n in sample)])
     for n in (truth.nodes[i] for i in ids):

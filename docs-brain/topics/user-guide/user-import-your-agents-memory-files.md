@@ -4,8 +4,6 @@ type: guide
 title: "Your agents' memory files"
 tags: [user-guide]
 source: "docs/user/import.md#your-agents-memory-files"
-bw-part_of:
-  - "[[user-import]]"
 ---
 # Your agents' memory files
 

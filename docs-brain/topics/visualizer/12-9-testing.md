@@ -5,8 +5,6 @@ title: "Testing (Visualizer)"
 aliases: ["12 §9"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#9-testing"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # Testing (Visualizer)
 

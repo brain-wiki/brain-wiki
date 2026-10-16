@@ -1,3 +1,17 @@
 <!-- brain-wiki:begin (generated; edit outside these markers) -->
-# Example brain
+# This folder is a brain-wiki brain: example
+
+- Read `rules.md` first: standing directives from the user.
+- Knowledge lives in `topics/<topic>/`; each topic has a hub (`index.md`).
+- To record something, add a new file under `inbox/episodes/YYYY/MM/<ULID>.md`
+  (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or
+  `rules.md` directly.
+- A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note
+  with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
+
+| Topic | Hub | About |
+|---|---|---|
+| budget | topics/budget/index.md | Spending decisions. |
+| search | topics/search/index.md | How local search works and why. |
+| storage | topics/storage/index.md | Where data lives and which versions we require. |
 <!-- brain-wiki:end -->

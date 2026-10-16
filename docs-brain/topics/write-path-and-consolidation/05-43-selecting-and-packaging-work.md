@@ -5,8 +5,6 @@ title: "Selecting and packaging work"
 aliases: ["05 §4.3"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#43-selecting-and-packaging-work"
-bw-part_of:
-  - "[[05-4-consolidation]]"
 ---
 # Selecting and packaging work
 

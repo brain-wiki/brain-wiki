@@ -5,8 +5,6 @@ title: "Modes (Agent integrations)"
 aliases: ["08 §6.2"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#62-modes"
-bw-part_of:
-  - "[[08-6-harvest]]"
 ---
 # Modes (Agent integrations)
 

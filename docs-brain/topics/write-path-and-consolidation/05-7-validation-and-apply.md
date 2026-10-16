@@ -5,8 +5,6 @@ title: "Validation and apply"
 aliases: ["05 §7"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#7-validation-and-apply"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # Validation and apply
 

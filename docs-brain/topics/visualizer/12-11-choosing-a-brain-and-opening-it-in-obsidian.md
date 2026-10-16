@@ -5,8 +5,6 @@ title: "Choosing a brain, and opening it in Obsidian"
 aliases: ["12 §11"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#11-choosing-a-brain-and-opening-it-in-obsidian"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # Choosing a brain, and opening it in Obsidian
 

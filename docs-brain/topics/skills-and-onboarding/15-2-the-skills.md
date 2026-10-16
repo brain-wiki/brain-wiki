@@ -5,8 +5,6 @@ title: "The skills (Skills and onboarding)"
 aliases: ["15 §2"]
 tags: [skills-and-onboarding]
 source: "docs/design/15-skills-and-onboarding.md#2-the-skills"
-bw-part_of:
-  - "[[skills-and-onboarding]]"
 ---
 # The skills (Skills and onboarding)
 

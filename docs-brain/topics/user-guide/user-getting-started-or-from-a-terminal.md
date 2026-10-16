@@ -4,8 +4,6 @@ type: guide
 title: "Or from a terminal"
 tags: [user-guide]
 source: "docs/user/getting-started.md#or-from-a-terminal"
-bw-part_of:
-  - "[[user-getting-started]]"
 ---
 # Or from a terminal
 

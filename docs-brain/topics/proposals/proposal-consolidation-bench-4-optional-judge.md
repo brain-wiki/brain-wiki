@@ -4,8 +4,6 @@ type: proposal
 title: "Optional judge"
 tags: [proposals]
 source: "docs/proposals/consolidation-bench.md#4-optional-judge"
-bw-part_of:
-  - "[[proposal-consolidation-bench]]"
 ---
 # Optional judge
 

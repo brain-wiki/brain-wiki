@@ -4,8 +4,6 @@ type: proposal
 title: "Which readers are trusted"
 tags: [proposals]
 source: "docs/proposals/privacy.md#43-which-readers-are-trusted"
-bw-part_of:
-  - "[[proposal-privacy-4-draft-model]]"
 ---
 # Which readers are trusted
 

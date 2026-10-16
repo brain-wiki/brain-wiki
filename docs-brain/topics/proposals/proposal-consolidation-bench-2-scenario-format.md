@@ -4,8 +4,6 @@ type: proposal
 title: "Scenario format"
 tags: [proposals]
 source: "docs/proposals/consolidation-bench.md#2-scenario-format"
-bw-part_of:
-  - "[[proposal-consolidation-bench]]"
 ---
 # Scenario format
 

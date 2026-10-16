@@ -4,8 +4,6 @@ type: proposal
 title: "Why the old model was removed"
 tags: [proposals]
 source: "docs/proposals/privacy.md#1-why-the-old-model-was-removed"
-bw-part_of:
-  - "[[proposal-privacy]]"
 ---
 # Why the old model was removed
 

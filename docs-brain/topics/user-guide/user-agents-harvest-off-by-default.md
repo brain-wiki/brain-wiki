@@ -4,8 +4,6 @@ type: guide
 title: "Harvest (off by default)"
 tags: [user-guide]
 source: "docs/user/agents.md#harvest-off-by-default"
-bw-part_of:
-  - "[[user-agents]]"
 ---
 # Harvest (off by default)
 

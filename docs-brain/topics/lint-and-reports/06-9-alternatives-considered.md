@@ -5,8 +5,6 @@ title: "Alternatives considered (Lint and reports)"
 aliases: ["06 §9"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#9-alternatives-considered"
-bw-part_of:
-  - "[[lint-and-reports]]"
 ---
 # Alternatives considered (Lint and reports)
 

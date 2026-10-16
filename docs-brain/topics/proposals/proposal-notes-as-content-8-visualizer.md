@@ -4,8 +4,6 @@ type: proposal
 title: "Visualizer"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#8-visualizer"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Visualizer
 

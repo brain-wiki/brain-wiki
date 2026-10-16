@@ -4,8 +4,6 @@ type: guide
 title: "Maintenance"
 tags: [user-guide]
 source: "docs/user/maintenance.md"
-bw-part_of:
-  - "[[user-guide]]"
 ---
 # Maintenance
 

@@ -5,8 +5,6 @@ title: "Rule catalog"
 aliases: ["06 §3"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#3-rule-catalog"
-bw-part_of:
-  - "[[lint-and-reports]]"
 ---
 # Rule catalog
 

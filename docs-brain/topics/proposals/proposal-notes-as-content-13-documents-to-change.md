@@ -4,8 +4,6 @@ type: proposal
 title: "Documents to change"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#13-documents-to-change"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Documents to change
 

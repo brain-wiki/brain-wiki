@@ -5,8 +5,6 @@ title: "T13: Sync-tool damage"
 aliases: ["threat T13"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
 ---
 # T13: Sync-tool damage
 

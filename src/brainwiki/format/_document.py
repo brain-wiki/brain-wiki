@@ -1,4 +1,8 @@
-"""Parse a Markdown note, hub, or episode into its structured parts."""
+"""Parse a Markdown note, hub, or episode into its structured parts (design doc 02 §6).
+
+Frontmatter holds metadata only; the body is free Markdown. brain-wiki reads from the body only
+its headings and links, never what it means.
+"""
 
 from __future__ import annotations
 
@@ -6,27 +10,14 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from brainwiki.format._claims import Claim, parse_claim_block
-from brainwiki.format._fields import (
-    ALIAS_KEYS,
-    KNOWN,
-    PREFIX,
-    RELATION_KEYS,
-    SUPERSEDED,
-    as_items,
-    item_lines,
-    split_claim,
-)
-from brainwiki.format._fields import CLAIMS as FM_CLAIMS
+from brainwiki.format._fields import CLAIMS, as_items, item_lines, split_claim
 from brainwiki.format._frontmatter import Frontmatter, split
 from brainwiki.format._links import Link, extract_links, mask_code
 from brainwiki.format._meta import strip_meta_comments
-from brainwiki.format._relations import Relation, RelationError, parse_relation_line
 
 HEADING_RE = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<text>.+?)\s*#*\s*$")
-_CLAIMS = "claims"
-_RELATIONS = "relations"
-_LIST_ITEM_RE = re.compile(r"^\s*[-*+]\s+\S")
+# Metadata fields whose values link to notes: (field, edge relation).
+_LINK_FIELDS = (("bw-superseded_by", "superseded_by"), ("bw-sources", "source"))
 
 
 @dataclass
@@ -45,12 +36,10 @@ class ParsedDoc:
     title: str
     headings: list[tuple[int, int, str]] = field(default_factory=list)  # (line, level, text)
     sections: list[Section] = field(default_factory=list)
-    claims: list[Claim] = field(default_factory=list)
-    relations: list[Relation] = field(default_factory=list)
-    links: list[Link] = field(default_factory=list)
+    links: list[Link] = field(default_factory=list)  # body links
+    meta_links: list[tuple[str, Link]] = field(default_factory=list)  # (relation, link)
     problems: list[tuple[int, str, str]] = field(default_factory=list)  # (line, code, message)
     body_text: str = ""
-    history_text: str = ""
     line_count: int = 0
 
     @property
@@ -60,9 +49,6 @@ class ParsedDoc:
     def section(self, name: str) -> Section | None:
         found = [s for s in self.sections if s.name == name and s.level == 2]
         return found[0] if found else None
-
-    def section_count(self, name: str) -> int:
-        return sum(1 for s in self.sections if s.name == name and s.level == 2)
 
 
 def _stem(path: str) -> str:
@@ -106,98 +92,17 @@ def parse_document(path: str, text: str) -> ParsedDoc:
     doc.line_count = last_line
     if fm.error:
         doc.problems.append((1, "BW101", fm.error))
-
-    def lines_of(section: Section) -> list[tuple[int, str]]:
-        return [
-            (n, all_lines[n - 1]) for n in range(section.heading_line + 1, section.end_line + 1)
-        ]
-
-    relation_lines: set[int] = set()
-    history: list[str] = []
-    superseded_lines: set[int] = set()
-    claim_links: list[Link] = []
+    doc.links = extract_links(body_lines, first_body)
+    legacy_text: list[str] = []
     if fm.present and not fm.error:
-        _frontmatter_parts(doc, text, history, claim_links)
-    claims_section = doc.section(_CLAIMS)
-    if claims_section:
-        claims, problems = parse_claim_block(lines_of(claims_section))
-        doc.claims = claims
-        for line_no, message in problems:
-            doc.problems.append((line_no, "BW201", message))
-        for claim in claims:
-            if claim.status != "active":
-                history.append(claim.text)
-                superseded_lines.update(range(claim.line, claim.last_line + 1))
-    relations_section = doc.section(_RELATIONS)
-    if relations_section:
-        for line_no, line in lines_of(relations_section):
-            if not _LIST_ITEM_RE.match(line):
-                continue
-            parsed = parse_relation_line(line, line_no)
-            relation_lines.add(line_no)
-            if isinstance(parsed, RelationError):
-                doc.problems.append((parsed.line, parsed.code, parsed.message))
-            else:
-                doc.relations.append(parsed)
-
-    doc.links = claim_links + extract_links(body_lines, first_body, skip_lines=relation_lines)
-
-    body_for_index = [
-        line for n, line in enumerate(body_lines, start=first_body) if n not in superseded_lines
-    ]
-    current = [c.text for c in doc.claims if c.key == FM_CLAIMS]  # searchable like body text
-    doc.body_text = strip_meta_comments("\n".join([*body_for_index, *current]))
-    doc.history_text = "\n".join(history)
+        for key, rel in _LINK_FIELDS:
+            values = as_items(fm.raw.get(key))
+            for value, line in zip(values, item_lines(text, key, len(values)), strict=True):
+                if isinstance(value, str):
+                    doc.meta_links += [(rel, link) for link in extract_links([value], line)]
+        # Claims of an unconverted format 2 note stay searchable until `brain lint --fix`.
+        legacy_text = [
+            split_claim(v)[0] for v in as_items(fm.raw.get(CLAIMS)) if isinstance(v, str)
+        ]
+    doc.body_text = strip_meta_comments("\n".join([*body_lines, *legacy_text]))
     return doc
-
-
-def _frontmatter_parts(doc: ParsedDoc, text: str, history: list[str], links: list[Link]) -> None:
-    """Claims and relations held in `bw-` fields (format 2), with the lines they sit on."""
-    fm = doc.fm
-    for key in fm:
-        if key.startswith(PREFIX) and key not in KNOWN and key not in ALIAS_KEYS:
-            line = item_lines(text, key, 1)[0]
-            doc.problems.append(
-                (line, "BW302", f"unknown field {key!r}: not a relation verb or brain-wiki field")
-            )
-    for key in (FM_CLAIMS, SUPERSEDED):
-        values = as_items(fm.get(key))
-        for index, (value, line) in enumerate(
-            zip(values, item_lines(text, key, len(values)), strict=True)
-        ):
-            if not isinstance(value, str):
-                doc.problems.append((line, "BW201", f"{key} items must be strings"))
-                continue
-            body, meta = split_claim(value)
-            claim = Claim(
-                line=line,
-                last_line=line,
-                text=body,
-                meta=meta or {},
-                struck=key == SUPERSEDED,
-                has_meta=meta is not None,
-                key=key,
-                index=index,
-            )
-            doc.claims.append(claim)
-            if key == SUPERSEDED:
-                history.append(body)
-            else:
-                links.extend(extract_links([body], line))
-    for key in [k for k in fm if k in RELATION_KEYS or k in ALIAS_KEYS]:
-        verb = RELATION_KEYS.get(key) or ALIAS_KEYS[key]
-        values = as_items(fm.get(key))
-        for index, (value, line) in enumerate(
-            zip(values, item_lines(text, key, len(values)), strict=True)
-        ):
-            if not isinstance(value, str):
-                doc.problems.append(
-                    (line, "BW301", f'{key} items must be strings like "[[Target]]"')
-                )
-                continue
-            parsed = parse_relation_line(f"- {verb} {value}", line)
-            if isinstance(parsed, RelationError):
-                doc.problems.append((line, parsed.code, f"{key}: {parsed.message}"))
-                continue
-            parsed.key, parsed.index = key, index
-            doc.relations.append(parsed)

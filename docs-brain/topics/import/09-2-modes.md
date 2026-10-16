@@ -5,8 +5,6 @@ title: "Modes (Import)"
 aliases: ["09 §2"]
 tags: [import]
 source: "docs/design/09-import.md#2-modes"
-bw-part_of:
-  - "[[import]]"
 ---
 # Modes (Import)
 

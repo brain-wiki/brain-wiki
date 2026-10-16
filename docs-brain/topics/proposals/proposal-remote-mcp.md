@@ -4,8 +4,6 @@ type: proposal
 title: "Remote MCP for chat apps"
 tags: [proposals]
 source: "docs/proposals/remote-mcp.md"
-bw-part_of:
-  - "[[proposals]]"
 ---
 # Remote MCP for chat apps
 

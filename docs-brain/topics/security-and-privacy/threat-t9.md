@@ -5,10 +5,6 @@ title: "T9: Local server exposure"
 aliases: ["threat T9"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
-bw-related_to:
-  - "[[12-8-safety]]"
 ---
 # T9: Local server exposure
 

@@ -4,8 +4,6 @@ type: design
 title: "Notes (OpenClaw)"
 tags: [agents]
 source: "docs/design/agents/openclaw.md#notes"
-bw-part_of:
-  - "[[agent-openclaw]]"
 ---
 # Notes (OpenClaw)
 

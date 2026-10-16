@@ -5,8 +5,6 @@ title: "Harvest"
 aliases: ["08 §6"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#6-harvest"
-bw-part_of:
-  - "[[agent-integrations]]"
 ---
 # Harvest
 

@@ -5,8 +5,6 @@ title: "Requirements that shaped the format"
 aliases: ["02 §1"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#1-requirements-that-shaped-the-format"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # Requirements that shaped the format
 

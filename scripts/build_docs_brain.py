@@ -1,10 +1,9 @@
 """Build docs-brain/: the design docs and user guide as a brain-wiki brain.
 
-Each document becomes a topic with a hub; each `##` and `###` section becomes a note that is
-`part_of` its parent; rows of the ID tables (decisions, milestones, open questions,
-verification items, threats) become typed notes with their own relations; links between
-documents become wikilinks. The docs stay the source of truth, so the brain is regenerated,
-never edited by hand.
+Each document becomes a topic with a hub; each `##` and `###` section becomes a note its parent
+lists; rows of the ID tables (decisions, milestones, open questions, verification items,
+threats) become typed notes that link the rows they mention; links between documents become
+wikilinks. The docs stay the source of truth, so the brain is regenerated, never edited by hand.
 
     uv run scripts/build_docs_brain.py           # write docs-brain/
     uv run scripts/build_docs_brain.py --check   # change nothing; exit 1 if docs-brain/ is stale
@@ -295,7 +294,7 @@ class Brain:
         title: str,
         source: str,
         body: list[str],
-        relations: list[tuple[str, str]],
+        related: list[str] | None = None,
         aliases: list[str] | None = None,
         tags: list[str] | None = None,
         stage: str | None = None,
@@ -308,14 +307,11 @@ class Brain:
         fm.append(f"source: {yaml_str(source)}")
         if stage:
             fm.append(f"bw-stage: {stage}")
-        by_verb: dict[str, list[str]] = {}  # relations, one bw-<verb> list each (02 §6.4)
-        for verb, target in dict.fromkeys(relations):
-            by_verb.setdefault(verb, []).append(target)
-        for verb, targets in by_verb.items():
-            fm += [f"bw-{verb}:", *[f"  - {yaml_str(f'[[{t}]]')}" for t in targets]]
         text = [*fm, "---", f"# {title}", ""]
         if body:
             text += [*body, ""]
+        if related:
+            text += ["## Related", *related, ""]
         self.files[rel] = "\n".join(text).rstrip("\n") + "\n"
 
 
@@ -406,7 +402,6 @@ def build() -> dict[str, str]:
             title=title,
             source=source,
             body=body,
-            relations=[],
         )
 
     brain.files["brain.toml"] = manifest(topics)
@@ -438,13 +433,11 @@ def render_doc(brain: Brain, doc: Doc, topics: dict) -> None:
             title=doc.title,
             source=doc.path.as_posix(),
             body=["## Sections", *[f"- [[{s.stem}]]: {s.note_title}" for s in doc.sections]],
-            relations=[("part_of", slug)],
             tags=[slug],
         )
     else:
         tree(doc.sections, 0)
     for s in walk(doc.sections):
-        parent = s.parent.stem if s.parent else (doc.note.stem if doc.note else slug)
         body = brain.body(doc, s.lines)
         if s.children:
             body += ["", "## Subsections", *[f"- [[{c.stem}]]: {c.note_title}" for c in s.children]]
@@ -459,7 +452,6 @@ def render_doc(brain: Brain, doc: Doc, topics: dict) -> None:
             title=s.note_title,
             source=f"{doc.path.as_posix()}#{s.anchor}",
             body=body,
-            relations=[("part_of", parent)],
             aliases=aliases,
             tags=[slug],
         )
@@ -468,7 +460,7 @@ def render_doc(brain: Brain, doc: Doc, topics: dict) -> None:
 
 
 def render_row(brain: Brain, doc: Doc, row: Row, folder: str) -> None:
-    relations = [("part_of", row.section.stem)]
+    related = []
     body = []
     first = True
     for column, value in row.cells.items():
@@ -479,18 +471,16 @@ def render_row(brain: Brain, doc: Doc, row: Row, folder: str) -> None:
         elif text:
             body.append(f"**{column}:** {text}")
             body.append("")
-        for href in re.findall(r"\]\(([^)\s]+)\)", value):
-            converted = brain.link(doc, href, "x")
-            if converted.startswith("[["):
-                relations.append(("related_to", converted[2:].split("|", 1)[0]))
-    mentions = {m for m in MENTION.findall(" ".join(row.cells.values())) if m != row.id}
-    for other in sorted(mentions, key=lambda m: (m[0], int(m[1:]))):
-        if other in brain.rows:
-            relations.append(("related_to", brain.rows[other].stem))
     if row.kind == "milestone" and int(row.id[1:]) > 0:
         previous = f"M{int(row.id[1:]) - 1}"
         if previous in brain.rows:
-            relations.append(("depends_on", brain.rows[previous].stem))
+            related.append(
+                f"- Follows [[{brain.rows[previous].stem}]]: {brain.rows[previous].title}"
+            )
+    mentions = {m for m in MENTION.findall(" ".join(row.cells.values())) if m != row.id}
+    for other in sorted(mentions, key=lambda m: (m[0], int(m[1:]))):
+        if other in brain.rows:
+            related.append(f"- [[{brain.rows[other].stem}]]: {brain.rows[other].title}")
     stage = None
     joined = " ".join(row.cells.values())
     if row.kind == "question":
@@ -504,7 +494,7 @@ def render_row(brain: Brain, doc: Doc, row: Row, folder: str) -> None:
         title=row.title,
         source=f"{doc.path.as_posix()}#{row.section.anchor}",
         body=[line for line in body if line is not None][:-1] if body else [],
-        relations=relations,
+        related=list(dict.fromkeys(related)),
         aliases=[row.id] if row.kind != "threat" else [f"threat {row.id}"],
         tags=[row.section.doc.topic],
         stage=stage,
@@ -514,7 +504,7 @@ def render_row(brain: Brain, doc: Doc, row: Row, folder: str) -> None:
 def manifest(topics: dict) -> str:
     lines = [
         "# Generated by scripts/build_docs_brain.py from docs/. Do not edit; rerun the script.",
-        "format = 2",
+        "format = 3",
         f'id = "{ulid("brain:" + NAME)}"',
         f'name = "{NAME}"',
         f"description = {yaml_str(DESCRIPTION)}",

@@ -13,35 +13,25 @@ from typing import TYPE_CHECKING
 
 from brainwiki.config import Manifest
 from brainwiki.format import (
-    ALIAS_KEYS,
     FIELDS,
     INPUTS,
+    NOTE_FIELDS,
     ORIGINS,
-    RELATION_PROPERTIES,
+    SOURCES,
     STATUSES,
+    SUPERSEDED_BY,
     ParsedDoc,
-    add_items,
-    as_items,
-    canonical_item,
-    canonicalize_line,
-    claim_value,
     episode_path,
-    format_meta,
-    is_format1,
+    legacy,
     map_status,
+    mark_superseded,
     mask_code,
-    move_item,
     parse_document,
     parse_rules,
-    property_links,
-    relation_values_for,
-    remove_field,
-    replace_item,
-    replace_line_matching,
     set_fields,
-    to_format2,
+    to_format3,
 )
-from brainwiki.ids import claim_id, is_ulid, new_ulid
+from brainwiki.ids import is_ulid, new_ulid
 from brainwiki.lint._catalog import severity
 from brainwiki.lint._model import Fix, Problem
 from brainwiki.write import find_secrets
@@ -51,7 +41,7 @@ if TYPE_CHECKING:
     from brainwiki.index import TopicTree
     from brainwiki.runs import Run
 
-LINT_VERSION = "1"
+LINT_VERSION = "2"
 _NOTE_KINDS = ("note", "hub")
 _EPISODE_KINDS = ("episode", "archived_episode")
 _SECRET_KINDS = (
@@ -67,11 +57,8 @@ _SECRET_KINDS = (
 _MARKER_KINDS = (*_NOTE_KINDS, "rules", "agents_md", "log")
 
 _CONFLICT_MARKER = re.compile(r"^(?:<{7}|>{7})(?: |$)|^={7}$")
-_INJECTION = re.compile(
-    r"(?i)\b(?:ignore|disregard|forget)\b.{0,40}\b(?:previous|prior|above|earlier|all)\b.{0,20}"
-    r"\b(?:instructions?|prompts?|rules?)\b"
-    r"|\byou must now\b|\bfrom now on,? you\b|\bnew (?:system )?instructions?\s*:|\bsystem prompt\b"
-)
+_ONE_LINK = re.compile(r"^\[\[[^\[\]\n]+\]\]$")
+_URL = re.compile(r"^[a-z][a-z0-9+.-]*://\S+$", re.IGNORECASE)
 
 
 @dataclass
@@ -105,14 +92,6 @@ def _fm_line(doc: ParsedDoc, key: str) -> int:
 
 def _set(values: dict[str, object]) -> Callable[[str], str]:
     return lambda text: set_fields(text, values, order_first=("id", "type", "title"))
-
-
-def _line_edit(original: str, new_line: str, hint: int) -> Callable[[str], str]:
-    return lambda text: replace_line_matching(text, original, new_line, hint)
-
-
-def _item_edit(key: str, index: int, value: str) -> Callable[[str], str]:
-    return lambda text: replace_item(text, key, index, [value])
 
 
 def check_file(
@@ -175,178 +154,147 @@ def _parse_problems(doc: ParsedDoc, rel: str) -> list[Problem]:
     return out
 
 
+def _hub_names(ctx: FileContext, rel: str, kind: str) -> frozenset[str]:
+    """Link targets naming the hub a note belongs to (a hub's: its parent topic's hub)."""
+    from brainwiki.index import hub_name
+
+    tree = ctx.tree
+    slug = tree.for_path(rel)
+    if kind == "hub" and slug:
+        slug = tree.parent(slug)
+    if not slug or slug not in tree.paths:
+        return frozenset()
+    folder = tree.paths[slug]
+    hub = f"{folder}/{hub_name(ctx.manifest.layout, folder)}"
+    return frozenset({hub.removesuffix(".md"), folder.rsplit("/", 1)[-1], slug})
+
+
 def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -> list[Problem]:
     doc = parse_document(rel, text)
     problems = _parse_problems(doc, rel)
-    fm = doc.fm
-    if not doc.frontmatter.error:
-        raw_id = fm.get("id")
-        if raw_id is None:
-            problems.append(
-                Problem(
-                    "BW103",
-                    rel,
-                    1,
-                    "note has no id",
-                    fix=Fix("mint an id", _set({"id": new_ulid()})),
-                )
-            )
-        elif not is_ulid(str(raw_id)):
-            problems.append(
-                Problem(
-                    "BW104",
-                    rel,
-                    _fm_line(doc, "id"),
-                    f"id {raw_id!r} is not a ULID",
-                    fix=Fix("re-mint the id", _set({"id": new_ulid()})),
-                )
-            )
-        status = fm.get("status")
-        if status is not None and str(status) not in STATUSES:
-            new_status, stage = map_status(str(status))
-            values: dict[str, object] = {"status": new_status}
-            if stage and fm.get("stage") is None:
-                values[FIELDS["stage"]] = stage
-            problems.append(
-                Problem(
-                    "BW106",
-                    rel,
-                    _fm_line(doc, "status"),
-                    f"status {status!r} is not active, superseded, or archived; it belongs in stage",
-                    fix=Fix(f"status: {new_status}, stage: {stage}", _set(values)),
-                )
-            )
-        for key, value in doc.frontmatter.raw.items():
-            if key.lower() not in RELATION_PROPERTIES or not property_links(value):
-                continue
-            pairs = relation_values_for(key, value)
-
-            def convert(text: str, key: str = key, pairs: list[tuple[str, str]] = pairs) -> str:
-                text = remove_field(text, key)
-                for bw_key, item in pairs:
-                    text = add_items(text, bw_key, [item])
-                return text
-
-            verbs = ", ".join(dict.fromkeys(k for k, _ in pairs))
-            problems.append(
-                Problem(
-                    "BW113",
-                    rel,
-                    _fm_line(doc, key),
-                    f"property {key!r} holds links that read as relations; write them as {verbs}",
-                    fix=Fix(f"convert {key} to {verbs}", convert),
-                )
-            )
-    if doc.section_count("claims") > 1:
-        problems.append(Problem("BW207", rel, None, "more than one ## Claims section"))
-    if doc.section_count("relations") > 1:
-        problems.append(Problem("BW311", rel, None, "more than one ## Relations section"))
-    lines = text.splitlines()
-    seen_ids: Counter[str] = Counter()
-    for claim in doc.claims:
-        last = lines[claim.last_line - 1]
-        if not claim.has_meta:
-            new_id = claim_id()
-            edit = (
-                _item_edit(claim.key, claim.index, claim_value(claim.text, {"id": new_id}))
-                if claim.key
-                else _line_edit(last, f"{last} {format_meta({'id': new_id})}", claim.last_line)
-            )
-            problems.append(
-                Problem(
-                    "BW205",
-                    rel,
-                    claim.line,
-                    "claim has no metadata",
-                    fix=Fix("assign a claim id", edit),
-                )
-            )
-            continue
-        if claim.id:
-            seen_ids[claim.id] += 1
-            if seen_ids[claim.id] > 1:
-                new_id = claim_id()
-                if claim.key:
-                    value = claim_value(claim.text, {**claim.meta, "id": new_id})
-                    edit = _item_edit(claim.key, claim.index, value)
-                else:
-                    new_line = last.replace(f"id:{claim.id}", f"id:{new_id}", 1)
-                    edit = _line_edit(last, new_line, claim.last_line)
-                problems.append(
-                    Problem(
-                        "BW202",
-                        rel,
-                        claim.line,
-                        f"duplicate claim id {claim.id}",
-                        fix=Fix("re-mint the claim id", edit),
-                    )
-                )
-        raw_inputs = claim.meta.get("inputs")
-        if raw_inputs is not None and raw_inputs not in INPUTS:
-            problems.append(
-                Problem(
-                    "BW201",
-                    rel,
-                    claim.line,
-                    f"claim inputs {raw_inputs!r} must be local, external, or unknown; "
-                    "it reads as unknown",
-                )
-            )
-        if claim.inputs != "local" and _INJECTION.search(claim.text):
-            problems.append(
-                Problem(
-                    "BW702",
-                    rel,
-                    claim.line,
-                    "instruction-like text in an unverified claim; treat it as data",
-                )
-            )
-    for relation in doc.relations:
-        if relation.key in ALIAS_KEYS:
-            value = str(as_items(fm.get(relation.key))[relation.index])
-            moved = canonical_item(relation.written_verb, value)
-            problems.append(
-                Problem(
-                    "BW303",
-                    rel,
-                    relation.line,
-                    f"alias field {relation.key!r}; canonical is 'bw-{relation.verb}'",
-                    fix=Fix(
-                        f"move to bw-{relation.verb}",
-                        lambda t, k=relation.key, v=value, m=moved: move_item(t, k, v, *m),
-                    )
-                    if moved
-                    else None,
-                )
-            )
-        elif relation.is_alias:
-            original = lines[relation.line - 1]
-            rewritten = canonicalize_line(original)
-            problems.append(
-                Problem(
-                    "BW303",
-                    rel,
-                    relation.line,
-                    f"alias verb {relation.written_verb!r}; canonical is {relation.verb!r}",
-                    fix=Fix(
-                        f"rewrite as {relation.verb}",
-                        _line_edit(original, rewritten, relation.line),
-                    )
-                    if rewritten
-                    else None,
-                )
-            )
-    if is_format1(doc):
+    if doc.frontmatter.error:
+        return problems
+    fm, raw = doc.fm, doc.frontmatter.raw
+    raw_id = fm.get("id")
+    if raw_id is None:
         problems.append(
             Problem(
-                "BW116",
-                rel,
-                None,
-                "format 1: ## Claims, ## Relations, or unprefixed stage; "
-                "move them to bw- frontmatter fields",
-                fix=Fix("convert to format 2", to_format2),
+                "BW103", rel, 1, "note has no id", fix=Fix("mint an id", _set({"id": new_ulid()}))
             )
         )
+    elif not is_ulid(str(raw_id)):
+        problems.append(
+            Problem(
+                "BW104",
+                rel,
+                _fm_line(doc, "id"),
+                f"id {raw_id!r} is not a ULID",
+                fix=Fix("re-mint the id", _set({"id": new_ulid()})),
+            )
+        )
+    status = fm.get("status")
+    if status is not None and str(status) not in STATUSES:
+        new_status, stage = map_status(str(status))
+        values: dict[str, object] = {"status": new_status}
+        if stage and fm.get("stage") is None:
+            values[FIELDS["stage"]] = stage
+        problems.append(
+            Problem(
+                "BW106",
+                rel,
+                _fm_line(doc, "status"),
+                f"status {status!r} is not active, superseded, or archived; it belongs in stage",
+                fix=Fix(f"status: {new_status}, stage: {stage}", _set(values)),
+            )
+        )
+    found = legacy(text)
+    if found:
+        what = [k for k, _ in found.fields] + [f"## {n.title()}" for n, _ in found.sections]
+        what += ["unprefixed stage"] if found.stage else []
+        layout = ctx.manifest.layout
+        hubs = _hub_names(ctx, rel, kind)
+        line = (found.fields or found.sections or [("", None)])[0][1]
+        problems.append(
+            Problem(
+                "BW117",
+                rel,
+                line,
+                f"format 1 or 2 ({', '.join(what)}): facts and relations belong in the body "
+                "and frontmatter holds metadata only; `brain lint --fix` converts the note",
+                fix=Fix(
+                    "convert to format 3",
+                    lambda t: to_format3(
+                        t, hub_names=hubs, inbox=layout.inbox_dir, archive=layout.archive_dir
+                    ),
+                ),
+            )
+        )
+        for target in dict.fromkeys(found.supersedes):
+            problems.append(
+                Problem(
+                    "BW117",
+                    rel,
+                    line,
+                    f"supersedes [[{target}]]: that note gets status: superseded and "
+                    f"{SUPERSEDED_BY} linking here",
+                    fix=Fix(
+                        "mark the replaced note superseded",
+                        target_link=target,
+                        link_edit=mark_superseded,
+                    ),
+                )
+            )
+    legacy_keys = {k for k, _ in found.fields}
+    for key in raw:
+        if key.startswith("bw-") and key not in NOTE_FIELDS and key not in legacy_keys:
+            problems.append(
+                Problem(
+                    "BW118",
+                    rel,
+                    _fm_line(doc, key),
+                    f"unknown field {key!r}; a note's brain-wiki fields are "
+                    f"{', '.join(sorted(NOTE_FIELDS))}",
+                )
+            )
+    if SUPERSEDED_BY in raw:
+        value = raw[SUPERSEDED_BY]
+        if not (isinstance(value, str) and _ONE_LINK.match(value.strip())):
+            problems.append(
+                Problem(
+                    "BW119",
+                    rel,
+                    _fm_line(doc, SUPERSEDED_BY),
+                    f'{SUPERSEDED_BY} must be one link, like "[[newer note]]"',
+                )
+            )
+        elif str(status or "active") != "superseded":
+            problems.append(
+                Problem(
+                    "BW119",
+                    rel,
+                    _fm_line(doc, SUPERSEDED_BY),
+                    f"{SUPERSEDED_BY} is set but status is {str(status or 'active')!r}",
+                    fix=Fix("set status: superseded", _set({"status": "superseded"})),
+                )
+            )
+    if SOURCES in raw:
+        value = raw[SOURCES]
+        items = value if isinstance(value, list) else [value]
+        bad = [
+            v
+            for v in items
+            if not (isinstance(v, str) and (_ONE_LINK.match(v.strip()) or _URL.match(v.strip())))
+        ]
+        if bad:
+            problems.append(
+                Problem(
+                    "BW120",
+                    rel,
+                    _fm_line(doc, SOURCES),
+                    f'{SOURCES} items must be links or URLs, like "[[archive/episodes/…]]" '
+                    f"or https://…; not {bad[0]!r}",
+                )
+            )
     return problems
 
 

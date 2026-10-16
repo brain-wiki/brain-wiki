@@ -5,8 +5,6 @@ title: "Testing (Engineering)"
 aliases: ["13 §6"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#6-testing"
-bw-part_of:
-  - "[[engineering]]"
 ---
 # Testing (Engineering)
 

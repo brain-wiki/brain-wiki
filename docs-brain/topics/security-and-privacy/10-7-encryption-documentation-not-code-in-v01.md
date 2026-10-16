@@ -5,8 +5,6 @@ title: "Encryption (documentation, not code, in v0.1)"
 aliases: ["10 §7"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#7-encryption-documentation-not-code-in-v01"
-bw-part_of:
-  - "[[security-and-privacy]]"
 ---
 # Encryption (documentation, not code, in v0.1)
 

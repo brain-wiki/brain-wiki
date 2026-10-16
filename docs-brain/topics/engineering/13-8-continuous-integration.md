@@ -5,8 +5,6 @@ title: "Continuous integration"
 aliases: ["13 §8"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#8-continuous-integration"
-bw-part_of:
-  - "[[engineering]]"
 ---
 # Continuous integration
 

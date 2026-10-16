@@ -5,8 +5,6 @@ title: "Architecture"
 aliases: ["12 §5"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#5-architecture"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # Architecture
 

@@ -4,8 +4,6 @@ type: design
 title: "BW2xx: claims"
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#bw2xx-claims"
-bw-part_of:
-  - "[[06-3-rule-catalog]]"
 ---
 # BW2xx: claims
 

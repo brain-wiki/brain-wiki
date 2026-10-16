@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from brainwiki.format import RELATION_PROPERTIES, STATUSES, parse_document, property_links
+from brainwiki.format import STATUSES, parse_document
 from brainwiki.index import norm_key, slugify
 
 _DAILY = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
@@ -34,7 +34,6 @@ class Survey:
     daily_folder: str | None = None
     counts: Counter[str] = field(default_factory=Counter)
     statuses: Counter[str] = field(default_factory=Counter)
-    relation_props: Counter[str] = field(default_factory=Counter)
     unresolved: Counter[str] = field(default_factory=Counter)
     conflicts: list[str] = field(default_factory=list)
     unparsable: list[str] = field(default_factory=list)
@@ -51,7 +50,6 @@ class Survey:
             "daily_folder": self.daily_folder,
             "counts": dict(self.counts),
             "nonstandard_status": dict(self.statuses),
-            "relation_properties": dict(self.relation_props),
             "unresolved_links": sum(self.unresolved.values()),
             "top_unresolved": self.unresolved.most_common(10),
             "conflict_copies": self.conflicts,
@@ -131,9 +129,6 @@ def survey(root: Path) -> Survey:
         status = fm.data.get("status")
         if status is not None and str(status).lower() not in STATUSES:
             result.statuses[str(status)] += 1
-        for key, value in fm.data.items():
-            if key.lower() in RELATION_PROPERTIES and property_links(value):
-                result.relation_props[key] += 1
         for link in doc.links:
             if norm_key(link.target) not in keys and link.target.casefold() not in keys:
                 result.unresolved[link.target] += 1

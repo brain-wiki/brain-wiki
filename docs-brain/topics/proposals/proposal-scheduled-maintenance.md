@@ -4,8 +4,6 @@ type: proposal
 title: "Scheduled maintenance"
 tags: [proposals]
 source: "docs/proposals/scheduled-maintenance.md"
-bw-part_of:
-  - "[[proposals]]"
 ---
 # Scheduled maintenance
 

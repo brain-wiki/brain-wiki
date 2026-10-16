@@ -5,8 +5,6 @@ title: "T15: Impersonating plugins"
 aliases: ["threat T15"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
 ---
 # T15: Impersonating plugins
 

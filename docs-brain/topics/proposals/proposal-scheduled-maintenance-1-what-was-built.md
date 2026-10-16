@@ -4,8 +4,6 @@ type: proposal
 title: "What was built (Scheduled maintenance)"
 tags: [proposals]
 source: "docs/proposals/scheduled-maintenance.md#1-what-was-built"
-bw-part_of:
-  - "[[proposal-scheduled-maintenance]]"
 ---
 # What was built (Scheduled maintenance)
 

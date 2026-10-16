@@ -5,8 +5,6 @@ title: "Purpose (Lint and reports)"
 aliases: ["06 §1"]
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#1-purpose"
-bw-part_of:
-  - "[[lint-and-reports]]"
 ---
 # Purpose (Lint and reports)
 

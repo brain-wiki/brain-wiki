@@ -5,8 +5,6 @@ title: "Fields"
 aliases: ["05 §3.1"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#31-fields"
-bw-part_of:
-  - "[[05-3-provenance-and-inputs]]"
 ---
 # Fields
 

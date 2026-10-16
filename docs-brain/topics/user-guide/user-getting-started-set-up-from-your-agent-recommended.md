@@ -4,8 +4,6 @@ type: guide
 title: "Set up from your agent (recommended)"
 tags: [user-guide]
 source: "docs/user/getting-started.md#set-up-from-your-agent-recommended"
-bw-part_of:
-  - "[[user-getting-started]]"
 ---
 # Set up from your agent (recommended)
 

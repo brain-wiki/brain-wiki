@@ -5,10 +5,6 @@ title: "T17: A direct agent edit damages a note"
 aliases: ["threat T17"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
-bw-related_to:
-  - "[[05-23-checked-agent-edits]]"
 ---
 # T17: A direct agent edit damages a note
 

@@ -4,8 +4,6 @@ type: proposal
 title: "Writing notes"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#4-writing-notes"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Writing notes
 

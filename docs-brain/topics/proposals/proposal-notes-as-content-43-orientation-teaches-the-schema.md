@@ -4,8 +4,6 @@ type: proposal
 title: "Orientation teaches the schema"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#43-orientation-teaches-the-schema"
-bw-part_of:
-  - "[[proposal-notes-as-content-4-writing-notes]]"
 ---
 # Orientation teaches the schema
 

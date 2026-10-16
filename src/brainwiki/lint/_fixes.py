@@ -24,6 +24,23 @@ class FixOutcome:
     remaining: LintResult
 
 
+def _linked(engine: Engine, link: str, from_path: str) -> str | None:
+    """The path of the note `link` resolves to from `from_path`, if exactly one."""
+    from brainwiki.index import Resolver
+
+    node_id = Resolver(engine.db).resolve(link, from_path).node_id
+    row = engine.db.execute("SELECT path FROM nodes WHERE id=?", (node_id,)).fetchone()
+    return row["path"] if row else None
+
+
+def _link_to(engine: Engine, path: str) -> str:
+    """How to write a link to the note at `path`: its name when unique, else its path."""
+    from brainwiki.index import link_text
+
+    row = engine.db.execute("SELECT id FROM nodes WHERE path=?", (path,)).fetchone()
+    return link_text(engine.db, row["id"]) if row else path.removesuffix(".md")
+
+
 def plan(engine: Engine, result: LintResult, *, include_info: bool) -> tuple[Run, list[Problem]]:
     """Stage every applicable fix in one run. Info-level fixes only when explicitly selected."""
     run = Run(engine, "lint-fix")
@@ -31,7 +48,16 @@ def plan(engine: Engine, result: LintResult, *, include_info: bool) -> tuple[Run
     for problem in result.problems:
         if problem.fix is None or (problem.severity == "info" and not include_info):
             continue
-        groups[problem.fix.target or problem.path].append(problem)
+        target = problem.fix.target
+        if problem.fix.target_link:
+            target = _linked(engine, problem.fix.target_link, problem.path)
+            if target is None:
+                continue
+            problem.fix.target = target
+            if problem.fix.link_edit is not None:
+                back = _link_to(engine, problem.path)
+                problem.fix.edit = lambda t, f=problem.fix.link_edit, b=back: f(t, b)
+        groups[target or problem.path].append(problem)
     applied: list[Problem] = []
     for target, problems in groups.items():
         original = run.read(target)

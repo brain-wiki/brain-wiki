@@ -4,8 +4,6 @@ type: proposal
 title: "Options"
 tags: [proposals]
 source: "docs/proposals/privacy.md#5-options"
-bw-part_of:
-  - "[[proposal-privacy]]"
 ---
 # Options
 

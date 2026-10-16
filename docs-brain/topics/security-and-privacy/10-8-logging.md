@@ -5,8 +5,6 @@ title: "Logging"
 aliases: ["10 §8"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#8-logging"
-bw-part_of:
-  - "[[security-and-privacy]]"
 ---
 # Logging
 

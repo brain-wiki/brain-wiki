@@ -5,8 +5,6 @@ title: "Storage and sync"
 aliases: ["03 §6"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#6-storage-and-sync"
-bw-part_of:
-  - "[[config-and-storage]]"
 ---
 # Storage and sync
 

@@ -4,8 +4,6 @@ type: guide
 title: "Import"
 tags: [user-guide]
 source: "docs/user/import.md"
-bw-part_of:
-  - "[[user-guide]]"
 ---
 # Import
 

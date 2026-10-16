@@ -4,8 +4,6 @@ type: guide
 title: "Next"
 tags: [user-guide]
 source: "docs/user/getting-started.md#next"
-bw-part_of:
-  - "[[user-getting-started]]"
 ---
 # Next
 

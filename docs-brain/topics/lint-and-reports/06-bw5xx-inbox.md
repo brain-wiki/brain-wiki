@@ -4,8 +4,6 @@ type: design
 title: "BW5xx: inbox"
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#bw5xx-inbox"
-bw-part_of:
-  - "[[06-3-rule-catalog]]"
 ---
 # BW5xx: inbox
 

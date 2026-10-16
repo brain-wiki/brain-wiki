@@ -5,8 +5,6 @@ title: "How inputs are determined"
 aliases: ["05 §3.2"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#32-how-inputs-are-determined"
-bw-part_of:
-  - "[[05-3-provenance-and-inputs]]"
 ---
 # How inputs are determined
 

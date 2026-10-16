@@ -5,8 +5,6 @@ title: "Failure modes (Import)"
 aliases: ["09 §7"]
 tags: [import]
 source: "docs/design/09-import.md#7-failure-modes"
-bw-part_of:
-  - "[[import]]"
 ---
 # Failure modes (Import)
 

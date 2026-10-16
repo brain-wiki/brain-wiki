@@ -75,7 +75,6 @@ def search(args: Any) -> int:
             cursor=args.cursor,
             count_only=args.count,
             facets=args.facets,
-            intent=args.intent,
             include_episodes=True
             if "episodes" in include
             else (False if args.no_episodes else None),
@@ -119,7 +118,6 @@ def neighbors(args: Any) -> int:
         result = run(
             engine,
             args.target,
-            relations=args.relations,
             direction=args.direction,
             depth=args.depth,
             limit=args.limit,

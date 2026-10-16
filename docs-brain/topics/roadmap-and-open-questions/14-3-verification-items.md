@@ -5,8 +5,6 @@ title: "Verification items"
 aliases: ["14 §3"]
 tags: [roadmap-and-open-questions]
 source: "docs/design/14-roadmap-and-open-questions.md#3-verification-items"
-bw-part_of:
-  - "[[roadmap-and-open-questions]]"
 ---
 # Verification items
 

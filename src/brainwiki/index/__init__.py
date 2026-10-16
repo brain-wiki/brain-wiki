@@ -5,6 +5,7 @@ from __future__ import annotations
 from brainwiki.index import _written as written
 from brainwiki.index._brains import format_brain_list, list_brains
 from brainwiki.index._db import open_index
+from brainwiki.index._guards import stale_links
 from brainwiki.index._neighbors import format_neighbors_text, neighbors
 from brainwiki.index._orient import agents_block, orient, topic_rows
 from brainwiki.index._read import format_read_text, read, resolve_target
@@ -17,7 +18,7 @@ from brainwiki.index._search import (
     parse_cursor,
     search,
 )
-from brainwiki.index._topics import TopicTree, slugify, topic_tree
+from brainwiki.index._topics import TopicTree, hub_name, slugify, topic_tree
 
 __all__ = [
     "LinkNamer",
@@ -29,6 +30,7 @@ __all__ = [
     "format_neighbors_text",
     "format_read_text",
     "format_search_text",
+    "hub_name",
     "known_topics",
     "link_text",
     "list_brains",
@@ -43,6 +45,7 @@ __all__ = [
     "scan",
     "search",
     "slugify",
+    "stale_links",
     "topic_rows",
     "topic_tree",
     "written",

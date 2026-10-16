@@ -5,8 +5,6 @@ title: "Failure modes (Config and storage)"
 aliases: ["03 §8"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#8-failure-modes"
-bw-part_of:
-  - "[[config-and-storage]]"
 ---
 # Failure modes (Config and storage)
 

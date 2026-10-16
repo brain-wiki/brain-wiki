@@ -49,18 +49,6 @@ ALIASES: dict[str, str] = {
     "similar_to": "related_to",
     "analogous_to": "related_to",
 }
-_GUARD_RELS = frozenset({"conflicts_with", "supersedes"})
-SYMMETRIC_RELS = frozenset({"conflicts_with", "related_to"})
-INVERSE: dict[str, str] = {
-    "part_of": "has_part",
-    "has_part": "part_of",
-    "depends_on": "enables",
-    "enables": "depends_on",
-    "conflicts_with": "conflicts_with",
-    "supersedes": "superseded_by",
-    "superseded_by": "supersedes",
-    "related_to": "related_to",
-}
 
 _LINE_RE = re.compile(
     r"^\s*[-*+]\s+(?P<verb>[A-Za-z_][\w-]*)\s+"
@@ -88,14 +76,6 @@ class Relation:
     key: str | None = None  # the `bw-<verb>` list holding it; None for a body line
     index: int = 0  # its position in that list
 
-    @property
-    def is_guard(self) -> bool:
-        return self.rel in _GUARD_RELS
-
-    @property
-    def symmetric(self) -> bool:
-        return self.rel in SYMMETRIC_RELS
-
 
 @dataclass
 class RelationError:
@@ -104,7 +84,7 @@ class RelationError:
     message: str
 
 
-def canonical_verb(word: str) -> tuple[str | None, bool]:
+def _canonical_verb(word: str) -> tuple[str | None, bool]:
     lowered = word.lower().replace("-", "_")
     if lowered in CANONICAL:
         return lowered, False
@@ -164,7 +144,7 @@ def parse_relation_line(text: str, line: int) -> Relation | RelationError:
             "relation line does not parse: expected `- verb [[Target]] (qualifier) — note`",
         )
     written = match.group("verb")
-    verb, is_alias = canonical_verb(written)
+    verb, is_alias = _canonical_verb(written)
     if verb is None:
         return RelationError(line, "BW302", f"unknown relation verb {written!r}")
     target, label = _parse_target(match.group("target"))
@@ -185,27 +165,3 @@ def parse_relation_line(text: str, line: int) -> Relation | RelationError:
         note=(match.group("note") or None),
         is_alias=is_alias,
     )
-
-
-def canonicalize_line(text: str) -> str | None:
-    """Rewrite an alias verb as its canonical verb, keeping the alias as the qualifier.
-
-    Only the verb (and a new qualifier) change; the target, qualifiers, and note keep their
-    exact text. Returns None when the line has no alias verb.
-    """
-    match = _LINE_RE.match(text)
-    if not match:
-        return None
-    written = match.group("verb")
-    verb, is_alias = canonical_verb(written)
-    if verb is None or not is_alias:
-        return None
-    head = text[: match.start("verb")] + verb + text[match.end("verb") : match.end("target")]
-    tail = text[match.end("target") :]
-    qual = match.group("qual")
-    if qual is None:
-        return f"{head} ({written.lower()}){tail}"
-    if _parse_qualifiers(qual)[0] is None:
-        start = match.start("qual") - match.end("target")
-        return head + tail[:start] + f"{written.lower()}, " + tail[start:]
-    return head + tail

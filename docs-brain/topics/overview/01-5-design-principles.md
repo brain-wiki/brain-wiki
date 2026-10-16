@@ -5,8 +5,6 @@ title: "Design principles"
 aliases: ["01 §5"]
 tags: [overview]
 source: "docs/design/01-overview.md#5-design-principles"
-bw-part_of:
-  - "[[overview]]"
 ---
 # Design principles
 

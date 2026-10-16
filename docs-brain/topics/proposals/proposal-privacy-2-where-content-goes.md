@@ -4,8 +4,6 @@ type: proposal
 title: "Where content goes"
 tags: [proposals]
 source: "docs/proposals/privacy.md#2-where-content-goes"
-bw-part_of:
-  - "[[proposal-privacy]]"
 ---
 # Where content goes
 

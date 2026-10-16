@@ -5,8 +5,6 @@ title: "Naming and size limits"
 aliases: ["07 §3.2"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#32-naming-and-size-limits"
-bw-part_of:
-  - "[[07-3-mcp-server]]"
 ---
 # Naming and size limits
 

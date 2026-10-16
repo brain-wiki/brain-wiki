@@ -1,28 +1,18 @@
-"""brain-wiki's frontmatter fields: relations, claims, and `bw-` metadata (design doc 02 §4, §6).
+"""brain-wiki's frontmatter fields and line-local list edits (design doc 02 §4, §6).
 
-Everything brain-wiki parses lives in frontmatter, in fields named `bw-…`, so the body stays
-prose. Relations are one list per verb (`bw-depends_on: ["[[note]] (qualifier) — note"]`);
-claims are strings with a trailing meta block (`"text {id: c-…; src: …}"`). All values are
-flat: strings or lists of strings, which Obsidian's Properties UI can show and edit.
+brain-wiki's own metadata lives in fields named `bw-…`. Values are flat: strings or lists of
+strings, which Obsidian's Properties UI can show and edit. The claim and relation fields of
+format 2 are named here only so the conversion to format 3 can find them.
 """
 
 from __future__ import annotations
 
 import json
 import re
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from brainwiki.format._meta import parse_meta
-from brainwiki.format._relations import (
-    _LINE_RE,
-    ALIASES,
-    CANONICAL,
-    canonical_verb,
-    canonicalize_line,
-)
-
-if TYPE_CHECKING:
-    from brainwiki.format._document import ParsedDoc
+from brainwiki.format._relations import ALIASES, CANONICAL
 
 PREFIX = "bw-"
 CLAIMS = "bw-claims"
@@ -43,11 +33,8 @@ FIELDS = {
     "dedupe": "bw-dedupe",
     "source": "bw-source",
 }
-_NOTE_FIELDS = ("stage",)  # the unprefixed names a note may still use (format 1)
-KNOWN = {CLAIMS, SUPERSEDED, *RELATION_KEYS, *FIELDS.values()}
 _META_KEYS = {"id", "src", "origin", "inputs", "at", "status", "by", "reason", "quote", "via"}
 _META_TAIL = re.compile(r"\s*\{(?P<body>[^{}]*)\}\s*$")
-_ORDER = ("id", "status", "by", "reason", "src", "origin", "inputs", "at")
 # Characters outside YAML's printable set (YAML 1.1 §5.1), as PyYAML's reader checks them.
 _NOT_YAML = re.compile("[^\x09\x0a\x0d\x20-\x7e\x85\xa0-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]")
 
@@ -75,23 +62,6 @@ def quote(value: str) -> str:
     return _NOT_YAML.sub(lambda m: f"\\u{ord(m.group()):04x}", text)
 
 
-def claim_value(text: str, meta: dict[str, str] | None = None) -> str:
-    """`"claim text {id: c-…; src: …}"`, the form a claim takes in `bw-claims`."""
-    body = " ".join(text.replace("{", "(").replace("}", ")").split())
-    if not meta:
-        return body
-    keys = [k for k in _ORDER if k in meta] + sorted(k for k in meta if k not in _ORDER)
-    parts = []
-    for key in keys:
-        value = " ".join(str(meta[key]).replace("{", "(").replace("}", ")").split())
-        if not value:
-            continue
-        if ";" in value or '"' in value:
-            value = '"' + value.replace('"', '\\"') + '"'
-        parts.append(f"{key}: {value}")
-    return f"{body} {{{'; '.join(parts)}}}" if parts else body
-
-
 def split_claim(value: str) -> tuple[str, dict[str, str] | None]:
     """(claim text, meta or None). A trailing `{…}` counts as meta only with known keys."""
     match = _META_TAIL.search(value)
@@ -104,34 +74,6 @@ def split_claim(value: str) -> tuple[str, dict[str, str] | None]:
         ):
             return value[: match.start()].strip(), meta
     return value.strip(), None
-
-
-def relation_value(
-    target_link: str,
-    *,
-    qualifier: str | None = None,
-    attrs: dict[str, str] | None = None,
-    note: str | None = None,
-) -> str:
-    """`"[[target]] (qualifier) — note"`, the form a relation takes in `bw-<verb>`."""
-    value = f"[[{target_link}]]"
-    quals = ([qualifier] if qualifier else []) + [
-        f"{k}={v}" for k, v in (attrs or {}).items() if k != "tags"
-    ]
-    if quals:
-        value += " (" + ", ".join(quals) + ")"
-    if note:
-        value += " — " + " ".join(note.split())
-    return value
-
-
-def canonical_item(alias: str, value: str) -> tuple[str, str] | None:
-    """(`bw-<verb>`, value) for an item written under an alias key, the alias kept as qualifier."""
-    verb, is_alias = canonical_verb(alias)
-    line = canonicalize_line(f"- {alias} {value}") if is_alias else None
-    if verb is None or line is None:
-        return None
-    return f"{PREFIX}{verb}", line[len(f"- {verb} ") :]
 
 
 def as_items(value: Any) -> list[Any]:
@@ -237,114 +179,4 @@ def list_values(text: str, key: str) -> list[str]:
 
 
 def add_items(text: str, key: str, values: list[str]) -> str:
-    return _set_list(text, key, [*list_values(text, key), *values], after=tuple(_field_order(key)))
-
-
-def replace_item(text: str, key: str, index: int, new: list[str]) -> str:
-    values = list_values(text, key)
-    if not 0 <= index < len(values):
-        return text
-    values[index : index + 1] = new
-    return _set_list(text, key, values)
-
-
-def move_item(text: str, key: str, value: str, new_key: str, new_value: str) -> str:
-    """Move one item (found by value, so earlier edits cannot shift it) to another list."""
-    values = list_values(text, key)
-    if value not in values:
-        return text
-    values.remove(value)
-    return add_items(_set_list(text, key, values), new_key, [new_value])
-
-
-def _field_order(key: str) -> list[str]:
-    """Fields that come before `key`, so new fields land in a stable order."""
-    order = [*RELATION_KEYS, CLAIMS, SUPERSEDED]
-    return order[: order.index(key)] if key in order else order
-
-
-# -- format 1 -> format 2 ----------------------------------------------------------------------
-
-
-def to_format2(text: str) -> str:
-    """Move a note's `## Claims` and `## Relations` sections and its unprefixed brain-wiki
-    fields into `bw-` frontmatter. Lines that do not parse stay where they are."""
-    from brainwiki.format._document import parse_document
-    from brainwiki.format._frontmatter import remove_field, set_fields
-
-    doc = parse_document("x.md", text)
-    if doc.frontmatter.error:
-        return text
-    lines = text.splitlines()
-    drop: set[int] = set()
-    claims: list[str] = []
-    superseded: list[str] = []
-    relations: dict[str, list[str]] = {}
-    for claim in doc.claims:
-        if claim.key is not None:
-            continue
-        meta = {k: v for k, v in claim.meta.items() if (k, v) != ("status", "superseded")}
-        value = claim_value(claim.text, meta or None)
-        (claims if claim.status == "active" else superseded).append(value)
-        drop.update(range(claim.line, claim.last_line + 1))
-    for relation in doc.relations:
-        if relation.key is not None:
-            continue
-        line = lines[relation.line - 1]
-        line = canonicalize_line(line) or line
-        match = _LINE_RE.match(line)
-        if not match:
-            continue
-        relations.setdefault(f"{PREFIX}{relation.verb}", []).append(
-            line[match.end("verb") :].strip()
-        )
-        drop.add(relation.line)
-    for name in ("claims", "relations"):
-        for section in [s for s in doc.sections if s.name == name and s.level == 2]:
-            body = range(section.heading_line + 1, section.end_line + 1)
-            leftover = [n for n in body if n not in drop and lines[n - 1].strip()]
-            if not leftover:
-                drop.update([section.heading_line, *body])
-    new_lines = [line for n, line in enumerate(lines, start=1) if n not in drop]
-    while new_lines and not new_lines[-1].strip():
-        new_lines.pop()
-    out = "\n".join(_collapse_blank(new_lines)) + "\n"
-    if "\r\n" in text:
-        out = out.replace("\n", "\r\n")
-    for key, values in relations.items():
-        out = add_items(out, key, values)
-    if claims:
-        out = add_items(out, CLAIMS, claims)
-    if superseded:
-        out = add_items(out, SUPERSEDED, superseded)
-    for name in _NOTE_FIELDS:
-        if name in doc.frontmatter.legacy_fields:
-            value = doc.frontmatter.raw.get(name)
-            out = set_fields(remove_field(out, name), {FIELDS[name]: value})
-    return out
-
-
-def is_format1(doc: ParsedDoc) -> bool:
-    """Whether a parsed note still holds body claims or relations, or unprefixed fields."""
-    if doc.frontmatter.error:
-        return False
-    return (
-        any(c.key is None for c in doc.claims)
-        or any(r.key is None for r in doc.relations)
-        or any(n in doc.frontmatter.legacy_fields for n in _NOTE_FIELDS)
-    )
-
-
-def _needs_format2(text: str) -> bool:
-    from brainwiki.format._document import parse_document
-
-    return is_format1(parse_document("x.md", text))
-
-
-def _collapse_blank(lines: list[str]) -> list[str]:
-    out: list[str] = []
-    for line in lines:
-        if not line.strip() and out and not out[-1].strip():
-            continue
-        out.append(line)
-    return out
+    return _set_list(text, key, [*list_values(text, key), *values])

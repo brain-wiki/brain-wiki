@@ -4,8 +4,6 @@ type: proposal
 title: "Import, harvest, bench"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#9-import-harvest-bench"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Import, harvest, bench
 

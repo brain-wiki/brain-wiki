@@ -5,8 +5,6 @@ title: "What we protect"
 aliases: ["10 §1"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#1-what-we-protect"
-bw-part_of:
-  - "[[security-and-privacy]]"
 ---
 # What we protect
 

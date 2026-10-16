@@ -4,8 +4,6 @@ type: proposal
 title: "Backlog"
 tags: [proposals]
 source: "docs/proposals/README.md#backlog"
-bw-part_of:
-  - "[[proposal-readme]]"
 ---
 # Backlog
 

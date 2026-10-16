@@ -4,8 +4,6 @@ type: design
 title: "Other MCP clients"
 tags: [agents]
 source: "docs/design/agents/cursor.md#other-mcp-clients"
-bw-part_of:
-  - "[[agent-cursor]]"
 ---
 # Other MCP clients
 

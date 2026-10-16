@@ -4,8 +4,6 @@ type: proposal
 title: "What leaves the machine"
 tags: [proposals]
 source: "docs/proposals/remote-sync.md#5-what-leaves-the-machine"
-bw-part_of:
-  - "[[proposal-remote-sync]]"
 ---
 # What leaves the machine
 

@@ -5,8 +5,6 @@ title: "Stability promises"
 aliases: ["07 §4"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#4-stability-promises"
-bw-part_of:
-  - "[[interfaces]]"
 ---
 # Stability promises
 

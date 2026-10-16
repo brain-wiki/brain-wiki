@@ -5,8 +5,6 @@ title: "Skill bodies (outlines)"
 aliases: ["15 §4"]
 tags: [skills-and-onboarding]
 source: "docs/design/15-skills-and-onboarding.md#4-skill-bodies-outlines"
-bw-part_of:
-  - "[[skills-and-onboarding]]"
 ---
 # Skill bodies (outlines)
 

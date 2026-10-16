@@ -25,31 +25,22 @@ _RULES = [
     _RuleInfo("BW110", "warning", "warning", False, "two paths differ only by letter case"),
     _RuleInfo("BW111", "error", "error", False, "file is not valid UTF-8"),
     _RuleInfo("BW112", "warning", "warning", False, "file looks like a sync conflict copy"),
-    _RuleInfo("BW113", "info", "info", True, "frontmatter property holds relation-like links"),
     _RuleInfo("BW114", "error", "error", False, "leftover merge conflict markers"),
     _RuleInfo("BW115", "warning", "warning", False, "database or lock file inside the brain"),
     _RuleInfo(
-        "BW116", "warning", "info", True, "note is in format 1 (body sections, unprefixed fields)"
+        "BW117", "error", "warning", True, "format 1 or 2: claims or relations outside the body"
+    ),
+    _RuleInfo("BW118", "error", "warning", False, "unknown bw- field in a note"),
+    _RuleInfo(
+        "BW119", "error", "warning", True, "bw-superseded_by is malformed or does not resolve"
+    ),
+    _RuleInfo(
+        "BW120", "error", "warning", False, "bw-sources item is malformed or does not resolve"
     ),
     _RuleInfo("BW121", "error", "error", False, "file is never edited directly"),
-    _RuleInfo("BW201", "error", "warning", False, "claim metadata comment is malformed"),
-    _RuleInfo("BW202", "error", "error", True, "duplicate claim id"),
-    _RuleInfo("BW203", "error", "warning", False, "by: points to a claim that does not exist"),
-    _RuleInfo("BW204", "warning", "info", False, "src: points to a missing file or line range"),
-    _RuleInfo("BW205", "info", "off", True, "claim has no metadata"),
-    _RuleInfo("BW206", "warning", "warning", False, "near-identical claims cite the same span"),
-    _RuleInfo("BW207", "error", "warning", False, "more than one ## Claims section"),
-    _RuleInfo("BW301", "error", "warning", False, "relation line does not parse"),
-    _RuleInfo("BW302", "error", "warning", False, "unknown relation verb or bw- field"),
-    _RuleInfo("BW303", "warning", "info", True, "alias verb instead of canonical"),
-    _RuleInfo("BW304", "error", "warning", True, "relation target does not resolve"),
-    _RuleInfo("BW305", "error", "error", False, "relation target is ambiguous"),
-    _RuleInfo("BW306", "error", "error", False, "note relates to itself"),
-    _RuleInfo("BW307", "error", "error", False, "supersession cycle"),
-    _RuleInfo("BW308", "warning", "info", True, "supersedes target is not status: superseded"),
-    _RuleInfo("BW309", "error", "error", False, "contradictory containment"),
+    _RuleInfo("BW122", "warning", "info", False, "bw-sources link does not resolve"),
+    _RuleInfo("BW307", "error", "error", False, "supersession cycle (bw-superseded_by)"),
     _RuleInfo("BW310", "warning", "info", True, "body link does not resolve"),
-    _RuleInfo("BW311", "error", "warning", False, "more than one ## Relations section"),
     _RuleInfo("BW402", "error", "error", False, "rules.md exceeds its budget"),
     _RuleInfo("BW403", "error", "warning", True, "AGENTS.md exceeds its budget"),
     _RuleInfo("BW404", "warning", "info", True, "topic folder has no hub"),
@@ -67,11 +58,24 @@ _RULES = [
     _RuleInfo("BW602", "error", "error", False, "rule origin is not owner"),
     _RuleInfo("BW603", "error", "error", False, "rule line does not parse"),
     _RuleInfo("BW701", "error", "error", False, "text matches a secret pattern"),
-    _RuleInfo("BW702", "warning", "warning", False, "instruction-like text in an unverified claim"),
 ]
 _RULES: dict[str, _RuleInfo] = {r.code: r for r in _RULES}
 # The frontmatter rules `brain validate` runs (design doc 06 §3).
-SCHEMA_CODES = ("BW101", "BW102", "BW103", "BW104", "BW105", "BW106", "BW121", "BW302")
+SCHEMA_CODES = (
+    "BW101",
+    "BW102",
+    "BW103",
+    "BW104",
+    "BW105",
+    "BW106",
+    "BW117",
+    "BW118",
+    "BW119",
+    "BW120",
+    "BW121",
+    "BW122",
+    "BW307",
+)
 
 
 def severity(code: str, profile: str) -> str:

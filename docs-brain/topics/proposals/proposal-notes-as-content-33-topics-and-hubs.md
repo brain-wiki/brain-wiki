@@ -4,8 +4,6 @@ type: proposal
 title: "Topics and hubs"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#33-topics-and-hubs"
-bw-part_of:
-  - "[[proposal-notes-as-content-3-format-3]]"
 ---
 # Topics and hubs
 

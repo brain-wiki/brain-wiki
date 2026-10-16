@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 11
+SCHEMA_VERSION = 12
 
 DDL = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -62,38 +62,17 @@ CREATE TABLE path_history (
   PRIMARY KEY (node_id, path)
 );
 
-CREATE TABLE claims (
-  id            TEXT NOT NULL,
-  node_id       TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-  line          INTEGER NOT NULL,
-  text          TEXT NOT NULL,
-  status        TEXT NOT NULL,
-  superseded_by TEXT,
-  origin        TEXT,
-  inputs         TEXT,
-  asserted_at   TEXT,
-  sources       TEXT NOT NULL DEFAULT '[]',
-  PRIMARY KEY (node_id, id)
-);
-CREATE INDEX claims_id ON claims(id);
--- The briefing counts unverified claims; few claims are, so scanning only them is cheap.
-CREATE INDEX claims_unverified ON claims(node_id) WHERE status = 'active' AND inputs IN ('external', 'unknown');
-
+-- Where links point (02 §6.5): body links (`links_to`), plus the note links held in metadata,
+-- `bw-superseded_by` (`superseded_by`) and `bw-sources` (`source`). `src` is always the note
+-- that holds the link (`declared_in`); `dst` is the note it resolves to (`other`), or NULL.
 CREATE TABLE edges (
   id          INTEGER PRIMARY KEY,
   src         TEXT,
   dst         TEXT,
   rel         TEXT NOT NULL,
-  is_guard    INTEGER NOT NULL,
-  symmetric   INTEGER NOT NULL,
-  verb        TEXT NOT NULL,
   written     TEXT NOT NULL,
-  qualifier   TEXT,
-  attrs       TEXT NOT NULL DEFAULT '{}',
-  note        TEXT,
   declared_in TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
   other       TEXT,
-  flip        INTEGER NOT NULL DEFAULT 0,
   line        INTEGER NOT NULL,
   raw_target  TEXT NOT NULL,
   ambiguous   INTEGER NOT NULL DEFAULT 0
@@ -102,7 +81,6 @@ CREATE INDEX edges_src ON edges(src, rel);
 CREATE INDEX edges_dst ON edges(dst, rel);
 CREATE INDEX edges_declared ON edges(declared_in);
 CREATE INDEX edges_other ON edges(other);
-CREATE INDEX edges_rel ON edges(rel, src, dst);
 
 CREATE TABLE docs (
   rowid    INTEGER PRIMARY KEY,
@@ -111,11 +89,10 @@ CREATE TABLE docs (
   aliases  TEXT NOT NULL,
   tags     TEXT NOT NULL,
   headings TEXT NOT NULL,
-  body     TEXT NOT NULL,
-  history  TEXT NOT NULL
+  body     TEXT NOT NULL
 );
 CREATE VIRTUAL TABLE fts USING fts5(
-  title, aliases, tags, headings, body, history,
+  title, aliases, tags, headings, body,
   content='docs', content_rowid='rowid',
   tokenize='porter unicode61 remove_diacritics 2'
 );
@@ -135,16 +112,6 @@ CREATE TABLE episode_hashes (
   sha256     TEXT NOT NULL,
   path       TEXT NOT NULL,
   first_seen TEXT NOT NULL
-);
-
--- The last recorded version of each note (05 §2.3): what a run last wrote, what `brain check`
--- last recorded, or the file as a fresh index first saw it. A NULL sha256 records the note as
--- absent, so a note created outside brain-wiki after the index was built is a pending creation.
-CREATE TABLE baselines (
-  path    TEXT PRIMARY KEY,
-  sha256  TEXT,
-  content BLOB,
-  since   TEXT NOT NULL
 );
 
 -- File-local lint results keyed by content hash, so whole-brain lint only re-checks changed files.

@@ -4,8 +4,6 @@ type: guide
 title: "Which agent may do what"
 tags: [user-guide]
 source: "docs/user/agents.md#which-agent-may-do-what"
-bw-part_of:
-  - "[[user-agents]]"
 ---
 # Which agent may do what
 

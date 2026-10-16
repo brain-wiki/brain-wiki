@@ -4,8 +4,6 @@ type: guide
 title: "Undo (Maintenance)"
 tags: [user-guide]
 source: "docs/user/maintenance.md#undo"
-bw-part_of:
-  - "[[user-maintenance]]"
 ---
 # Undo (Maintenance)
 

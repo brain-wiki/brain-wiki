@@ -5,8 +5,6 @@ title: "Hooks"
 aliases: ["08 §5"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#5-hooks"
-bw-part_of:
-  - "[[agent-integrations]]"
 ---
 # Hooks
 

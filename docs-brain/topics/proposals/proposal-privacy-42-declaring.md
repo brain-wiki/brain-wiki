@@ -4,8 +4,6 @@ type: proposal
 title: "Declaring"
 tags: [proposals]
 source: "docs/proposals/privacy.md#42-declaring"
-bw-part_of:
-  - "[[proposal-privacy-4-draft-model]]"
 ---
 # Declaring
 

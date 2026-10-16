@@ -4,8 +4,6 @@ type: proposal
 title: "Body (Notes as content (format 3))"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#32-body"
-bw-part_of:
-  - "[[proposal-notes-as-content-3-format-3]]"
 ---
 # Body (Notes as content (format 3))
 

@@ -4,8 +4,6 @@ type: proposal
 title: "Why it was removed (Host hooks: briefing, capture, and recall)"
 tags: [proposals]
 source: "docs/proposals/hooks.md#2-why-it-was-removed"
-bw-part_of:
-  - "[[proposal-hooks]]"
 ---
 # Why it was removed (Host hooks: briefing, capture, and recall)
 

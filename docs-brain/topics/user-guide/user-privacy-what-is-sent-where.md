@@ -4,8 +4,6 @@ type: guide
 title: "What is sent where"
 tags: [user-guide]
 source: "docs/user/privacy.md#what-is-sent-where"
-bw-part_of:
-  - "[[user-privacy]]"
 ---
 # What is sent where
 

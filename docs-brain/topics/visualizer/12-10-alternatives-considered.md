@@ -5,8 +5,6 @@ title: "Alternatives considered (Visualizer)"
 aliases: ["12 §10"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#10-alternatives-considered"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # Alternatives considered (Visualizer)
 

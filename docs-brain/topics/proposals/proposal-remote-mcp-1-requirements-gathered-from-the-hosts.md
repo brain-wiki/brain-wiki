@@ -4,8 +4,6 @@ type: proposal
 title: "Requirements gathered from the hosts"
 tags: [proposals]
 source: "docs/proposals/remote-mcp.md#1-requirements-gathered-from-the-hosts"
-bw-part_of:
-  - "[[proposal-remote-mcp]]"
 ---
 # Requirements gathered from the hosts
 

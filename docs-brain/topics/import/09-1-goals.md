@@ -5,8 +5,6 @@ title: "Goals (Import)"
 aliases: ["09 §1"]
 tags: [import]
 source: "docs/design/09-import.md#1-goals"
-bw-part_of:
-  - "[[import]]"
 ---
 # Goals (Import)
 

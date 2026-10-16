@@ -5,8 +5,6 @@ title: "T14: Supply chain"
 aliases: ["threat T14"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
 ---
 # T14: Supply chain
 

@@ -5,8 +5,6 @@ title: "Matching"
 aliases: ["04 §6.2"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#62-matching"
-bw-part_of:
-  - "[[04-6-search]]"
 ---
 # Matching
 

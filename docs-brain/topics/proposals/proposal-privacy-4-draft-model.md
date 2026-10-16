@@ -4,8 +4,6 @@ type: proposal
 title: "Draft model"
 tags: [proposals]
 source: "docs/proposals/privacy.md#4-draft-model"
-bw-part_of:
-  - "[[proposal-privacy]]"
 ---
 # Draft model
 

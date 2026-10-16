@@ -5,8 +5,6 @@ title: "MCP server"
 aliases: ["07 §3"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#3-mcp-server"
-bw-part_of:
-  - "[[interfaces]]"
 ---
 # MCP server
 

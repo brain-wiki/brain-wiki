@@ -5,8 +5,6 @@ title: "T7: Hostile files attack the tools"
 aliases: ["threat T7"]
 tags: [security-and-privacy]
 source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
-bw-part_of:
-  - "[[10-3-threats-and-mitigations]]"
 ---
 # T7: Hostile files attack the tools
 

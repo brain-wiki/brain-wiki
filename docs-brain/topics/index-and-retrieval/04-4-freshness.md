@@ -5,8 +5,6 @@ title: "Freshness"
 aliases: ["04 §4"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#4-freshness"
-bw-part_of:
-  - "[[index-and-retrieval]]"
 ---
 # Freshness
 

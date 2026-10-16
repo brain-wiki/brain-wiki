@@ -53,10 +53,6 @@ def ulid_datetime(ulid: str) -> datetime:
     return datetime.fromtimestamp(value / 1000, tz=UTC)
 
 
-def claim_id() -> str:
-    return "c-" + new_ulid()
-
-
 def rule_id() -> str:
     return "r-" + new_ulid()
 

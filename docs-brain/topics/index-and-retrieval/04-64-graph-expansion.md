@@ -5,8 +5,6 @@ title: "Graph expansion"
 aliases: ["04 §6.4"]
 tags: [index-and-retrieval]
 source: "docs/design/04-index-and-retrieval.md#64-graph-expansion"
-bw-part_of:
-  - "[[04-6-search]]"
 ---
 # Graph expansion
 

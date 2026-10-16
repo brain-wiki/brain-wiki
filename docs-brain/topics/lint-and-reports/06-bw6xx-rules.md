@@ -4,8 +4,6 @@ type: design
 title: "BW6xx: rules"
 tags: [lint-and-reports]
 source: "docs/design/06-lint-and-reports.md#bw6xx-rules"
-bw-part_of:
-  - "[[06-3-rule-catalog]]"
 ---
 # BW6xx: rules
 

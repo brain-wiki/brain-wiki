@@ -4,8 +4,6 @@ type: proposal
 title: "Design proposals"
 tags: [proposals]
 source: "docs/proposals/README.md"
-bw-part_of:
-  - "[[proposals]]"
 ---
 # Design proposals
 

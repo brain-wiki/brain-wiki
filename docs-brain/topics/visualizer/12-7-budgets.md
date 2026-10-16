@@ -5,8 +5,6 @@ title: "Budgets"
 aliases: ["12 §7"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#7-budgets"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # Budgets
 

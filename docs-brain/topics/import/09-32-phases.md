@@ -5,8 +5,6 @@ title: "Phases"
 aliases: ["09 §3.2"]
 tags: [import]
 source: "docs/design/09-import.md#32-phases"
-bw-part_of:
-  - "[[09-3-overlay]]"
 ---
 # Phases
 

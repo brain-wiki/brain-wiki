@@ -12,7 +12,7 @@ from brainwiki.config import MANIFEST, parse_manifest
 from brainwiki.errors import Conflict, UsageError
 from brainwiki.format import RULES_HEADER, replace_block
 from brainwiki.ids import is_ulid, new_ulid
-from brainwiki.importer._normalize import convert_relations, identity_and_status
+from brainwiki.importer._normalize import identity_and_status
 from brainwiki.importer._survey import Survey, survey
 from brainwiki.runs import Run, RunRecord, is_work_tree, run_git
 
@@ -69,7 +69,6 @@ def report(found: Survey, name: str) -> str:
         + ", ".join(f"{s} ← {f}/" for s, f in found.topics.items()),
         f"- Ignored folders: {', '.join(found.ignore) or 'none'}",
         f"- Non-standard status values: {_tally(found.statuses)}",
-        f"- Relation-like properties: {_tally(found.relation_props)}",
         f"- Unresolved links: {sum(found.unresolved.values())}"
         + (
             f" (top: {', '.join(t for t, _ in found.unresolved.most_common(5))})"
@@ -83,10 +82,9 @@ def report(found: Survey, name: str) -> str:
         "",
         "- 0 · Adopt: adds brain.toml, AGENTS.md (managed block), rules.md, log.md, inbox/, archive/, reports/. "
         "Touches no existing note.",
-        f"- 1 · Relations: converts {sum(found.relation_props.values())} relation-like properties into bw- relation fields.",
-        f"- 2 · Identity and status: mints ids for {counts['notes'] - counts['with_id']} notes; "
+        f"- 1 · Identity and status: mints ids for {counts['notes'] - counts['with_id']} notes; "
         f"maps {sum(found.statuses.values())} status values into status + stage.",
-        "- 3 · Structure: creates missing hubs and lists notes in them.",
+        "- 2 · Structure: creates missing hubs and lists notes in them.",
         "",
         "Run each phase separately: `brain import PATH --overlay --apply [--phase N]`.",
         "",
@@ -119,7 +117,7 @@ def already_brain(root: Path) -> str | None:
     names = [n for n, p in load_user_config().brains.items() if p.expanduser().resolve() == root]
     if names:
         return (
-            f"{root} is already a brain, registered as {names[0]!r}; for phases 1-3 run "
+            f"{root} is already a brain, registered as {names[0]!r}; for phases 1-2 run "
             f"`brain import {root} --overlay --phase N`"
         )
     return f"{root} is already a brain but not registered; use `brain brains add NAME {root}`"
@@ -195,27 +193,23 @@ def _stable_id(brain_id: str, path: str, text: str) -> Callable[[], str]:
 
 
 def apply_phase(
-    engine: Engine, phase: int, *, drop_converted: bool = False, dry_run: bool = False
+    engine: Engine, phase: int, *, dry_run: bool = False
 ) -> tuple[RunRecord | None, str]:
-    """Phases 1–3, each one undoable run. Returns (record, diff)."""
+    """Phases 1 and 2, each one undoable run. Returns (record, diff)."""
     from brainwiki.lint import lint
     from brainwiki.lint import plan as plan_fixes
 
-    if phase not in (1, 2, 3):
-        raise UsageError("--phase must be 1, 2, or 3 (phase 0 is the adopt step)")
+    if phase not in (1, 2):
+        raise UsageError("--phase must be 1 or 2 (phase 0 is the adopt step)")
     if not dry_run:
         _check_clean_git(engine.brain.root)
     engine.scan(force=True)
-    if phase == 3:
+    if phase == 2:
         result = lint(engine, select=["BW404", "BW405"], fixes=True)
         run, _ = plan_fixes(engine, result, include_info=True)
-        run.kind, run.summary = "import", "import phase 3: hubs"
+        run.kind, run.summary = "import", "import phase 2: hubs"
     else:
-        run = Run(
-            engine,
-            "import",
-            summary=f"import phase {phase}: {'relations' if phase == 1 else 'ids and status'}",
-        )
+        run = Run(engine, "import", summary="import phase 1: ids and status")
         rows = engine.db.execute(
             "SELECT f.path FROM files f JOIN nodes n ON n.id = f.node_id WHERE n.kind IN ('note', 'hub') AND f.parse_errors = 0"
         ).fetchall()
@@ -223,12 +217,7 @@ def apply_phase(
             text = run.read(row["path"])
             if text is None:
                 continue
-            if phase == 1:
-                new = convert_relations(text, drop=drop_converted)
-            else:
-                new = identity_and_status(
-                    text, mint=_stable_id(engine.manifest.id, row["path"], text)
-                )
+            new = identity_and_status(text, mint=_stable_id(engine.manifest.id, row["path"], text))
             if new != text:
                 run.write(row["path"], new)
     if not run.entries:

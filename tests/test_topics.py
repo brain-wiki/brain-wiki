@@ -20,7 +20,7 @@ from brainwiki.runs._undo import undo
 from brainwiki.viz._lod import tree_groups
 from brainwiki.write._move import move_note
 
-MANIFEST = """format = 2
+MANIFEST = """format = 3
 id = "01M4KT3JPRY4W6766VT18CQS8Z"
 [topics.rin-sato]
 title = "Rin Sato"
@@ -81,7 +81,7 @@ def people(brain_dir: Path) -> Path:
     return brain_dir
 
 
-def test_nested_topic_takes_its_notes_and_part_of(people: Path):
+def test_nested_topic_takes_its_notes(people: Path):
     with Engine(open_brain(people)) as e:
         e.scan(force=True)
         row = e.db.execute(
@@ -92,13 +92,13 @@ def test_nested_topic_takes_its_notes_and_part_of(people: Path):
             "SELECT kind FROM nodes WHERE path='topics/people/rin-sato/index.md'"
         ).fetchone()
         assert hub["kind"] == "hub"
-        up = neighbors(e, "topics/people/rin-sato/index.md", relations=["part_of"], direction="out")
+        up = neighbors(e, "topics/people/rin-sato/index.md", direction="in")
         assert [n["path"] for n in up["nodes"] if n["id"] != up["root"]] == [
             "topics/people/index.md"
         ]
         hits = search(e, "", topics=["people"])["results"]
         assert "topics/people/rin-sato/priority.md" in {h["path"] for h in hits}
-        assert not [p for p in lint(e).problems if p.code in ("BW304", "BW404")]
+        assert not [p for p in lint(e).problems if p.code == "BW404"]
         text = orient(e)["text"]
         assert (
             "**people**" in text and "1 sub-topics: rin-sato" in text and "**rin-sato**" not in text

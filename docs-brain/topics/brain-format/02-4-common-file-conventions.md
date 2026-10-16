@@ -5,8 +5,6 @@ title: "Common file conventions"
 aliases: ["02 §4"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#4-common-file-conventions"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # Common file conventions
 

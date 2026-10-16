@@ -4,8 +4,6 @@ type: proposal
 title: "Scenario set"
 tags: [proposals]
 source: "docs/proposals/consolidation-bench.md#1-scenario-set"
-bw-part_of:
-  - "[[proposal-consolidation-bench]]"
 ---
 # Scenario set
 

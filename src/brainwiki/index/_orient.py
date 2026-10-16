@@ -64,15 +64,6 @@ def brief_stats(engine: Engine) -> dict[str, Any]:
                    MIN(CASE WHEN length(fm_id) = 26 THEN fm_id END) AS oldest
             FROM nodes n WHERE kind = 'episode'"""
     ).fetchone()
-    pairs = engine.db.execute(
-        """SELECT DISTINCT e.src, e.dst, a.topic AS ta, b.topic AS tb FROM edges e
-            JOIN nodes a ON a.id = e.src JOIN nodes b ON b.id = e.dst
-            WHERE e.rel = 'conflicts_with' AND a.status = 'active' AND b.status = 'active'"""
-    ).fetchall()
-    conflicts: dict[str, int] = {}
-    for pair in pairs:
-        for topic in {pair["ta"], pair["tb"]} - {None}:
-            conflicts[topic] = conflicts.get(topic, 0) + 1
     return {
         "notes": notes,
         "span": (first, last) if last else None,
@@ -85,8 +76,6 @@ def brief_stats(engine: Engine) -> dict[str, Any]:
         },
         "pending": episodes["pending"],
         "oldest_episode": episodes["oldest"],
-        "conflicts": len(pairs),  # active conflicts between two notes
-        "conflicts_by_topic": conflicts,
     }
 
 
@@ -98,7 +87,7 @@ def topic_rows(engine: Engine, stats: dict[str, Any] | None = None) -> list[dict
     conn = engine.db
     tree = engine.topics
     stats = stats or brief_stats(engine)
-    by_topic, conflict_counts = stats["by_topic"], stats["conflicts_by_topic"]
+    by_topic = stats["by_topic"]
     hubs: dict[str, Any] = {}
     for r in conn.execute(
         "SELECT topic, title, path, props FROM nodes WHERE kind='hub' ORDER BY path"
@@ -124,7 +113,6 @@ def topic_rows(engine: Engine, stats: dict[str, Any] | None = None) -> list[dict
                 "description": description,
                 "notes": stat["notes"],
                 "updated": stat["updated"],
-                "conflicts": conflict_counts.get(slug, 0),
             }
         )
     by_slug = {r["slug"]: r for r in rows}
@@ -137,7 +125,6 @@ def topic_rows(engine: Engine, stats: dict[str, Any] | None = None) -> list[dict
         ]
         row["total_notes"] = row["notes"] + sum(r["notes"] for r in below)
         row["total_updated"] = max([row["updated"], *(r["updated"] for r in below)])
-        row["total_conflicts"] = row["conflicts"] + sum(r["conflicts"] for r in below)
     rows.sort(key=lambda r: r["updated"], reverse=True)
     return rows
 
@@ -169,17 +156,6 @@ def _recent_changes(engine: Engine, count: int = 5) -> list[str]:
     return entries[-count:][::-1]
 
 
-def _open_issues(engine: Engine, stats: dict[str, Any]) -> dict[str, int]:
-    """Active conflicts between notes, and unverified claims in notes."""
-    unverified = engine.db.execute(
-        # CROSS JOIN starts from the few unverified claims (claims_unverified), not every note.
-        """SELECT COUNT(*) FROM claims c CROSS JOIN nodes n ON n.id = c.node_id
-            WHERE c.status = 'active' AND c.inputs IN ('external', 'unknown')
-              AND n.kind IN ('note', 'hub')"""
-    ).fetchone()[0]
-    return {"conflicts": stats["conflicts"], "unverified_claims": unverified}
-
-
 def _contents(
     engine: Engine, stats: dict[str, Any], topics: list[dict[str, Any]]
 ) -> dict[str, Any]:
@@ -193,7 +169,6 @@ def _contents(
             (t["slug"], t["notes"]) for t in sorted(topics, key=lambda t: -t["notes"])[:5]
         ],
         "homes": stats["homes"],
-        **_open_issues(engine, stats),
     }
 
 
@@ -209,11 +184,31 @@ def _query_examples(info: dict[str, Any], topics: list[dict[str, Any]]) -> list[
         lines.append(
             f'- `brain_search("", type=["{latest}"], sort="recent", limit=3)`: the latest {latest} notes.'
         )
-    why_type = ', type=["decision"]' if "decision" in info["types"] else ""
-    lines.append(
-        f'- `brain_search("{other}"{why_type}, intent="why")`: why it is this way, with prerequisites.'
-    )
+    hub = next((t["hub"] for t in by_size if t["title"] == other and t["hub"]), None)
+    if hub:
+        lines.append(f'- `brain_neighbors("{hub}")`: what a note links to, and what links to it.')
     return lines
+
+
+def _writing_lines(engine: Engine, topics: list[dict[str, Any]]) -> list[str]:
+    """How to write a valid note, for agents that may edit (02 §6)."""
+    from brainwiki.format import STATUSES
+
+    layout = engine.manifest.layout
+    slugs = [t["slug"] for t in sorted(topics, key=lambda t: -t["notes"]) if t["parent"] is None]
+    known = ", ".join(slugs[:6]) + (", …" if len(slugs) > 6 else "") if slugs else "none yet"
+    return [
+        "## Writing notes",
+        f"- Edit or create Markdown files at `{layout.topics_dir}/<topic>/<slug>.md` (topics: "
+        f"{known}); a new topic is a folder with an `{layout.hub_filename}` hub.",
+        "- Frontmatter is metadata only: `type` (note, decision, howto, person, …), `title`, "
+        f'`status` ({" | ".join(STATUSES)}), `bw-superseded_by: "[[newer note]]"` with '
+        '`status: superseded`, `bw-sources: ["[[archive/episodes/…]]", "https://…"]`, '
+        "`tags`, `aliases`, `updated`. Keep an existing `id`.",
+        "- Body: a one-paragraph summary, then one fact per bullet; link notes with "
+        "`[[wikilinks]]` inside sentences.",
+        "- Then run `brain_validate` on the files you changed and fix what it reports.",
+    ]
 
 
 def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str, Any]:
@@ -252,13 +247,6 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
                 f"- {label}: "
                 + ", ".join(f"topic {s} ({c} {kind} notes)" for s, c in info["homes"][kind])
             )
-    issues = []
-    if info["conflicts"]:
-        issues.append(f"{info['conflicts']} active conflicts")
-    if info["unverified_claims"]:
-        issues.append(f"{info['unverified_claims']} unverified claims")
-    if issues:
-        content_lines.append("- Open issues: " + ", ".join(issues))
     if len(content_lines) == 1:
         content_lines.append("(empty so far)")
     inbox_lines = [
@@ -278,6 +266,7 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         )
     inbox_lines += extra_lines or []
     howto = ["## How to query", *_query_examples(info, topics)]
+    writing = _writing_lines(engine, topics) if engine.profile.can("edit") else []
     changes = _recent_changes(engine)
     change_lines = ["## Recent changes"] + [f"- {c}" for c in changes]
     if info["updated_7d"]:
@@ -292,7 +281,6 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         subs = t["sub_topics"]
         bits.append(
             f"({t['total_notes']} notes, updated {t['total_updated'] or 'n/a'}"
-            + (f", {t['total_conflicts']} open conflicts" if t["total_conflicts"] else "")
             + (
                 f"; {len(subs)} sub-topics: "
                 + ", ".join(subs[:4])
@@ -307,7 +295,7 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
     def size(lines: list[str]) -> int:
         return sum(len(line) + 1 for line in lines) + 1
 
-    fixed = [header, *rule_lines, *content_lines, *inbox_lines, *howto]
+    fixed = [header, *rule_lines, *content_lines, *inbox_lines, *howto, *writing]
     used = size(fixed) + 8
     if change_lines and used + size(change_lines) + 200 > budget_chars:
         change_lines = []  # keep room for at least a few topics
@@ -335,6 +323,8 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
     if change_lines:
         parts += [*change_lines, ""]
     parts += [*inbox_lines, "", *howto]
+    if writing:
+        parts += ["", *writing]
     text = "\n".join(parts)
     if len(text) > budget_chars:
         text = text[: budget_chars - 1] + "…"

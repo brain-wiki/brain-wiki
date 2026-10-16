@@ -4,8 +4,6 @@ type: guide
 title: "What agents can read"
 tags: [user-guide]
 source: "docs/user/privacy.md#what-agents-can-read"
-bw-part_of:
-  - "[[user-privacy]]"
 ---
 # What agents can read
 

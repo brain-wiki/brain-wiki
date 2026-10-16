@@ -5,8 +5,6 @@ title: "Goals (Overview)"
 aliases: ["01 §3"]
 tags: [overview]
 source: "docs/design/01-overview.md#3-goals"
-bw-part_of:
-  - "[[overview]]"
 ---
 # Goals (Overview)
 

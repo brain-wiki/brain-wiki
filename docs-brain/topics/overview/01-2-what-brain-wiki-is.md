@@ -5,8 +5,6 @@ title: "What brain-wiki is"
 aliases: ["01 §2"]
 tags: [overview]
 source: "docs/design/01-overview.md#2-what-brain-wiki-is"
-bw-part_of:
-  - "[[overview]]"
 ---
 # What brain-wiki is
 

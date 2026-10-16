@@ -5,8 +5,6 @@ title: "Identifiers"
 aliases: ["02 §5"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#5-identifiers"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # Identifiers
 

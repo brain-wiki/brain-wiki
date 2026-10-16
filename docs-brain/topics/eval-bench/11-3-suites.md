@@ -5,8 +5,6 @@ title: "Suites"
 aliases: ["11 §3"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#3-suites"
-bw-part_of:
-  - "[[eval-bench]]"
 ---
 # Suites
 

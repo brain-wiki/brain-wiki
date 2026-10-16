@@ -5,8 +5,6 @@ title: "Episodes (Brain format)"
 aliases: ["02 §9"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#9-episodes"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # Episodes (Brain format)
 

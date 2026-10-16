@@ -5,8 +5,6 @@ title: "Alternatives considered (Config and storage)"
 aliases: ["03 §9"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#9-alternatives-considered"
-bw-part_of:
-  - "[[config-and-storage]]"
 ---
 # Alternatives considered (Config and storage)
 

@@ -4,8 +4,6 @@ type: proposal
 title: "Interface changes"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#11-interface-changes"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Interface changes
 

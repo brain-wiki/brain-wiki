@@ -5,8 +5,6 @@ title: "Test matrix"
 aliases: ["08 §9"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#9-test-matrix"
-bw-part_of:
-  - "[[agent-integrations]]"
 ---
 # Test matrix
 

@@ -4,8 +4,6 @@ type: guide
 title: "Commands"
 tags: [user-guide]
 source: "docs/user/reference.md#commands"
-bw-part_of:
-  - "[[user-reference]]"
 ---
 # Commands
 

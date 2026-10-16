@@ -5,8 +5,6 @@ title: "Levels (semantic zoom)"
 aliases: ["12 §2"]
 tags: [visualizer]
 source: "docs/design/12-visualizer.md#2-levels-semantic-zoom"
-bw-part_of:
-  - "[[visualizer]]"
 ---
 # Levels (semantic zoom)
 

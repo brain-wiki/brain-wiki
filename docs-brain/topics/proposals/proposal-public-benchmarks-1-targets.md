@@ -4,8 +4,6 @@ type: proposal
 title: "Targets"
 tags: [proposals]
 source: "docs/proposals/public-benchmarks.md#1-targets"
-bw-part_of:
-  - "[[proposal-public-benchmarks]]"
 ---
 # Targets
 

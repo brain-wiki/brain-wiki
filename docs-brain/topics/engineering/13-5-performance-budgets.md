@@ -5,8 +5,6 @@ title: "Performance budgets (Engineering)"
 aliases: ["13 §5"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#5-performance-budgets"
-bw-part_of:
-  - "[[engineering]]"
 ---
 # Performance budgets (Engineering)
 

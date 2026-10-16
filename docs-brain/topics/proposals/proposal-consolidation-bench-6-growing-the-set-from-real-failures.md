@@ -4,8 +4,6 @@ type: proposal
 title: "Growing the set from real failures"
 tags: [proposals]
 source: "docs/proposals/consolidation-bench.md#6-growing-the-set-from-real-failures"
-bw-part_of:
-  - "[[proposal-consolidation-bench]]"
 ---
 # Growing the set from real failures
 

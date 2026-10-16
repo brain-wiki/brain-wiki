@@ -180,7 +180,7 @@ def test_overlay_survey_adopt_and_phases(tmp_path: Path):
     found = survey(root)
     assert found.obsidian and set(found.ignore) == {"Attachments", "Templates"}
     assert found.topics == {"projects": "01 Projects", "areas": "Areas"}
-    assert found.statuses == {"wip": 1, "deprecated": 1} and found.relation_props == {"up": 1}
+    assert found.statuses == {"wip": 1, "deprecated": 1}
     before = {p: (root / p).read_text() for p in ("01 Projects/Lumen.md", "01 Projects/Search.md")}
     assert main(["import", str(root), "--overlay"]) == 0
     assert not (root / "brain.toml").exists()
@@ -196,19 +196,17 @@ def test_overlay_survey_adopt_and_phases(tmp_path: Path):
             )
         }
         assert topics == {"projects", "areas"}
-        record, _ = overlay.apply_phase(engine, 1)
-        lumen = (root / "01 Projects/Lumen.md").read_text()
-        assert 'bw-part_of:\n  - "[[index]]"' in lumen and "up: '[[index]]'" in lumen
-        overlay.apply_phase(engine, 2)
+        overlay.apply_phase(engine, 1)
         lumen = (root / "01 Projects/Lumen.md").read_text()
         assert (
             "status: active" in lumen
             and "stage: wip" in lumen
             and "id: " in lumen
             and "tags: [lumen, notes]" in lumen
+            and "up: '[[index]]'" in lumen  # their property, left as it is
         )
         assert "status: superseded" in (root / "01 Projects/Search.md").read_text()
-        overlay.apply_phase(engine, 3)
+        overlay.apply_phase(engine, 2)
         assert (root / "Areas/index.md").exists()
         assert not [p for p in lint(engine).problems if p.severity == "error"]
         undo(engine)

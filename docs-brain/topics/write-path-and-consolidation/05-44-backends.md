@@ -5,8 +5,6 @@ title: "Backends"
 aliases: ["05 §4.4"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#44-backends"
-bw-part_of:
-  - "[[05-4-consolidation]]"
 ---
 # Backends
 

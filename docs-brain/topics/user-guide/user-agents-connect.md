@@ -4,8 +4,6 @@ type: guide
 title: "Connect"
 tags: [user-guide]
 source: "docs/user/agents.md#connect"
-bw-part_of:
-  - "[[user-agents]]"
 ---
 # Connect
 

@@ -5,8 +5,6 @@ title: "Topic hubs"
 aliases: ["02 §8"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#8-topic-hubs"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # Topic hubs
 

@@ -5,8 +5,6 @@ title: "Conventions"
 aliases: ["07 §2.2"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#22-conventions"
-bw-part_of:
-  - "[[07-2-cli]]"
 ---
 # Conventions
 

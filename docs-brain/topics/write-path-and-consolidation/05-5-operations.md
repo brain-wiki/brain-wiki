@@ -5,8 +5,6 @@ title: "Operations"
 aliases: ["05 §5"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#5-operations"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # Operations
 

@@ -5,8 +5,6 @@ title: "Prompts"
 aliases: ["07 §3.5"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#35-prompts"
-bw-part_of:
-  - "[[07-3-mcp-server]]"
 ---
 # Prompts
 

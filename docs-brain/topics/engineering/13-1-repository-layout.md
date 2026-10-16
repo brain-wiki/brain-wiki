@@ -5,8 +5,6 @@ title: "Repository layout"
 aliases: ["13 §1"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#1-repository-layout"
-bw-part_of:
-  - "[[engineering]]"
 ---
 # Repository layout
 

@@ -5,8 +5,6 @@ title: "The skills (Agent integrations)"
 aliases: ["08 §3.1"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#31-the-skills"
-bw-part_of:
-  - "[[08-3-the-plugin-bundle]]"
 ---
 # The skills (Agent integrations)
 

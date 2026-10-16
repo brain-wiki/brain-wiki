@@ -9,7 +9,6 @@ import importlib
 import os
 import sys
 from dataclasses import dataclass
-from enum import StrEnum
 from types import SimpleNamespace
 from typing import Annotated, Any, Literal
 
@@ -384,14 +383,6 @@ def _search(
     cursor: Annotated[
         str | None, typer.Option("--cursor", help="next_cursor from the previous page")
     ] = None,
-    intent: Annotated[
-        Literal["none", "context", "why", "impact", "history", "related"],
-        typer.Option(
-            "--intent",
-            help="also show hits' parents (context), dependencies (why), dependents "
-            "(impact), supersessions (history), or links (related)",
-        ),
-    ] = "context",
     include: Annotated[
         str, typer.Option("--include", help="comma list: archived,episodes,archived_episodes")
     ] = "",
@@ -422,7 +413,6 @@ def _search(
         until=until,
         sort=sort,
         cursor=cursor,
-        intent=intent,
         include=include,
         no_episodes=no_episodes,
         count=count,
@@ -439,7 +429,7 @@ def _read(
         Literal["outline", "full", "section", "raw"] | None,
         typer.Option(
             "--mode",
-            help="headings and claims, the body, one section, or the raw file "
+            help="summary, headings, and links; the body; one section; or the raw file "
             "(default: full; outline for hubs)",
         ),
     ] = None,
@@ -453,32 +443,13 @@ def _read(
     return _call(ctx, "read", target=target, mode=mode, section=section)
 
 
-class _Relation(StrEnum):
-    part_of = "part_of"
-    depends_on = "depends_on"
-    conflicts_with = "conflicts_with"
-    supersedes = "supersedes"
-    related_to = "related_to"
-    links_to = "links_to"
-
-
-@_app.command(
-    "neighbors",
-    help="follow a note's relations by their meaning (e.g. what depends on it), "
-    "not by which file declares them",
-)
+@_app.command("neighbors", help="follow a note's links: what it links to, what links to it")
 def _neighbors(
     ctx: typer.Context,
     target: _Target,
-    relations: Annotated[
-        list[_Relation] | None,
-        typer.Option(
-            "--rel", help="follow only this relation (repeatable; default: all but links_to)"
-        ),
-    ] = None,
     direction: Annotated[
         Literal["out", "in", "both"],
-        typer.Option("--direction", help="out: what it points to; in: what points to it"),
+        typer.Option("--direction", help="out: what it links to; in: what links to it"),
     ] = "both",
     depth: Annotated[int, typer.Option("--depth", min=1, help="hops to follow (1-3)")] = 1,
     limit: Annotated[
@@ -493,7 +464,6 @@ def _neighbors(
         ctx,
         "neighbors",
         target=target,
-        relations=[r.value for r in relations] if relations else None,
         direction=direction,
         depth=depth,
         limit=limit,
@@ -514,9 +484,7 @@ def _topics(
     return _call(ctx, "topics", topic=topic)
 
 
-@_app.command(
-    "links", help="what a note links to, as written in its file (body links and typed relations)"
-)
+@_app.command("links", help="what a note links to: body links, bw-superseded_by, and bw-sources")
 def _links(
     ctx: typer.Context,
     target: _Target,
@@ -1195,7 +1163,7 @@ def _import(
         int | None,
         typer.Option(
             "--phase",
-            help="overlay phase: 0 adopt (the default), 1 relations, 2 ids and status, 3 hubs",
+            help="overlay phase: 0 adopt (the default), 1 ids and status, 2 hubs",
         ),
     ] = None,
     apply: Annotated[

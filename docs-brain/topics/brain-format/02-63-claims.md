@@ -5,8 +5,6 @@ title: "Claims"
 aliases: ["02 §6.3"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#63-claims"
-bw-part_of:
-  - "[[02-6-notes]]"
 ---
 # Claims
 

@@ -5,8 +5,6 @@ title: "Principles"
 aliases: ["11 §2"]
 tags: [eval-bench]
 source: "docs/design/11-eval-bench.md#2-principles"
-bw-part_of:
-  - "[[eval-bench]]"
 ---
 # Principles
 

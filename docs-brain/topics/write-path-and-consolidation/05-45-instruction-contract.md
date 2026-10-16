@@ -5,8 +5,6 @@ title: "Instruction contract"
 aliases: ["05 §4.5"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#45-instruction-contract"
-bw-part_of:
-  - "[[05-4-consolidation]]"
 ---
 # Instruction contract
 

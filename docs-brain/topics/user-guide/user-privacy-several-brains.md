@@ -4,8 +4,6 @@ type: guide
 title: "Several brains"
 tags: [user-guide]
 source: "docs/user/privacy.md#several-brains"
-bw-part_of:
-  - "[[user-privacy]]"
 ---
 # Several brains
 

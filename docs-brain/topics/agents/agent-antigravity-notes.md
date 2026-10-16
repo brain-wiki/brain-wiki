@@ -4,8 +4,6 @@ type: design
 title: "Notes (Antigravity (desktop, IDE, CLI))"
 tags: [agents]
 source: "docs/design/agents/antigravity.md#notes"
-bw-part_of:
-  - "[[agent-antigravity]]"
 ---
 # Notes (Antigravity (desktop, IDE, CLI))
 

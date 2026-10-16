@@ -5,8 +5,6 @@ title: "Prior art and what we take from it"
 aliases: ["01 §8"]
 tags: [overview]
 source: "docs/design/01-overview.md#8-prior-art-and-what-we-take-from-it"
-bw-part_of:
-  - "[[overview]]"
 ---
 # Prior art and what we take from it
 

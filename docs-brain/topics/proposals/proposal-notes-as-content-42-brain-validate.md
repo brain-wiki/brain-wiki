@@ -4,8 +4,6 @@ type: proposal
 title: "`brain validate`"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#42-brain-validate"
-bw-part_of:
-  - "[[proposal-notes-as-content-4-writing-notes]]"
 ---
 # `brain validate`
 

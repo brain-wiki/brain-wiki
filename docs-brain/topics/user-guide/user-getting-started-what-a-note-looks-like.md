@@ -4,8 +4,6 @@ type: guide
 title: "What a note looks like"
 tags: [user-guide]
 source: "docs/user/getting-started.md#what-a-note-looks-like"
-bw-part_of:
-  - "[[user-getting-started]]"
 ---
 # What a note looks like
 

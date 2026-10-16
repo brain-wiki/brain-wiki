@@ -4,8 +4,6 @@ type: proposal
 title: "Deployment options"
 tags: [proposals]
 source: "docs/proposals/remote-mcp.md#2-deployment-options"
-bw-part_of:
-  - "[[proposal-remote-mcp]]"
 ---
 # Deployment options
 

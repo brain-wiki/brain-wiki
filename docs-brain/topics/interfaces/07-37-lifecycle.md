@@ -5,8 +5,6 @@ title: "Lifecycle"
 aliases: ["07 §3.7"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#37-lifecycle"
-bw-part_of:
-  - "[[07-3-mcp-server]]"
 ---
 # Lifecycle
 

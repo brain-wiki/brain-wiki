@@ -5,8 +5,6 @@ title: "Exit codes"
 aliases: ["07 §2.3"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#23-exit-codes"
-bw-part_of:
-  - "[[07-2-cli]]"
 ---
 # Exit codes
 

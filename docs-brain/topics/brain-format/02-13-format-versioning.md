@@ -5,8 +5,6 @@ title: "Format versioning"
 aliases: ["02 §13"]
 tags: [brain-format]
 source: "docs/design/02-brain-format.md#13-format-versioning"
-bw-part_of:
-  - "[[brain-format]]"
 ---
 # Format versioning
 

@@ -5,8 +5,6 @@ title: "Alternatives considered (Skills and onboarding)"
 aliases: ["15 §6"]
 tags: [skills-and-onboarding]
 source: "docs/design/15-skills-and-onboarding.md#6-alternatives-considered"
-bw-part_of:
-  - "[[skills-and-onboarding]]"
 ---
 # Alternatives considered (Skills and onboarding)
 

@@ -4,8 +4,6 @@ type: design
 title: "Instructions come from the MCP server"
 tags: [agents]
 source: "docs/design/agents/codex.md#1-instructions-come-from-the-mcp-server"
-bw-part_of:
-  - "[[agent-codex]]"
 ---
 # Instructions come from the MCP server
 

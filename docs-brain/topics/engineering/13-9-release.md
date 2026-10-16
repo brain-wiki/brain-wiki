@@ -5,8 +5,6 @@ title: "Release"
 aliases: ["13 §9"]
 tags: [engineering]
 source: "docs/design/13-engineering.md#9-release"
-bw-part_of:
-  - "[[engineering]]"
 ---
 # Release
 

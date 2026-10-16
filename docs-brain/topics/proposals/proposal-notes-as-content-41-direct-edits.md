@@ -4,8 +4,6 @@ type: proposal
 title: "Direct edits (Notes as content (format 3))"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#41-direct-edits"
-bw-part_of:
-  - "[[proposal-notes-as-content-4-writing-notes]]"
 ---
 # Direct edits (Notes as content (format 3))
 

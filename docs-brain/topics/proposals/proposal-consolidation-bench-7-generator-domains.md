@@ -4,8 +4,6 @@ type: proposal
 title: "Generator domains"
 tags: [proposals]
 source: "docs/proposals/consolidation-bench.md#7-generator-domains"
-bw-part_of:
-  - "[[proposal-consolidation-bench]]"
 ---
 # Generator domains
 

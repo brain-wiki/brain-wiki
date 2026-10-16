@@ -5,8 +5,6 @@ title: "Parser and startup cost"
 aliases: ["07 §2.4"]
 tags: [interfaces]
 source: "docs/design/07-interfaces.md#24-parser-and-startup-cost"
-bw-part_of:
-  - "[[07-2-cli]]"
 ---
 # Parser and startup cost
 

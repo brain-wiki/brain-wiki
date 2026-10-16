@@ -5,8 +5,6 @@ title: "Decisions needed from the maintainer"
 aliases: ["14 §2"]
 tags: [roadmap-and-open-questions]
 source: "docs/design/14-roadmap-and-open-questions.md#2-decisions-needed-from-the-maintainer"
-bw-part_of:
-  - "[[roadmap-and-open-questions]]"
 ---
 # Decisions needed from the maintainer
 

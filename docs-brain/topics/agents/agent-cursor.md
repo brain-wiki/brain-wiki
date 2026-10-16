@@ -4,8 +4,6 @@ type: design
 title: "Cursor and other MCP clients"
 tags: [agents]
 source: "docs/design/agents/cursor.md"
-bw-part_of:
-  - "[[agents]]"
 ---
 # Cursor and other MCP clients
 

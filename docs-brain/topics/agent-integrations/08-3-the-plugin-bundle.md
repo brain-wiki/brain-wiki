@@ -5,8 +5,6 @@ title: "The plugin bundle"
 aliases: ["08 §3"]
 tags: [agent-integrations]
 source: "docs/design/08-agent-integrations.md#3-the-plugin-bundle"
-bw-part_of:
-  - "[[agent-integrations]]"
 ---
 # The plugin bundle
 

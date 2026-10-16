@@ -5,8 +5,6 @@ title: "Requirements (Write path and consolidation)"
 aliases: ["05 §1"]
 tags: [write-path-and-consolidation]
 source: "docs/design/05-write-path-and-consolidation.md#1-requirements"
-bw-part_of:
-  - "[[write-path-and-consolidation]]"
 ---
 # Requirements (Write path and consolidation)
 

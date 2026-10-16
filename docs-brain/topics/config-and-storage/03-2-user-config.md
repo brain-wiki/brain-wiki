@@ -5,8 +5,6 @@ title: "User config"
 aliases: ["03 §2"]
 tags: [config-and-storage]
 source: "docs/design/03-config-and-storage.md#2-user-config"
-bw-part_of:
-  - "[[config-and-storage]]"
 ---
 # User config
 

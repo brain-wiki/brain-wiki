@@ -5,8 +5,6 @@ title: "Other fixes offered"
 aliases: ["09 §4.3"]
 tags: [import]
 source: "docs/design/09-import.md#43-other-fixes-offered"
-bw-part_of:
-  - "[[09-4-normalization-rules]]"
 ---
 # Other fixes offered
 

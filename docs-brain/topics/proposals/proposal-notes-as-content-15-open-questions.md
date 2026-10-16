@@ -4,8 +4,6 @@ type: proposal
 title: "Open questions (Notes as content (format 3))"
 tags: [proposals]
 source: "docs/proposals/notes-as-content.md#15-open-questions"
-bw-part_of:
-  - "[[proposal-notes-as-content]]"
 ---
 # Open questions (Notes as content (format 3))
 

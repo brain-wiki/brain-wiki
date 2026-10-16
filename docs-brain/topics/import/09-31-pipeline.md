@@ -5,8 +5,6 @@ title: "Pipeline (Import)"
 aliases: ["09 §3.1"]
 tags: [import]
 source: "docs/design/09-import.md#31-pipeline"
-bw-part_of:
-  - "[[09-3-overlay]]"
 ---
 # Pipeline (Import)
 

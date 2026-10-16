@@ -5,8 +5,6 @@ title: "Future work"
 aliases: ["14 §4"]
 tags: [roadmap-and-open-questions]
 source: "docs/design/14-roadmap-and-open-questions.md#4-future-work"
-bw-part_of:
-  - "[[roadmap-and-open-questions]]"
 ---
 # Future work
 
