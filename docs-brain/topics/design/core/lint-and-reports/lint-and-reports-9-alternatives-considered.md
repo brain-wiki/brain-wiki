@@ -9,6 +9,6 @@ source: "docs/design/lint-and-reports.md#9-alternatives-considered"
 
 | Option | Why not |
 |---|---|
-| A general Markdown linter (markdownlint, remark) | Knows nothing about ids, links between notes, supersession, or the index; can run alongside. |
-| JSON Schema over frontmatter only | Covers only the `SCHEMA_CODES` rules, and even those need the index to resolve links and find duplicate ids. |
-| LLM-based lint | Non-deterministic, slow, and needs a model; the bench covers semantic quality instead. |
+| A general Markdown linter (markdownlint, remark) | Knows nothing about ids, links between notes, or supersession. It can run alongside. |
+| JSON Schema over frontmatter | Covers part of `SCHEMA_CODES`. Duplicate ids and link targets still need the index. |
+| LLM-based lint | Non-deterministic, slow, and needs a model ([[d08-no-model-calls\|D8]]). The bench covers semantic quality. |

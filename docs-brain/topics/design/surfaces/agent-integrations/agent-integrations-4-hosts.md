@@ -7,14 +7,15 @@ source: "docs/design/agent-integrations.md#4-hosts"
 ---
 # Hosts
 
-Each host's integration (install, registration, MCP specifics, where the
-instructions go, harvest, presets, and what was verified) has its own page
-in `hosts/`:
+Each host's page covers install, registration, MCP details, where the
+instructions go, harvest, presets, and what was verified. Every host gets
+the MCP server.
 
-| Host | Instructions | Harvest | Page |
-|---|---|---|---|
-| Claude Code | `~/.claude/rules/brain-wiki.md`, brain-wiki's own file | yes | [[host-claude-code\|claude-code.md]] |
-| Codex CLI and ChatGPT desktop | MCP server instructions; no file is written | yes | [[host-codex\|codex.md]] |
-| Antigravity (desktop, IDE, CLI) | The plugin's `always_on` rule | yes | [[host-antigravity\|antigravity.md]] |
-| OpenClaw | Managed block in the workspace `AGENTS.md` | after v0.1 | [[host-openclaw\|openclaw.md]] |
-| Cursor and other MCP clients | Printed for the user; `.cursor/rules/` with `--scope project` | after v0.1 | [[host-cursor\|cursor.md]] |
+| Host | Install | Instructions | Skills | Harvest | Page |
+|---|---|---|---|---|---|
+| Claude Code | Plugin marketplace, or `brain connect` | `~/.claude/rules/brain-wiki.md` | yes | yes | [[host-claude-code\|claude-code.md]] |
+| Codex CLI and ChatGPT desktop | Plugin marketplace, or `brain connect` | MCP server instructions | yes | yes | [[host-codex\|codex.md]] |
+| Antigravity (desktop, IDE, CLI) | `agy plugin install`, or `brain connect` | The plugin's always-on rule | yes | yes | [[host-antigravity\|antigravity.md]] |
+| OpenClaw | `openclaw plugins install`, or `brain connect` | Managed block in the workspace `AGENTS.md` | yes | no | [[host-openclaw\|openclaw.md]] |
+| Cursor | The bundle, or `brain connect` | Printed; `.cursor/rules/` with `--scope project` | bundle only | no | [[host-cursor\|cursor.md]] |
+| Other MCP clients | `brain connect generic` prints an entry | Printed | no | no | [[host-cursor-other-mcp-clients\|cursor.md]] |

@@ -8,21 +8,63 @@ source: "docs/design/skills-and-onboarding.md#32-the-flow"
 # The flow
 
 ```
-detect ─► install ─► brain ─► connect ─► permissions ─► harvest ─► verify ─► summary
-  │          │          │          │            │             │          │
-doctor   CLI on PATH  create or  other     which brains,   opt-in per test episode,
---json   (uv tool     adopt;     agents    what each       host, with search,
-         install)     commit job found     agent may do    routes, a  orientation
-                      for git    on disk                   dry run
+check ─► install ─► brain ─► connect ─► permissions ─► harvest ─► verify ─► summary
 ```
 
-| Step | The agent | Asks the user | Writes |
-|---|---|---|---|
-| Detect | Runs `brain doctor --json` (§3.4); if the CLI is missing, notes it | — | nothing |
-| Install | Proposes `uv tool install brain-wiki` (or `pipx`); explains that marketplace installs can also run through `uvx` without installing | "Install the brain-wiki command?" | the tool install |
-| Brain | If none exists: explains what a brain is and suggests a location outside any code repository (default `~/brains/personal`), a name, and git (recommended strongly: agents edit notes directly, and git is the only way to see or revert those edits; the brain can be pushed to a private remote); the user decides. If the user has a vault: runs `brain import <path> --overlay --dry-run`, summarizes the report, applies phase 0, and mentions later phases. An existing brain below format 3 gets `brain lint --fix --dry-run`, then the conversion if the user agrees. When the brain uses git: explains that agents' direct edits are committed by `brain commit`, and offers a job that runs it every 15 minutes (`brain schedule add commit --dry-run` first, showing the crontab block or LaunchAgent) | Location, name, git; which existing vault, if any; schedule commits, and push too (default no)? | `brain init` (with `--git`, a first commit) or import phase 0; user config; `brain schedule add commit [--push]` (the OS scheduler, not brain-wiki's config) |
-| Connect | Lists agents `doctor` found installed and not yet connected; runs `brain connect <host> --dry-run` for each and shows the change | Which agents to connect | each host's config, with backups |
-| Permissions | Which brains: one brain is fine to start; every connected agent reads all of it; separate brains for separate lives (work and personal). What each agent may do: logging episodes and editing notes are on by default; `propose_rules` is granted per app | Keep defaults, or set up a second brain / host limits; which apps may propose rules | `brain agents grant` (`brain.toml`, an undoable run); `brain brains limit` (user config) |
-| Harvest | Explains in plain terms what is read and what may be sent to a model; runs a dry run and shows how many past sessions exist and an estimated cost of backfill; explains routing and, with one brain, offers a route for every folder under the home folder | Per host: harvest on/off, backfill now/later/never; the route | `brain harvest enable`, `brain agents grant HOST harvest`, `brain harvest route`; episodes if backfill runs |
-| Verify | Logs a test episode, searches for it, and shows orientation; the test episode stays in the inbox, and consolidation skips it as holding nothing durable | — | one episode |
-| Summary | Lists everything configured, where it lives, and how to undo each part (`brain connect --uninstall`, `brain brains remove`, `brain undo` or `brain agents revoke`, `brain harvest disable`, `brain schedule remove commit`) | — | nothing |
+The steps of the `brain-setup` skill:
+
+1. **Check.** Run `brain doctor --json` (§3.4). If the command is missing,
+   go to install. If everything is set up, show a short summary and offer
+   only the `next_steps`.
+2. **Install.** Ask, then run `uv tool install brain-wiki` (or
+   `pipx install brain-wiki`). Without installing, every command also runs
+   as `uvx --from brain-wiki brain …`, which is how the plugin's own MCP
+   server runs.
+3. **Brain.**
+   - With no brain: suggest a folder outside any code repository
+     (`~/brains/personal`), a name, and git. Recommend git strongly: agents
+     edit notes directly, and git is the only way to see or revert those
+     edits. Warn against a git brain inside a folder a sync tool copies
+     between machines. Then run `brain init PATH --name NAME [--git]`.
+   - With an existing vault: run `brain import PATH --overlay --dry-run`,
+     summarize the report, and after a yes apply phase 0. Mention phases 1
+     and 2 without applying them.
+   - A brain below format 3 gets `brain lint --fix --dry-run`, then the
+     conversion after a yes.
+   - For a git brain: explain that `brain commit` records agents' direct
+     edits, and offer a job that runs it every 15 minutes
+     (`brain schedule add commit --dry-run` first). Ask whether the job
+     should also push (default no). On Windows, or if the user declines,
+     mention running `brain commit` by hand.
+4. **Connect.** List the agent apps `doctor` found installed and not
+   connected. Skip the app the agent runs in if brain-wiki's tools already
+   work there. For each app the user picks, run
+   `brain connect HOST --dry-run`, show the change, and connect after a
+   yes. Report where the instructions went and tell the user to start a new
+   session in that app.
+5. **Permissions.** Explain that every connected agent can read all of a
+   brain, and that separate parts of life (work and personal) belong in
+   separate brains, limited with `brain brains limit APP BRAIN...`.
+   Logging and editing are on by default; offer `propose_rules` per app
+   with `brain agents grant APP propose_rules --dry-run` first.
+6. **Harvest.** Explain what is read and which model may see it. Run
+   `brain harvest --from HOST --since 30d` (writes nothing) and show the
+   sessions found and the estimated tokens. Explain routing, and with one
+   brain offer `brain harvest route "~/**" NAME`. Then ask per app: harvest
+   on or off (`brain harvest enable APP`, plus
+   `brain agents grant APP harvest`), and backfill now, later, or never.
+7. **Verify.** Log a test episode, search for it, and show the
+   orientation, with the MCP tools or with `brain log`, `brain search`, and
+   `brain orient`. The test episode stays in the inbox, and consolidation
+   skips it as holding nothing durable.
+8. **Summary.** List what was set up, where it lives, and how to undo
+   each part.
+
+| Part | Undo |
+|---|---|
+| Brain created | `brain brains remove NAME` (the files stay) |
+| Vault adopted | `brain brains remove NAME` and delete the added files, or revert its commit; phases 1 and 2 with `brain undo RUN` |
+| Agent permissions | `brain undo RUN`, or `brain agents revoke APP CAPABILITY` |
+| Agent app connected | `brain connect HOST --uninstall` |
+| Harvest | `brain harvest disable APP` |
+| Commit job | `brain schedule remove commit` |

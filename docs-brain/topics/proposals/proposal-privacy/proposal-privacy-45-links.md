@@ -7,6 +7,7 @@ source: "docs/proposal/privacy.md#45-links"
 ---
 # Links (Privacy)
 
-- An `open` note may link to a `private` one; a reader without access sees
-  the link text and gets `not_found` for the target. No stand-in notes.
-- Agents may not add such a link (P4); the owner may.
+- An `open` note may link to a `private` one. A reader without access sees
+  the link text and gets `not_found` for the target. There are no stand-in
+  notes.
+- Agents may not add such a link (P4). The owner may.

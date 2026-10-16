@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Sources
 
-A note's `bw-sources` list: links to the episodes and notes, or URLs, its knowledge came from.
+A note's `bw-sources` list: links to the episodes and notes, or URLs, that its content came from.

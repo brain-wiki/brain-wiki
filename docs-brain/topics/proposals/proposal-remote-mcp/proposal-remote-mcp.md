@@ -8,12 +8,13 @@ source: "docs/proposal/remote-mcp.md"
 
 HTTP transport and OAuth for ChatGPT, claude.ai, and the Gemini app
 
-Status: designed, not scheduled · Waits on [[proposal-privacy|privacy]] · Extends
-[[agent-integrations|agent integrations]] and [[cli-and-mcp-3-mcp-server|CLI and MCP §3]]
+Status: designed, not scheduled. Waits on the [[proposal-privacy|privacy]]
+proposal. Extends [[agent-integrations|agent integrations]] and
+[[cli-and-mcp-3-mcp-server|CLI and MCP §3]].
 
 ChatGPT (web and mobile), claude.ai, and the Gemini app connect only to
-remote MCP servers over HTTPS. Today brain-wiki serves MCP over stdio only
-(D15).
+remote MCP servers over HTTPS. brain-wiki serves MCP over stdio only
+([[d15-remote-mcp-later|D15]]).
 
 Generated from `docs/proposal/remote-mcp.md`.
 

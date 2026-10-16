@@ -20,9 +20,13 @@ trusted_mcp_servers = ["brain-wiki"]
 
 | Mode | How | Cost |
 |---|---|---|
-| `prompted` | At the first `stop` after `min_turns`, the hook asked the agent once, through the host's "continue with reason" output, to call `brain_log_episode` with durable learnings, or to do nothing | One short extra turn per session |
-| `raw` | At `pre_compact` and `session_end` (and `stop` for Antigravity), the hook read the transcript since the last capture point and wrote one episode with `bw-captured: hook` | No model call; consolidation distills |
+| `prompted` | At the first `stop` after `min_turns`, the hook asked the agent once to call `brain_log_episode` with durable learnings, or do nothing | One short extra turn per session |
+| `raw` | At `pre_compact` and `session_end` (and `stop` for Antigravity), the hook wrote the transcript since the last capture point as one episode with `bw-captured: hook` | No model call; consolidation distills |
 
-Capture points and inputs were kept per session in
-`<state>/sessions/<host>/<id>.json`. `BRAIN_WIKI_INTERNAL=1`, set for
-brain-wiki's own headless runs, made every hook exit at once.
+- The `prompted` mode asked through the host's "continue with reason"
+  output.
+- Capture points and inputs were kept per session in
+  `<state>/sessions/<host>/<id>.json`.
+- `BRAIN_WIKI_INTERNAL=1`, set for brain-wiki's own headless runs, made
+  every hook exit at once. The variable no longer exists. Harvest now skips
+  brain-wiki's own runs by their working folder under the state folder.

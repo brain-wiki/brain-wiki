@@ -11,46 +11,29 @@ A brain serves two uses, and one brain can serve both:
 
 | Use | Who writes most of it | What agents do with it | What matters most |
 |---|---|---|---|
-| **The user's second brain, as context** | The user: notes in Obsidian or any editor, an imported vault | Read it at session start and during tasks; propose additions only through the inbox | The user's words stay authoritative and are never rewritten silently |
-| **The agents' own memory of the world** | Agents: what they observe and learn while working, written into notes directly or captured as episodes first | Log or write down what they learn, recall it later, across hosts | Notes cite their sources; git shows what changed and when; world facts kept current as the world changes |
+| The user's second brain | The user, in Obsidian or any editor, or by importing a vault | Read it when a task needs it; add to it through the inbox | The user's words stay authoritative and are never rewritten behind the user's back |
+| The agents' own memory | Agents, writing notes directly or logging episodes first | Write down what they learn and recall it later, on any host | Notes cite their sources, git shows what changed and when, and facts about the world stay current |
 
-Provenance keeps the two apart where they meet: every episode records its
-`origin` (`owner`, `agent`, `import`, `system`) and `inputs`, notes cite
-the episodes and pages they came from in `bw-sources`, and only the user
-can add rules. A user who wants a hard line keeps them in separate
-named brains. Open decisions about how far to separate and trust
-agent-learned knowledge are Q9–Q12 in
-[[questions|open questions]].
+Provenance keeps the two apart where they meet:
 
-Agents interact through three surfaces, each optional:
+- Every episode records its `origin` (`owner`, `agent`, `import`, or `system`) and its `inputs`.
+- Notes cite the episodes and pages they came from in `bw-sources`.
+- Only the user can add rules.
 
-1. **Files.** Any agent that can read files can use a brain directly; the
-   brain carries its own `AGENTS.md`.
-2. **MCP server.** Tools to orient, search, read, follow links, validate an
-   edit, log an episode, propose a rule, and help with consolidation.
-3. **Plugin.** A plugin bundle for each supported host adds the skills and
-   the MCP server, and `brain connect` writes a short instruction block that
-   tells the agent when to consult the brain.
+A user who wants a hard line keeps the two in separate brains. How far to separate and trust what agents learn is still open (Q9–Q12 in [[questions|open questions]]).
 
-Writes take one of three paths:
+Agents reach a brain in three ways, each optional:
 
-- **Direct edits (people, and agents with `edit`):** edit or create a note
-  under `topics/` with any editor or file tool, then run `brain validate`,
-  which checks the frontmatter of the changed files. Git is the history:
-  `brain commit` snapshots direct edits, by hand or on a schedule
-  (`brain schedule`).
-- **Inbox (any agent, any time):** append a new episode file for something
-  nobody has organized yet. Nothing is overwritten, so concurrent agents
-  and devices never conflict.
-- **Consolidation (optional):** `brain consolidate --prepare` hands an
-  agent the pending episodes with candidate notes; the agent edits notes
-  directly and validates them, then `brain consolidate --done` archives the
-  episodes in one undoable run.
+1. Files. Any agent that can read files can use a brain directly. The brain carries its own `AGENTS.md`.
+2. The MCP server. Its tools list brains, orient, search, read, follow links, validate edits, log episodes, propose rules, help with consolidation and harvest, and read the conversation behind an episode.
+3. The plugin. A plugin for each supported host adds the skills and the MCP server, and `brain connect` writes a short instruction block that tells the agent when to consult the brain.
 
-Each change brain-wiki makes itself (`brain mv`, `brain lint --fix`,
-`brain consolidate --done`) is one run: it records an undo point and
-commits if the brain is a git repo.
+Notes change in three ways:
 
-The LLM that writes notes is whatever the user already runs: the host agent
-itself, through its file tools, MCP tools, and a skill. brain-wiki needs no
-API keys.
+- Direct edits. People, and agents whose profile has `edit`, edit or create notes under `topics/` with any editor or file tool. `brain validate` then checks the frontmatter of the changed files. Git is the history: `brain commit` commits direct edits, by hand or on a schedule set with `brain schedule`.
+- The inbox. Any agent may append an episode for something nobody has organized yet. Nothing is overwritten, so concurrent agents and devices never conflict.
+- Consolidation, which is optional. `brain consolidate --prepare` gives an agent the pending episodes with candidate notes. The agent edits and validates the notes, and `brain consolidate --done` archives the episodes in one undoable run.
+
+Each change brain-wiki makes itself, such as `brain mv`, `brain lint --fix`, or `brain consolidate --done`, is one run. A run records an undo point and commits if the brain is a git repository.
+
+The model that writes notes is the agent the user already runs, working through its file tools, the MCP tools, and a skill. brain-wiki needs no API keys.

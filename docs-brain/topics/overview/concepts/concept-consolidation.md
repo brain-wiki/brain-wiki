@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Consolidation
 
-Optional: an agent folds pending episodes into notes by editing them directly. `brain consolidate --prepare` selects the work; `brain consolidate --done` archives the episodes.
+An optional step in which an agent folds pending episodes into notes by editing the notes directly. `brain consolidate --prepare` gathers the work, and `brain consolidate --done` archives the episodes.

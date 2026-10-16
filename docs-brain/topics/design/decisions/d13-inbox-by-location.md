@@ -10,8 +10,8 @@ source: "docs/decision/d13-inbox-by-location.md"
 Status: accepted.
 Argued in: [[brain-format-9-episodes|brain format §9]].
 
-Pending vs consolidated episodes is encoded by location (`inbox/` vs `archive/`), not by a watermark file.
+An episode is pending while it is in `inbox/episodes/` and consolidated once it moves to `archive/episodes/`. No watermark file records which episodes are done, so the state is visible in any file browser and survives sync.
 
 ### Alternatives considered
 
-Watermark in machine state
+- A watermark in machine state. It would differ between devices and be invisible in the brain.

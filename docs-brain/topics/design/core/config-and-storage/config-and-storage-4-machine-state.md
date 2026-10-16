@@ -7,19 +7,49 @@ source: "docs/design/config-and-storage.md#4-machine-state"
 ---
 # Machine state
 
-| Kind | Linux / macOS default | Windows | Contents | If deleted |
-|---|---|---|---|---|
-| config | `~/.config/brain-wiki/` | `%APPDATA%\brain-wiki\` | `config.toml` | Brains must be re-registered |
-| state | `$XDG_STATE_HOME/brain-wiki/`, default `~/.local/state/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\state\` | run records and pre-images (undo), episode markers, harvest watermarks, locks, `brain connect` records and backups, headless preset runs, per-brain commit state (`schedule/<brain-id>.json`), the logs (`logs/brain-wiki.log`, and `logs/schedule-<brain-id>.log` per commit job) | Undo history is lost; harvest may re-read sessions (dedupe keys prevent duplicate episodes); `connect --uninstall` can no longer restore what it replaced; `brain schedule list` and `brain doctor` show no last run until the next `brain commit`; nothing in any brain is lost |
-| cache | `$XDG_CACHE_HOME/brain-wiki/`, default `~/.cache/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\cache\` | `brains/<brain-id>/index.sqlite` | Rebuilt on next use |
-| data | `$XDG_DATA_HOME/brain-wiki/`, default `~/.local/share/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\data\` | `plugin/<host>/`, the plugin copies `brain connect` registers | Connected hosts lose brain-wiki until `brain connect` runs again |
+brain-wiki keeps four directories outside brains:
 
-`BRAIN_WIKI_CONFIG` (the file), `BRAIN_WIKI_STATE_DIR`, `BRAIN_WIKI_CACHE_DIR`,
-and `BRAIN_WIKI_DATA_DIR` override them (tests use these).
+| Kind | Linux and macOS default | Windows | Contents |
+|---|---|---|---|
+| config | `~/.config/brain-wiki/` | `%APPDATA%\brain-wiki\` | `config.toml` |
+| state | `$XDG_STATE_HOME/brain-wiki/`, default `~/.local/state/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\state\` | listed below |
+| cache | `$XDG_CACHE_HOME/brain-wiki/`, default `~/.cache/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\cache\` | `brains/<brain-key>/index.sqlite` |
+| data | `$XDG_DATA_HOME/brain-wiki/`, default `~/.local/share/brain-wiki/` | `%LOCALAPPDATA%\brain-wiki\data\` | `plugin/<host>/`, the plugin copies `brain connect` registers |
 
-Everything is keyed by the brain's `id` from `brain.toml`, not by its
-path, so moving a brain folder keeps its index and undo history. When two
-folders claim the same id (a copied brain), the second one is keyed by
-`<id>-<hash of path>`, so the copies never share an index or undo history
-([[index-and-search-2-location-and-lifecycle|index and search §2]]). Nothing
-reports the duplicate id.
+`BRAIN_WIKI_CONFIG` (the file), `BRAIN_WIKI_STATE_DIR`,
+`BRAIN_WIKI_CACHE_DIR`, and `BRAIN_WIKI_DATA_DIR` override them. Tests use
+these.
+
+The state directory holds:
+
+| Path | What |
+|---|---|
+| `brains/<brain-key>/runs/` | Run records and pre-images, for undo ([[write-path-8-undo\|write path §8]]) |
+| `brains/<brain-key>/written/`, `dedupe/` | Episode markers ([[write-path-21-ways-an-episode-is-written\|write path §2.1]]) |
+| `brains/<brain-id>/root` | The folder that owns the brain's id on this device |
+| `harvest/` | Harvest watermarks and in-agent harvest runs |
+| `locks/<brain-key>.lock` | Per-brain write locks |
+| `connect/` | `brain connect` records and backups |
+| `headless/` | Working folders for headless preset runs |
+| `schedule/<brain-id>.json` | The last `brain commit` outcome per brain |
+| `logs/` | `brain-wiki.log`, and `schedule-<brain-id>.log` per commit job |
+
+What deleting each directory costs:
+
+- config: brains must be registered again.
+- state: undo history is lost. Harvest may re-read sessions, but dedupe
+  keys prevent duplicate episodes. `brain connect --uninstall` can no
+  longer restore what it replaced. `brain schedule list` and `brain doctor`
+  show no last run until the next `brain commit`. Nothing in any brain is
+  lost.
+- cache: the index is rebuilt on next use.
+- data: connected hosts lose brain-wiki until `brain connect` runs again.
+
+State and cache are keyed by the brain's `id` from `brain.toml`, not by its
+path, so moving a brain folder keeps its index and undo history. When a
+second folder claims an id already owned by an existing folder (a copied
+brain), the copy is keyed `<id>-<hash of path>`, so the two never share an
+index or undo history
+([[index-and-search-2-location-and-lifecycle|index and search §2]]).
+Nothing reports the duplicate id. Commit jobs and their state files use the
+plain id.

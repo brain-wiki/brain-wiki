@@ -18,6 +18,7 @@ Generated from `docs/design/glossary.md`.
 - [[concept-episode]]: Episode
 - [[concept-harvest]]: Harvest
 - [[concept-host]]: Host
+- [[concept-hub]]: Hub
 - [[concept-index]]: Index
 - [[concept-inputs]]: Inputs
 - [[concept-link]]: Link

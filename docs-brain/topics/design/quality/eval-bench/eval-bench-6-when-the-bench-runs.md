@@ -7,7 +7,7 @@ source: "docs/design/eval-bench.md#6-when-the-bench-runs"
 ---
 # When the bench runs
 
-| Trigger | Suites |
+| When | Command |
 |---|---|
-| Every change (`scripts/check.py`, and CI through it) | `retrieval` and `lint` on a 300-note brain |
-| Performance work, and before a release | `perf` at 10k (`brain bench perf --sizes 10k`) |
+| Every change, through `scripts/check.py` and CI | `brain bench retrieval lint --sizes 300` |
+| Performance work, and before a release | `brain bench perf --sizes 10k` |

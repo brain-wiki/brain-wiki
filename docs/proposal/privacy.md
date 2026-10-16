@@ -1,24 +1,25 @@
 # Privacy
 
-Status: draft · Open questions in §6 · Replaces the privacy levels removed in
-D10 ([design README](../decision/README.md))
+Status: draft, with open questions in §6. It would replace the privacy
+levels removed by [D10](../decision/d10-no-access-control-in-a-brain.md).
 
-Today every host that may use a brain reads all of it. This proposal drafts
-what replaces the removed privacy levels.
+Today every agent that may use a brain reads all of it. This proposal
+drafts privacy levels that say where content may go, not only who may read
+it.
 
 ## 1. Why the old model was removed
 
-The old model put an ordered level on topics and notes
-(`default` < `sensitive` < `secret`) and gave each host a maximum level it
-could read through brain-wiki's tools, plus a topic allowlist.
+The old model put an ordered level on topics and notes (`default`, then
+`sensitive`, then `secret`). Each host had a maximum level it could read
+through brain-wiki's tools, plus a topic allowlist.
 
 | Problem | Effect |
 |---|---|
-| A level named no threat. | Nobody could say what `sensitive` protected against that `default` did not, or from whom. |
-| It controlled reading through the tools, not what happens after. | Once a host reads a note, the note goes to its model provider, into its transcript store, into tool calls, and into what it writes. The level governed none of that. |
-| Agents could set it. | Checked edits could raise a note's level and consolidation stamped levels on new notes, although only the owner knows what is sensitive. |
-| File access bypassed it. | `brain_list` withheld the folder path from restricted hosts, which made those hosts worse at ordinary work. |
-| It cost structure. | Public stand-in notes so open notes could link to private people, hidden-guard counts, and a lint rule (BW312) that warned about links the owner wrote on purpose. |
+| A level named no threat | Nobody could say what `sensitive` protected against, or from whom |
+| It controlled reading, not what happened next | A note a host read still went to its model, transcripts, tool calls, and outputs |
+| Agents could set it | Agents raised levels and stamped them on new notes, though only the owner knows what is sensitive |
+| File access bypassed it | Hiding the folder path from restricted hosts made them worse at ordinary work |
+| It cost structure | Public stand-in notes, hidden-note counts, and a lint rule (BW312) against links the owner wrote on purpose |
 
 ## 2. Where content goes
 
@@ -26,72 +27,73 @@ could read through brain-wiki's tools, plus a topic allowlist.
                                ┌──────────────► S1 model provider (host's, or local)
   brain ──► brain-wiki tools ──┤
     │       (search, read,     ├──────────────► S2 tools the agent calls
-    │        orient, hooks)    │                (local: grep, tests; external: web, MCP
+    │        orient)           │                (local: grep, tests; external: web, MCP
     │                          │                 servers, issue trackers, chat, email)
     └─► files (direct reads) ──┤
                                ├──────────────► S3 outputs others see
     host agent ◄───────────────┘                (commits, PRs, docs, messages)
         │
         ├─────────────────────────────────────► S4 host transcript store (later harvest)
-        └─ automatic injection (session start,
-           per-prompt recall) ────────────────► S5 context the agent never asked for
+        └─ automatic injection (only if host
+           hooks return) ─────────────────────► S5 context the agent never asked for
 
-  consolidation / harvest backend ────────────► S1 model provider
+  consolidation / harvest by a model ─────────► S1 model provider
   viz export, git remote, cloud sync ─────────► S6 copies outside the machine
 ```
 
-Reading is one step. A privacy setting is only useful if it says which of
-these sinks content may reach.
+Reading is one step. A privacy setting is useful only if it says which of
+these destinations content may reach. Automatic injection (S5) does not
+exist today; it comes back only with [host hooks](hooks.md).
 
 ## 3. Requirements
 
 | # | Requirement | Why |
 |---|---|---|
-| P1 | Only the owner sets or changes privacy. Agents never do, in either direction. | Agents cannot know what the owner considers sensitive, and a manipulated agent should not be able to hide or expose a topic. |
-| P2 | A level is defined by the sinks it allows (§2), not by an abstract degree of sensitivity. | So every level answers "may a model read this, may it go to a tool, may it end up in an output". |
-| P3 | brain-wiki enforces a level where it controls the flow, and tells the host where it does not. | It controls its tools, hooks, packets, writes, and exports; it does not control the host's model or tool calls. |
-| P4 | Nothing an agent writes moves content to a less private place. | Consolidation, harvest, and checked edits would otherwise launder private facts into open notes. |
+| P1 | Only the owner sets or changes privacy. Agents never do, in either direction. | Agents cannot know what the owner finds sensitive, and a manipulated agent must not hide or expose a topic. |
+| P2 | A level is defined by the destinations it allows (§2). | Every level then answers whether a model may read it, a tool may get it, or an output may contain it. |
+| P3 | brain-wiki enforces a level where it controls the flow, and tells the agent where it does not. | It controls its tools, packets, runs, and exports, not the host's model or tool calls. |
+| P4 | Nothing an agent writes moves content to a less private place. | Otherwise consolidation, harvest, and direct edits copy private facts into open notes. |
 | P5 | The level is visible where the owner reads: in the topic's `index.md` frontmatter. | One place to look, shown in Obsidian, carried along when the folder moves. |
-| P6 | With no settings, a brain behaves as it does today. | Privacy is opt-in; most brains never need it. |
+| P6 | With no settings, a brain behaves as it does today. | Most brains never need privacy levels. |
 | P7 | An unknown host or backend gets only open content. | Trust is granted, never assumed. |
 
 ## 4. Draft model
 
-### 4.1 Levels as allowed sinks
+### 4.1 Levels as allowed destinations
 
-| Sink | `open` (default) | `private` | `secret` |
+| Destination | `open` (default) | `private` | `secret` |
 |---|---|---|---|
-| S1 Model reads it | any model | models the owner trusts (§4.3) | local models only |
-| S2 Passed to tools | any tool | local tools; external tools need the user's confirmation | none |
-| S3 Written into outputs | yes | only when the user asks | never |
-| S4 Host transcripts and harvest | yes | yes; harvested episodes inherit `private` | the agent never reads it, so nothing reaches a transcript |
-| S5 Injected automatically | yes | no; only on an explicit read | no |
-| S6 Exports and sync | yes | excluded unless requested | never |
-| Consolidated by | any backend | trusted backends, into `private` topics only | local backend only |
+| S1: a model reads it | Any model | Models the owner trusts (§4.3) | Local models only |
+| S2: passed to tools | Any tool | Local tools; external tools after the user confirms | None |
+| S3: written into outputs | Yes | Only when the user asks | Never |
+| S4: transcripts and harvest | Yes | Yes; harvested episodes become `private` | The agent never reads it |
+| S5: injected automatically | Yes | No; only on an explicit read | No |
+| S6: exports and sync | Yes | Left out unless requested | Never |
+| Consolidated by | Any agent | Trusted agents, into `private` topics only | Local models only |
 
-Three levels keep the common case simple: most people need only `open` and
-`private`. `secret` is for notes no cloud model should see (finances,
-health), which the owner reads in an editor.
+Most people need only `open` and `private`. `secret` is for notes no cloud
+model should see, such as finances or health, which the owner reads in an
+editor.
 
 ### 4.2 Declaring
 
 - A topic declares its level in its hub's frontmatter: `bw-privacy: private`
-  in `index.md`. It covers the folder, its plain subfolders, and its
-  sub-topics; the strictest level along the tree wins.
+  in `index.md`. The level covers the folder, its plain subfolders, and its
+  sub-topics. The strictest level along the tree wins.
 - Notes carry no level of their own. One private note in an open topic moves
-  into a private sub-topic (a folder with an `index.md`, which may hold just
-  that note).
-- Episodes get a level from code: the strictest of their hinted topics and of
+  into a private sub-topic: a folder with an `index.md`, which may hold just
+  that note.
+- Code gives each episode a level: the strictest of its topic hints and of
   what the session read (§4.4). An episode is never less private than its
   inputs.
-- `brain.toml` keeps no per-topic level. It names which model providers the
+- `brain.toml` keeps no per-topic level. It names the model providers the
   owner trusts for `private` (§4.3).
 
 ### 4.3 Which readers are trusted
 
-The level says which sinks are allowed; each reader is then checked against
-it. A host's model provider is known from the host (Claude Code, Codex,
-Antigravity) or declared for command presets and OpenClaw.
+The level says which destinations are allowed. Each reader is then checked
+against it. A host's model provider is known from the host (Claude Code,
+Codex, Antigravity), or declared for distill presets and OpenClaw.
 
 ```toml
 [privacy]
@@ -100,55 +102,65 @@ trusted_providers = ["anthropic"]   # may read `private`; local models always ma
 
 | Reader | `open` | `private` | `secret` |
 |---|---|---|---|
-| Host on a trusted provider | yes | yes | no |
-| Host on another provider, or unknown | yes | no | no |
-| Local model (host or backend) | yes | yes | yes |
-| The owner (CLI, editor, viz) | yes | yes | yes |
+| Host on a trusted provider | Yes | Yes | No |
+| Host on another or unknown provider | Yes | No | No |
+| Local model | Yes | Yes | Yes |
+| The owner (CLI, editor, viz) | Yes | Yes | Yes |
 
 ### 4.4 Enforcement points
 
 | Point | Mechanism | Strength |
 |---|---|---|
-| Tool reads (search, read, orient, neighbors, list) | Filter by the reader's trust before ranking; a hidden note reads as missing. | Hard, for MCP and CLI |
-| Direct file reads | `brain_list` gives the path only to readers trusted at every level present in the brain; others are told to use the tools. | Soft: any program can read files |
-| Automatic injection | Session-start briefing and per-prompt recall include `open` content only. | Hard |
-| Consolidation and harvest | Packets hold only what the backend may read; ops may not cite a source in a note less private than the source (P4). | Hard |
-| Checked edits | `brain check` refuses a change to `bw-privacy`, and a new link from a note to a more private one. | Hard for recorded edits |
-| Tool calls after a private read | A read of `private` content marks the session exposed. A pre-tool hook then asks the user before external tools run, where the host has one (Claude Code's `PreToolUse` can ask or deny); elsewhere, the read result says to keep the content local. | Medium, host-dependent |
-| Outputs | Read results label `private` content: "keep in this conversation; do not post it". | Soft: depends on the agent |
-| Exports | `brain viz --export` leaves out non-`open` notes unless `--include private`. | Hard |
+| Tool reads (search, read, orient, neighbors, list) | Filter by the reader's trust before ranking; a hidden note reads as missing | Hard, for MCP and CLI |
+| Direct file reads | `brain_list` gives the path only to readers trusted at every level in the brain | Soft |
+| Automatic injection, if hooks return | Only `open` content | Hard |
+| Consolidation and harvest | Packets hold only what the reader may see | Hard |
+| Direct edits | `brain validate` and lint report a changed `bw-privacy` and a new link to a more private note | Soft |
+| Tool calls after a private read | Mark the session exposed; ask before external tools run | Medium, host-dependent |
+| Outputs | Read results label `private` content as not for posting | Soft |
+| Exports | `brain viz --export` leaves out non-`open` notes unless `--include private` | Hard |
 
-The exposure mark (fourth row from the bottom) is the guardrail against
-giving sensitive content to an untrusted third party: it targets the case
-where injected text in a web page or issue steers an agent that has just
-read private notes into sending them somewhere.
+- Any program can read files, so `brain_list` can only point readers that
+  are not trusted to the tools.
+- Direct edits are plain file writes. Validation reports a violation after
+  the fact, and git or the owner reverts it. P4 also needs a lint rule for a
+  note that cites a source more private than itself.
+- The exposure mark guards against giving private content to an untrusted
+  third party. It targets text in a web page or issue that steers an agent
+  which has just read private notes into sending them somewhere. A pre-tool
+  hook asks the user before external tools run, where the host has one
+  (Claude Code's `PreToolUse` can ask or deny). Elsewhere, the read result
+  says to keep the content local.
 
 ### 4.5 Links
 
-- An `open` note may link to a `private` one; a reader without access sees
-  the link text and gets `not_found` for the target. No stand-in notes.
-- Agents may not add such a link (P4); the owner may.
+- An `open` note may link to a `private` one. A reader without access sees
+  the link text and gets `not_found` for the target. There are no stand-in
+  notes.
+- Agents may not add such a link (P4). The owner may.
 
 ## 5. Options
 
 | Option | For | Against |
 |---|---|---|
-| **A · Levels as allowed sinks (this draft)** | Each level answers concrete questions; covers model, tools, outputs, injection, and exports; owner-only; visible in `index.md` | Most work; tool-call control depends on host hooks |
-| B · Restore the old read levels | Already designed and tested | Same problems as §1 |
-| C · Separate brains only (today) | Simplest; a directory boundary every tool understands | No links across the boundary; two brains to keep up; no control over tools or outputs inside a brain |
-| D · Labels and instructions only | Cheap; no filtering code | Relies entirely on agents obeying; no hard guarantee anywhere |
+| A. Levels as allowed destinations (this draft) | Concrete questions per level; covers models, tools, outputs, and exports; owner-only; visible in `index.md` | Most work; tool-call control depends on host hooks |
+| B. Restore the old read levels | Already designed and tested once | The problems in §1 |
+| C. Separate brains only (today) | Simplest; a folder boundary every tool understands | No links across brains; two brains to keep up; no control inside a brain |
+| D. Labels and instructions only | Cheap; no filtering code | Relies on agents obeying; no hard guarantee |
 
-Recommendation: A, built in two steps. Step 1: levels, declaration,
-reader trust, read filtering, injection, packets, and P4. Step 2: the
-exposure mark with pre-tool hooks, output labels, and export filtering.
+Recommendation: A, built in two steps.
+
+1. Levels, declaration, reader trust, read filtering, packets, and P4.
+2. The exposure mark with pre-tool hooks, output labels, and export
+   filtering.
 
 ## 6. Open questions
 
 | # | Question | Options |
 |---|---|---|
-| PQ1 | How many levels? | `open`/`private`; `open`/`private`/`secret` (draft) |
-| PQ2 | Where does provider trust live? | `brain.toml` (travels with the brain, draft); user config (per machine) |
+| PQ1 | How many levels? | `open` and `private`; or `open`, `private`, and `secret` (draft) |
+| PQ2 | Where does provider trust live? | `brain.toml`, which travels with the brain (draft); or the user config, per machine |
 | PQ3 | After a private read, what happens before an external tool runs? | Ask the user (draft); block; label only |
-| PQ4 | May the owner mark a single note private? | No: use a private sub-topic (draft); owner-only `bw-privacy` on a note |
-| PQ5 | May a cloud backend consolidate `private` episodes if its provider is trusted? | Yes (draft); local backends only |
-| PQ6 | Does the owner's own CLI get the exposure mark? | No (draft); yes, for agents running the CLI through a shell |
+| PQ4 | May the owner mark a single note private? | No, use a private sub-topic (draft); or an owner-only `bw-privacy` on a note |
+| PQ5 | May an agent on a trusted cloud provider consolidate `private` episodes? | Yes (draft); or local models only |
+| PQ6 | Does the owner's own CLI get the exposure mark? | No (draft); or yes, for agents running the CLI through a shell |

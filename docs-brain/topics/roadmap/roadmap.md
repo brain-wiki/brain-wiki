@@ -8,7 +8,7 @@ source: "docs/roadmap/README.md"
 
 What is built, what comes next, and what is still open
 
-Designs not yet built are in [[proposals|docs/proposal]].
+Designs that are not built yet are in [[proposals|docs/proposal]].
 
 Generated from `docs/roadmap/README.md`.
 

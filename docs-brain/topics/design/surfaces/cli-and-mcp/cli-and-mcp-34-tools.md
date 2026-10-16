@@ -7,28 +7,48 @@ source: "docs/design/cli-and-mcp.md#34-tools"
 ---
 # Tools
 
-All tools except `brain_list` and `brain_harvest_apply` (which takes the run
-from `brain_harvest_prepare`) accept an optional `brain` argument (a brain
-name allowed for this host). Unknown arguments are rejected. All return structured content plus a text rendering.
+Every tool except `brain_list` and `brain_harvest_apply` takes an optional
+`brain` argument: a brain this host may use, or its default when omitted.
+`brain_harvest_apply` gets its brain from the run. Unknown top-level
+arguments are rejected with an error that names them. Every tool returns
+structured content and a text rendering.
+
+All tools are closed-world. "Read-only" below means read-only, not
+destructive, and idempotent.
 
 | Tool | Annotations | Purpose |
 |---|---|---|
-| `brain_list` | read-only, idempotent, closed-world | Brains this host may use ([[index-and-search-91-brain-list\|index and search §9.1]]) |
-| `brain_orient` | read-only, idempotent, closed-world | One brain's briefing ([[index-and-search-8-orientation-the-briefing\|index and search §8]]) |
-| `brain_search` | read-only, idempotent, closed-world | Search or browse with filters and supersession guards ([[index-and-search-6-search\|index and search §6]]) |
-| `brain_read` | read-only, idempotent, closed-world | Read a note, hub, or episode, with handles on every link and backlink ([[index-and-search-7-read\|index and search §7]]) |
-| `brain_neighbors` | read-only, idempotent, closed-world | Follow a note's links in either direction ([[index-and-search-92-neighbors\|index and search §9.2]]) |
-| `brain_validate` | read-only, idempotent, closed-world | Check the frontmatter of notes the agent created or edited; needs no capability ([[write-path-23-direct-edits\|write path §2.3]]) |
-| `brain_log_episode` | not read-only, not destructive, idempotent (with `dedupe_key`), closed-world | Write an episode ([[write-path-21-ways-an-episode-is-written\|write path §2.1]]) |
-| `brain_propose_rule` | destructive, not idempotent, closed-world; `_meta["anthropic/requiresUserInteraction"] = true` | Add or replace a rule with user confirmation ([[write-path-6-rules\|write path §6]]) |
-| `brain_consolidate_prepare` | read-only, idempotent, closed-world | Gather pending episodes with candidate notes; returns the guidance and the packet ([[write-path-43-selecting-and-packaging-work\|write path §4.3]]) |
-| `brain_consolidate_done` | not read-only, not destructive (reversible), not idempotent, closed-world | Archive the episodes the agent handled as one run; requires `edit` ([[write-path-44-archiving-handled-episodes\|write path §4.4]]) |
-| `brain_read_origin` | read-only, idempotent, closed-world | Read a bounded window of the conversation an episode came from; requires `read_origin` ([[write-path-46-origin-context\|write path §4.6]]) |
-| `brain_harvest_prepare` | not read-only, not destructive, closed-world | Start an agent-backend harvest of the calling host's sessions; returns instructions and a packet of condensed, scrubbed turns; requires `harvest` ([[write-path-22-harvesting-sessions\|write path §2.2]]) |
-| `brain_harvest_apply` | not read-only, not destructive, idempotent per run, closed-world | Validate the agent's per-session results and write episodes with server-set provenance |
+| `brain_list` | read-only | Brains this host may use ([[index-and-search-91-brain-list\|index and search §9.1]]) |
+| `brain_orient` | read-only | One brain's briefing ([[index-and-search-8-orientation-the-briefing\|index and search §8]]) |
+| `brain_search` | read-only | Search or browse with filters and supersession guards ([[index-and-search-6-search\|index and search §6]]) |
+| `brain_read` | read-only | A note, hub, or episode, with handles on every link and backlink ([[index-and-search-7-read\|index and search §7]]) |
+| `brain_neighbors` | read-only | Follow a note's links in either direction ([[index-and-search-92-neighbors\|index and search §9.2]]) |
+| `brain_validate` | read-only | Check the frontmatter of notes the agent created or edited ([[write-path-23-direct-edits\|write path §2.3]]) |
+| `brain_log_episode` | writes, idempotent with `dedupe_key` | Write an episode ([[write-path-21-ways-an-episode-is-written\|write path §2.1]]) |
+| `brain_propose_rule` | destructive, not idempotent, needs user interaction | Add or replace a rule after the user confirms ([[write-path-6-rules\|write path §6]]) |
+| `brain_consolidate_prepare` | read-only | Pending episodes with candidate notes, and the guidance ([[write-path-43-selecting-and-packaging-work\|write path §4.3]]) |
+| `brain_consolidate_done` | writes, not idempotent | Archive the handled episodes as one run ([[write-path-44-archiving-handled-episodes\|write path §4.4]]) |
+| `brain_read_origin` | read-only | A bounded window of the conversation an episode came from ([[write-path-46-origin-context\|write path §4.6]]) |
+| `brain_harvest_prepare` | writes, not idempotent | Start a harvest of the calling host's sessions ([[write-path-22-harvesting-sessions\|write path §2.2]]) |
+| `brain_harvest_apply` | writes, idempotent per run | Validate the agent's per-session results and write episodes |
 
-Input schemas (JSON Schema 2020-12; output schemas follow the result shapes
-in 04 and 05):
+"Writes" means not read-only and not destructive. `brain_propose_rule`
+carries `_meta["anthropic/requiresUserInteraction"] = true`.
+
+Capabilities each tool needs:
+
+| Tool | Needs |
+|---|---|
+| `brain_log_episode` | `episodes` |
+| `brain_propose_rule` | `propose_rules` |
+| `brain_consolidate_done` | `edit` |
+| `brain_read_origin` | `read_origin` |
+| `brain_harvest_prepare` | `harvest`, and harvest turned on for the host in the user config |
+| `brain_harvest_apply` | Harvest still turned on for the host |
+| Others | Nothing |
+
+Input schemas (JSON Schema 2020-12; output shapes are in
+[[index-and-search|index and search]] and [[write-path|write path]]):
 
 ```json
 {
@@ -113,10 +133,10 @@ in 04 and 05):
 
   "brain_read_origin": {"type": "object", "additionalProperties": false, "required": ["episode"],
     "properties": {
-      "episode":             {"type": "string", "description": "Episode id or path."},
-      "turns":               {"type": "string", "pattern": "^[0-9]+-[0-9]+$",
-                              "description": "Turn range; default: the episode's range plus context."},
-      "brain":               {"type": "string"}}},
+      "episode": {"type": "string", "description": "Episode id or path."},
+      "turns":   {"type": "string", "pattern": "^[0-9]+-[0-9]+$",
+                  "description": "Turn range; default: the episode's range plus context."},
+      "brain":   {"type": "string"}}},
 
   "brain_harvest_prepare": {"type": "object", "additionalProperties": false,
     "properties": {
@@ -129,7 +149,7 @@ in 04 and 05):
     "properties": {
       "run":      {"type": "string", "pattern": "^run-[0-9A-HJKMNP-TV-Z]{26}$"},
       "sessions": {"type": "array", "maxItems": 50, "items": {
-        "type": "object", "additionalProperties": false, "required": ["session"],
+        "type": "object", "required": ["session"],
         "properties": {
           "session":           {"type": "string", "pattern": "^S[0-9]+$", "description": "Handle from the packet."},
           "skip":              {"type": "boolean", "default": false},
@@ -147,20 +167,32 @@ in 04 and 05):
 
 Notes:
 
-- `brain_log_episode` assembles the episode body from `summary`, `claims`,
-  and `open_questions`; `claims` become a `## Claims` list in the body,
-  plain text that nothing parses later. The provenance fields are set by
-  the server, never by arguments ([[write-path-3-provenance-and-inputs|write path §3]]).
+- Unknown fields inside a `brain_harvest_apply` session entry or claim are
+  dropped, not rejected. Only top-level arguments are checked.
+- `brain_log_episode` builds the episode body from `summary`, `claims`,
+  and `open_questions`. Claims become a `## Claims` list, plain text that
+  nothing parses later. The server sets the provenance fields
+  (`bw-origin: agent`, `bw-captured: mcp`, `bw-inputs: unknown`, the host as
+  agent), never the arguments
+  ([[write-path-3-provenance-and-inputs|write path §3]]).
 - `session` and `origin_turns` on `brain_log_episode` are hints from the
-  model (used by the fallback harvest recipe); the episode records them but
-  keeps `bw-captured: mcp` and `bw-inputs: unknown`. In `brain_harvest_apply`, by
-  contrast, every provenance field comes from the server's own parse of the
-  session.
-- `brain_validate` writes nothing and checks no capability: any agent may
+  model, used by the fallback harvest recipe. The episode records them.
+  In `brain_harvest_apply`, by contrast, every provenance field comes from
+  the server's own parse of the session.
+- `brain_propose_rule` asks the user through elicitation when the client
+  offers it. A confirmed rule is added as a run, and a declined one writes
+  nothing. Without a way to ask (including Antigravity, which declines
+  every request unseen, T-8), the rule is saved as a proposal for
+  `brain rules accept`.
+- `brain_validate` writes nothing and needs no capability: any agent may
   check files. It returns the lint result (`problems`, counts) plus
   `checked`, the paths it checked (`null` for the whole brain).
-- `brain_consolidate_prepare` returns the guidance and packet as text and
-  counts (`episodes`, `pending`, `notes`) as structured content. Notes are
-  edited with the agent's own file tools; no MCP tool writes a note.
-- `brain_consolidate_done` returns `{run, archived}`; `brain undo RUN` puts
+- The packet tools return the guidance and packet as text, and counts as
+  structured content: `{episodes, pending, notes}` for consolidation,
+  `{run, sessions, remaining}` for harvest. No MCP tool writes a note; the
+  agent edits notes with its own file tools.
+- `brain_consolidate_done` returns `{run, archived}`. `brain undo RUN` puts
   the episodes back.
+- `brain_harvest_apply` writes what validates and lists the problems for
+  the rest. It fails with `invalid_ops` only when nothing was written or
+  skipped.

@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Rule
 
-A standing directive in `rules.md`, always loaded into orientation. Only added with the user's verbatim words.
+A standing directive in `rules.md`, shown at the top of every orientation. A rule is added only from the user's own words.

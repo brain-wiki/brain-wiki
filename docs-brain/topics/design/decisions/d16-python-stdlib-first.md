@@ -10,11 +10,11 @@ source: "docs/decision/d16-python-stdlib-first.md"
 Status: accepted.
 Argued in: [[engineering|engineering]].
 
-Python ≥ 3.11, stdlib-first, few runtime dependencies. The CLI was on `argparse` for fast startup until D31.
+brain-wiki is written in Python 3.11 or newer, uses the standard library first, and keeps runtime dependencies few: the MCP SDK, PyYAML, tomlkit, filelock, and Typer. The CLI used `argparse` for fast startup until D31 moved it to Typer.
 
 ### Alternatives considered
 
-Rust core
+- A Rust core.
 
 ## Related
 - [[d31-typer-cli]]: D31: The CLI is built on Typer

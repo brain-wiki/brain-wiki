@@ -8,17 +8,19 @@ source: "docs/design/import.md"
 
 Adopting Markdown folders and Obsidian vaults
 
-Status: draft for review
+How existing Markdown becomes part of a brain: a folder adopted in place,
+notes copied into a brain, documents turned into episodes, and agents' own
+memory files brought in.
 
 Generated from `docs/design/import.md`.
 
 ## Notes
 - [[import-1-goals]]: Goals (Import)
   - [[i1]]: I1: An existing Markdown folder or Obsidian vault becomes a working brain…
-  - [[i2]]: I2: Nothing changes before the user has seen a report of what will change
+  - [[i2]]: I2: Nothing changes before the user has seen what will change
   - [[i3]]: I3: Every change to existing files is a run
-  - [[i4]]: I4: Normalization is opt-in and incremental
-  - [[i5]]: I5: The user's own files can also be fed to consolidation as episodes, and…
+  - [[i4]]: I4: Normalization is optional and step by step
+  - [[i5]]: I5: The user's own files, and agents' memory files, can be fed to…
 - [[import-2-modes]]: Modes (Import)
 - [[import-3-overlay]]: Overlay
   - [[import-31-pipeline]]: Pipeline

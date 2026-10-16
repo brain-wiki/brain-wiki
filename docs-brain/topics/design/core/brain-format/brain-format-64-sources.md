@@ -7,7 +7,7 @@ source: "docs/design/brain-format.md#64-sources"
 ---
 # Sources
 
-`bw-sources` records where a note's knowledge came from:
+`bw-sources` records where a note's knowledge came from.
 
 ```yaml
 bw-sources:
@@ -18,8 +18,10 @@ bw-sources:
 
 - Each item MUST be a quoted link to a note or episode, or a URL (BW120).
 - A link SHOULD resolve (BW122, a warning). A link to an episode's
-  `archive/` path is not reported while that episode is still in the inbox,
-  so a note can cite an episode before `brain consolidate --done` moves it.
-- Sources are per note, not per fact, and carry no trust flags. The episode
-  a source names keeps its own provenance (`bw-origin`, `bw-inputs`, §9),
-  so following the link answers who wrote it and what they had read.
+  `archive/` path is not reported while that episode is still in the
+  inbox, so a note can cite an episode before `brain consolidate --done`
+  moves it.
+- Sources are per note, not per fact, and carry no trust flags. The
+  episode a source names keeps its own provenance (`bw-origin`,
+  `bw-inputs`, §9), so following the link answers who wrote it and what
+  they had read.

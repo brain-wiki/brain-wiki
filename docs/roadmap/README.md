@@ -2,9 +2,9 @@
 
 | File | What it holds |
 |---|---|
-| [Milestones](milestones.md) | Implementation milestones and the build status |
-| [Open questions](open-questions.md) | Decisions needed from the maintainer |
-| [Verification items](verification.md) | Assumptions about hosts and dependencies to check |
+| [Milestones](milestones.md) | How brain-wiki was built, what is not built, and what the tests do not yet prove |
+| [Open questions](open-questions.md) | Questions for the maintainer, open and settled |
+| [Verification items](verification.md) | Facts about hosts and dependencies to check by test |
 | [Ideas](ideas.md) | Ideas without a design yet |
 
-Designs not yet built are in [docs/proposal](../proposal/README.md).
+Designs that are not built yet are in [docs/proposal](../proposal/README.md).

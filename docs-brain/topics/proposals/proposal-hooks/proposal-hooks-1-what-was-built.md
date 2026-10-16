@@ -8,15 +8,21 @@ source: "docs/proposal/hooks.md#1-what-was-built"
 # What was built (Host hooks: briefing, capture, and recall)
 
 One entry point, `brain hook <host|auto> <event>`, read the host's JSON
-payload on stdin and wrote the host's expected JSON on stdout. `brain connect
-<host>` installed hooks only on request, with the absolute path of the
-installed `brain`:
+payload on stdin and wrote the JSON the host expects on stdout.
+`brain connect <host>` installed hooks only on request, with the absolute
+path of the installed `brain`:
 
 | Option | Hooks | Did |
 |---|---|---|
-| `--briefing-hook` | `SessionStart` (Claude Code, Codex), `PreInvocation` (Antigravity) | Injected the briefing (rules, topics, recent changes) at session start, so the agent did not need to call `brain_orient` |
-| `--capture` | `PostToolUse`, `Stop`, `PreCompact`, `SessionEnd` | Marked sessions that ran untrusted tools as having external inputs; asked the agent once at stop to log durable learnings; wrote raw transcript episodes at compaction and session end |
-| by hand | `UserPromptSubmit` with `[recall] on_prompt = true` | Injected up to three matching notes, with their guards, on each prompt |
+| `--briefing-hook` | `SessionStart` (Claude Code, Codex), `PreInvocation` (Antigravity) | Injected the briefing at session start |
+| `--capture` | `PostToolUse`, `Stop`, `PreCompact`, `SessionEnd` | Tracked external inputs, asked for learnings at stop, wrote raw episodes at compaction and session end |
+| By hand | `UserPromptSubmit` with `[recall] on_prompt = true` | Injected up to three matching notes on each prompt |
+
+- The briefing (rules, topics, recent changes) meant the agent did not
+  need to call `brain_orient`.
+- Capture marked sessions that ran untrusted tools as having external
+  inputs, and asked the agent once at stop to log durable learnings.
+- Recall included each note's supersession warnings.
 
 ## Subsections
 - [[proposal-hooks-11-events]]: Events

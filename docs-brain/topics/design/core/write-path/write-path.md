@@ -8,18 +8,19 @@ source: "docs/design/write-path.md"
 
 Direct edits and `brain validate`, episodes, consolidation, `brain commit` and `brain schedule`, runs and undo, rules
 
-Status: draft for review · The protected-file list in §2.3 and the run
-record in §8 are normative for v0.2
+This document covers every way content enters a brain: episodes, harvest,
+direct edits, consolidation, commits, rules, and brain-wiki's own runs. The
+protected-file list in §2.3 and the run record in §8 are normative.
 
 Generated from `docs/design/write-path.md`.
 
 ## Notes
 - [[write-path-1-requirements]]: Requirements (Write path)
-  - [[w1]]: W1: Writing an episode must never block or fail an agent's work, and never…
+  - [[w1]]: W1: Writing an episode never blocks or fails an agent's work, and never…
   - [[w2]]: W2: A note is an ordinary Markdown file that agents and people edit…
-  - [[w3]]: W3: Untrusted content can never become a standing directive without the…
+  - [[w3]]: W3: Untrusted content never becomes a standing directive without the user
   - [[w4]]: W4: Every change can be undone
-  - [[w5]]: W5: Every change brain-wiki itself makes is recorded
+  - [[w5]]: W5: Every change brain-wiki itself makes is recorded with what it touched,…
   - [[w6]]: W6: Any LLM the user already runs can do the writing, with no API keys
 - [[write-path-2-the-write-paths]]: The write paths
   - [[write-path-21-ways-an-episode-is-written]]: Ways an episode is written

@@ -6,16 +6,18 @@ source: "docs/user/maintenance.md#consolidate"
 ---
 # Consolidate
 
-The inbox holds episodes nobody has organized yet. Consolidation folds them
-into notes. It is optional, and runs when you ask.
+Consolidation folds inbox episodes into notes. It runs only when you ask.
 
 | How | When |
 |---|---|
 | Ask your agent: "consolidate my brain" | Day to day; the agent needs `edit` |
-| `brain consolidate --prepare`, edit notes, `brain validate`, then `brain consolidate --done EPISODE…` | By hand or from your own tooling |
+| `brain consolidate --prepare`, edit, `brain validate`, `brain consolidate --done EPISODE…` | By hand or from your own tooling |
 
-`--prepare` lists pending episodes, oldest first, each with the notes it
-most likely belongs to, plus guidance on writing them in. Once the notes are
-edited and valid, `--done` moves the handled episodes to `archive/` as one
-run; `brain undo` returns them to the inbox. Notes cite an episode in
-`bw-sources`, so the archived episode stays the source.
+1. `--prepare` lists pending episodes, oldest first, each with the notes it
+   most likely belongs to, plus guidance on writing them in. `--max-episodes`
+   caps the count; the default is 50 (`[consolidate] max_episodes_per_run`
+   in `brain.toml`).
+2. You or the agent edit the notes and cite each episode in `bw-sources`.
+3. `--done` moves the handled episodes to `archive/` as one run. The
+   archived episode stays the note's source. `brain undo` returns them to
+   the inbox.

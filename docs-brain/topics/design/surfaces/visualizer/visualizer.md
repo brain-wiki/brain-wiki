@@ -8,15 +8,14 @@ source: "docs/design/visualizer.md"
 
 The 3D brain map
 
-Status: draft for review (second design; the first rendered every note at
-once and did not scale past a few thousand)
-
 Generated from `docs/design/visualizer.md`.
 
 ## Notes
 - [[visualizer-1-goals]]: Goals (Visualizer)
 - [[visualizer-2-levels-semantic-zoom]]: Levels (semantic zoom)
 - [[visualizer-3-rendering]]: Rendering
+  - [[visualizer-31-layout]]: Layout
+  - [[visualizer-32-words-and-lines]]: Words and lines
 - [[visualizer-4-hud-and-navigation]]: HUD and navigation
 - [[visualizer-5-architecture]]: Architecture
 - [[visualizer-6-data]]: Data (Visualizer)

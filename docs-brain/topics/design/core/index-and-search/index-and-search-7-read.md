@@ -7,20 +7,32 @@ source: "docs/design/index-and-search.md#7-read"
 ---
 # Read
 
-`read(target, mode)` resolves `target` by id, path, file name, alias, or
-title (brain format §6.5); an ambiguous target returns the candidates instead of
-guessing.
+`read(target, mode)` returns one note, hub, or episode. The target is
+matched by node id, path, or frontmatter id, then by the link resolution
+order of [[brain-format-65-links|brain format §6.5]]. An ambiguous target
+is an error that lists the candidates instead of guessing.
 
 | Mode | Returns |
 |---|---|
-| `outline` (default for hubs) | The summary (the first paragraph, up to 600 characters), headings, links, and backlinks |
-| `full` (default for notes) | The body without frontmatter or HTML comments, then the "Links:" and "Linked from:" handle lists below a `---` line |
-| `section` | One heading's content, matched by heading text, case-insensitively. Asking for a `section` implies this mode; the mode without a section, or a section with another mode, is a usage error |
-| `raw` | The file exactly as on disk, for agents about to edit it; an episode stays in its untrusted envelope |
+| `outline` (default for hubs) | Summary, headings, links, and backlinks |
+| `full` (default for notes and episodes) | The body, then link and backlink lists |
+| `section` | One section's content |
+| `raw` | The file exactly as on disk, for an agent about to edit it |
 
-Every mode except `raw` starts with the banners from §5 (a `raw` read still
-carries them in the structured result, but its text is the file alone). An
-outline:
+- The outline summary is the first paragraph that is not a heading, up to
+  600 characters.
+- `full` returns the body without frontmatter or HTML comments. For notes
+  and hubs it appends "Links:" and "Linked from:" lists below a `---`
+  line, since the file's own wikilinks carry no paths.
+- `section` matches a heading's text, case-insensitively. Passing a
+  section implies this mode. The mode without a section, or a section with
+  another mode, is a usage error.
+- An episode's content, in every mode, is wrapped in the
+  `<untrusted-episode>` envelope.
+
+Every mode except `raw` starts with the banners from §5. A `raw` read
+still carries them in the structured result, but its text is the file
+alone. An outline:
 
 ```
 ↳ supersedes "Use ripgrep for search" (topics/search/ripgrep.md).
@@ -39,15 +51,20 @@ Linked from:
 - linked_from "Search" (topics/search/index.md)
 ```
 
-Every link and backlink carries its handle: the path after the title in
-the text, and in the structured result:
+Every link and backlink carries its handle, the path after the title. In
+the structured result, `outline` and `full` include:
 
-| Field | Items | Order and limit |
-|---|---|---|
-| `links` | `{relation, target, id, title, path, resolved}`; `relation` is `superseded_by`, `cites`, or `links_to`; `target` is the link as written; `id`, `title`, and `path` are null when it does not resolve | Metadata links first, then body links in file order; one entry per target. Text shows 20, then a pointer to `brain_neighbors("<path>", direction="out")` |
-| `backlinks` | `{id, title, path, relation}`; `relation` is `supersedes`, `cited_by`, or `linked_from` | Supersession first, then most recently updated; one entry per note; at most 10, with `backlinks_total` and a pointer to `brain_neighbors("<path>", direction="in")` |
+- `links`: items `{relation, target, id, title, path, resolved}`.
+  `relation` is `superseded_by`, `cites`, or `links_to`. `target` is the
+  link as written. `id`, `title`, and `path` are null when it does not
+  resolve. Metadata links come first, then body links in file order, one
+  entry per target. Text shows 20, then a pointer to
+  `brain_neighbors("<path>", direction="out")`.
+- `backlinks`: items `{id, title, path, relation}`, where `relation` is
+  `supersedes`, `cited_by`, or `linked_from`. Supersession comes first,
+  then the most recently updated, one entry per note, at most 10.
+  `backlinks_total` gives the full count, and text points to
+  `brain_neighbors("<path>", direction="in")` for the rest.
 
-`full` mode carries the same `links` and `backlinks`; it appends the handle
-lists to notes and hubs, since the file's own wikilinks carry no paths. An
-episode's result adds its `agent`, `inputs`, `origin`, `session`, and
+An episode's result adds `agent`, `inputs`, `origin`, `session`, and
 `origin_turns`.

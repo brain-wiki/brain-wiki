@@ -7,27 +7,27 @@ source: "docs/design/write-path.md#46-origin-context"
 ---
 # Origin context
 
-An episode is a summary; sometimes the decision it records only makes sense
-with the conversation around it. When an episode carries `session` and
-`origin_turns` and its transcript still exists on this device, consolidation
-can look at the original:
+An episode is a summary, and sometimes the decision it records only makes
+sense with the conversation around it. When the transcript still exists on
+this device, the original conversation can be read:
 
 | Interface | How |
 |---|---|
-| MCP | The packet marks such episodes `origin_available: true`. The agent may call `brain_read_origin {episode, turns?}`, which returns a bounded window of normalized turns (default up to 20, never more than 60) around the episode's range. |
-| CLI | `brain origin <episode> [--turns A-B]` prints the same window for a person. |
+| MCP | The packet marks such episodes `origin_available: true`. `brain_read_origin {episode, turns?}` returns a window of turns. |
+| CLI | `brain origin <episode> [--turns A-B]` prints the same window. |
 
-Rules for origin reads:
-
-- The window is normalized the same way harvest extracts turns: tool output
-  bodies are omitted unless explicitly requested, and then wrapped as
-  `<untrusted-tool-output>`; text the host injected is stripped; secrets
-  are scrubbed.
-- Reading origins requires `read_origin = true` in the caller's agent
-  profile ([[cli-and-mcp-1-agent-profiles|CLI and MCP §1]]), off by default for
-  every host, because transcripts hold far more than the episode chose to
-  keep.
-- Missing origins are normal (another device, or deleted after the host's
-  retention period; Claude Code keeps transcripts 30 days by default). The
-  tool returns `not_available` with the reason, and consolidation proceeds
-  from the episode alone.
+- Origin is available when the episode records `session` and
+  `origin_turns`, brain-wiki has a session reader for its `agent`, and its
+  `device` is this one.
+- The default window is the episode's turn range, widened to about 20
+  turns. A window never exceeds 60 turns.
+- The window is normalized as harvest normalizes turns. Tool output bodies
+  are never included, injected text is stripped, and secrets are scrubbed.
+  The result is marked `untrusted` unless the session's inputs are `local`.
+- Agents need `read_origin = true` in their profile
+  ([[cli-and-mcp-1-agent-profiles|CLI and MCP §1]]). It is off by default
+  for every host, because transcripts hold far more than the episode chose
+  to keep. The user's own CLI may always read origins.
+- Missing origins are normal: another device, or a transcript deleted
+  after the host's retention period. The call fails with `not_available`
+  and the reason, and consolidation proceeds from the episode alone.

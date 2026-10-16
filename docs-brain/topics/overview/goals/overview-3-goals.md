@@ -10,7 +10,7 @@ source: "docs/design/overview.md#3-goals"
 
 ## Items
 - [[g1]]: G1: Files are the source of truth
-- [[g2]]: G2: Works with the agents people use
+- [[g2]]: G2: One brain works with the agents people use
 - [[g3]]: G3: Code and data are separate
 - [[g4]]: G4: Writes are safe
 - [[g5]]: G5: Retrieval is correct about change

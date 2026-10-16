@@ -22,7 +22,7 @@
       "interface": {
         "displayName": "brain-wiki",
         "shortDescription": "Long-term memory shared by all your AI agents",
-        "longDescription": "brain-wiki keeps one durable memory for every agent you use, as a folder of plain Markdown notes you own. Agents search it before answering, record what they learn in an inbox, and a validated, undoable consolidation step folds that into notes.",
+        "longDescription": "brain-wiki keeps one durable memory for every agent you use, as a folder of plain Markdown notes you own. Agents search it before answering and write what they learn into the notes, checked by brain validate and kept in git.",
         "developerName": "brain-wiki contributors",
         "category": "Productivity",
         "websiteURL": "https://github.com/brain-wiki/brain-wiki",

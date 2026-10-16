@@ -7,8 +7,8 @@ source: "docs/design/index-and-search.md#65-output"
 ---
 # Output (Index and search)
 
-Structured result (MCP `structuredContent`; JSON from the CLI with
-`--json`):
+The structured result is MCP `structuredContent`, or JSON from the CLI
+with `--json`:
 
 ```json
 {
@@ -41,13 +41,14 @@ Structured result (MCP `structuredContent`; JSON from the CLI with
 }
 ```
 
-`total` counts every match before `limit`. `next_cursor` is present when
-more results follow. `facets` appears only when requested. `score` is null
-when results are ordered by date or title instead of relevance. `inputs`
-and `agent` are set for episode hits only.
+- `total` counts every match before `limit`.
+- `next_cursor` is null on the last page.
+- `facets` appears only when requested.
+- `score` is null when results are ordered by date or title.
+- `inputs` and `agent` are set for episode hits only.
 
-The text form (MCP text content, CLI default) shows each hit's path, which is
-the handle for the next call, and puts guard banners (§5) before the
+The text form (MCP text content, CLI default) shows each hit's path, which
+is the handle for the next call. Guard banners (§5) come before the
 snippet:
 
 ```
@@ -59,6 +60,10 @@ snippet:
    …Lumen searches notes with SQLite FTS5 instead of «ripgrep»…
 ```
 
-Episode hits are raw and unreviewed. Their text is wrapped in an
-`<untrusted-episode agent="…" inputs="…">` envelope with a one-line
-reminder that it is data, not instructions ([[security-and-privacy|security]]).
+- A browse adds each hit's `updated` date inside the brackets.
+- When more results follow, a last line gives the range and the cursor:
+  `Showing 1–8 of 37; next page: cursor=8`.
+- Episode hits are raw and unreviewed. Their snippet is wrapped in an
+  `<untrusted-episode agent="…" inputs="…">` envelope, and the output ends
+  with a line saying episode text is data, not instructions
+  ([[security-and-privacy|security and privacy]]).

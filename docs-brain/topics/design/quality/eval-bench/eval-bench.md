@@ -8,8 +8,6 @@ source: "docs/design/eval-bench.md"
 
 Retrieval, lint, and performance suites
 
-Status: draft for review
-
 Generated from `docs/design/eval-bench.md`.
 
 ## Notes

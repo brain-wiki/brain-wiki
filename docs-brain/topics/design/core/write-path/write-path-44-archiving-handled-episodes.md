@@ -9,15 +9,16 @@ source: "docs/design/write-path.md#44-archiving-handled-episodes"
 
 `brain consolidate --done EPISODE…` (MCP `brain_consolidate_done
 {episodes}`) needs `edit`. Episodes are named by path or id, as prepare
-listed them; every one must be pending (`not_found` otherwise). The command
-moves them from `inbox/` to the same relative path under `archive/` as one
-run of kind `consolidate` (§7): one `log.md` entry, one git commit
-`brain: consolidate N episodes`, and `brain undo` returns them to the inbox.
-It regenerates `reports/` when `[reports] after_consolidate = true`
-(default).
+listed them. Each must be pending, or the command fails with `not_found`.
 
-Episodes the agent read and found nothing durable in are passed to `--done`
-too; episodes left out stay pending. A note citing an episode in
-`bw-sources` before `--done` archives it points at the `archive/` path the
-packet gave; lint does not report that link until the episode is archived
+The command moves them from `inbox/` to the same relative path under
+`archive/` as one run of kind `consolidate` (§7), with one `log.md` entry
+and one git commit, `brain: consolidate N episodes`. `brain undo` returns
+them to the inbox. It regenerates `reports/` when `[reports]
+after_consolidate = true`, the default.
+
+Episodes the agent found nothing durable in go to `--done` too, and
+episodes left out stay pending. A note may cite an episode's `archive_to`
+path in `bw-sources` before `--done` moves it there. Lint does not report
+that link until the episode is archived
 ([[lint-and-reports-4-how-lint-works|lint §4]]).

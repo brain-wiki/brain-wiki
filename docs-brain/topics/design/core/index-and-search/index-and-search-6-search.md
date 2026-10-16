@@ -7,6 +7,8 @@ source: "docs/design/index-and-search.md#6-search"
 ---
 # Search
 
+Search is one call for both keyword search and browsing. MCP exposes it as
+`brain_search`, the CLI as `brain search`.
 
 ## Subsections
 - [[index-and-search-61-inputs]]: Inputs

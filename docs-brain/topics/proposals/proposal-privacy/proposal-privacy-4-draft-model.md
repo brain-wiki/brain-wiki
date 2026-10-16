@@ -9,7 +9,7 @@ source: "docs/proposal/privacy.md#4-draft-model"
 
 
 ## Subsections
-- [[proposal-privacy-41-levels-as-allowed-sinks]]: Levels as allowed sinks
+- [[proposal-privacy-41-levels-as-allowed-destinations]]: Levels as allowed destinations
 - [[proposal-privacy-42-declaring]]: Declaring
 - [[proposal-privacy-43-which-readers-are-trusted]]: Which readers are trusted
 - [[proposal-privacy-44-enforcement-points]]: Enforcement points

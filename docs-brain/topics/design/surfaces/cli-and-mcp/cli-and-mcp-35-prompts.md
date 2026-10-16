@@ -7,12 +7,12 @@ source: "docs/design/cli-and-mcp.md#35-prompts"
 ---
 # Prompts
 
-Three MCP prompts give hosts that surface prompts as slash commands a
-one-step entry point (for example `/brain:harvest`, depending on the host's
-naming):
+Three MCP prompts give hosts that show prompts as slash commands a
+one-step entry point, for example `/brain:harvest`, depending on the
+host's naming:
 
-| Prompt | Does |
+| Prompt | Asks the agent to |
 |---|---|
-| `consolidate` | Asks the agent to call `brain_consolidate_prepare`, edit or create notes, run `brain_validate`, call `brain_consolidate_done`, repeat while episodes remain, and report what changed. |
-| `capture` | Asks the agent to summarize the current session's durable learnings and log them as one episode. |
-| `harvest` | Asks the agent to run the harvest recipe: prepare, distill each session, apply, repeat until no sessions remain or the user stops; fall back to the self-read recipe if the host is unsupported. |
+| `consolidate` | Call `brain_consolidate_prepare`, edit or create notes, run `brain_validate`, call `brain_consolidate_done`, repeat while episodes remain, and report what changed |
+| `capture` | Summarize the session's durable learnings and log them with one `brain_log_episode` call |
+| `harvest` | Run prepare, distill, and apply, at most 3 rounds; on `unsupported_host`, ask the user before reading its own session history |

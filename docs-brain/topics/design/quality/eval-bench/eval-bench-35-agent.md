@@ -7,7 +7,4 @@ source: "docs/design/eval-bench.md#35-agent"
 ---
 # `agent`
 
-Reserved for end-to-end runs of real hosts with the plugin installed on a
-fixture brain. Not built: `brain bench agent` (with or without `--backends`)
-reports the suite as skipped, and those checks are done by hand before
-releases.
+Reserved for end-to-end runs of real hosts with the plugin installed on a fixture brain. It is not built. `brain bench agent`, with or without `--backends`, reports the suite as skipped, and these checks are done by hand before releases.

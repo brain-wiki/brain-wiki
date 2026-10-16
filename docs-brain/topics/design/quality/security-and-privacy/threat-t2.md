@@ -7,8 +7,8 @@ source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T2: Poisoned knowledge
 
-**Poisoned knowledge.** False facts written into notes, directly or while consolidating.
+Poisoned knowledge. False facts written into notes, directly or while consolidating.
 
-**Mitigations:** Weaker than in format 2: there is no per-fact provenance and no `[unverified]` marking. A note may cite where its facts came from in `bw-sources`; orientation lists the field to agents that may edit, and the consolidation guidance asks them to cite each episode they fold in. Episodes keep their `inputs`, and the consolidation packet marks episodes with external or unknown inputs as untrusted. Git history shows what changed and when. Instructions tell the model to treat episode text as data.
+**Mitigations:** Notes have no per-fact provenance. A note may cite its sources in `bw-sources`, and orientation and the consolidation guidance ask agents to cite each episode they fold in. Episodes keep their `inputs`, and the consolidation packet marks episodes with external or unknown inputs as untrusted. The guidance tells the model to treat episode text as data. Git shows what changed and when.
 
-**Residual risk:** A false fact an agent writes directly looks like one the user wrote. That is a knowledge-quality risk, not a control risk: it never becomes a rule.
+**Residual risk:** A false fact an agent writes looks like one the user wrote. That is a knowledge-quality risk, not a control risk, because it never becomes a rule.

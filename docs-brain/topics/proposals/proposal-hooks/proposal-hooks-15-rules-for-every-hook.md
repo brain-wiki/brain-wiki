@@ -7,11 +7,11 @@ source: "docs/proposal/hooks.md#15-rules-for-every-hook"
 ---
 # Rules for every hook
 
-- Never break the host: internal errors were logged and the hook exited 0
+- Never break the host. Internal errors were logged, and the hook exited 0
   with an empty, valid output.
-- Fast: about 0.1 s with the installed `brain` (300 ms budget), no network,
-  no model calls, and never importing the MCP SDK. Online `uvx` took 23 s
-  per call behind a slow package index (T-10), so marketplace copies shipped
-  no hooks.
-- Quiet: only protocol JSON on stdout.
-- No shell interpolation of payload content.
+- Be fast: about 0.1 s with the installed `brain` (300 ms budget), no
+  network, no model calls, and no import of the MCP SDK. `uvx` took 23 s
+  per call behind a slow package index (T-10), so marketplace copies
+  shipped no hooks.
+- Print only protocol JSON on stdout.
+- Never interpolate payload content into a shell command.

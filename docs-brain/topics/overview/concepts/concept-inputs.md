@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Inputs
 
-Whether the writer had read content from outside the user's control (web, email, third-party tools) before writing an episode: `local`, `external`, or `unknown`.
+Whether the writer had read content from outside the user's control, such as web pages, email, or third-party tools, before writing an episode: `local`, `external`, or `unknown`.

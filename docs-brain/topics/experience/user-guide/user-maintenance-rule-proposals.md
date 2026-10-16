@@ -6,7 +6,8 @@ source: "docs/user/maintenance.md#rule-proposals"
 ---
 # Rule proposals
 
-Agents can propose rules. They wait for you:
+Agents with `propose_rules` can propose rules. A proposal waits in
+`inbox/proposals/` until you decide:
 
 ```sh
 brain review list
@@ -14,3 +15,5 @@ brain review show ID
 brain review accept ID      # or: brain rules accept ID
 brain review reject ID
 ```
+
+`brain rules list` shows your rules and the proposals still waiting.

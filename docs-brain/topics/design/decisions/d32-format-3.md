@@ -10,11 +10,11 @@ source: "docs/decision/d32-format-3.md"
 Status: accepted.
 Argued in: [[brain-format-6-notes|brain format §6]], [[brain-format-13-format-versioning|brain format §13]].
 
-Format 3: a note is an ordinary Markdown page. Frontmatter holds metadata only; facts and connections are body Markdown, and notes connect through wikilinks. `brain lint --fix` converts format 1 and 2 notes.
+In format 3 a note is an ordinary Markdown page. Frontmatter holds metadata only. Facts and connections are body Markdown, and notes connect through wikilinks. `brain lint --fix` converts format 1 and 2 notes as one undoable run.
 
 ### Alternatives considered
 
-Keeping claims and relations in frontmatter (D3's format 2)
+- Keeping claims and relations in frontmatter, as format 2 did (D3).
 
 ## Related
 - [[d03-flat-frontmatter]]: D3: Frontmatter is flat metadata

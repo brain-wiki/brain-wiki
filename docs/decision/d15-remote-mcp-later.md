@@ -1,10 +1,10 @@
 # D15: Remote MCP is designed, not built
 
 Status: accepted.
-Argued in: [proposal](../proposal/remote-mcp.md).
+Argued in: [remote MCP proposal](../proposal/remote-mcp.md).
 
-Remote MCP for chat apps is designed but not built in v0.1.
+A remote MCP server for chat apps is designed but not built. The MCP server runs over stdio only.
 
 ## Alternatives considered
 
-Ship HTTP + OAuth in v0.1
+- Shipping HTTP and OAuth in the first release.

@@ -7,11 +7,13 @@ source: "docs/design/cli-and-mcp.md#33-server-instructions"
 ---
 # Server instructions
 
-Sent once per connection:
-
-The static instruction block ([[agent-integrations-32-the-static-instruction-block|agent integrations §3.2]])
+The server sends the static instruction block
+([[agent-integrations-32-the-static-instruction-block|agent integrations §3.2]])
 without its skill pointer, so clients without an instruction file follow
-the same policy. Its file-access and edit sentences follow the host's
-profile, as in the block. Codex gets the policy only this way, and weighs
-the first 512 characters most, so the first bullet ends within them
-([[host-codex-1-instructions-come-from-the-mcp-server|Codex]]).
+the same policy.
+
+- The edit sentence follows the host's profile, as in the block. The
+  server picks it when it starts, for the host it detects then.
+- Codex gets the policy only this way and weighs the first 512 characters
+  most, so the first bullet ends within them
+  ([[host-codex-1-instructions-come-from-the-mcp-server|Codex]]).

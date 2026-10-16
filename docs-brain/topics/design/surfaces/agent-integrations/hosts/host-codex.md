@@ -6,8 +6,8 @@ source: "docs/design/hosts/codex.md"
 ---
 # Codex (CLI and ChatGPT desktop)
 
-How brain-wiki integrates with Codex: the Codex CLI and Codex in the
-ChatGPT desktop app. The cross-host mechanics are in
+How brain-wiki works with Codex: the Codex CLI and Codex in the ChatGPT
+desktop app. The mechanics shared by all hosts are in
 [[agent-integrations|agent integrations]].
 
 ## Sections

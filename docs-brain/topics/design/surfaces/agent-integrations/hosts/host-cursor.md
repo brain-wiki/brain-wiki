@@ -6,8 +6,9 @@ source: "docs/design/hosts/cursor.md"
 ---
 # Cursor and other MCP clients
 
-How brain-wiki integrates with Cursor, and with any other MCP client. The
-cross-host mechanics are in [[agent-integrations|agent integrations]].
+How brain-wiki works with Cursor and with any other MCP client. The
+mechanics shared by all hosts are in
+[[agent-integrations|agent integrations]].
 
 ## Sections
 - [[host-cursor-notes]]: Notes (Cursor and other MCP clients)

@@ -9,24 +9,30 @@ source: "docs/design/write-path.md#43-selecting-and-packaging-work"
 
 `brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE]`
 (MCP `brain_consolidate_prepare {topic, max_episodes}`) needs no capability.
+It rescans the brain first.
 
-**Selection.** Pending episodes (everything under `inbox/episodes/` and
-`inbox/agents/`), oldest first, up to `--max-episodes` (default `[consolidate]
-max_episodes_per_run`, 50) and a budget of about 15k tokens, because hosts
-cap tool results (Claude Code at 25k tokens by default; the tool raises its
-own cap with `_meta["anthropic/maxResultSizeChars"]` where supported). The
-first episode is always included. `--topic` keeps episodes whose topic hints
-include T. Leftover episodes wait for the next round. The model the agent
-runs on sees every episode and candidate note in the packet; keeping a body
-of notes away from a cloud model means keeping it in a separate brain
-([[proposal-privacy|privacy proposal]]).
+Selection:
 
-**Candidates.** For each episode: the hubs of its hinted topics, then up to
-5 notes or hubs found by an FTS query over the episode's most frequent
-words (archived notes excluded).
+- Pending episodes are everything under `inbox/episodes/` and
+  `inbox/agents/`, oldest first. Episodes with an empty body are skipped.
+- The packet holds up to `--max-episodes` (default `[consolidate]
+  max_episodes_per_run`, 50; MCP allows 1 to 100) within a budget of about
+  15k tokens, because hosts cap tool results. The first episode is always
+  included. The MCP tool raises Claude Code's cap with
+  `_meta["anthropic/maxResultSizeChars"]`.
+- `--topic` keeps episodes whose topic hints include T. An unknown topic is
+  `not_found`.
+- Leftover episodes wait for the next round.
 
-**Packet.** A JSON document with brain-relative paths; the guidance comes
-before it:
+The model the agent runs on sees every episode and candidate note in the
+packet. Keeping notes away from a cloud model means keeping them in a
+separate brain ([[proposal-privacy|privacy proposal]]).
+
+Candidates for each episode are the hubs of its hinted topics, then up to 5
+notes or hubs found by an FTS query over the episode's 12 most frequent
+words. Archived notes are excluded.
+
+The packet is JSON with brain-relative paths. The guidance comes before it:
 
 ```json
 {
@@ -37,10 +43,11 @@ before it:
     {"path": "inbox/episodes/2026/10/01JA0D7F9G1H3J5K7M9N1P3Q5R.md",
      "archive_to": "archive/episodes/2026/10/01JA0D7F9G1H3J5K7M9N1P3Q5R.md",
      "agent": "claude-code", "created": "2026-10-10T19:22:11Z",
-     "inputs": "unknown", "untrusted": true, "topics": ["search"],
+     "inputs": "unknown", "topics": ["search"],
      "candidates": ["topics/search/index.md", "topics/search/fts5.md"],
      "origin_available": true,
-     "text": "Switched Lumen's search path to FTS5 after …"}
+     "text": "Switched Lumen's search path to FTS5 after …",
+     "untrusted": true}
   ],
   "notes": [
     {"path": "topics/search/fts5.md", "title": "Use SQLite FTS5 for local search",
@@ -54,5 +61,6 @@ before it:
 }
 ```
 
-Notes appear once, with their summary (the first paragraph), so the agent
-can decide which to open in full.
+Each note appears once, with its summary (the first paragraph, at most 600
+characters), so the agent can decide which to open in full. A topic entry
+has `parent` when the topic is nested.

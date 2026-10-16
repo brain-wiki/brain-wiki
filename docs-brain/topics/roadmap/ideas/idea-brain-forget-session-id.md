@@ -6,6 +6,6 @@ source: "docs/roadmap/ideas.md"
 ---
 # brain forget --session <id>
 
-`brain forget --session <id>`: list, with a dry run, the episodes from one session and the notes whose `bw-sources` cite only them, for the user to edit or delete
+`brain forget --session <id>`, which lists as a dry run the episodes from one session and the notes whose `bw-sources` cite only them, for the user to edit or delete
 
 **Area:** Provenance

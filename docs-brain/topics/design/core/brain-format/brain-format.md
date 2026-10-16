@@ -8,17 +8,17 @@ source: "docs/design/brain-format.md"
 
 What a brain looks like on disk: layout, `brain.toml`, notes, links, supersession, episodes, rules
 
-Status: draft for review · Format version: 3 · Normative
-
-This document defines what a brain looks like on disk. It is the contract
-between brain-wiki, every agent host, and the user's other tools. The key
-words MUST, MUST NOT, SHOULD, and MAY are used as in RFC 2119.
+This document defines format 3, what a brain looks like on disk. brain-wiki,
+every agent host, and the user's other tools rely on it, and it is
+normative. The key words MUST, MUST NOT, SHOULD, and MAY are used as in
+RFC 2119.
 
 Generated from `docs/design/brain-format.md`.
 
 ## Notes
 - [[brain-format-1-requirements-that-shaped-the-format]]: Requirements that shaped the format
 - [[brain-format-2-directory-layout]]: Directory layout
+  - [[brain-format-21-topics]]: Topics
 - [[brain-format-3-braintoml]]: `brain.toml`
 - [[brain-format-4-common-file-conventions]]: Common file conventions
 - [[brain-format-5-identifiers]]: Identifiers

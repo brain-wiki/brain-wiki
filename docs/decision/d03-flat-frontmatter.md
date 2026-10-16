@@ -3,8 +3,11 @@
 Status: accepted.
 Argued in: [brain format §4, §6](../design/brain-format.md#4-common-file-conventions).
 
-Frontmatter is flat (scalars and lists of scalars) and holds metadata only (D32). Format 2 kept claims and relations there as lists of strings (`bw-claims`, `bw-<verb>`); format 1 kept them in `## Claims` and `## Relations` body sections.
+Frontmatter values are scalars or lists of scalars, and frontmatter holds only metadata (D32). Facts and links go in the body.
+
+Older formats differ. Format 1 kept claims and relations in `## Claims` and `## Relations` body sections. Format 2 moved them into frontmatter lists of strings (`bw-claims`, `bw-<verb>`). `brain lint --fix` converts both to format 3.
 
 ## Alternatives considered
 
-Nested YAML objects (Obsidian cannot show or edit them); knowledge in properties (format 2: empty bodies, dead links inside facts, every fact edit a YAML edit)
+- Nested YAML objects. Obsidian cannot show or edit them.
+- Knowledge in properties, as in format 2. Note bodies were empty, links inside facts did not work in Obsidian, and every fact edit was a YAML edit.

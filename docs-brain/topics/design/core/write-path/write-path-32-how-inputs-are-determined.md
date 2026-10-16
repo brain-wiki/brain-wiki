@@ -7,13 +7,18 @@ source: "docs/design/write-path.md#32-how-inputs-are-determined"
 ---
 # How inputs are determined
 
-| Path | Mechanism |
+| Path | Value |
 |---|---|
-| Harvest | `external` if any tool call in the harvested turn range matches the host's untrusted-tool list (web fetch and search, browser tools, MCP servers other than brain-wiki, network shell commands; [[agent-integrations-63-detecting-external-inputs\|agent integrations §6.3]]), else `local`; a transcript the reader cannot fully parse yields `unknown`. |
-| MCP | `unknown`. The MCP protocol does not tell a server what else happened in the session, and the model's own claims about it are not evidence. |
-| Human CLI | `local`. |
+| Harvest | `external` when any tool call in the session matches the host's untrusted-tool list, else `local` |
+| MCP | `unknown` |
+| Owner's CLI | `local`, unless `--inputs` says otherwise |
 
-`unknown` is treated like `external` everywhere it matters for safety (§3.3).
-This makes MCP-only hosts slightly less convenient (their episodes need
-review before becoming rules, which they never could anyway) and keeps
-the guarantee simple.
+The untrusted-tool list covers web fetch and search, browser tools, MCP
+servers other than brain-wiki, and shell commands that reach the network
+([[agent-integrations-63-detecting-external-inputs|agent integrations §6.3]]).
+Harvest checks the whole transcript, not only the harvested turns. An MCP
+server cannot see the rest of the session, and the model's claims about it
+are not evidence.
+
+`unknown` is treated like `external` everywhere it matters for safety
+(§3.3).

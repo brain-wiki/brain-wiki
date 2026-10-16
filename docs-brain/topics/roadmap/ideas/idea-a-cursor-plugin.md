@@ -1,12 +1,12 @@
 ---
-id: 01M3250V00WXAYGE5DY2624WFA
+id: 01M3250V0030QY5WSVH86DZQ9Z
 type: idea
-title: "Cursor plugin"
+title: "A Cursor plugin"
 source: "docs/roadmap/ideas.md"
 ---
-# Cursor plugin
+# A Cursor plugin
 
-Cursor plugin
+A Cursor plugin
 
 **Area:** Hosts
 

@@ -6,8 +6,8 @@ source: "docs/design/hosts/openclaw.md"
 ---
 # OpenClaw
 
-How brain-wiki integrates with OpenClaw in bundle mode. The cross-host
-mechanics are in [[agent-integrations|agent integrations]].
+How brain-wiki works with OpenClaw in bundle mode. The mechanics shared by
+all hosts are in [[agent-integrations|agent integrations]].
 
 ## Sections
 - [[host-openclaw-notes]]: Notes (OpenClaw)

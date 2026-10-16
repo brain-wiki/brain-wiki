@@ -9,11 +9,13 @@ source: "docs/proposal/privacy.md#5-options"
 
 | Option | For | Against |
 |---|---|---|
-| **A · Levels as allowed sinks (this draft)** | Each level answers concrete questions; covers model, tools, outputs, injection, and exports; owner-only; visible in `index.md` | Most work; tool-call control depends on host hooks |
-| B · Restore the old read levels | Already designed and tested | Same problems as §1 |
-| C · Separate brains only (today) | Simplest; a directory boundary every tool understands | No links across the boundary; two brains to keep up; no control over tools or outputs inside a brain |
-| D · Labels and instructions only | Cheap; no filtering code | Relies entirely on agents obeying; no hard guarantee anywhere |
+| A. Levels as allowed destinations (this draft) | Concrete questions per level; covers models, tools, outputs, and exports; owner-only; visible in `index.md` | Most work; tool-call control depends on host hooks |
+| B. Restore the old read levels | Already designed and tested once | The problems in §1 |
+| C. Separate brains only (today) | Simplest; a folder boundary every tool understands | No links across brains; two brains to keep up; no control inside a brain |
+| D. Labels and instructions only | Cheap; no filtering code | Relies on agents obeying; no hard guarantee |
 
-Recommendation: A, built in two steps. Step 1: levels, declaration,
-reader trust, read filtering, injection, packets, and P4. Step 2: the
-exposure mark with pre-tool hooks, output labels, and export filtering.
+Recommendation: A, built in two steps.
+
+1. Levels, declaration, reader trust, read filtering, packets, and P4.
+2. The exposure mark with pre-tool hooks, output labels, and export
+   filtering.

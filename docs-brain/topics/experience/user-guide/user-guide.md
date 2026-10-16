@@ -14,11 +14,11 @@ Generated from `docs/user/`.
 - [[user-readme]]: brain-wiki user guide
 - [[user-agents]]: Agents
   - [[user-agents-connect]]: Connect
-    - [[user-agents-antigravity-notes]]: Antigravity notes
+    - [[user-agents-antigravity]]: Antigravity
   - [[user-agents-what-agents-get]]: What agents get
   - [[user-agents-direct-edits]]: Direct edits (Agents)
   - [[user-agents-which-agent-may-do-what]]: Which agent may do what
-  - [[user-agents-harvest-off-by-default]]: Harvest (off by default)
+  - [[user-agents-harvest]]: Harvest (Agents)
 - [[user-getting-started]]: Getting started
   - [[user-getting-started-set-up-from-your-agent-recommended]]: Set up from your agent (recommended)
   - [[user-getting-started-or-from-a-terminal]]: Or from a terminal
@@ -48,6 +48,15 @@ Generated from `docs/user/`.
   - [[user-privacy-what-is-sent-where]]: What is sent where
 - [[user-reference]]: Reference
   - [[user-reference-commands]]: Commands
+    - [[user-reference-brains-and-agents]]: Brains and agents
+    - [[user-reference-search-and-read]]: Search and read
+    - [[user-reference-writing]]: Writing
+    - [[user-reference-commits-and-schedules]]: Commits and schedules
+    - [[user-reference-lint-runs-and-undo]]: Lint, runs, and undo
+    - [[user-reference-harvest-and-origin]]: Harvest and origin
+    - [[user-reference-connect-import-viz-and-bench]]: Connect, import, viz, and bench
+  - [[user-reference-which-brain-a-command-uses]]: Which brain a command uses
   - [[user-reference-mcp-tools]]: MCP tools
+  - [[user-reference-exit-codes]]: Exit codes (Reference)
   - [[user-reference-files]]: Files
   - [[user-reference-troubleshooting]]: Troubleshooting

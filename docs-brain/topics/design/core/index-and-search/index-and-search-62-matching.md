@@ -7,23 +7,28 @@ source: "docs/design/index-and-search.md#62-matching"
 ---
 # Matching
 
-1. Tokenize the query with the same Unicode rules as the index; drop FTS5
-   syntax characters so user text can never be interpreted as operators.
-2. Drop filler words ("the", "did", "why", "what", "how", "we"…) when any
-   content word remains, so a question phrased as a sentence matches by what
-   it is about. Build `"tok1" "tok2" "tok3"*` from what is left (implicit
-   AND, prefix match on the last token, since queries are often partial
-   words).
-3. If fewer than `limit` nodes match, retry with OR between the same
-   tokens.
-4. If the query contains CJK or other unsegmented script, or the token
-   query found nothing, also query `fts_tri` (trigram) with each run of 3+
-   characters. Shorter runs fall back to a bounded `LIKE` scan over
-   `docs.title` and `docs.body` (trigram cannot match fewer than 3
-   characters).
-5. Topic, type, tag, property, and date filters are applied to FTS
-   candidates before scoring and truncation (R3). Candidates are fetched in
-   growing batches, so filtered-out notes never displace matching ones.
-6. An empty query skips steps 1–4: it selects the filtered nodes directly and
-   orders them by `sort`, which is how an agent lists a topic or asks for the
-   latest release.
+1. Split the query into word tokens, lowercased. Each token is quoted, so
+   user text is never read as FTS5 operators.
+2. Drop filler words ("the", "did", "why", "what", "how", "we", and other
+   common words) when any content word remains, so a question phrased as a
+   sentence matches by what it is about.
+3. Build `"tok1" "tok2" "tok3"*` from what is left. This is an implicit
+   AND, with a prefix match on the last token when it has 2 or more
+   characters, since queries are often partial words.
+4. If fewer than `limit` nodes match and there is more than one token,
+   also run the same tokens joined by OR.
+5. If the query contains CJK text (Han, kana, or Hangul), or nothing has
+   matched yet, also query `fts_tri` when it exists. It searches each CJK
+   run of 3 or more characters, or each token of 3 or more characters when
+   the query has no CJK.
+6. CJK runs shorter than 3 characters, which trigram cannot match, use a
+   bounded `LIKE` scan over `docs.title` and `docs.body`.
+7. Topic, type, tag, property, and date filters apply to FTS candidates
+   before scoring and truncation (R3). Candidates come in growing batches,
+   starting at four times what the page needs and doubling, so
+   filtered-out notes never displace matching ones.
+
+An empty query skips text matching. It selects the filtered nodes
+directly and orders them by `sort`, which is how an agent lists a topic or
+asks for the latest release. A browse result's snippet is the opening
+words of the body.

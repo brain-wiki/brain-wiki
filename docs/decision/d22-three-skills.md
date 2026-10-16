@@ -3,8 +3,10 @@
 Status: accepted.
 Argued in: [skills and onboarding](../design/skills-and-onboarding.md).
 
-Three skills (use, setup, maintain) with a guided, resumable onboarding flow; maintenance runs when the user asks. Only `brain commit` runs on a schedule (D35).
+The plugin ships three skills: `brain` (use a brain), `brain-setup` (a guided setup that can resume where it stopped), and `brain-maintain` (harvest, consolidation, rule proposals, health checks, and commits). Maintenance runs when the user asks for it. The only scheduled job is `brain commit` (D35).
 
 ## Alternatives considered
 
-One broad skill; a terminal-only wizard; scheduled maintenance (built, then removed before 0.1: [proposal](../proposal/scheduled-maintenance.md))
+- One broad skill.
+- A wizard that runs only in a terminal.
+- Scheduled maintenance. It was built and removed before 0.1 ([proposal](../proposal/scheduled-maintenance.md)).

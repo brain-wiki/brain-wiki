@@ -27,11 +27,11 @@ url    = "git@example.com:me/brain.git"
 auto   = "after-write"                # off | after-write | interval
 ```
 
-`brain sync [--dry-run]` and `brain sync status` drive it. Sync runs under
-the brain's state-dir lock, never concurrently with an apply; remote
-correctness comes from per-object preconditions, with an optional remote
-lease object for cross-device exclusion.
-
-A sync component must treat a missing local file inside a known cloud-drive
-folder as unknown, not deleted: online-only placeholders look like missing
-files ([[config-and-storage-63-coexisting-with-desktop-sync-tools|config and storage §6.3]]).
+- `brain sync [--dry-run]` and `brain sync status` drive it.
+- Sync takes the brain's write lock, the same lock runs and `brain commit`
+  take, so it never runs during a write.
+- Remote correctness comes from per-object preconditions. An optional lease
+  object on the remote can keep two devices from syncing at once.
+- A missing local file inside a known cloud-drive folder counts as unknown,
+  not deleted, because online-only placeholders look like missing files
+  ([[config-and-storage-63-coexisting-with-desktop-sync-tools|config and storage §6.3]]).

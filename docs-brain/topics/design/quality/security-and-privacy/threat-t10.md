@@ -7,6 +7,6 @@ source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T10: Command injection
 
-**Command injection.** Transcript or note content reaches a shell.
+Command injection. Transcript or note content reaches a shell.
 
-**Mitigations:** Nothing read from a brain or a session is ever interpolated into a command line; headless presets pass the prompt on stdin; no `shell=True` anywhere.
+**Mitigations:** Nothing read from a brain or a session is put into a command line. Headless presets pass the prompt on stdin. No code uses `shell=True`, which ruff's `S` rules check.

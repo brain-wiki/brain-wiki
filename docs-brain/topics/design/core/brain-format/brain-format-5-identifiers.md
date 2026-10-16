@@ -13,10 +13,12 @@ source: "docs/design/brain-format.md#5-identifiers"
 | rule | `r-` + ULID | `r-01JA0C5D8E2F4G6H8J0K2M4N6P` |
 | run | `run-` + ULID | `run-01JA0D7F9G1H3J5K7M9N1P3Q5R` |
 
-- ULIDs sort by creation time, which keeps episode folders naturally
-  ordered and makes ids carry a timestamp without a separate field.
-- Format 2 also gave each claim a `c-` id. Claims are gone in format 3, and
-  the conversion drops their ids (§13).
+- ULIDs sort by creation time, which keeps episode folders ordered and
+  gives every id a timestamp without a separate field
+  ([[d12-ulids|D12]]).
 - Ids are permanent. Renaming or moving a file never changes its id.
-- Ids MUST be unique within a brain. Lint reports duplicates (usually a
-  copied file) and `--fix` re-mints the id of the newer copy.
+- Ids MUST be unique within a brain. Lint reports duplicates (BW105),
+  usually a copied file, and `--fix` mints a new id for each newer copy
+  of a note or hub.
+- Format 2 also gave each claim a `c-` id. The conversion to format 3
+  drops them (§13).

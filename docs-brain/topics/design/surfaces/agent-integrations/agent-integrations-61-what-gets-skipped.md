@@ -7,10 +7,16 @@ source: "docs/design/agent-integrations.md#61-what-gets-skipped"
 ---
 # What gets skipped
 
-- Sessions whose working directory is under brain-wiki's state directory,
-  which is where headless harvest runs.
-- Subagent sessions, where the host distinguishes them.
-- Non-interactive (headless) sessions, unless `include_headless = true`.
-- Sessions with fewer than `min_user_turns` user messages.
-- Sessions still in progress, and sessions whose working directory routes
-  to no brain.
+Harvest looks only at sessions modified within `since`, and skips:
+
+- subagent sessions, where the host marks them;
+- non-interactive (headless) sessions, unless `include_headless = true`;
+- sessions whose working directory is under brain-wiki's state directory,
+  where headless harvest runs;
+- sessions modified less than `min_idle_minutes` ago;
+- sessions outside `--project`, when given;
+- sessions whose working directory routes to no brain, or to a brain other
+  than the one being harvested;
+- unreadable transcripts (§6.4);
+- sessions with fewer than `min_user_turns` new user turns since the last
+  harvest.

@@ -7,14 +7,11 @@ source: "docs/design/write-path.md#41-flow"
 ---
 # Flow
 
-```
- prepare ──────────────► agent edits notes ──► validate ──► done
-   │                         │                    │           │
- pending episodes,        direct edits        brain        archive the handled
- candidate notes,         under topics/       validate     episodes as one run
- guidance (read-only)                                      (undo puts them back)
-```
+1. Prepare returns pending episodes, candidate notes, and the guidance. It
+   writes nothing.
+2. The agent edits notes under `topics/` and runs `brain validate` on them.
+3. Done archives the handled episodes as one run, which `brain undo`
+   reverses. It only moves files.
 
-Prepare writes nothing. Done moves files and nothing else, so a failure
-between the steps leaves notes edited and episodes still pending; running
-prepare again shows what is left.
+A failure between the steps leaves notes edited and episodes still pending.
+Running prepare again shows what is left.

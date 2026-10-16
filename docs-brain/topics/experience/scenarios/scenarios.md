@@ -16,13 +16,13 @@ Generated from `docs/design/overview.md#6-users-and-scenarios`.
   - [[s1]]: S1: Session start
   - [[s2]]: S2: Recall during a task
   - [[s2b]]: S2b: An agent updates a note
-  - [[s3]]: S3: Record
+  - [[s3]]: S3: Recording
   - [[s3b]]: S3b: Harvest and backfill
   - [[s4]]: S4: Consolidation
-  - [[s5]]: S5: Human editing
-  - [[s6]]: S6: Bring an existing vault
+  - [[s5]]: S5: Editing by hand
+  - [[s6]]: S6: Bringing an existing vault
   - [[s7]]: S7: Work and personal
   - [[s8]]: S8: A bad edit
-  - [[s9]]: S9: Inspect the brain
-  - [[s10]]: S10: Measure
+  - [[s9]]: S9: Inspecting the brain
+  - [[s10]]: S10: Measuring
   - [[s11]]: S11: An agent builds its own knowledge

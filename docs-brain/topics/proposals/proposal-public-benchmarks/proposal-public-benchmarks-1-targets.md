@@ -9,7 +9,7 @@ source: "docs/proposal/public-benchmarks.md#1-targets"
 
 | Benchmark | Relevant part | License | Use |
 |---|---|---|---|
-| LongMemEval | Knowledge-update and temporal-reasoning questions; evidence session ids allow retrieval recall without an LLM judge | MIT | First adapter target |
-| MemoryAgentBench | Conflict resolution over incrementally fed facts (supersession) | MIT | Second target; closest to guard behavior |
-| LoCoMo | Very long multi-session dialogs with evidence ids | CC BY-NC 4.0 | Download at run time only; never redistributed |
-| HaluMem | Operation-level extraction and update quality against gold memory points | CC BY-NC-ND 4.0 | Download at run time only; closest public measure of write quality |
+| LongMemEval | Knowledge-update and temporal-reasoning questions; evidence session ids measure retrieval recall without an LLM judge | MIT | First adapter |
+| MemoryAgentBench | Conflict resolution over facts fed one at a time | MIT | Second adapter; closest to supersession |
+| LoCoMo | Very long multi-session dialogs with evidence ids | CC BY-NC 4.0 | Download at run time only, never redistributed |
+| HaluMem | Extraction and update quality against gold memory points | CC BY-NC-ND 4.0 | Download at run time only; the closest public measure of write quality |

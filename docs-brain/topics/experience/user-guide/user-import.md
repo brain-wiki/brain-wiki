@@ -6,10 +6,13 @@ source: "docs/user/import.md"
 ---
 # Import
 
-Every mode starts as a dry run; add `--apply` to change anything. `--dry-run`
-wins over `--apply`. Choose one mode per command; a flag the mode does not
-use (`--agent` without `--to-episodes`, `--phase` without `--overlay`, …) is
-an error rather than ignored.
+`brain import` has four modes. Choose one per command:
+
+
+- Every mode is a dry run until you add `--apply`. `--dry-run` wins over
+  `--apply`.
+- A flag the mode does not use is an error, not ignored. For example,
+  `--agent` needs `--to-episodes`, and `--phase` needs `--overlay`.
 
 ## Sections
 - [[user-import-adopt-an-obsidian-vault-or-markdown-folder]]: Adopt an Obsidian vault or Markdown folder

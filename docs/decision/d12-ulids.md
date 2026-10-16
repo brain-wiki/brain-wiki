@@ -3,8 +3,9 @@
 Status: accepted.
 Argued in: [brain format §5](../design/brain-format.md#5-identifiers).
 
-ULIDs identify brains, notes, episodes, rules, and runs; links resolve like Obsidian with id-based repair.
+Brains, notes, episodes, rules, and runs are identified by ULIDs. Rules and runs add an `r-` or `run-` prefix. A ULID sorts by creation time and needs no coordination between devices. An id never changes when a file is renamed or moved, so links resolve by file name the way Obsidian resolves them, and the id finds a note again after it moves.
 
 ## Alternatives considered
 
-Path-only identity; UUIDv4
+- The path as the only identity. Every rename would break references.
+- UUIDv4. It does not sort by time.

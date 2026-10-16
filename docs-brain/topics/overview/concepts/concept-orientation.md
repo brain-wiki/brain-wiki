@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Orientation
 
-The short, budgeted briefing an agent fetches with `brain_orient` when a task may depend on the brain.
+The short briefing an agent gets from `brain_orient`: rules, what the brain holds, topics, the inbox, recent changes, and how to query, within a fixed size budget.

@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Note
 
-A curated Markdown file: metadata in frontmatter; facts and links in the body, as ordinary Markdown.
+A Markdown file in a topic. Frontmatter holds metadata, and facts and links are ordinary Markdown in the body.

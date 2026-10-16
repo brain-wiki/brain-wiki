@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Agent profile
 
-Per-brain settings for one host (e.g. `claude-code`): what it may write. Every host that may use a brain reads all of it; privacy inside a brain is being redesigned ([[proposal-privacy|proposal]]).
+Per-brain settings for one host, such as `claude-code`, in `brain.toml`. Its capabilities say what the host may write (`episodes`, `edit`, `propose_rules`, `harvest`), and `read_origin` lets it read the conversation behind an episode. Every host that may use a brain reads all of it.

@@ -8,7 +8,8 @@ source: "docs/design/engineering.md"
 
 Repository layout, dependencies, packaging, testing, performance budgets, releases
 
-Status: draft for review
+This document covers the repository layout, package structure,
+dependencies, packaging, performance budgets, tests, CI, and releases.
 
 Generated from `docs/design/engineering.md`.
 

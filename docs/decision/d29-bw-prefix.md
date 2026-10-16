@@ -3,8 +3,12 @@
 Status: accepted.
 Argued in: [brain format §4, §13](../design/brain-format.md#4-common-file-conventions).
 
-brain-wiki's own frontmatter fields carry a `bw-` prefix: `bw-superseded_by`, `bw-sources`, `bw-stage`, and episode provenance. Shared metadata (`id`, `type`, `title`, `aliases`, `tags`, `status`, `created`, `updated`) stays unprefixed. `format` in `brain.toml` names the newest file format a brain may hold; writers raise it one-way, and older tools refuse to open newer brains.
+brain-wiki's own frontmatter fields start with `bw-`: `bw-superseded_by`, `bw-sources`, `bw-stage`, and the episode provenance fields such as `bw-origin` and `bw-inputs`. Shared metadata stays unprefixed: `id`, `type`, `title`, `aliases`, `tags`, `status`, `created`, and `updated`.
+
+`format` in `brain.toml` names the newest file format the brain may hold. Writers only raise it, and a brain-wiki that is older than the brain's format refuses to open it.
 
 ## Alternatives considered
 
-No prefix (clashes with other tools' properties); a dotted `brain-wiki.` prefix (Dataview reads dots as nesting); best-effort reads of newer brains (an old reader misreads what it does not know)
+- No prefix. The fields would clash with other tools' properties.
+- A dotted `brain-wiki.` prefix. Dataview reads dots as nesting.
+- Best-effort reads of newer brains. An old reader misreads what it does not know.

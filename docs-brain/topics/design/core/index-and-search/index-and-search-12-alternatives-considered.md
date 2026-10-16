@@ -7,11 +7,11 @@ source: "docs/design/index-and-search.md#12-alternatives-considered"
 ---
 # Alternatives considered (Index and search)
 
-| Option | Why not (for v0.1) |
+| Option | Why not |
 |---|---|
-| Scan files with ripgrep at query time | No ranking, no graph, no field weights; cost grows with the brain on every query. |
-| Vector database / embeddings only | Misses exact terms and identifiers, needs a model, is opaque, and still needs the link graph for the guard. Planned as an optional hybrid signal. |
-| Tantivy or Whoosh | An extra dependency for little gain over FTS5 at this scale. |
-| DuckDB | Strong for analytics, weaker and heavier for incremental full-text search. |
-| In-memory index per process | Parsing 10k notes on every CLI call costs seconds. |
-| Index inside the brain | Breaks under sync tools, is device-specific, and clutters git. |
+| Scan files with ripgrep at query time | No ranking, no graph, no field weights, and the cost grows with the brain on every query |
+| Vector database or embeddings only | Misses exact terms and identifiers, needs a model, and still needs the link graph for the guard |
+| Tantivy or Whoosh | An extra dependency for little gain over FTS5 at this scale |
+| DuckDB | Strong for analytics, weaker and heavier for incremental full-text search |
+| In-memory index per process | Parsing 10k notes on every CLI call costs seconds |
+| Index inside the brain | Breaks under sync tools, is device-specific, and clutters git |

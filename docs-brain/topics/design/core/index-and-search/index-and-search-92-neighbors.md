@@ -8,10 +8,15 @@ source: "docs/design/index-and-search.md#92-neighbors"
 # Neighbors
 
 `neighbors(target, direction, depth, limit)` follows a node's resolved
-edges without reading bodies: `direction` is `out` (what it links to),
-`in` (what links to it), or `both` (default), `depth` is 1–3 (default 1),
-and `limit` caps nodes (default 30, max 100). There is no filter by
-relation. It returns a small subgraph:
+edges without reading bodies, and returns a small subgraph.
+
+- `direction` is `out` (what it links to), `in` (what links to it), or
+  `both` (default).
+- `depth` is 1 to 3 (default 1).
+- `limit` caps the nodes returned besides the root (default 30, at most
+  100). The engine clamps out-of-range values, and the CLI rejects values
+  below 1.
+- There is no filter by relation.
 
 ```json
 {"brain": "personal", "root": "01J9…", "direction": "both", "depth": 1,
@@ -24,14 +29,11 @@ relation. It returns a small subgraph:
  "truncated": false}
 ```
 
-The root comes first, at depth 0. `via.relation` reads from the node it was
-reached from, with the labels in §3: an outgoing body link reads
-`links_to` and an incoming one `linked_from`; `superseded_by` reads
-`supersedes` from the newer note; a `bw-sources` link reads `cites` or
-`cited_by`. `edges` keep the stored direction. Within a depth, supersession
-comes first, then body links, then citations, each newest first, so
-`limit` keeps what matters.
+- The root comes first, at depth 0.
+- `via.relation` uses the labels in §3, read from the node it was reached
+  from. `edges` keep the stored direction.
+- Within a depth, supersession comes first, then body links, then
+  citations, each newest first, so `limit` keeps what matters.
 
 Typical uses: what a hub lists (`out`), what refers to a decision (`in`),
-how a note evolved (`both`, depth 3; supersession edges are listed
-first at each depth).
+and how a note evolved (`both`, depth 3).

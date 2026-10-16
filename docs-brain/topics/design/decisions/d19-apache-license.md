@@ -10,8 +10,9 @@ source: "docs/decision/d19-apache-license.md"
 Status: accepted.
 Argued in: [[engineering|engineering]].
 
-License: Apache-2.0.
+brain-wiki is licensed under Apache-2.0.
 
 ### Alternatives considered
 
-AGPL, MIT
+- AGPL.
+- MIT.

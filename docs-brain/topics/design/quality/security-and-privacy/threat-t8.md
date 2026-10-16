@@ -7,6 +7,6 @@ source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T8: XSS in the visualizer
 
-**XSS in the visualizer.** A note title or body contains HTML or script.
+XSS in the visualizer. A note title or body contains HTML or script.
 
-**Mitigations:** Note content is inserted as text, never as HTML; previews render Markdown through an escaping renderer; a strict Content-Security-Policy on the page; no remote resources.
+**Mitigations:** Note content is inserted as text, never as HTML. Previews render Markdown through an escaping renderer. The page has a strict Content-Security-Policy (`default-src 'none'`, scripts and styles from the page's own origin) and loads no remote resources.

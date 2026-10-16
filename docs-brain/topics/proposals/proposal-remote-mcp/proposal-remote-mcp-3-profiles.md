@@ -7,6 +7,6 @@ source: "docs/proposal/remote-mcp.md#3-profiles"
 ---
 # Profiles
 
-Per-client tokens map to agent profiles (`chatgpt-web`, `claude-web`,
+Each client token maps to an agent profile (`chatgpt-web`, `claude-web`,
 `gemini-app`), read-only by default. A remote client reads the whole brain
 it is given, so this waits on the privacy redesign.

@@ -1,102 +1,138 @@
 # Import
 
-Status: draft for review
+How existing Markdown becomes part of a brain: a folder adopted in place,
+notes copied into a brain, documents turned into episodes, and agents' own
+memory files brought in.
 
 ## 1. Goals
 
 | # | Goal |
 |---|---|
 | I1 | An existing Markdown folder or Obsidian vault becomes a working brain in minutes, without moving or rewriting files. |
-| I2 | Nothing changes before the user has seen a report of what will change. |
-| I3 | Every change to existing files is a run: undoable, logged, committed if git is on. Adopting a folder (phase 0) only adds files. |
-| I4 | Normalization is opt-in and incremental. The brain works before any of it. |
-| I5 | The user's own files can also be fed to consolidation as episodes, and agents' existing memory files can be brought in the same way. |
+| I2 | Nothing changes before the user has seen what will change. |
+| I3 | Every change to existing files is a run: undoable, logged, and committed when git is on. Adopting a folder (phase 0) only adds files. |
+| I4 | Normalization is optional and step by step. The brain works before any of it. |
+| I5 | The user's own files, and agents' memory files, can be fed to consolidation as episodes. |
 
 ## 2. Modes
 
 | Mode | Command | Result |
 |---|---|---|
-| **Overlay** | `brain import <folder> --overlay` | The folder itself becomes a brain. brain-wiki adds its own files; notes stay where they are. |
-| **Into** | `brain import <folder> --into <brain>` | Files are copied into an existing brain as one or more topics; links are rewritten; the source folder is untouched. |
-| **To episodes** | `brain import <path> --to-episodes` | Documents are split into episodes in the inbox, for consolidation to fold into notes. |
-| **From an agent** | `brain import --from <host>` | The host's own memory files become episodes attributed to that host (§6). |
+| Overlay | `brain import <folder> --overlay` | The folder becomes a brain; notes stay where they are |
+| Into | `brain import <folder> --into <brain>` | Notes are copied into an existing brain as topics |
+| To episodes | `brain import <path> --to-episodes` | Documents become episodes in the inbox |
+| From an agent | `brain import [PATH] --from <host>` | The host's memory files become episodes (§6) |
 
-All modes default to `--dry-run`; `--apply` executes, and `--dry-run` wins
-when both are given. Exactly one mode per command. A flag the chosen mode
-does not use is a usage error (exit 2), never silently dropped: `--agent`
-and `--untrusted` need `--to-episodes`, `--phase` needs `--overlay`, and
-`--topic` does not apply to `--overlay` (top-level folders are the topics).
-A source path that does not exist is `not_found` (exit 3) in every mode.
+Rules shared by every mode:
+
+- A command picks exactly one mode.
+- Every mode is a dry run unless `--apply` is given. `--dry-run` wins when
+  both are given.
+- A flag the chosen mode does not use is a usage error (exit 2), never
+  dropped: `--agent` and `--untrusted` need `--to-episodes`, `--phase`
+  needs `--overlay`, and `--topic` does not work with `--overlay`, whose
+  top-level folders become the topics.
+- `--overlay` and `--into` need a folder. A source path that does not
+  exist is `not_found` (exit 3).
+- `--to-episodes` and `--from` write into the brain chosen by the global
+  `--brain`.
+  For phase 0, `--brain NAME` sets the new brain's name; the default is
+  the folder name.
 
 ## 3. Overlay
 
 ### 3.1 Pipeline
 
 ```
-scan ─► detect conventions ─► plan ─► report ─► apply phase 0 ─► (optional) phases 1..2
+scan ─► detect conventions ─► report ─► apply phase 0 ─► (optional) phases 1 and 2
 ```
 
-**Scan** walks the folder (respecting ignore rules) and parses every `.md`
-file without writing anything.
+The scan walks the folder and parses every `.md` file without writing
+anything. It skips hidden folders, the folders it ignores (below), and the
+contents of files over 2 MiB, which it lists as `oversized`.
 
-**Detect conventions:**
+Conventions it detects:
 
-| Convention | Detection | Effect on the plan |
+| Convention | Detected by | Effect |
 |---|---|---|
-| Obsidian vault | `.obsidian/` present | Read `app.json` for link style (`useMarkdownLinks`), new-file location, attachment folder; read `types.json` for property types. |
-| Topics | Top-level folders containing notes | Each becomes a declared topic with `path` set to the folder and a slug derived from its name. Numbered prefixes (`01 Projects`) are kept in the path and dropped from the slug. Deeper folders that have a hub are sub-topics (brain format §2) without being declared. |
-| Hub style | `index.md`, `_index.md`, `README.md`, or a folder note (`Folder/Folder.md`) inside topic folders | Sets `layout.hub_filename` (`{folder}.md` for folder notes). Topics without a hub get one only in phase 2. |
-| Templates | A folder named like `Templates` or configured as the template folder | Ignored (template placeholders are not knowledge). |
-| Attachments | The configured attachment folder, or folders of mostly non-Markdown files | Ignored for knowledge, still linkable. |
-| Daily notes | Files named `YYYY-MM-DD.md` in one folder | Declared as a `journal` topic; optionally fed to consolidation with `--to-episodes` later. |
-| Inbox folder | A top-level folder named like `Inbox` | Used as `layout.inbox_dir` only if empty of curated notes; otherwise left alone and the default inbox is created. |
+| Obsidian vault | A `.obsidian/` folder | Reads `useMarkdownLinks` and `attachmentFolderPath` from `app.json`, and the template folder from `templates.json` |
+| Topics | Top-level folders with notes | Each becomes a declared topic: `path` is the folder, the slug comes from its name |
+| Hub style | `index.md`, `_index.md`, `README.md`, or a folder note (`Folder/Folder.md`) directly in top-level folders | The most common one becomes `layout.hub_filename` (`{folder}.md` for folder notes) |
+| Templates | A top-level folder named `templates`, `_templates`, or `template`, or Obsidian's template folder | Ignored |
+| Attachments | Obsidian's attachment folder, or a top-level folder named `attachments`, `assets`, `files`, `images`, `media`, or `_resources` | Ignored for knowledge, still linkable |
+| Daily notes | A folder where at least 3 notes, and at least half its notes, are named `YYYY-MM-DD.md` | Declared as the `journal` topic |
+| Inbox folder | A top-level folder named `inbox` or `_inbox` | Not declared as a topic; brain-wiki creates its own `inbox/` |
 
-Properties that hold links (`up`, `parent`, `related`, `next`) stay the
-user's properties: preserved and filterable with `--where`, never converted
-or reported (§4.2).
+- Numbered prefixes (`01 Projects`, `90 Templates`) are ignored when
+  matching names, kept in the path, and dropped from the slug.
+- Two folders that give the same slug get `-2`, `-3`, and so on.
+- Deeper folders are sub-topics without being declared
+  ([brain format §2](brain-format.md#2-directory-layout)).
+- Properties that hold links (`up`, `parent`, `related`, `next`) stay the
+  user's properties (§4.2).
 
-**Plan and report.** The report (`reports/import-plan.md` in the target,
-plus terminal output) shows:
+The report prints in the terminal on a dry run and is saved as
+`reports/import-plan.md` by phase 0. It shows:
 
-- the generated `brain.toml` (topics with paths, hub style, ignores,
-  `lint.profile = "migrate"`);
-- counts: notes, notes with and without frontmatter, ids present,
-  non-standard `status` values, unresolved links (with the most common
-  targets), conflict copies, files that fail to parse;
-- every change each phase would make, with examples;
-- what will not change.
+- note counts: notes, notes with frontmatter, notes with ids;
+- whether the folder is an Obsidian vault, and the hub style;
+- the topics and the folders they come from, and the ignored folders;
+- non-standard `status` values with counts;
+- unresolved links, with the five most common targets;
+- conflict copies (left alone) and files that fail to parse (never
+  modified);
+- what each phase would do, and the `brain.toml` phase 0 would write.
+
+`--json` gives the same survey as data, including the oversized files.
+
+The generated `brain.toml` sets `layout.topics_dir = "."`, the hub style,
+the ignored folders, `lint.profile = "migrate"`,
+`[agents.default] write = ["episodes", "edit"]`, and one `[topics.<slug>]`
+table per topic.
 
 ### 3.2 Phases
 
 | Phase | Changes | Touches existing notes? |
 |---|---|---|
-| 0 · Adopt | Adds `brain.toml`, `AGENTS.md` (or a managed block in an existing one, with the topic table filled in from the folders found), `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain; in a git repository, commits every file it added (including `reports/import-plan.md`), so the tree is clean for phases 1–2. Not a run: it is undone by removing the brain and the added files, or by reverting its commit. | **No** |
-| 1 · Ids and status | Mints `id:` for notes without one; maps non-standard `status` values into `status` + `bw-stage` (§4.1); turns `tags` and `aliases` written as strings into lists (§4.3). | Yes, frontmatter lines only |
-| 2 · Hubs | Creates missing hubs, adds missing notes to hub `## Notes` lists. | Hubs only |
+| 0, adopt | Adds `brain.toml`, `AGENTS.md`, `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain; commits in git | No |
+| 1, ids and status | Mints missing `id:`; maps non-standard `status` (§4.1); turns string `tags` and `aliases` into lists (§4.3) | Frontmatter lines only |
+| 2, hubs | Creates missing hubs; adds missing notes to hub `## Notes` lists | Hubs only |
 
-Phase 0 alone gives a fully searchable brain: notes without ids are
-indexed under `path:` ids, `migrate` lint keeps legacy issues at `info`,
-and agents can start logging episodes immediately. Phases 1 and 2 are each
-a separate `--apply --phase N` run, so the user can stop at any point and
-review each diff on its own.
+Phase 0:
+
+- Writes `AGENTS.md`, or a managed block in an existing one, with the
+  topic table filled in from the folders found.
+- Does not overwrite an existing `rules.md` or `log.md`.
+- In a git repository, commits every file it added, including
+  `reports/import-plan.md`, so the tree is clean for phases 1 and 2.
+- Is not a run. To undo it, remove the brain (`brain brains remove`) and
+  the files it added, or revert its commit.
+
+Phase 0 alone gives a searchable brain: notes without ids are indexed
+under `path:` ids, `migrate` lint keeps legacy issues at `info`, and agents
+can log episodes at once. Phases 1 and 2 are each a separate
+`--phase N --apply` run, so the user can stop at any point and review each
+diff on its own.
 
 The diff a dry run shows is the diff the apply makes. Phase 1 ids are
-therefore not random: each is a ULID whose time part is the brain id's
-(the adoption time, as a freshly minted id would have) and whose random
-part is a hash of the brain id, the note's path, and its text. A note
-edited between the dry run and the apply gets a different id, as its diff
-differs anyway.
+therefore not random. Each is a ULID whose time part is the brain id's
+(the adoption time) and whose random part is a hash of the brain id, the
+note's path, and its text. A note edited between the dry run and the apply
+gets a different id, since its diff differs anyway. Phase 1 skips notes
+whose frontmatter fails to parse.
 
 ### 3.3 Safety
 
-- If the folder is a git repository with uncommitted changes, apply stops
-  and asks the user to commit or stash first, so import diffs stay clean.
-- If the folder is not a git repository, `brain undo` restores what
-  phases 1–2 changed from the run's pre-images; there is no separate backup.
-- Phase 0 refuses a name or folder that is already registered as another
-  brain.
+- If the folder is a git repository with uncommitted changes, phase 0 and
+  the apply of phases 1 and 2 stop and ask the user to commit or stash
+  first, so import diffs stay clean.
+- Without git, `brain undo` restores what phases 1 and 2 changed from the
+  run's saved copies. There is no separate backup.
+- Phase 0 refuses a name or folder already registered to another brain.
 - Files that fail to parse are never modified.
-- A conflict copy (BW112) is reported and left alone.
+- Conflict copies (Syncthing `.sync-conflict-`, "conflicted copy", or a
+  ` (N).md` suffix) are reported and left alone; lint reports them as
+  BW112.
 
 ## 4. Normalization rules
 
@@ -104,97 +140,116 @@ differs anyway.
 
 | Original value (case-insensitive) | `status` | `bw-stage` |
 |---|---|---|
-| `active`, `superseded`, `archived` | unchanged | — |
-| `draft`, `wip`, `in progress`, `in-progress`, `todo`, `review`, `in review`, `published`, `done`, `complete`, `completed`, `approved`, `shipped`, `evergreen`, `seed`, `sprout` | `active` | the original value |
+| `active`, `superseded`, `archived` | the value, lowercased | — |
 | `abandoned`, `paused`, `on hold`, `cancelled`, `canceled`, `inactive` | `archived` | the original value |
-| `deprecated`, `obsolete`, `replaced`, `outdated` | `superseded` | the original value (add `bw-superseded_by` to name the replacement) |
-| anything else | `active` | the original value |
+| `deprecated`, `obsolete`, `replaced`, `outdated` | `superseded` | the original value |
+| anything else (`draft`, `wip`, `done`, `evergreen`, …) | `active` | the original value |
 
-The original string is always preserved in `bw-stage`, so no information is
-lost and users can map it back.
+The original string is kept in `bw-stage`, so no information is lost and
+users can map it back. An existing `bw-stage` is not overwritten. A note
+mapped to `superseded` still needs `bw-superseded_by` to name its
+replacement.
 
 ### 4.2 Link properties
 
 Properties that hold wikilinks (`up`, `parent`, `related`, `see_also`,
 `next`, `source`) are left as they are. Format 3 has no typed relations to
-convert them into (D33), and brain-wiki indexes links from the body only, so
-these properties do not appear in backlinks or neighbors. A user who wants
-them there can move the links into the body.
+convert them into ([D33](../decision/d33-no-meaning-extraction.md)), and
+brain-wiki indexes links from the body only, so these properties do not
+appear in backlinks or neighbors. They can still be filtered with
+`--where`. A user who wants them in the link graph can move them into the
+body.
 
 ### 4.3 Other fixes
 
-- `tags` written as a string → list; leading `#` removed (phase 1).
-- `aliases` written as a string → list (phase 1).
-- Nested frontmatter mappings → reported only (BW102); flattening them
+- `tags` written as a string becomes a list, split on commas, with
+  leading `#` removed (phase 1).
+- `aliases` written as a string becomes a list, split on commas
+  (phase 1).
+- Nested frontmatter mappings are only reported (BW102). Flattening them
   would guess at meaning.
 
 ## 5. Into an existing brain
 
-1. Map the source's top-level folders (or the whole source, with
-   `--topic <slug>`) to topics in the target brain.
-2. Copy files to `topics/<slug>/…`, preserving relative structure.
-3. Rewrite links between copied files and links to attachments; links to
-   notes outside the source become unresolved and are reported.
-4. Apply phase 1 (§3.2) to the copies (the source stays untouched), all in
-   one run.
-5. Then add hubs for the new topics and refresh the topic table in
-   `AGENTS.md`, as separate lint-fix runs (the table can only be computed
-   once the hubs exist). The output names every run, so undoing them all
-   reverts the import.
+`--into <brain>` copies the source's notes into a brain as one run. The
+source stays untouched.
+
+1. Map each note to a topic folder: `topics/<slug of its top-level
+   folder>/…`, keeping the rest of its path. Notes at the source's top
+   level go to the slug of the source folder's name. With `--topic <slug>`,
+   every note goes under `topics/<slug>/`.
+2. Rewrite links between copied notes: Markdown links get the new relative
+   path, and wikilinks written as paths get the new path. Wikilinks by file
+   name are left alone, since they still resolve. Markdown links to `.md`
+   files outside the source are counted and reported.
+3. Apply the phase 1 rules (§3.2) to the copies.
+4. Commit the run through the lint gate.
+5. Then add hubs for the new topics, and refresh the topic table in
+   `AGENTS.md`, as separate runs (the table can only be computed once the
+   hubs exist). The output names every run, so undoing them all reverts
+   the import.
+
+Only Markdown notes are copied. Attachments stay in the source, and links
+to them are left as written.
 
 ## 6. To episodes, and from agents
 
-`--to-episodes` turns documents into raw input for consolidation instead of
-curated notes. It suits note dumps, exported chats, meeting transcripts, and
-clippings.
+`--to-episodes` turns documents into raw input for consolidation instead
+of curated notes. It suits note dumps, exported chats, meeting
+transcripts, and clippings. A folder imports every `.md` file under it.
 
-- Frontmatter is metadata, not content: it is dropped, and only the body is
-  split.
-- Documents are split on headings into chunks of at most 8 KiB; each chunk
-  becomes one episode with `bw-captured: import`, `bw-origin: import`, and a
-  `bw-source` property naming the original file and heading.
-- `inputs` is `local` for the user's own files, or `external` with `--untrusted`
-  (clippings, documents written by others).
+- Frontmatter is metadata, not content. It is dropped, and only the body
+  is split.
+- Documents are split on headings into chunks of at most 8 KiB. Each chunk
+  becomes one episode with `bw-captured: import`, `bw-origin: import`, and
+  `bw-source` naming the file and heading.
+- `bw-inputs` is `local` for the user's own files, or `external` with
+  `--untrusted` (clippings, documents written by others).
+- `--agent HOST` records the episodes as written by that host. `--topic`
+  adds a topic hint.
 - The original files are not modified or moved.
-- Each chunk carries a dedupe key (source and text), so a rerun skips what
-  was already imported; the output counts episodes written and skipped.
+- Each chunk carries a dedupe key from its source and text, so a rerun
+  skips what was already imported. The output counts episodes written and
+  skipped, and names files it could not read; any unreadable file makes
+  the exit code 1.
 
-`--from <host>` knows where hosts keep their own memory and imports those
-files as episodes attributed to the host (`bw-origin: agent`, `bw-inputs:
-unknown`):
+`--from <host>` imports the host's own memory files the same way, as
+episodes attributed to the host (`bw-origin: agent`, `bw-inputs: unknown`):
 
-| Host | Files (defaults; a `PATH` argument overrides them) |
+| Host | Files (a `PATH` argument replaces them) |
 |---|---|
-| Claude Code | Project memory directories under `~/.claude/projects/*/memory/` and user-level `CLAUDE.md` |
-| Codex | `~/.codex/memories/` and `~/.codex/AGENTS.md` |
-| Antigravity | `~/.gemini/AGENTS.md`, `~/.gemini/GEMINI.md`, and global rule files |
-| OpenClaw | The agent workspace's `MEMORY.md`, `USER.md`, and `memory/*.md` |
+| Claude Code | `projects/*/memory/*.md` and `CLAUDE.md` under `CLAUDE_CONFIG_DIR` (default `~/.claude`) |
+| Codex | `memories/**/*.md` and `AGENTS.md` under `CODEX_HOME` (default `~/.codex`) |
+| Antigravity | `~/.gemini/AGENTS.md`, `~/.gemini/GEMINI.md`, and `~/.gemini/config/rules/*.md` |
+| OpenClaw | `MEMORY.md`, `USER.md`, and `memory/*.md` in `~/.openclaw/workspace/` |
 
-`--from` brings in a host's *memory files*. A host's *conversation
-history* is read by `brain harvest` instead
-([write path §2.2](write-path.md#22-harvesting-sessions)),
-which is also the way to backfill a new brain from past sessions.
+`--from` brings in a host's memory files. A host's conversation history is
+read by `brain harvest` instead
+([write path §2.2](write-path.md#22-harvesting-sessions)), which is also
+the way to backfill a new brain from past sessions.
 
-Locations are taken from each host's documentation and will be verified by
-the integration tests in [agent integrations](agent-integrations.md); hosts change
-them, so the table lives in code with per-host overrides. Directive-like
-content from these files is a natural candidate for rules, but promotion
-still requires the user ([write path §6](write-path.md#6-rules)).
+The locations come from each host's documentation and change between host
+versions, so they live in code (`importer/_episodes.py`). Instructions in
+these files are natural candidates for rules, but only the user can add a
+rule ([write path §6](write-path.md#6-rules)).
 
 ## 7. Failure modes
 
 | Failure | Behavior |
 |---|---|
-| Folder already contains `brain.toml` | Overlay phase 0 (dry run or apply) refuses: if the folder is registered, it names the registration and points at phases 1–2; otherwise it suggests `brain brains add`. |
-| `--from` names a host with no known locations and no `PATH` | Usage error listing the known hosts; a `PATH` imports from there under that host name. |
-| A top-level folder name slugifies to an invalid or duplicate slug | The plan shows the clash and appends a numeric suffix; the user can edit `brain.toml` before phase 0. |
-| Thousands of unresolved links | Reported in aggregate with the top offenders; phase 0 still proceeds (links are not modified). |
-| Huge files (exports, logs) | Indexed by name only above the size cap; listed in the report. |
+| The folder already has `brain.toml` | Phase 0 (dry run or apply) refuses with `conflict`; it names the registration and points to phases 1 and 2, or suggests `brain brains add` |
+| `--from` names a host with no known locations and no `PATH` | Usage error listing the known hosts; with a `PATH`, the files are imported under that host name |
+| Two folders give the same slug | The second gets a numeric suffix; the report shows the mapping, and `brain.toml` can be edited after phase 0 |
+| Thousands of unresolved links | Reported as a total with the top targets; phase 0 still proceeds, since links are not changed |
+| Huge files (exports, logs) | Not parsed by the scan above 2 MiB; listed as `oversized` in `--json` |
 
 ## 8. Alternatives considered
 
-| Option | Why not |
-|---|---|
-| Restructure the vault into `topics/<slug>/` on import | Breaks the user's mental map, Obsidian shortcuts, and external links; huge git diffs. Overlay maps instead. |
-| LLM-driven classification of every note during import | Slow, costly, non-deterministic; deterministic heuristics plus an editable plan are enough, and consolidation handles new material. |
-| One big apply | Hard to review; phases keep each diff focused. |
+- Restructuring the vault into `topics/<slug>/` on import was rejected. It
+  breaks the user's mental map, Obsidian shortcuts, and outside links, and
+  makes huge git diffs. Overlay maps folders instead.
+- Classifying every note with a model during import was rejected as slow,
+  costly, and not repeatable. Deterministic rules and an editable plan are
+  enough, and consolidation handles new material.
+- One big apply was rejected as hard to review. Phases keep each diff
+  focused.

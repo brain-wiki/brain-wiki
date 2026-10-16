@@ -7,5 +7,5 @@ source: "docs/design/security-and-privacy.md#8-logging"
 ---
 # Logging
 
-- Logs go to `<state>/logs/brain-wiki.log`, rotated, local only.
-- Logs record operations and errors, never note content.
+Logs go to `<state>/logs/brain-wiki.log`, local only, rotated at 2 MB with
+3 old files kept. They record operations and errors, never note content.

@@ -9,6 +9,8 @@ source: "docs/user/reference.md"
 
 ## Sections
 - [[user-reference-commands]]: Commands
+- [[user-reference-which-brain-a-command-uses]]: Which brain a command uses
 - [[user-reference-mcp-tools]]: MCP tools
+- [[user-reference-exit-codes]]: Exit codes (Reference)
 - [[user-reference-files]]: Files
 - [[user-reference-troubleshooting]]: Troubleshooting

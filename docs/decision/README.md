@@ -1,6 +1,6 @@
 # Decisions
 
-Each decision says what was decided, what was rejected, and where the design argues it.
+One file per decision. Each says what was decided and why, what was rejected, and which design documents argue it.
 
 | Decision | Status |
 |---|---|

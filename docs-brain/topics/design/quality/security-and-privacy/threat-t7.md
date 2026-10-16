@@ -7,6 +7,6 @@ source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T7: Hostile files attack the tools
 
-**Hostile files attack the tools.** YAML bombs, huge files, pathological regexes, invalid UTF-8.
+Hostile files attack the tools: YAML bombs, huge files, pathological regexes, invalid UTF-8.
 
-**Mitigations:** `yaml.safe_load` with size limits on frontmatter (64 KiB); file size cap for indexing (default 2 MiB, larger files indexed by name only); line-oriented parsers with linear-time regexes; FTS queries built from sanitized tokens. Parse failures degrade to plain text.
+**Mitigations:** YAML is parsed with the safe loader, and frontmatter over 64 KiB is refused. Files over 2 MiB are indexed by path only. Parsers are line-oriented with linear-time regexes, and FTS queries are built from quoted tokens. Parse failures degrade to plain text.

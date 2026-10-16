@@ -8,12 +8,14 @@ source: "docs/user/reference.md#files"
 
 | Where | What |
 |---|---|
-| `<brain>/brain.toml` | Settings that travel with the brain: format, topics, agent profiles, lint, consolidation, budgets |
-| `~/.config/brain-wiki/config.toml` | Per machine: registered brains, default brain, per-host brain choice, harvest |
-| `~/.local/state/brain-wiki/` | Run records and pre-images (undo), locks, markers for episodes brain-wiki wrote, session and harvest state, connect records, commit-job state (`schedule/`), logs |
-| `~/.cache/brain-wiki/` | The search index (rebuilt automatically when missing) |
+| `<brain>/brain.toml` | Settings that travel with the brain: format, layout, topics, agent profiles, lint, search, consolidation, git, reports, budgets |
+| `~/.config/brain-wiki/config.toml` | Per machine: registered brains, default brain, per-host settings, harvest |
+| `~/.local/state/brain-wiki/` | Run records and pre-images for undo, locks, harvest and connect state, commit-job state (`schedule/`), logs |
+| `~/.cache/brain-wiki/` | The search index, rebuilt when missing |
 | `~/.local/share/brain-wiki/plugin/<host>/` | Plugin copies written by `brain connect` |
 
-On Windows these live under `%APPDATA%` and `%LOCALAPPDATA%`. Override any
-of them with `BRAIN_WIKI_CONFIG`, `BRAIN_WIKI_STATE_DIR`,
-`BRAIN_WIKI_CACHE_DIR`, and `BRAIN_WIKI_DATA_DIR`.
+- The `XDG_CONFIG_HOME`, `XDG_STATE_HOME`, `XDG_CACHE_HOME`, and
+  `XDG_DATA_HOME` variables move these folders on Linux and macOS.
+- On Windows they live under `%APPDATA%` and `%LOCALAPPDATA%`.
+- `BRAIN_WIKI_CONFIG`, `BRAIN_WIKI_STATE_DIR`, `BRAIN_WIKI_CACHE_DIR`, and
+  `BRAIN_WIKI_DATA_DIR` override each one.

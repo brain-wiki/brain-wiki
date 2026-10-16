@@ -10,8 +10,12 @@ source: "docs/decision/d27-direct-file-reads.md"
 Status: accepted.
 Argued in: [[index-and-search-91-brain-list|index and search §9.1]], [[security-and-privacy|security]].
 
-Agents may read a brain's files directly, at the folder path `brain_list` gives.
+Agents may read a brain's files directly, at the folder path `brain_list` gives. grep and glob over the files work for bulk scans, and the tools add link resolution and supersession warnings.
 
 ### Alternatives considered
 
-Tools only; the path only for profiles that may read everything (moot while every host reads everything)
+- Tools only.
+- Giving the path only to profiles that may read everything. This is moot while every host reads the whole brain (D10).
+
+## Related
+- [[d10-no-access-control-in-a-brain]]: D10: No access control inside a brain

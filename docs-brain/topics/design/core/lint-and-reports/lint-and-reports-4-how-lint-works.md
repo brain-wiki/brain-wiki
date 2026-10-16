@@ -7,39 +7,51 @@ source: "docs/design/lint-and-reports.md#4-how-lint-works"
 ---
 # How lint works
 
-```
-lint(paths, profile):
-  scan()                                    # index freshness (04 §4)
-  per-file rules: re-parse each file in scope (fast, line-oriented)
-  cross-file rules: query the index (ids, names, edges, budgets)
-  merge, apply profile and overrides, sort by path and line
-```
+`brain lint` combines file rules, which read one file, with cross-file
+rules, which query the index.
 
-- File rules depend only on a file's content and the manifest, so their
-  results are cached in the index by content hash (keyed with
-  `LINT_VERSION`, now `"2"`, and the budgets); whole-brain lint re-checks
-  only files that changed.
-- Cross-file rules use the index, so whole-brain lint stays under a second
-  at 10k notes:
-  - duplicate ids (BW105), case clashes (BW110), conflict copies (BW112),
-    database files (BW115);
-  - link resolution over the `edges` table
-    ([[index-and-search-3-schema|index and search §3]]): an unresolved or
-    ambiguous body link is BW310, a `bw-superseded_by` link BW119, a
-    `bw-sources` link BW122. A `bw-sources` link to `archive/episodes/…`
-    whose episode is still under `inbox/episodes/` is not reported: it is
-    the path the consolidation packet gives, valid once `brain consolidate
-    --done` archives the episode;
-  - `bw-superseded_by` naming its own note (BW119) and cycles along
-    `bw-superseded_by` (BW307). Chains without a cycle are fine;
-  - structure (BW4xx) and inbox (BW5xx).
-- `--staged` (pre-commit) lints staged versions from git, not the working
-  tree, so it checks exactly what will be committed.
-- `--changed` lints files changed since the last run, for editor
-  integrations.
+1. Force a scan, so the index matches the files
+   ([[index-and-search-4-freshness|index and search §4]]).
+2. Run the file rules on each note, hub, episode, agent file, `rules.md`,
+   `AGENTS.md`, proposal, and `log.md` in scope.
+3. Run the cross-file rules and keep the problems in scope.
+4. Apply `--select` and `--ignore`, set each severity from the profile for
+   its path, drop the ones that are off, and sort by path, line, and code.
 
-`brain validate` ([[write-path-23-direct-edits|write path §2.3]])
-is lint with `--profile strict --select` set to `SCHEMA_CODES`, on the
-paths given or the Markdown files git sees as changed (every note without
-git). It adds BW121 for any protected path it is asked to check, and exits 1
-only on errors.
+File rules depend only on a file's content and the manifest. Their results
+are cached in `lint_cache`, keyed by content hash, `LINT_VERSION` (now
+`"2"`), and a hash of `[budgets]`, so whole-brain lint re-checks only
+changed files and stays under one second at 10k notes.
+
+Cross-file rules cover:
+
+- Duplicate ids (BW105), case clashes (BW110), conflict copies (BW112),
+  and database files (BW115).
+- Link resolution over the `edges` table
+  ([[index-and-search-3-schema|index and search §3]]). An unresolved
+  body link is BW310, `bw-superseded_by` link BW119, and `bw-sources`
+  link BW122. A `bw-sources` link to `archive/episodes/…` is not reported
+  while its episode is still under `inbox/episodes/`. The consolidation
+  packet gives that path, and it resolves once
+  `brain consolidate --done` archives the episode.
+- A `bw-superseded_by` naming its own note (BW119), and cycles (BW307).
+  Chains without a cycle are fine.
+- Structure (BW4xx), the inbox (BW5xx), and `brain.toml` keys (BW109,
+  BW409).
+
+Narrowing the scope:
+
+- Paths may be absolute, relative to the working directory, or relative
+  to the brain. A path that does not exist is a not-found error.
+- `--staged` runs the file rules on the bytes git has staged, so it checks
+  exactly what will be committed. Cross-file rules still read the index of
+  the working tree.
+- `--changed` checks files modified since the last whole-brain or
+  `--changed` lint (`meta.last_lint_ns`).
+
+`brain validate` is lint with the `strict` profile and `--select` set to
+`SCHEMA_CODES`. It checks the paths given, else the Markdown files git
+sees as changed or new, else every note when the brain is not a git work
+tree. A protected path among them gets BW121 instead of being linted. That
+includes a new episode file, since it lies in the inbox. It exits 1 only
+on errors. See [[write-path-23-direct-edits|write path §2.3]].

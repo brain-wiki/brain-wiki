@@ -7,8 +7,9 @@ source: "docs/design/index-and-search.md#10-performance-budgets"
 ---
 # Performance budgets (Index and search)
 
-Measured by the bench performance suite on generated brains of 1k and 10k
-notes (5 prose links and a `## Related` list each), warm cache, local SSD:
+The bench performance suite measures these on generated brains of 1k and
+10k notes (5 prose links and a `## Related` list each), with a warm cache
+on a local SSD.
 
 | Operation | Budget at 10k |
 |---|---|
@@ -18,3 +19,4 @@ notes (5 prose links and a `## Related` list each), warm cache, local SSD:
 | Orientation | p95 < 30 ms |
 | Full rebuild | < 30 s |
 | Incremental update, one changed file | < 50 ms |
+| Whole-brain lint, warm cache | < 1 s |

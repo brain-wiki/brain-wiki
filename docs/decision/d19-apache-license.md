@@ -3,8 +3,9 @@
 Status: accepted.
 Argued in: [engineering](../design/engineering.md).
 
-License: Apache-2.0.
+brain-wiki is licensed under Apache-2.0.
 
 ## Alternatives considered
 
-AGPL, MIT
+- AGPL.
+- MIT.

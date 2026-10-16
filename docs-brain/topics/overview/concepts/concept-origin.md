@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Origin
 
-Who produced an episode: `owner` (the human), `agent`, `import`, or `system`.
+Who produced an episode: `owner` (the user), `agent`, `import`, or `system`.

@@ -7,8 +7,8 @@ source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T3: Cross-agent leakage
 
-**Cross-agent leakage.** A personal assistant reads work notes.
+Cross-agent leakage. A personal assistant reads work notes.
 
-**Mitigations:** Separate brains plus host brain limits ([[config-and-storage-3-choosing-a-brain|config and storage §3]]).
+**Mitigations:** Separate brains, plus host brain limits ([[config-and-storage-3-choosing-a-brain|config and storage §3]]).
 
-**Residual risk:** Inside one brain, every host reads everything until privacy is redesigned ([[proposal-privacy|privacy proposal]]). File access bypasses host limits (§2).
+**Residual risk:** Inside one brain, every host reads everything ([[proposal-privacy|privacy proposal]]). File access bypasses host limits (§2).

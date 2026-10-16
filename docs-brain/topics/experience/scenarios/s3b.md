@@ -7,6 +7,8 @@ source: "docs/design/overview.md#6-users-and-scenarios"
 ---
 # S3b: Harvest and backfill
 
-**Harvest and backfill.** The agent logged nothing in a session, or sessions happened before brain-wiki existed.
+Harvest and backfill
 
-**Flow (details in):** `brain harvest` reads finished sessions from the hosts' own stores, routes each to a brain by project, and distills them into episodes, after a dry run. [[write-path-22-harvesting-sessions|write path §2.2]]
+**What happens:** The agent logged nothing in a session, or the sessions happened before brain-wiki was set up. `brain harvest` lists finished sessions from the hosts' own stores, and with `--apply` routes each to a brain by project and distills it into episodes.
+
+**Details:** [[write-path-22-harvesting-sessions|write path §2.2]]

@@ -9,11 +9,9 @@ source: "docs/design/write-path.md#10-failure-modes"
 
 | Failure | Result |
 |---|---|
-| Agent writes invalid frontmatter | `brain validate` reports the field, the value, and what is allowed; the agent fixes it. Nothing blocks the file: lint keeps reporting it until it is fixed. |
-| Agent edits a protected file | `brain validate` on that path reports BW121; restore it from git. |
-| Agent edits a note badly | Recovery is git (§5). Without git, there is no copy to restore. |
-| Crash during a run | Writes are per-file atomic. On restart, a record left in `applying` is detected; `brain doctor` restores pre-images for files whose hash matches the recorded `after`, so a half-applied run is rolled back. |
-| Index stale or busy | Prepare forces a fresh scan; runs verify file hashes from disk, not from the index. |
-| Origin transcript missing or unreadable | `brain_read_origin` returns `not_available`; consolidation uses the episode alone. |
-| Host changes its transcript format | The session reader skips what it cannot parse; harvest reports the session as unreadable. |
-| `brain commit` hits a rebase conflict | The rebase is aborted, files stay as they were, exit 1 names the files; later rounds keep committing locally (§5.1). |
+| Agent writes invalid frontmatter or edits a protected file | `brain validate` reports it; lint keeps reporting it until fixed. Restore from git (§2.3). |
+| Crash during a run | `brain doctor` finds records left in `applying` and restores the pre-images of files whose hash matches `after`. |
+| Index stale or busy | Prepare forces a fresh scan. Runs verify file hashes on disk, not in the index. |
+| Origin transcript missing | `brain_read_origin` returns `not_available`; consolidation uses the episode alone. |
+| Host changes its transcript format | The reader skips lines it cannot parse. Harvest skips a mostly unparsable session as unreadable. |
+| `brain commit` hits a rebase conflict | The rebase is aborted and exit 1 names the files (§5.1). |

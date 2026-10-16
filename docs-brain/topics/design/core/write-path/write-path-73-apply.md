@@ -8,28 +8,30 @@ source: "docs/design/write-path.md#73-apply"
 # Apply
 
 1. Take the brain's write lock (`<state>/locks/<brain-key>.lock`, an OS
-   advisory lock held for the duration of the apply; waits up to 30
-   seconds, then `busy`).
-2. Check that every file the run read still has the content it read. A file
-   edited since (by an agent, a person, or a sync tool) makes the run
-   `stale`; nothing is written.
+   advisory lock held for the whole apply). Wait up to 30 seconds, then
+   fail with `busy`.
+2. Check that every file the run read still has the content it read. A
+   file edited since, by an agent, a person, or a sync tool, makes the run
+   `stale`, and nothing is written.
 3. Run the lint gate (§7.2), if any.
 4. Stage the run's entry at the end of `log.md`.
-5. Save a pre-image of every file the run changes and the run record with
+5. Save a pre-image of every file the run changes, and the run record with
    status `applying`.
-6. Write each file atomically (temporary file, `fsync`, rename); moves keep
+6. Write each file atomically (temporary file, `fsync`, rename). Moves keep
    the relative path. A failure rolls back what the run wrote and marks the
    record `failed`.
 7. Raise `brain.toml`'s `format` when the run wrote notes into a brain that
-   declares an older one (one-way; [[brain-format-13-format-versioning|brain format §13]]).
-8. Update the index (write-through) and mark the record `applied`.
-9. If the brain is a git work tree and `[git] mode = "auto"`, stage exactly
-   the files the run touched (plus `brain.toml` when step 7 changed it) and
-   commit, e.g. `brain: consolidate 6 episodes` with trailers
+   declares an older one. This is one-way
+   ([[brain-format-13-format-versioning|brain format §13]]).
+8. Update the index and mark the record `applied`.
+9. If the brain is a git work tree and `[git] mode` is `"auto"` (the
+   default) or `"on"`, stage exactly the files the run touched, plus
+   `brain.toml` when step 7 changed it, and commit. The subject names the
+   operation, for example `brain: consolidate 6 episodes`, with trailers
    `Brain-Run: run-…` and `Brain-Agent: claude-code` (`owner` from the
-   CLI), using the user's git identity and hooks. Never push. A refused
-   commit leaves the run applied and its files staged; the record keeps
-   git's error and `brain doctor` lists it.
+   CLI). The commit uses the user's git identity and hooks, and never
+   pushes. A refused commit leaves the run applied and its files staged.
+   The record keeps git's error, the CLI prints it, and `brain doctor`
+   lists it.
 
-Run records older than the retention window are pruned after each run
-(§8).
+Run records outside the retention window are pruned after each run (§8).

@@ -2,7 +2,7 @@
 
 These documents describe how brain-wiki works today. The code follows them:
 change a document in the same change as the behavior it describes.
-[Milestones](../roadmap/milestones.md#status-2026-10-15) records what is built,
+[Milestones](../roadmap/milestones.md) records what is built,
 [decisions](../decision/README.md) records why, and
 [proposals](../proposal/README.md) holds designs not built yet.
 

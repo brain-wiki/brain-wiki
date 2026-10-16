@@ -7,26 +7,14 @@ source: "docs/design/visualizer.md#1-goals"
 ---
 # Goals (Visualizer)
 
-`brain viz` opens a local, interactive map of a brain. It exists to help a
-person **understand and audit** their brain:
+`brain viz` opens a local, interactive map of a brain. It helps a person understand and audit their brain:
 
-| Question | What the view shows |
+| Question | What the map shows |
 |---|---|
-| What is in here? | Topics as nebulae grouped into constellations; zooming in reveals notes as stars |
-| What is unhealthy? | Superseded notes, notes that still link to them, orphans, lint errors |
-| What changed recently? | Brightness by recency; recent consolidation runs, highlighted where they landed |
+| What is in here? | Topics as glowing clouds grouped into constellations; zooming in shows notes as stars |
+| What is unhealthy? | Superseded notes, notes that still link to them, orphans, files that failed to parse |
+| What changed recently? | Brightness by recency, and recent runs highlighted where they changed notes |
 
-Non-goals: editing notes, collaboration, public hosting. The view is
-read-only and local.
+The map is read-only and local. It does not edit notes, support collaboration, or get hosted publicly.
 
-Lessons from the first design (a 3D force graph of every note):
-
-- Rendering 10k notes and 90k links at once is slow (19.5 MB of JSON, a
-  global layout in the browser) and unreadable: overlapping labels and a
-  hairball.
-- A flat list of 250 topic checkboxes is not navigation.
-
-The second design works like a map: it shows a little at every zoom level,
-reveals detail as you approach, and keeps positions stable so places stay
-where you left them. Every visual element encodes data; there is no
-decoration for its own sake.
+This is the second design. The first drew every note in one 3D force graph. At 10k notes and 90k links that meant 19.5 MB of JSON, a global layout in the browser, overlapping labels, and a tangle of lines, and its flat list of 250 topic checkboxes did not help anyone navigate. The second design works like a map: it shows a little at every zoom level, adds detail as you approach, and keeps positions stable. Every visual element encodes data.

@@ -14,21 +14,32 @@ uv tool install brain-wiki     # or: pipx install brain-wiki
 
 > Set up brain-wiki by running `brain setup --guide` and following it.
 
-`brain setup --guide` prints the setup steps for the agent, which walks you
-through the choices below, explaining each and showing every change before
-it makes it. Connecting your agent gives it brain-wiki's tools, and its
-skills where the app takes plugins; they load in a new session (details per
-app in [[user-agents|Agents]]). You can rerun setup at any time; it offers only
-what is missing.
+`brain setup --guide` prints setup steps for the agent. The agent walks you
+through the choices below, explains each one, and shows every change before
+it makes it. Connecting an agent app gives it brain-wiki's tools, plus its
+skills where the app takes plugins. They load in a new session. See
+[[user-agents|Agents]] for each app.
 
-If the plugin is already installed from your agent's marketplace
-([[user-agents|Agents]]), just ask: *Set up brain-wiki.*
+You can rerun setup at any time. It offers only what is missing. If the
+plugin is already installed from your agent's marketplace, ask the agent:
+*Set up brain-wiki.*
 
 | Choice | What to know |
 |---|---|
-| Where the brain lives | An ordinary folder of Markdown you own, such as `~/brains/personal`. Keep it outside code repositories. Or adopt an existing Obsidian vault in place ([[user-import\|Import]]). |
-| Git | Strongly recommended. Agents edit notes directly, and git is how you see and revert those edits. To use the brain on another machine, push it to a private remote; do not sync a git brain with a sync tool ([[user-maintenance-share-a-brain-between-machines\|Maintenance]]). Without git, `brain undo` still reverses brain-wiki's own changes on this machine, but not direct edits. |
-| Commit job | With git: a job that runs `brain commit` every 15 minutes, so agents' edits land in history; whether it also pushes (off by default). |
-| Other agents | Which agent apps on this machine to connect ([[user-agents\|Agents]]). |
-| What agents may do | Log what they learn and edit notes: on by default. Propose rules and harvest their own sessions: off until you turn them on for an app. |
-| Harvest | Whether to turn past sessions into episodes, and which brain each project's sessions go to. |
+| Where the brain lives | Any folder you own, such as `~/brains/personal`, outside code repositories |
+| Git | Strongly recommended |
+| Commit job | With git: runs `brain commit` every 15 minutes |
+| Other agents | Which agent apps on this machine to connect |
+| What agents may do | Log and edit by default; rules and harvest when you allow them |
+| Harvest | Whether to turn past sessions into episodes, and into which brain |
+
+- You can also adopt an existing Obsidian vault in place. See
+  [[user-import|Import]].
+- Agents edit notes directly, and git is how you see and revert those edits.
+  Without git, `brain undo` still reverses brain-wiki's own changes on this
+  machine, but not direct edits.
+- To use the brain on another machine, push it to a private git remote. Do
+  not sync a git brain with a sync tool. See
+  [[user-maintenance-share-a-brain-between-machines|Maintenance]].
+- The commit job does not push unless you say so. Setup asks only when the
+  brain has a git remote.

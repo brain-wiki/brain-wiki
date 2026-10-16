@@ -12,4 +12,4 @@ source: "docs/user/agents.md"
 - [[user-agents-what-agents-get]]: What agents get
 - [[user-agents-direct-edits]]: Direct edits (Agents)
 - [[user-agents-which-agent-may-do-what]]: Which agent may do what
-- [[user-agents-harvest-off-by-default]]: Harvest (off by default)
+- [[user-agents-harvest]]: Harvest (Agents)

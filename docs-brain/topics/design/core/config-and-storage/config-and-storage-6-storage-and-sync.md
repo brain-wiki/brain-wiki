@@ -10,6 +10,6 @@ source: "docs/design/config-and-storage.md#6-storage-and-sync"
 
 ## Subsections
 - [[config-and-storage-61-model-a-local-working-copy-always]]: Model: a local working copy, always
-- [[config-and-storage-62-v01-local-folder-with-optional-git]]: v0.1: local folder with optional git
+- [[config-and-storage-62-local-folder-with-optional-git]]: Local folder with optional git
 - [[config-and-storage-63-coexisting-with-desktop-sync-tools]]: Coexisting with desktop sync tools
 - [[config-and-storage-64-file-access]]: File access

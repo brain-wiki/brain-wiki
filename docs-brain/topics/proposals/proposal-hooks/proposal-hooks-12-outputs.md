@@ -7,14 +7,19 @@ source: "docs/proposal/hooks.md#12-outputs"
 ---
 # Outputs
 
-| Event | Claude Code / Codex | Antigravity |
+| Event | Claude Code and Codex | Antigravity |
 |---|---|---|
 | `session_start` | `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "<orientation>"}}` | `{"injectSteps": [{"ephemeralMessage": "<orientation>"}]}` |
-| `prompt` | `additionalContext` listing up to 3 notes scoring at least `[recall] min_score` (default 0.3), each with up to 3 guards, cut to 2,400 characters | — |
-| `tool_used` | nothing (records the session's inputs in state) | `{}` |
-| `stop` | prompted capture: `{"decision": "block", "reason": "<capture instruction>"}` at most once per session | `{"decision": "continue", "reason": "…"}` likewise |
-| `pre_compact`, `session_end` | nothing; raw capture ran as an async hook so it never ate the host's short session-end budget (1 s in Codex, 1.5 s shared in Claude Code) | — |
+| `prompt` | `additionalContext` with up to 3 notes (see below) | — |
+| `tool_used` | Nothing; records the session's inputs in state | `{}` |
+| `stop` | `{"decision": "block", "reason": "<capture instruction>"}`, at most once per session | `{"decision": "continue", "reason": "…"}`, likewise |
+| `pre_compact`, `session_end` | Nothing; raw capture ran as an async hook | — |
 
-Injected text was wrapped in `<brain-wiki-context>` markers so capture and
-the session readers could strip it; bringing hooks back means restoring that
-stripping in the session readers.
+- Recall listed up to 3 notes scoring at least `[recall] min_score`
+  (default 0.3), each with up to 3 supersession warnings, cut to 2,400
+  characters.
+- Raw capture ran asynchronously so it never used up the host's short
+  session-end budget: 1 s in Codex, and 1.5 s shared in Claude Code.
+- Injected text was wrapped in `<brain-wiki-context>` markers, so capture
+  and the session readers could strip it. The session readers no longer
+  strip these markers. Bringing hooks back means restoring that.

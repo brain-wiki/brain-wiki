@@ -25,25 +25,29 @@ bw-sources:
 
 | Field | Required | Values | Notes |
 |---|---|---|---|
-| `id` | yes in `strict`, minted by `lint --fix` | ULID | Unique in the brain (§5). |
-| `type` | no (default `note`) | lowercase string | Open vocabulary. Suggested: `note`, `hub`, `concept`, `decision`, `howto`, `reference`, `person`, `project`, `source`, `meeting`. |
-| `title` | no | string | Default: first `# ` heading, else file name without `.md`. |
-| `aliases` | no | list of strings | Same meaning as in Obsidian; used for link resolution and search. |
-| `tags` | no | list of strings | Without `#`. |
-| `status` | no (default `active`) | `active` \| `superseded` \| `archived` | Closed set; the retrieval engine only reasons about these three (§6.3). |
-| `bw-superseded_by` | only with `status: superseded` | one link, `"[[note]]"` | The note that replaced this one (§6.3). |
-| `bw-sources` | no | list of `"[[note or episode]]"` links or URLs | Where the note's knowledge came from (§6.4). |
-| `bw-stage` | no | string | Free workflow state (`draft`, `shipped`, `abandoned`…). Importers move non-standard `status` values here. |
-| `created`, `updated` | no | ISO 8601 date or date-time | Writers set `updated` when they change a note. |
+| `id` | yes in `strict` (BW103) | ULID | Unique in the brain (§5) |
+| `type` | no (default `note`) | lowercase string | Open vocabulary |
+| `title` | no | string | Default: first `# ` heading, else file name |
+| `aliases` | no | list of strings | As in Obsidian; used to resolve links |
+| `tags` | no | list of strings | Without `#` |
+| `status` | no (default `active`) | `active`, `superseded`, `archived` | Closed set (§6.3, BW106) |
+| `bw-superseded_by` | only with `status: superseded` | one link, `"[[note]]"` | §6.3 |
+| `bw-sources` | no | list of links or URLs | §6.4 |
+| `bw-stage` | no | string | Free workflow state |
+| `created`, `updated` | no | ISO 8601 date or date-time | — |
 
+- Suggested `type` values: `note`, `hub`, `concept`, `decision`, `howto`,
+  `reference`, `person`, `project`, `source`, `meeting`.
+- `bw-stage` is a free workflow state (`draft`, `shipped`, `abandoned`).
+  Importers and the BW106 fix move non-standard `status` values here.
+- Agents SHOULD set `updated` when they change a note. brain-wiki's own
+  fixes and moves leave it alone.
 - Any other scalar or list property MAY be present (for example `source`,
-  `url`, `author`). It is the user's: preserved, indexed for `--where`
-  filters, never validated. Fields reserved for future use: `valid_from`,
-  `valid_until`, `confidence`.
-- Any other `bw-` field on a note is an error (BW118).
+  `url`, `author`). It is the user's: preserved, filterable with `--where`,
+  never validated. The names `valid_from`, `valid_until`, and `confidence`
+  are reserved for a later format.
 - Format 2 fields (`bw-claims`, `bw-claims-superseded`, `bw-<verb>`
-  relations, and `bw-superseded_by` written as a list) are reported as
-  BW117, with the command that converts them (§13).
-- `brain validate` checks these rules for the files an agent changed;
-  `brain lint` checks them for the whole brain
-  ([[lint-and-reports|lint]]).
+  relations, and `bw-superseded_by` written as a list) are BW117, and the
+  message names the command that converts them (§13).
+- `brain validate` checks these rules for the files an agent changed, and
+  `brain lint` for the whole brain ([[lint-and-reports|lint]]).

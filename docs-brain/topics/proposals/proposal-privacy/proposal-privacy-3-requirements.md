@@ -10,7 +10,7 @@ source: "docs/proposal/privacy.md#3-requirements"
 
 ## Items
 - [[p1]]: P1: Only the owner sets or changes privacy
-- [[p2]]: P2: A level is defined by the sinks it allows (§2), not by an abstract…
+- [[p2]]: P2: A level is defined by the destinations it allows (§2)
 - [[p3]]: P3: brain-wiki enforces a level where it controls the flow, and tells the…
 - [[p4]]: P4: Nothing an agent writes moves content to a less private place
 - [[p5]]: P5: The level is visible where the owner reads

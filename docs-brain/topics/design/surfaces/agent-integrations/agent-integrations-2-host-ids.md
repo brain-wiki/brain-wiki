@@ -7,25 +7,26 @@ source: "docs/design/agent-integrations.md#2-host-ids"
 ---
 # Host ids
 
-Stable identifiers used in agent profiles, user config, episode
-provenance, and `--host` flags:
+Host ids name a host in agent profiles, the user config, episode
+provenance, and `--host` flags: `claude-code`, `codex`, `antigravity`,
+`openclaw`, `cursor`, and `generic`.
 
-`claude-code`, `codex`, `antigravity`, `openclaw`, `cursor`, `generic`.
+`opencode` is also recognized, from the MCP client's self-reported name,
+so profiles and episode provenance can name it. It has no `brain connect`
+writer and no session reader; it is set up like other MCP clients
+([[host-cursor-other-mcp-clients|Cursor and other MCP clients]]).
 
-`opencode` is also a recognized host id, from the MCP client's
-self-reported name (below), so profiles and episode provenance can name it.
-It has no `brain connect` writer, skill install, or session reader; it is
-wired like other MCP clients ([Cursor and other MCP
-clients](hosts/cursor.md#other-mcp-clients)).
+The MCP server finds its host in this order:
 
-When the MCP server is started with `--host auto` (the plugin's `.mcp.json`
-is read by Claude Code and, as a Claude-format bundle, by OpenClaw), the
-host is detected in this order:
+1. `--host <id>`, when it is not `auto`.
+2. The MCP client's self-reported name, read on the first tool call. A
+   name containing `claude`, `codex`, `antigravity` or `agy`, `openclaw`,
+   `cursor`, or `opencode` maps to that host.
+3. The `BRAIN_WIKI_HOST` environment variable.
+4. `PLUGIN_ROOT` together with `CLAUDE_PLUGIN_ROOT` means Codex, which sets
+   both. `CLAUDE_PLUGIN_ROOT` alone, or `CLAUDECODE=1`, means Claude Code.
+5. Otherwise the host is `generic`.
 
-1. the MCP client's self-reported name, once the client connects;
-2. the `BRAIN_WIKI_HOST` environment variable;
-3. `PLUGIN_ROOT` together with `CLAUDE_PLUGIN_ROOT` is Codex, which sets
-   both for compatibility; `CLAUDE_PLUGIN_ROOT` alone, or `CLAUDECODE=1`, is
-   Claude Code.
-
-An undetectable host is `generic`.
+The client name matters because the plugin's `.mcp.json` passes
+`--host auto` and is read by both Claude Code and OpenClaw, and the
+environment cannot tell those two apart.

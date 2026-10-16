@@ -7,22 +7,29 @@ source: "docs/design/engineering.md#4-packaging-and-distribution"
 ---
 # Packaging and distribution
 
-- Build backend: `hatchling`. The plugin files at the repo root are copied
-  into `brainwiki/assets/plugin/` at build time, so `brain connect` can
-  install exactly the same files the marketplaces serve.
-- Console scripts: `brain`, `brain-wiki` (same entry point), and
-  `brain-wiki-mcp` (equivalent to `brain mcp`, for registries and configs
+- The build backend is `hatchling`. The wheel force-includes the root
+  plugin files (`plugin.json`, `mcp.json`, `.mcp.json`, `mcp_config.json`,
+  `server.json`, `.claude-plugin/`, `rules/`, `skills/`) under
+  `brainwiki/assets/plugin/`, so `brain connect` installs the same files
+  the marketplaces serve.
+- The sdist is built from an allowlist in `pyproject.toml`, so local drafts
+  and caches never reach it.
+- Console scripts are `brain`, `brain-wiki` (the same entry point), and
+  `brain-wiki-mcp` (the same as `brain mcp`, for registries and configs
   that expect a dedicated server binary).
-- Install paths users are told about: `uv tool install brain-wiki`,
-  `pipx install brain-wiki`, or `uvx --from brain-wiki brain …` with no
+- Users are told to install with `uv tool install brain-wiki` or `pipx
+  install brain-wiki`, or to run `uvx --from brain-wiki brain …` with no
   install.
-- PyPI: `brain-wiki` is the package; `brainwiki` is published as a thin
-  alias that depends on it, so either name installs the same thing.
+- On PyPI, `brain-wiki` is the package. `brainwiki` is published as a thin
+  alias that depends on it.
 - The README carries the `mcp-name:` marker the MCP Registry uses to verify
-  PyPI ownership, and `server.json` declares the PyPI package with stdio
-  transport.
-- One version number, in `pyproject.toml`. `scripts/sync_versions.py`
-  writes it into every plugin manifest and `server.json`; CI fails if they
-  disagree.
+  PyPI ownership. `server.json` declares the PyPI package, run with `uvx`
+  and the `mcp` argument over stdio.
+- The only hand-maintained version is in `pyproject.toml`.
+  `scripts/sync_versions.py` writes the release version into the plugin
+  manifests, `server.json`, and the `brain-wiki==<version>` pins in the MCP
+  configs. It also regenerates the skill references that mirror
+  `src/brainwiki/assets/` and the Antigravity rule. CI fails on drift
+  (`--check`).
 - An npm launcher package (`npx brain-wiki`, delegating to `uvx`) is
   deferred until there is demand.

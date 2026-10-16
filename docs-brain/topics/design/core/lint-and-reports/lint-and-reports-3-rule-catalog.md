@@ -7,10 +7,9 @@ source: "docs/design/lint-and-reports.md#3-rule-catalog"
 ---
 # Rule catalog
 
-Codes are stable; new rules get new codes, and the codes of removed rules
-are not reused. "Fix" means `brain lint --fix` can repair it safely. The
-codes marked † are `SCHEMA_CODES`, the frontmatter rules `brain validate`
-runs alone.
+Codes are stable. New rules get new codes, and the codes of removed rules
+are not reused. The Fix column says what `brain lint --fix` does. Codes
+marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
 
 ## Subsections
 - [[lint-and-reports-bw1xx-files-and-frontmatter]]: BW1xx: files and frontmatter

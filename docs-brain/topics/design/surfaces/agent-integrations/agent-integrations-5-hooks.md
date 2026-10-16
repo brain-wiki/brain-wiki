@@ -7,8 +7,9 @@ source: "docs/design/agent-integrations.md#5-hooks"
 ---
 # Hooks
 
-None in v0.1. A session-start briefing, capture at stop and compaction,
-input tracking from tool hooks, and per-prompt recall were built and removed before
-release: the instruction block and `brain_orient` deliver the briefing, and
-harvest recovers sessions afterwards
-([[proposal-hooks|proposal]]).
+brain-wiki installs no host lifecycle hooks. A session-start briefing,
+capture at stop and compaction, input tracking from tool hooks, and
+per-prompt recall were built and removed before 0.1. The instruction block
+and `brain_orient` deliver the briefing, and harvest recovers sessions
+afterwards ([[d25-static-instructions|D25]],
+[[proposal-hooks|proposal]]).

@@ -11,13 +11,13 @@ uv tool install brain-wiki     # or: pipx install brain-wiki
 brain setup
 ```
 
-`brain setup` goes step by step: create a brain (or adopt a vault) and choose
-git, schedule commits, connect the agent apps it finds, choose what each may do, and turn on
-harvest. It shows every change before making it, and ends with what to try
-next.
+`brain setup` goes step by step. It creates a brain (or adopts a vault),
+sets up git and the commit job, connects the agent apps it finds, sets what
+each may do, and turns on harvest. It shows every change before making it,
+and ends with what to try next.
 
-Every step is also a command of its own, which is what an agent following
-`brain setup --guide` runs:
+Each step is also a command of its own. These are the commands an agent
+following `brain setup --guide` runs:
 
 ```sh
 brain doctor
@@ -29,9 +29,12 @@ brain harvest enable claude-code
 brain harvest route "~/**" personal
 ```
 
-`brain doctor` reports its version and SQLite, your brains, and which agents
-it found on this machine. It changes nothing (except rolling back a run that
-a crash left half-applied). `brain init --git` also makes a first commit.
+- `brain doctor` reports its version, SQLite, your brains, and the agent apps
+  it found on this machine. It changes nothing, except that it rolls back a
+  run that a crash left half-applied.
+- `brain init --git` runs `git init` and makes a first commit.
+
+A new brain looks like this:
 
 ```text
 ~/brains/personal/
@@ -39,11 +42,12 @@ a crash left half-applied). `brain init --git` also makes a first commit.
 ├── AGENTS.md           how agents that only read files should use it
 ├── rules.md            your standing rules, part of every briefing
 ├── log.md              a readable history of changes brain-wiki made
-├── topics/<topic>/     curated notes; each topic has a hub (index.md)
+├── topics/<topic>/     notes; each topic has a hub (index.md)
 ├── inbox/episodes/     raw observations from agents and from you
+├── inbox/proposals/    rules agents proposed, waiting for you
 ├── archive/            consolidated episodes, kept as sources
 └── reports/            generated pages: stale links, orphans, inbox, lint
 ```
 
-Already have notes? See [[user-import|Import]] to adopt an Obsidian vault in
-place.
+A git brain also gets a `.gitattributes` file, so `log.md` merges without
+conflicts.

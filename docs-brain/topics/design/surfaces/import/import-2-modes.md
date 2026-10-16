@@ -9,14 +9,23 @@ source: "docs/design/import.md#2-modes"
 
 | Mode | Command | Result |
 |---|---|---|
-| **Overlay** | `brain import <folder> --overlay` | The folder itself becomes a brain. brain-wiki adds its own files; notes stay where they are. |
-| **Into** | `brain import <folder> --into <brain>` | Files are copied into an existing brain as one or more topics; links are rewritten; the source folder is untouched. |
-| **To episodes** | `brain import <path> --to-episodes` | Documents are split into episodes in the inbox, for consolidation to fold into notes. |
-| **From an agent** | `brain import --from <host>` | The host's own memory files become episodes attributed to that host (§6). |
+| Overlay | `brain import <folder> --overlay` | The folder becomes a brain; notes stay where they are |
+| Into | `brain import <folder> --into <brain>` | Notes are copied into an existing brain as topics |
+| To episodes | `brain import <path> --to-episodes` | Documents become episodes in the inbox |
+| From an agent | `brain import [PATH] --from <host>` | The host's memory files become episodes (§6) |
 
-All modes default to `--dry-run`; `--apply` executes, and `--dry-run` wins
-when both are given. Exactly one mode per command. A flag the chosen mode
-does not use is a usage error (exit 2), never silently dropped: `--agent`
-and `--untrusted` need `--to-episodes`, `--phase` needs `--overlay`, and
-`--topic` does not apply to `--overlay` (top-level folders are the topics).
-A source path that does not exist is `not_found` (exit 3) in every mode.
+Rules shared by every mode:
+
+- A command picks exactly one mode.
+- Every mode is a dry run unless `--apply` is given. `--dry-run` wins when
+  both are given.
+- A flag the chosen mode does not use is a usage error (exit 2), never
+  dropped: `--agent` and `--untrusted` need `--to-episodes`, `--phase`
+  needs `--overlay`, and `--topic` does not work with `--overlay`, whose
+  top-level folders become the topics.
+- `--overlay` and `--into` need a folder. A source path that does not
+  exist is `not_found` (exit 3).
+- `--to-episodes` and `--from` write into the brain chosen by the global
+  `--brain`.
+  For phase 0, `--brain NAME` sets the new brain's name; the default is
+  the folder name.

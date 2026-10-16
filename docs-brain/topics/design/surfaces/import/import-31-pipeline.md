@@ -8,35 +8,48 @@ source: "docs/design/import.md#31-pipeline"
 # Pipeline
 
 ```
-scan ─► detect conventions ─► plan ─► report ─► apply phase 0 ─► (optional) phases 1..2
+scan ─► detect conventions ─► report ─► apply phase 0 ─► (optional) phases 1 and 2
 ```
 
-**Scan** walks the folder (respecting ignore rules) and parses every `.md`
-file without writing anything.
+The scan walks the folder and parses every `.md` file without writing
+anything. It skips hidden folders, the folders it ignores (below), and the
+contents of files over 2 MiB, which it lists as `oversized`.
 
-**Detect conventions:**
+Conventions it detects:
 
-| Convention | Detection | Effect on the plan |
+| Convention | Detected by | Effect |
 |---|---|---|
-| Obsidian vault | `.obsidian/` present | Read `app.json` for link style (`useMarkdownLinks`), new-file location, attachment folder; read `types.json` for property types. |
-| Topics | Top-level folders containing notes | Each becomes a declared topic with `path` set to the folder and a slug derived from its name. Numbered prefixes (`01 Projects`) are kept in the path and dropped from the slug. Deeper folders that have a hub are sub-topics (brain format §2) without being declared. |
-| Hub style | `index.md`, `_index.md`, `README.md`, or a folder note (`Folder/Folder.md`) inside topic folders | Sets `layout.hub_filename` (`{folder}.md` for folder notes). Topics without a hub get one only in phase 2. |
-| Templates | A folder named like `Templates` or configured as the template folder | Ignored (template placeholders are not knowledge). |
-| Attachments | The configured attachment folder, or folders of mostly non-Markdown files | Ignored for knowledge, still linkable. |
-| Daily notes | Files named `YYYY-MM-DD.md` in one folder | Declared as a `journal` topic; optionally fed to consolidation with `--to-episodes` later. |
-| Inbox folder | A top-level folder named like `Inbox` | Used as `layout.inbox_dir` only if empty of curated notes; otherwise left alone and the default inbox is created. |
+| Obsidian vault | A `.obsidian/` folder | Reads `useMarkdownLinks` and `attachmentFolderPath` from `app.json`, and the template folder from `templates.json` |
+| Topics | Top-level folders with notes | Each becomes a declared topic: `path` is the folder, the slug comes from its name |
+| Hub style | `index.md`, `_index.md`, `README.md`, or a folder note (`Folder/Folder.md`) directly in top-level folders | The most common one becomes `layout.hub_filename` (`{folder}.md` for folder notes) |
+| Templates | A top-level folder named `templates`, `_templates`, or `template`, or Obsidian's template folder | Ignored |
+| Attachments | Obsidian's attachment folder, or a top-level folder named `attachments`, `assets`, `files`, `images`, `media`, or `_resources` | Ignored for knowledge, still linkable |
+| Daily notes | A folder where at least 3 notes, and at least half its notes, are named `YYYY-MM-DD.md` | Declared as the `journal` topic |
+| Inbox folder | A top-level folder named `inbox` or `_inbox` | Not declared as a topic; brain-wiki creates its own `inbox/` |
 
-Properties that hold links (`up`, `parent`, `related`, `next`) stay the
-user's properties: preserved and filterable with `--where`, never converted
-or reported (§4.2).
+- Numbered prefixes (`01 Projects`, `90 Templates`) are ignored when
+  matching names, kept in the path, and dropped from the slug.
+- Two folders that give the same slug get `-2`, `-3`, and so on.
+- Deeper folders are sub-topics without being declared
+  ([[brain-format-2-directory-layout|brain format §2]]).
+- Properties that hold links (`up`, `parent`, `related`, `next`) stay the
+  user's properties (§4.2).
 
-**Plan and report.** The report (`reports/import-plan.md` in the target,
-plus terminal output) shows:
+The report prints in the terminal on a dry run and is saved as
+`reports/import-plan.md` by phase 0. It shows:
 
-- the generated `brain.toml` (topics with paths, hub style, ignores,
-  `lint.profile = "migrate"`);
-- counts: notes, notes with and without frontmatter, ids present,
-  non-standard `status` values, unresolved links (with the most common
-  targets), conflict copies, files that fail to parse;
-- every change each phase would make, with examples;
-- what will not change.
+- note counts: notes, notes with frontmatter, notes with ids;
+- whether the folder is an Obsidian vault, and the hub style;
+- the topics and the folders they come from, and the ignored folders;
+- non-standard `status` values with counts;
+- unresolved links, with the five most common targets;
+- conflict copies (left alone) and files that fail to parse (never
+  modified);
+- what each phase would do, and the `brain.toml` phase 0 would write.
+
+`--json` gives the same survey as data, including the oversized files.
+
+The generated `brain.toml` sets `layout.topics_dir = "."`, the hub style,
+the ignored folders, `lint.profile = "migrate"`,
+`[agents.default] write = ["episodes", "edit"]`, and one `[topics.<slug>]`
+table per topic.

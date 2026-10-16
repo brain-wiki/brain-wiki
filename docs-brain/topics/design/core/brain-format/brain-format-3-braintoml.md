@@ -7,9 +7,10 @@ source: "docs/design/brain-format.md#3-braintoml"
 ---
 # `brain.toml`
 
-The manifest identifies the brain and holds settings that must travel with
-it. Settings that belong to a user or a machine (where brains are, which
-brain is the default) live in the user config ([[config-and-storage|config and storage]]).
+The manifest identifies the brain and holds settings that travel with it.
+Settings that belong to a user or a machine, such as where brains are and
+which brain is the default, live in the user config
+([[config-and-storage|config and storage]]).
 
 ```toml
 format = 3                                  # format version (required, §13)
@@ -25,18 +26,18 @@ reports_dir  = "reports"
 hub_filename = "index.md"                   # or "{folder}.md" for folder-note style
 ignore       = []                           # extra glob patterns, relative to the brain root
 
-[budgets]                                   # hard limits enforced by lint and writers
+[budgets]
 rules_max_lines     = 100
 rules_max_chars     = 4000
 agents_md_max_lines = 150
 orient_max_tokens   = 1500
 
-[lint]
-profile = "strict"                          # strict | migrate (see 06)
+[lint]                                      # see lint and reports §2
+profile = "strict"                          # strict | migrate
 stale_inbox_days = 14
 # [lint.overrides] maps path globs to a profile or "off", e.g. "Archive/**" = "migrate"
 
-[search]                                    # ranking and guard settings (see 04)
+[search]                                    # see index and search §4 to §6
 freshness_ms       = 1000
 max_guards_per_hit = 10
 status_factor      = { active = 1.0, superseded = 0.35, archived = 0.2 }
@@ -44,44 +45,51 @@ kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7, archived_episode =
 recency_half_life_days = 180
 
 [consolidate]
-max_episodes_per_run = 50                   # episodes one `brain consolidate --prepare` returns (see 05)
+max_episodes_per_run = 50                   # episodes one `brain consolidate --prepare` returns
 
 [reports]
-after_consolidate = true
-commit = false                              # include reports/ in brain-wiki's git commits
+after_consolidate = true                    # `brain consolidate --done` regenerates reports/
+commit = false                              # accepted, currently has no effect
 
 [git]
-mode = "auto"                               # auto | off ; auto = commit when the brain is a git work tree
+mode = "auto"                               # auto | off; auto commits each run in a git work tree
 
 [topics.search]                             # one table per declared topic (optional)
 path        = "topics/search"               # default: the folder with this slug, at any depth
 title       = "Search"
 description = "How local search works and why."
 
-[agents.default]                            # profile for unknown hosts
+[agents.default]                            # profile for hosts without their own
 write       = ["episodes", "edit"]
 
 [agents.claude-code]                        # profile for one host id
 write       = ["episodes", "edit", "propose_rules", "harvest"]
+read_origin = false
 ```
 
 Rules:
 
-- `format` and `id` are REQUIRED. Unknown keys MUST be preserved by tools
-  that rewrite the file and SHOULD produce a lint warning.
-- Inline tables (`status_factor = { … }`) are TOML, not frontmatter; the
-  flat-values rule in §4 applies to note frontmatter only.
-- A topic that exists on disk but is not declared still works: its slug is
-  its folder name and its title is taken from the hub. Declaring a topic
-  lets the user set a title, a description, or a path (for imported
-  vaults). A declaration without `path` applies to the folder whose slug
-  matches, wherever it sits.
-- Topic slugs match `^[a-z0-9][a-z0-9-]{0,63}$`.
-- Agent profile names are host ids ([[agent-integrations-2-host-ids|agent integrations]]).
-  The write capabilities are `episodes`, `edit`, `propose_rules`, and
-  `harvest` ([[cli-and-mcp-1-agent-profiles|CLI and MCP §1]]).
-- Settings from 0.1 that format 3 dropped (`[consolidate]` `review`,
-  `review_external`, `max_supersede_ratio`; topic `review` and
-  `agent_edits`) are unknown keys: preserved, reported by lint (BW109), and
-  ignored. The old capability names `consolidate` and `review` load and are
-  ignored.
+- `format` and `id` are REQUIRED. A known key with a value of the wrong
+  type stops the brain from opening, with an error naming the key.
+- Unknown keys MUST be preserved by tools that rewrite the file, and
+  SHOULD produce a lint warning (BW109).
+- Inline tables (`status_factor = { … }`) are TOML, not frontmatter. The
+  flat-values rule of §4 applies to note frontmatter only.
+- An undeclared topic still works. Its title comes from its hub, and its
+  description from the hub's `description` property. A declaration sets
+  the title, the description, or a path (for imported vaults).
+- Declared topic slugs MUST match `^[a-z0-9][a-z0-9-]{0,63}$` (BW409).
+- `[budgets]` limits are hard. Rule writes refuse to exceed theirs, lint
+  reports `rules.md` (BW402) and `AGENTS.md` (BW403), and orientation is
+  cut to fit.
+- `git.mode = "on"` behaves like `auto`.
+- Agent profile names are host ids
+  ([[agent-integrations-2-host-ids|agent integrations §2]]). The write
+  capabilities are `episodes`, `edit`, `propose_rules`, and `harvest`, and
+  `read_origin` lets a host read the conversation behind an episode
+  ([[cli-and-mcp-1-agent-profiles|CLI and MCP §1]]).
+- Settings that 0.1 had and format 3 dropped (`[consolidate]` `review`,
+  `review_external`, `max_supersede_ratio`, and topic `review` and
+  `agent_edits`) are unknown keys, so they are preserved, reported
+  (BW109), and ignored. The old capability names `consolidate` and
+  `review` grant nothing.

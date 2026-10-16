@@ -6,7 +6,7 @@ source: "docs/roadmap/ideas.md"
 ---
 # MCP tools for rule proposals
 
-MCP tools for rule proposals (list, show, accept with user confirmation, reject) so an agent can walk the user through them
+MCP tools for rule proposals (list, show, accept after the user confirms, reject) so an agent can walk the user through them
 
 **Area:** Consolidation
 

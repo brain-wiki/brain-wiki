@@ -7,6 +7,8 @@ source: "docs/design/write-path.md#2-the-write-paths"
 ---
 # The write paths
 
+There are three ways to write, plus rules, which have their own path.
+
 ```
                      PATH 1: inbox (append-only, any agent)
   agent / CLI ───────► inbox/episodes/YYYY/MM/<ulid>.md     never edited again
@@ -22,16 +24,17 @@ source: "docs/design/write-path.md#2-the-write-paths"
         ─► Run: lock, verify, lint gate, pre-images, apply, log.md, git commit (§7)
 
   rules.md ◄── only: user via CLI, or agent via MCP with user confirmation (§6)
-  any file ◄── a human with an editor (first-class, picked up by freshness + lint)
+  any file ◄── a person with an editor (picked up by the index and by lint)
 ```
 
-The inbox is optional capture: an agent may log an episode and let
-consolidation fold it in later (§4), or edit the right note itself. Agents
-with file tools can technically write anywhere. The sanctioned paths are
-what the static instruction block, the skill, `AGENTS.md`, orientation, and
-MCP tools teach; lint and `brain validate` make deviations visible (an
-episode that changed, a protected file edited, a frontmatter field brain-wiki
-does not know). Human edits are always allowed: it is the user's brain.
+The inbox is optional. An agent may log an episode and let consolidation
+fold it in later (§4), or edit the right note itself.
+
+Agents with file tools can write anywhere. The instruction block, the
+skill, `AGENTS.md`, orientation, and the MCP tools describe the documented
+ways to write, and lint and `brain validate` report changed episodes,
+edited protected files, and unknown frontmatter fields. People can always
+edit any file.
 
 ## Subsections
 - [[write-path-21-ways-an-episode-is-written]]: Ways an episode is written

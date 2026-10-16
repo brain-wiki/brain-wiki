@@ -11,5 +11,5 @@ source: "docs/design/cli-and-mcp.md#2-cli"
 ## Subsections
 - [[cli-and-mcp-21-command-tree]]: Command tree
 - [[cli-and-mcp-22-conventions]]: Conventions
-- [[cli-and-mcp-23-exit-codes]]: Exit codes
+- [[cli-and-mcp-23-exit-codes]]: Exit codes (CLI and MCP)
 - [[cli-and-mcp-24-parser-and-startup-cost]]: Parser and startup cost

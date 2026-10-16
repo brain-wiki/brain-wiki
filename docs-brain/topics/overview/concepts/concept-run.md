@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Run
 
-A change brain-wiki itself makes (`brain mv`, `brain lint --fix`, `brain consolidate --done`, …). Has an id, a record, and an undo point.
+A change brain-wiki itself makes, such as `brain mv`, `brain lint --fix`, `brain import`, a new rule, or `brain consolidate --done`. Each run has an id, a record, and an undo point for `brain undo`.

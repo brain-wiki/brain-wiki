@@ -3,8 +3,9 @@
 Status: accepted.
 Argued in: [agent integrations](../design/agent-integrations.md).
 
-The repo root is also the plugin root for every host; `brain connect` wires local installs; no host lifecycle hooks in v0.1 ([proposal](../proposal/hooks.md)).
+The repository root is also the plugin root for every host: it holds each host's manifest, the MCP entries, the skills, and the rules. `brain connect` wires a host to a local install instead. The plugin has no host lifecycle hooks ([hooks proposal](../proposal/hooks.md)).
 
 ## Alternatives considered
 
-Separate repos per host; plugin in a subdirectory
+- A separate repository per host.
+- The plugin in a subdirectory.

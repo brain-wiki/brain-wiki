@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Episode
 
-An immutable inbox file holding raw observations from one agent session or one human entry. May point back to the conversation it came from.
+A file of raw observations in `inbox/episodes/`, written by an agent, a person, an import, or harvest. Its text never changes, and consolidation moves it to `archive/episodes/`. It may record the session and turns it came from.

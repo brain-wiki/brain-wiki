@@ -170,17 +170,17 @@ description = "Designs not built yet, one topic each"
 [topics.proposal-hooks]
 title = "Host hooks: briefing, capture, and recall"
 path = "topics/proposals/proposal-hooks"
-description = "brain hook: the briefing injected at session start, capture at stop and compaction, input tracking from tool hooks, per-prompt recall"
+description = "brain hook: briefing at session start, capture at stop and compaction, input tracking, per-prompt recall"
 
 [topics.proposal-privacy]
 title = "Privacy"
 path = "topics/proposals/proposal-privacy"
-description = "Levels defined by where content may go (model, tools, outputs, exports), declared in a topic's index.md; replaces the removed privacy levels"
+description = "Levels defined by where content may go (model, tools, outputs, exports), declared in a topic's index.md"
 
 [topics.proposal-public-benchmarks]
 title = "Public memory benchmarks"
 path = "topics/proposals/proposal-public-benchmarks"
-description = "Bench adapters for LongMemEval and similar; probe coverage as a consolidation metric"
+description = "Bench adapters for LongMemEval and similar, and probe coverage as a consolidation metric"
 
 [topics.proposal-remote-mcp]
 title = "Remote MCP for chat apps"
@@ -190,12 +190,12 @@ description = "HTTP transport and OAuth for ChatGPT, claude.ai, and the Gemini a
 [topics.proposal-remote-sync]
 title = "Remote sync and object storage"
 path = "topics/proposals/proposal-remote-sync"
-description = "brain sync to a private git remote, then GCS and S3; a store interface for a server with no local copy"
+description = "brain sync with conflict copies, then GCS and S3, then a server that reads a brain from a bucket"
 
 [topics.proposal-scheduled-maintenance]
 title = "Scheduled maintenance"
 path = "topics/proposals/proposal-scheduled-maintenance"
-description = "Routine templates for hosts' schedulers and OS schedulers; a headless consolidation backend; one consolidation device"
+description = "Scheduled harvest and consolidation through host and OS schedulers"
 
 [agents.default]
 write = ["episodes"]

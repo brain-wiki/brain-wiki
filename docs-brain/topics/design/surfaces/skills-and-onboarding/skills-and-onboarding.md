@@ -8,7 +8,8 @@ source: "docs/design/skills-and-onboarding.md"
 
 The three skills, guided setup, and `brain doctor --json`
 
-Status: draft for review
+The three skills the plugin ships, and how a new user gets from an
+installed plugin to a working brain connected to their agents.
 
 Generated from `docs/design/skills-and-onboarding.md`.
 
@@ -23,6 +24,7 @@ Generated from `docs/design/skills-and-onboarding.md`.
   - [[skills-and-onboarding-32-the-flow]]: The flow
   - [[skills-and-onboarding-33-rules-for-the-setup-skill]]: Rules for the setup skill
   - [[skills-and-onboarding-34-brain-doctor---json]]: `brain doctor --json`
+  - [[skills-and-onboarding-35-the-terminal-wizard]]: The terminal wizard
 - [[skills-and-onboarding-4-skill-bodies-outlines]]: Skill bodies (outlines)
 - [[skills-and-onboarding-5-testing]]: Testing (Skills and onboarding)
 - [[skills-and-onboarding-6-alternatives-considered]]: Alternatives considered (Skills and onboarding)

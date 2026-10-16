@@ -7,12 +7,18 @@ source: "docs/design/cli-and-mcp.md#37-lifecycle"
 ---
 # Lifecycle
 
-- One process per host connection (stdio). On start it resolves the brain
-  for its host, opens the index, and runs a freshness scan. Each request
-  scans again if more than a second has passed ([[index-and-search-4-freshness|index and search §4]]).
-- Brain selection can change per call (`brain` argument), within the
-  host's limits; indexes are opened lazily and cached per brain.
-- Each call re-reads the brain's `brain.toml` and refreshes the cached
-  engine from it, so a profile grant or revoke, or any other manifest
-  change, applies to the next call without restarting the server.
+- One process serves one host connection over stdio.
+- On start, the server detects the host (§3.3) and builds its
+  instructions. With `--host auto`, the client's self-reported name, read
+  on the first tool call, replaces the guess from the environment
+  ([[agent-integrations-2-host-ids|agent integrations §2]]).
+- The `brain` argument can pick a different brain on each call, within the
+  host's limits. Engines are opened on first use and cached per brain.
+- Each call re-reads the user config and the brain's `brain.toml` and
+  refreshes the cached engine, so a profile change, or any other manifest
+  change, applies to the next call without a restart.
+- Each request rescans the brain if more than `search.freshness_ms`
+  (default one second) has passed since the last scan
+  ([[index-and-search-4-freshness|index and search §4]]).
+- Tool calls run one at a time, under one lock.
 - The server exits on stdin EOF, as the transport requires.

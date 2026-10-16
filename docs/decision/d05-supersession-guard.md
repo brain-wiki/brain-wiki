@@ -3,8 +3,11 @@
 Status: accepted.
 Argued in: [brain format §7](../design/brain-format.md#7-supersession-guard), [index and search §5](../design/index-and-search.md#5-supersession-guard).
 
-The supersession guard: a hit on a superseded note always comes with the note that replaced it (followed through `bw-superseded_by` to the newest), and a hit on a successor names the notes it replaced. Format 2 also co-retrieved `conflicts_with` notes; format 3 has no conflict relation.
+When retrieval returns a superseded note, it also returns the note that replaced it, following `bw-superseded_by` to the newest note in the chain. When it returns a note that replaced others, it names the notes it replaced. Search ranks by similarity, which says nothing about which note is current, so this rule makes retrieval correct about change.
+
+Format 2 also returned notes linked by `conflicts_with`. Format 3 has no conflict relation.
 
 ## Alternatives considered
 
-Rank-based retrieval only; post-hoc contradiction reports only
+- Ranking alone. A superseded note can still rank first, with nothing saying it is out of date.
+- Contradiction reports after the fact. By then the agent has already used the old note.

@@ -7,17 +7,8 @@ source: "docs/design/eval-bench.md#2-principles"
 ---
 # Principles
 
-- **Synthetic, seeded data.** Every dataset is generated from a seed or
-  hand-written about fictional subjects. No personal data, no licensing
-  questions, fully reproducible.
-- **Deterministic grading.** Graders check ids, ranks, diagnostics, and
-  file diffs. No LLM judges a result.
-- **Negative assertions.** Cases state what must *not* happen (a guard the
-  ground truth lacks, a finding on clean text, a fix that touches other
-  lines), not only what should.
-- **Worst model, not average.** For model comparisons, once a model suite
-  exists, the headline is the lowest score across backends, because a brain
-  is shared by every model that writes to it.
-- **Same code paths as production.** Suites call the functions the CLI and
-  MCP server use (search, read, orient, lint, fix). Model suites, when
-  built, run through headless agent CLIs ([[agent-integrations-7-headless-presets|agent integrations §7]]).
+- Synthetic data. Every dataset is generated from a seed or written by hand about fictional subjects, so it holds no personal data, raises no license questions, and is reproducible (D18).
+- Deterministic grading. Graders check ids, ranks, diagnostics, and file diffs. No model judges a result.
+- Negative cases. Cases also state what must not happen: a guard the ground truth lacks, a finding on clean text, a fix that touches other lines.
+- The same code as production. Suites call the functions the CLI and MCP server use: search, read, orient, lint, and fix.
+- Model comparisons are not built. When they are, they will run through the headless presets ([[agent-integrations-7-headless-presets|agent integrations §7]]), and the headline will be the lowest score across models, because every model that writes to a brain shares it.

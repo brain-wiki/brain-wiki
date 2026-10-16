@@ -10,7 +10,7 @@ How brain-wiki works and why: the design documents and the decisions
 
 These documents describe how brain-wiki works today. The code follows them:
 change a document in the same change as the behavior it describes.
-[[roadmap-milestones-status-2026-10-15|Milestones]] records what is built,
+[[milestones|Milestones]] records what is built,
 [[decisions|decisions]] records why, and
 [[proposals|proposals]] holds designs not built yet.
 

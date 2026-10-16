@@ -7,8 +7,8 @@ source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T11: Memory echo
 
-**Memory echo.** What brain-wiki returned to an agent gets harvested back as new evidence and reinforced.
+Memory echo. What brain-wiki returned to an agent is harvested back as new evidence.
 
-**Mitigations:** Harvest drops tool output bodies ([[write-path-3-provenance-and-inputs|write path §3]]). The consolidation packet shows each episode's agent and inputs.
+**Mitigations:** Harvest drops tool output bodies ([[write-path-33-invariants|write path §3.3]]). The consolidation packet shows each episode's agent and inputs.
 
-**Residual risk:** Agents that paraphrase recalled content into their own words can still echo it; provenance makes it visible.
+**Residual risk:** An agent that restates recalled content in its own words can still echo it. Provenance makes it visible.

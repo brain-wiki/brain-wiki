@@ -13,3 +13,4 @@ source: "docs/design/skills-and-onboarding.md#3-onboarding"
 - [[skills-and-onboarding-32-the-flow]]: The flow
 - [[skills-and-onboarding-33-rules-for-the-setup-skill]]: Rules for the setup skill
 - [[skills-and-onboarding-34-brain-doctor---json]]: `brain doctor --json`
+- [[skills-and-onboarding-35-the-terminal-wizard]]: The terminal wizard

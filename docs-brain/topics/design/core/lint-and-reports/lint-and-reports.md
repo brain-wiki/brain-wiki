@@ -8,8 +8,6 @@ source: "docs/design/lint-and-reports.md"
 
 Lint rules, profiles, fixes, reports, the pre-commit hook
 
-Status: draft for review
-
 Generated from `docs/design/lint-and-reports.md`.
 
 ## Notes

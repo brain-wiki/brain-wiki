@@ -6,7 +6,7 @@ source: "docs/roadmap/ideas.md"
 ---
 # Orientation shows how many of the calling host's sessions are not yet harvested
 
-Orientation shows how many of the calling host's sessions are not yet harvested, from a cached count refreshed at most hourly, as a nudge to run the recipe
+Orientation shows how many of the calling host's sessions are not yet harvested, from a cached count refreshed at most hourly, as a prompt to run the harvest recipe
 
 **Area:** Harvest
 

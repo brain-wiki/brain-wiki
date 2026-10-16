@@ -1,9 +1,18 @@
 # Import
 
-Every mode starts as a dry run; add `--apply` to change anything. `--dry-run`
-wins over `--apply`. Choose one mode per command; a flag the mode does not
-use (`--agent` without `--to-episodes`, `--phase` without `--overlay`, …) is
-an error rather than ignored.
+`brain import` has four modes. Choose one per command:
+
+| Mode | Does |
+|---|---|
+| `--overlay` | Adopt a folder as a brain in place |
+| `--into BRAIN` | Copy notes into an existing brain |
+| `--to-episodes` | Turn documents into episodes |
+| `--from HOST` | Turn an agent's memory files into episodes |
+
+- Every mode is a dry run until you add `--apply`. `--dry-run` wins over
+  `--apply`.
+- A flag the mode does not use is an error, not ignored. For example,
+  `--agent` needs `--to-episodes`, and `--phase` needs `--overlay`.
 
 ## Adopt an Obsidian vault or Markdown folder
 
@@ -13,39 +22,49 @@ brain import ~/notes --overlay --apply         # phase 0: adopt in place
 ```
 
 Phase 0 adds `brain.toml`, an `AGENTS.md` block, `rules.md`, `log.md`, and
-the `inbox/`, `archive/`, and `reports/` folders. **No note is moved or
-changed.** Top-level folders become topics; templates and attachment
-folders are ignored; lint starts in the lenient `migrate` profile. The
-brain is searchable right away. In a git repository, phase 0 commits
-everything it added, including the plan in `reports/import-plan.md`.
-Running phase 0 again on an adopted folder tells you it is already a brain.
+the `inbox/`, `archive/`, and `reports/` folders. It moves and changes no
+note.
 
-Later phases are optional, each one a separate undoable run:
+- Top-level folders become topics. Template and attachment folders are
+  ignored.
+- Lint starts in the lenient `migrate` profile.
+- The brain is registered under the folder's name and is searchable right
+  away.
+- In a git repository, phase 0 commits everything it added, including the
+  plan in `reports/import-plan.md`.
+- Running phase 0 again on an adopted folder says it is already a brain.
+
+Later phases are optional. Each one is a separate undoable run:
 
 | Phase | Changes |
 |---|---|
-| `--phase 1` | Notes without an `id` get one; non-standard `status` values (`draft`, `done`, …) move to `bw-stage` |
-| `--phase 2` | Topics without a hub get one; notes missing from their hub are listed |
+| `--phase 1` | Notes without an `id` get one; non-standard `status` values (`draft`, `done`) move to `bw-stage` |
+| `--phase 2` | Topics without a hub get one; notes missing from their hub are listed in it |
 
 ```sh
 brain import ~/notes --overlay --phase 1            # see the diff
 brain import ~/notes --overlay --phase 1 --apply
 ```
 
-The ids a phase 1 dry run shows are the ids the apply writes. Properties
-such as `up:` or `related:` stay yours and are left as they are.
-
-If the folder is a git repository with uncommitted changes, apply stops so
-the import diff stays clean.
+- The ids a phase 1 dry run shows are the ids the apply writes.
+- A moved `status` value becomes `status: active` plus `bw-stage`.
+- Properties such as `up:` or `related:` are yours and stay as they are.
+- If the folder is a git repository with uncommitted changes, apply stops,
+  so the import diff stays clean.
 
 ## Copy notes into an existing brain
 
 ```sh
-brain import ~/old-notes --into personal [--topic archive] --apply
+brain import ~/old-notes --into personal --apply
+brain import ~/old-notes --into personal --topic archive --apply
 ```
 
-Top-level folders become topics (or everything goes into `--topic`), path
-links are rewritten, and the source is left untouched.
+- Top-level folders become topics, or everything goes into `--topic`.
+- Notes get ids, `status` values are mapped as in phase 1, and path links
+  are rewritten.
+- New topics get hubs, and the `AGENTS.md` topic table is refreshed, in
+  separate runs. Undo all of them to revert.
+- The source folder is left untouched.
 
 ## Documents as episodes
 
@@ -54,19 +73,32 @@ brain import meeting-notes/ --to-episodes --apply
 brain import clippings/ --to-episodes --untrusted --apply
 ```
 
-Documents are split on headings into episodes, for an agent to fold into
-notes when consolidating; frontmatter is left out. Use `--untrusted` for text you did not
-write. Running the same import again skips what was already imported, and
-the output says how many episodes were written and how many skipped.
+- Documents are split on headings into episodes, for an agent to fold into
+  notes when consolidating. Frontmatter is left out.
+- Use `--untrusted` for text you did not write.
+- Running the same import again skips what was already imported. The
+  output says how many episodes were written and how many skipped.
 
 ## Your agents' memory files
 
 ```sh
-brain import --from claude-code          # project memory and CLAUDE.md
-brain import --from codex --apply        # ~/.codex/memories and AGENTS.md
+brain import --from claude-code          # a dry run
+brain import --from codex --apply
 ```
 
-Memory files become episodes attributed to the agent. For other hosts, or
-files kept elsewhere, give the location: `brain import ~/agent-notes --from
-myagent`. Conversation history
-is imported by `brain harvest` instead (see [Agents](agents.md)).
+Memory files become episodes attributed to the agent. brain-wiki knows
+where these apps keep them:
+
+| App | Files |
+|---|---|
+| `claude-code` | `~/.claude/projects/*/memory/*.md` and `~/.claude/CLAUDE.md` |
+| `codex` | `~/.codex/memories/` and `~/.codex/AGENTS.md` |
+| `antigravity` | `~/.gemini/AGENTS.md`, `~/.gemini/GEMINI.md`, and `~/.gemini/config/rules/` |
+| `openclaw` | `MEMORY.md`, `USER.md`, and `memory/` in `~/.openclaw/workspace/` |
+
+- `CLAUDE_CONFIG_DIR` and `CODEX_HOME` move the Claude Code and Codex
+  folders.
+- For other agents, or files kept elsewhere, give the location:
+  `brain import ~/agent-notes --from myagent`.
+- Conversation history is imported by `brain harvest` instead. See
+  [Agents](agents.md#harvest).

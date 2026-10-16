@@ -8,9 +8,8 @@ source: "docs/proposal/README.md"
 
 Designs not built yet, one topic each
 
-Designs that are not implemented. [[design|docs/design]]
-describes what brain-wiki does today; a proposal here describes what it
-could do.
+These designs are not built. [[design|docs/design]] describes
+what brain-wiki does today. A proposal describes what it could do.
 
 When a proposal is built, its content moves into the design documents it
 changes, in the same change as the code, and the proposal is deleted.

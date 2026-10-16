@@ -8,14 +8,7 @@ source: "docs/roadmap/milestones.md"
 
 Implementation milestones and the build status
 
-Each milestone ends with passing tests, updated docs, and one or more
-self-contained commits. Later milestones depend only on earlier ones.
-
-
-Order rationale: M1–M4 are the foundation everything else touches; M5 and
-M6 are the core value; M7 makes it usable in hosts; M8–M10 widen adoption
-and trust. M13 replaced parts of M1, M5, and M12 (claims, relations, ops,
-checked edits).
+brain-wiki was built in the milestones below. Each ended with passing tests, updated docs, and self-contained commits, and depended only on earlier milestones. All of them are built and on `main`, and `uv run scripts/check.py` runs every check. Version 0.2.0, released 2026-10-15, includes M13.
 
 Generated from `docs/roadmap/milestones.md`.
 
@@ -34,4 +27,5 @@ Generated from `docs/roadmap/milestones.md`.
 - [[m11]]: M11: Release readiness
 - [[m12]]: M12: Agent context and discovery (D25–D28)
 - [[m13]]: M13: Format 3 (D32–D35)
-- [[roadmap-milestones-status-2026-10-15]]: Status (2026-10-15)
+- [[roadmap-milestones-not-built]]: Not built (Milestones)
+- [[roadmap-milestones-what-the-tests-do-not-yet-prove]]: What the tests do not yet prove

@@ -12,11 +12,12 @@ bw-superseded_by: "[[d34-direct-edits]]"
 Status: Superseded by [[d34-direct-edits|D34]].
 Argued in: [[write-path-23-direct-edits|write path §2.3]].
 
-Agents edited notes directly when their profile had `edit` and the topic allowed it, then ran `brain check`, which validated the change (schema, links, claims only superseded, protected files, loss guard) and recorded it as a run with an undo point; git now keeps that history (D35).
+Agents edited notes directly when their profile had `edit` and the topic allowed it. They then ran `brain check`, which validated the change (schema, links, claims only superseded and never deleted, protected files, and a loss guard) and recorded it as a run with an undo point. D34 replaced `brain check` with `brain validate`, and git now keeps the history (D35).
 
 ### Alternatives considered
 
-Episodes and consolidation only (they cannot express prose or property updates); unchecked edits
+- Episodes and consolidation only. They could not express prose or property updates.
+- Unchecked edits.
 
 ## Related
 - [[d34-direct-edits]]: D34: Agents edit notes directly

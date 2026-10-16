@@ -6,9 +6,9 @@ source: "docs/user/getting-started.md#what-a-note-looks-like"
 ---
 # What a note looks like
 
-A note is an ordinary Markdown page in `topics/<topic>/`. Frontmatter holds
-metadata only; what the note knows, and how it connects to other notes, is
-in the body:
+A note is a Markdown page in `topics/<topic>/`. Frontmatter holds metadata
+only. What the note knows, and how it connects to other notes, goes in the
+body:
 
 ```markdown
 ---
@@ -30,15 +30,21 @@ Lumen searches notes with SQLite FTS5 instead of shelling out to ripgrep.
 Replaced the earlier [[Use ripgrep for search]] approach.
 ```
 
-- `status` (`active`, `superseded`, `archived`) and `bw-superseded_by`
-  mark a note that a newer one replaced; search then shows the newer note
-  first. `bw-sources` lists where the note's knowledge came from.
-- brain-wiki reads only the body's headings and links, never its meaning.
-  The suggested shape (a summary paragraph, one fact per bullet, links
-  inside sentences) is a convention, not a rule.
+- `status` (`active`, `superseded`, or `archived`) and `bw-superseded_by`
+  mark a note that a newer one replaced. Search then shows the newer note
+  first.
+- `bw-sources` lists where the note's knowledge came from.
+- brain-wiki reads the body's headings and links, never its meaning. The
+  suggested shape (a summary paragraph, one fact per bullet, links inside
+  sentences) is a convention, not a rule.
 
-Edit notes in any editor, then run `brain validate` (it checks the notes git
-sees as changed, or the paths you name). `brain lint` checks the whole
-brain, and `brain lint --fix` repairs what is safe to repair, as one
-undoable run. Notes from brain-wiki 0.1 (format 1 or 2) still work;
-`brain lint --fix` converts them ([[user-maintenance-convert-notes-from-brain-wiki-01|Maintenance]]).
+Edit notes in any editor, then check them:
+
+- `brain validate` checks the frontmatter of the notes git sees as changed,
+  or of the paths you name. It reports a missing `id` and gives one to add.
+- `brain lint` checks the whole brain.
+- `brain lint --fix` repairs what is safe to repair, as one undoable run.
+
+Notes from brain-wiki 0.1 (format 1 or 2) still work, and `brain lint --fix`
+converts them. See
+[[user-maintenance-convert-notes-from-brain-wiki-01|Maintenance]].

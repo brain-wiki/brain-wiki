@@ -10,8 +10,8 @@ source: "docs/decision/d23-plain-uvx-entry.md"
 Status: accepted.
 Argued in: [[agent-integrations-3-the-plugin-bundle|agent integrations §3]].
 
-Plugin MCP entries stay a plain `uvx` command that works on every platform, accepting a slow first start behind a slow package index; `brain connect` is the fast path.
+The plugin's MCP entry is a plain `uvx --from brain-wiki==<version> brain mcp` command, which works on every platform. Behind a slow package index the first start is slow, and that is accepted. `brain connect` is the fast path: it points the host at the installed `brain` command.
 
 ### Alternatives considered
 
-Wrapping the MCP entry in `sh -c` with an installed-command and offline fallback (breaks Windows)
+- Wrapping the entry in `sh -c` to try the installed command and an offline `uvx` first. It breaks on Windows.

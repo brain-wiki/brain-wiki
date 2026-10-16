@@ -9,9 +9,13 @@ source: "docs/design/agent-integrations.md#62-modes"
 
 | Mode | How | Cost |
 |---|---|---|
-| In the agent | The user asks their agent to harvest; the `brain-maintain` skill drives `brain_harvest_prepare` and `brain_harvest_apply` over MCP, and the agent distills | The session's context window |
-| Headless | `brain harvest --apply` runs a model preset (§7) once per chunk | One CLI model call per chunk |
-| `raw` | `brain harvest --apply --raw` keeps user and assistant text (no tool output bodies), strips text the host injected, scrubs secrets, and writes one episode per chunk | No model call; the agent that consolidates the inbox distills |
+| In the agent | The `brain-maintain` skill drives `brain_harvest_prepare` and `brain_harvest_apply`; the agent distills | The session's context |
+| Headless | `brain harvest --apply` runs a model preset (§7) once per chunk of about 30k tokens | One CLI model call per chunk |
+| Raw | `brain harvest --apply --raw` writes one episode per chunk without a model | None; consolidation distills later |
 
-A per-session watermark in brain-wiki's state records the last harvested
-turn, and episode `dedupe` keys make retries harmless.
+Raw episodes keep user and assistant text and tool names with a short
+argument summary, but no tool output. The readers strip text the host
+injected (reminders, command echoes), and secrets are scrubbed before turns
+go to a model or into an episode. A per-session
+watermark in brain-wiki's state records the last harvested turn, and
+episode `dedupe` keys make retries harmless.

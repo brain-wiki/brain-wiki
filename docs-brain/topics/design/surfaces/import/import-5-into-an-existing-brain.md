@@ -7,14 +7,23 @@ source: "docs/design/import.md#5-into-an-existing-brain"
 ---
 # Into an existing brain
 
-1. Map the source's top-level folders (or the whole source, with
-   `--topic <slug>`) to topics in the target brain.
-2. Copy files to `topics/<slug>/…`, preserving relative structure.
-3. Rewrite links between copied files and links to attachments; links to
-   notes outside the source become unresolved and are reported.
-4. Apply phase 1 (§3.2) to the copies (the source stays untouched), all in
-   one run.
-5. Then add hubs for the new topics and refresh the topic table in
-   `AGENTS.md`, as separate lint-fix runs (the table can only be computed
-   once the hubs exist). The output names every run, so undoing them all
-   reverts the import.
+`--into <brain>` copies the source's notes into a brain as one run. The
+source stays untouched.
+
+1. Map each note to a topic folder: `topics/<slug of its top-level
+   folder>/…`, keeping the rest of its path. Notes at the source's top
+   level go to the slug of the source folder's name. With `--topic <slug>`,
+   every note goes under `topics/<slug>/`.
+2. Rewrite links between copied notes: Markdown links get the new relative
+   path, and wikilinks written as paths get the new path. Wikilinks by file
+   name are left alone, since they still resolve. Markdown links to `.md`
+   files outside the source are counted and reported.
+3. Apply the phase 1 rules (§3.2) to the copies.
+4. Commit the run through the lint gate.
+5. Then add hubs for the new topics, and refresh the topic table in
+   `AGENTS.md`, as separate runs (the table can only be computed once the
+   hubs exist). The output names every run, so undoing them all reverts
+   the import.
+
+Only Markdown notes are copied. Attachments stay in the source, and links
+to them are left as written.

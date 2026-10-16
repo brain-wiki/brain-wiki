@@ -9,14 +9,15 @@ source: "docs/design/brain-format.md#1-requirements-that-shaped-the-format"
 
 | Requirement | Consequence |
 |---|---|
-| Readable and editable by people in any editor, and by Obsidian | Markdown files, YAML frontmatter, `[[wikilinks]]`, no binary state in the brain |
-| Writable by LLMs without corrupting structure | Frontmatter holds flat metadata only; what a note knows is ordinary Markdown in the body, so a careless edit breaks a sentence, not the note |
-| Parseable with simple, fast code | brain-wiki reads frontmatter, headings, and links; it never extracts meaning from the body |
-| Survives renames and moves | Permanent ULID ids; link repair by id |
-| Safe under concurrent agents and devices | Inbox files are append-only and uniquely named; agents edit notes directly and check them with `brain validate`; git keeps the history ([[write-path\|write path]]) |
-| Diff- and merge-friendly in git | Stable ordering, one item per line, no reflowing of untouched lines |
+| People can read and edit a brain in any editor, and in Obsidian | Markdown files, YAML frontmatter, `[[wikilinks]]`, no binary state in the brain |
+| LLMs can write it without corrupting its structure | Frontmatter holds flat metadata only. A note's knowledge is ordinary Markdown in the body, so a careless edit breaks a sentence, not the note. |
+| Simple, fast code can parse it | brain-wiki reads frontmatter, headings, and links, and never extracts meaning from the body ([[d33-no-meaning-extraction\|D33]]) |
+| Notes survive renames and moves | Permanent ULID ids, and link repair by id |
+| Concurrent agents and devices are safe | Episodes are new, uniquely named files. Agents edit notes directly and check them with `brain validate`. Git keeps the history ([[write-path\|write path]]). |
+| Git diffs and merges stay small | Stable ordering, one item per line, untouched lines never rewritten |
 
-Format 3 replaced format 2's claims and typed relations, which lived in
-frontmatter lists, with plain body content: Obsidian renders no Markdown in
-properties, so facts and links held there were hard to read and edit. §13
-describes the older formats and their conversion.
+Format 3 moved format 2's claims and typed relations out of frontmatter
+lists and into plain body text. Obsidian renders no Markdown in
+properties, so facts and links held there were hard to read and edit
+([[d32-format-3|D32]]). §13 describes the older formats and
+their conversion.

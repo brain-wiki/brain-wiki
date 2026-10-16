@@ -13,10 +13,10 @@ brain orient
 brain rules add "Prefer pytest for new tests." --quote "from now on use pytest"
 ```
 
-- `brain log` writes an **episode** to the inbox: something nobody has
-  organized yet. Episodes are never edited afterwards.
-- **Notes** are where knowledge lives. You and your agents write them
-  directly; **consolidation** is an optional helper for folding the inbox
-  into notes. See [[user-maintenance|Maintenance]].
-- **Rules** are your standing instructions. Only you add them: from the
-  CLI, or by confirming an agent's proposal.
+- `brain log` writes an episode to the inbox. An **episode** is an
+  observation nobody has organized yet. Episodes are never edited afterwards.
+- **Notes** hold the knowledge. You and your agents write them directly.
+  **Consolidation** folds the inbox into notes when you ask. See
+  [[user-maintenance-consolidate|Maintenance]].
+- **Rules** are your standing instructions. Only you add them, from the CLI
+  or by accepting an agent's proposal.

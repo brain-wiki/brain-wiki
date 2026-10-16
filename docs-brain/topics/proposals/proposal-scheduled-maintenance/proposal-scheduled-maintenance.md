@@ -6,22 +6,24 @@ source: "docs/proposal/scheduled-maintenance.md"
 ---
 # Scheduled maintenance
 
-Routine templates for hosts' schedulers and OS schedulers; a headless consolidation backend; one consolidation device
+Scheduled harvest and consolidation through host and OS schedulers
 
-Status: built during development and removed before 0.1. Not scheduled;
-the design below needs rethinking first (§3). Since format 3, `brain schedule`
-exists for one job only: running `brain commit` from crontab or a
-LaunchAgent ([[write-path-52-brain-schedule|write path §5.2]]).
-Maintenance routines remain unbuilt.
+Status: built during development and removed before 0.1. Not scheduled; the
+design needs rethinking first (§3). Today `brain schedule` runs one kind of
+job, `brain commit`, from crontab or a LaunchAgent
+([[write-path-52-brain-schedule|write path §5.2]]). Scheduled
+harvest and consolidation are not built.
 
-Maintenance today runs when the user asks for it: an agent harvests and
-consolidates in the session ([[write-path-4-consolidation|write path §4]]),
-and edits notes directly, then validates them
-([[write-path-23-direct-edits|write path §2.3]]).
-This proposal is what ran maintenance on a schedule instead. Its command
-name, `brain schedule show|install|list|remove`, described the removed
-design; the name `brain schedule` now belongs to the commit jobs, so a
-revival needs another name or new subcommands.
+Today maintenance runs when the user asks. An agent harvests and
+consolidates in the session
+([[write-path-4-consolidation|write path §4]]), and edits notes
+directly, then validates them
+([[write-path-23-direct-edits|write path §2.3]]). This proposal
+records the design that ran maintenance on a schedule instead.
+
+The removed design used `brain schedule show|install|list|remove`. The name
+`brain schedule` now belongs to commit jobs, so a revival needs another name
+or new subcommands.
 
 Generated from `docs/proposal/scheduled-maintenance.md`.
 

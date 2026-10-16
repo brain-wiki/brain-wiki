@@ -28,25 +28,25 @@ source: "docs/design/visualizer.md#6-data"
 }
 ```
 
-- `recent`: notes updated in the last 7 days. `flows`: links between notes
-  of two topics, counted by `rel`, `a` < `b`; each topic keeps its 8
-  strongest.
-- A constellation from the topic tree is titled by its top topic. A grouped
-  one leads with its hub topic, one linked to at least half of the
-  other topics in it (a plugins topic and each plugin); otherwise it names the
-  largest topics. The map labels a constellation by its first topic.
-  Topics carry their `parent` slug.
+- `recent` counts notes updated in the last 7 days.
+- `flows` count the links between notes of two topics, by `rel`, with `a` < `b`. Each topic keeps its 8 strongest flows.
+- `runs` lists the 20 most recent runs, leaving out failed and unfinished ones, with the notes each changed.
+- A constellation's `title` joins up to three topic titles. A constellation from the topic tree leads with its top topic. A clustered one leads with a topic linked to at least half of the others in it, such as a plugins topic linked to one topic per plugin, or else with its largest topics. The map labels a constellation by its first topic.
 
-`/api/topic/<slug>`: `{slug, title, color, hub, nodes: [...], links: [...],
-external: [...]}`. `nodes` use the node shape below; `links` are
-`{source, target, rel}` with both ends in the topic; `external` are links
-between this topic's notes and other topics (`{source, target, rel, topic,
-title, dir}`, `dir` `out` or `in`, at most 400, metadata links first).
+`/api/topic/<slug>` returns `{slug, title, color, hub, path, nodes, links, external}`:
 
-A link's `rel` is `links_to` (a body wikilink), `superseded_by` (from the old
-note's `bw-superseded_by`: source old, target new), or `source` (a
-`bw-sources` entry: source the citing note, target the cited note or
-episode).
+- `path` is the topic's folder, which the map uses to place notes by sub-folder.
+- `nodes` are the topic's notes and hub, in the node shape below.
+- `links` are `{source, target, rel}` with both ends in the topic.
+- `external` are links between this topic's notes and other topics' notes, as `{source, target, rel, topic, title, dir}` with `dir` `out` or `in`. There are at most 400, metadata links first.
+
+A link's `rel` is one of:
+
+- `links_to`, a body wikilink.
+- `superseded_by`, from the old note's `bw-superseded_by`. The source is the old note and the target the new one.
+- `source`, a `bw-sources` entry. The source is the citing note and the target the cited note or episode.
+
+A node:
 
 ```json
 {"id": "01J9Z7Q2…", "title": "Use SQLite FTS5 for local search", "path": "topics/search/fts5.md",
@@ -54,30 +54,28 @@ episode).
  "updated": "2026-10-09", "aliases": [], "lines": 42, "degree": 7, "flags": ["stale"]}
 ```
 
-`/api/note/<id>`: the outline read (`id`, `title`, `path`, `abs_path`,
-`kind`, `type`, `status`, `topic`, `updated`, `banners`, `summary`) and
-the note's links:
+`/api/note/<id>` returns the outline read (`id`, `title`, `path`, `abs_path`, `kind`, `type`, `status`, `topic`, `updated`, `banners`, `summary`) and the note's links:
 
-- `outlinks`: `[{relation, target, id, title, path, resolved}]`, one per
-  target, metadata links first. `relation` reads from this note:
-  `superseded_by`, `links_to`, or `cites` (a `bw-sources` entry); `target` is
-  the link as written; an unresolved link has `id`, `title`, and `path` null.
-- `backlinks`: `[{id, title, path, relation}]`, at most 10, supersession
-  first. `relation` reads from this note: `supersedes` (that note names this
-  one in `bw-superseded_by`), `linked_from`, or `cited_by`.
+- `outlinks`: `[{relation, target, id, title, path, resolved}]`, one per target, metadata links first. `relation` reads from this note: `superseded_by`, `links_to`, or `cites` (a `bw-sources` entry). `target` is the link as written, and an unresolved link has `id`, `title`, and `path` null.
+- `backlinks`: `[{id, title, path, relation}]`, at most 10, supersession first. `relation` reads from this note: `supersedes` (the other note names this one in `bw-superseded_by`), `linked_from`, or `cited_by`.
 
-Then what the preview needs: `properties` (the
-frontmatter, as written), `markdown` (the body after the frontmatter, at most 200 KB), and
-`links` (wikilink text as written → `{id, title, topic}` for each target
-that resolves; others are absent, so they render unresolved).
-`/api/search?q=`: the index search (`{results: [{id, title, topic, kind,
-snippet}]}`, at most 20).
-`/api/health`: `{counts: {flag: n}, items: {flag: [{id, title, topic}]}}`,
-at most 200 per flag.
+It also returns what the preview needs:
 
-`flags` come from the same queries as the reports
-([[lint-and-reports-7-reports|lint §7]]): `superseded` (status
-superseded), `stale` (an active note links to a superseded or archived note
-other than one it replaced), `orphan` (no other note links to it), and
-`lint_error`. The map lists them stale, superseded, orphan, lint error, and
-a star's halo takes the first that applies.
+- `properties`: the frontmatter as written.
+- `markdown`: the body after the frontmatter, at most 200 KB.
+- `links`: a map from wikilink text as written to `{id, title, topic}` for each target that resolves. Other links are absent, so they render as unresolved.
+
+`/api/search?q=` returns `{results: [{id, title, topic, kind, snippet}]}`, at most 20, from the mapped topics only. Notes whose title or alias contains the query come first, prefix matches before the rest, followed by index search hits with snippets.
+
+`/api/health` returns `{counts: {flag: n}, items: {flag: [{id, title, topic}]}}`, at most 200 items per flag.
+
+A node's `flags`:
+
+| Flag | Meaning |
+|---|---|
+| `superseded` | Its status is superseded |
+| `stale` | An active note that links to a superseded or archived note other than one it replaced; the same query as the stale report ([[lint-and-reports-7-reports\|lint §7]]) |
+| `orphan` | A note that nothing else links to |
+| `lint_error` | The index recorded a parse problem for the file |
+
+The map lists the flags in the order stale, superseded, orphan, lint error, and a star's halo shows the first that applies.

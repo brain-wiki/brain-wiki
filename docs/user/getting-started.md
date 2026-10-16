@@ -10,24 +10,35 @@ uv tool install brain-wiki     # or: pipx install brain-wiki
 
 > Set up brain-wiki by running `brain setup --guide` and following it.
 
-`brain setup --guide` prints the setup steps for the agent, which walks you
-through the choices below, explaining each and showing every change before
-it makes it. Connecting your agent gives it brain-wiki's tools, and its
-skills where the app takes plugins; they load in a new session (details per
-app in [Agents](agents.md)). You can rerun setup at any time; it offers only
-what is missing.
+`brain setup --guide` prints setup steps for the agent. The agent walks you
+through the choices below, explains each one, and shows every change before
+it makes it. Connecting an agent app gives it brain-wiki's tools, plus its
+skills where the app takes plugins. They load in a new session. See
+[Agents](agents.md) for each app.
 
-If the plugin is already installed from your agent's marketplace
-([Agents](agents.md)), just ask: *Set up brain-wiki.*
+You can rerun setup at any time. It offers only what is missing. If the
+plugin is already installed from your agent's marketplace, ask the agent:
+*Set up brain-wiki.*
 
 | Choice | What to know |
 |---|---|
-| Where the brain lives | An ordinary folder of Markdown you own, such as `~/brains/personal`. Keep it outside code repositories. Or adopt an existing Obsidian vault in place ([Import](import.md)). |
-| Git | Strongly recommended. Agents edit notes directly, and git is how you see and revert those edits. To use the brain on another machine, push it to a private remote; do not sync a git brain with a sync tool ([Maintenance](maintenance.md#share-a-brain-between-machines)). Without git, `brain undo` still reverses brain-wiki's own changes on this machine, but not direct edits. |
-| Commit job | With git: a job that runs `brain commit` every 15 minutes, so agents' edits land in history; whether it also pushes (off by default). |
-| Other agents | Which agent apps on this machine to connect ([Agents](agents.md)). |
-| What agents may do | Log what they learn and edit notes: on by default. Propose rules and harvest their own sessions: off until you turn them on for an app. |
-| Harvest | Whether to turn past sessions into episodes, and which brain each project's sessions go to. |
+| Where the brain lives | Any folder you own, such as `~/brains/personal`, outside code repositories |
+| Git | Strongly recommended |
+| Commit job | With git: runs `brain commit` every 15 minutes |
+| Other agents | Which agent apps on this machine to connect |
+| What agents may do | Log and edit by default; rules and harvest when you allow them |
+| Harvest | Whether to turn past sessions into episodes, and into which brain |
+
+- You can also adopt an existing Obsidian vault in place. See
+  [Import](import.md).
+- Agents edit notes directly, and git is how you see and revert those edits.
+  Without git, `brain undo` still reverses brain-wiki's own changes on this
+  machine, but not direct edits.
+- To use the brain on another machine, push it to a private git remote. Do
+  not sync a git brain with a sync tool. See
+  [Maintenance](maintenance.md#share-a-brain-between-machines).
+- The commit job does not push unless you say so. Setup asks only when the
+  brain has a git remote.
 
 ## Or from a terminal
 
@@ -36,13 +47,13 @@ uv tool install brain-wiki     # or: pipx install brain-wiki
 brain setup
 ```
 
-`brain setup` goes step by step: create a brain (or adopt a vault) and choose
-git, schedule commits, connect the agent apps it finds, choose what each may do, and turn on
-harvest. It shows every change before making it, and ends with what to try
-next.
+`brain setup` goes step by step. It creates a brain (or adopts a vault),
+sets up git and the commit job, connects the agent apps it finds, sets what
+each may do, and turns on harvest. It shows every change before making it,
+and ends with what to try next.
 
-Every step is also a command of its own, which is what an agent following
-`brain setup --guide` runs:
+Each step is also a command of its own. These are the commands an agent
+following `brain setup --guide` runs:
 
 ```sh
 brain doctor
@@ -54,9 +65,12 @@ brain harvest enable claude-code
 brain harvest route "~/**" personal
 ```
 
-`brain doctor` reports its version and SQLite, your brains, and which agents
-it found on this machine. It changes nothing (except rolling back a run that
-a crash left half-applied). `brain init --git` also makes a first commit.
+- `brain doctor` reports its version, SQLite, your brains, and the agent apps
+  it found on this machine. It changes nothing, except that it rolls back a
+  run that a crash left half-applied.
+- `brain init --git` runs `git init` and makes a first commit.
+
+A new brain looks like this:
 
 ```text
 ~/brains/personal/
@@ -64,14 +78,15 @@ a crash left half-applied). `brain init --git` also makes a first commit.
 ├── AGENTS.md           how agents that only read files should use it
 ├── rules.md            your standing rules, part of every briefing
 ├── log.md              a readable history of changes brain-wiki made
-├── topics/<topic>/     curated notes; each topic has a hub (index.md)
+├── topics/<topic>/     notes; each topic has a hub (index.md)
 ├── inbox/episodes/     raw observations from agents and from you
+├── inbox/proposals/    rules agents proposed, waiting for you
 ├── archive/            consolidated episodes, kept as sources
 └── reports/            generated pages: stale links, orphans, inbox, lint
 ```
 
-Already have notes? See [Import](import.md) to adopt an Obsidian vault in
-place.
+A git brain also gets a `.gitattributes` file, so `log.md` merges without
+conflicts.
 
 ## First steps
 
@@ -82,19 +97,19 @@ brain orient
 brain rules add "Prefer pytest for new tests." --quote "from now on use pytest"
 ```
 
-- `brain log` writes an **episode** to the inbox: something nobody has
-  organized yet. Episodes are never edited afterwards.
-- **Notes** are where knowledge lives. You and your agents write them
-  directly; **consolidation** is an optional helper for folding the inbox
-  into notes. See [Maintenance](maintenance.md).
-- **Rules** are your standing instructions. Only you add them: from the
-  CLI, or by confirming an agent's proposal.
+- `brain log` writes an episode to the inbox. An **episode** is an
+  observation nobody has organized yet. Episodes are never edited afterwards.
+- **Notes** hold the knowledge. You and your agents write them directly.
+  **Consolidation** folds the inbox into notes when you ask. See
+  [Maintenance](maintenance.md#consolidate).
+- **Rules** are your standing instructions. Only you add them, from the CLI
+  or by accepting an agent's proposal.
 
 ## What a note looks like
 
-A note is an ordinary Markdown page in `topics/<topic>/`. Frontmatter holds
-metadata only; what the note knows, and how it connects to other notes, is
-in the body:
+A note is a Markdown page in `topics/<topic>/`. Frontmatter holds metadata
+only. What the note knows, and how it connects to other notes, goes in the
+body:
 
 ```markdown
 ---
@@ -116,18 +131,24 @@ Lumen searches notes with SQLite FTS5 instead of shelling out to ripgrep.
 Replaced the earlier [[Use ripgrep for search]] approach.
 ```
 
-- `status` (`active`, `superseded`, `archived`) and `bw-superseded_by`
-  mark a note that a newer one replaced; search then shows the newer note
-  first. `bw-sources` lists where the note's knowledge came from.
-- brain-wiki reads only the body's headings and links, never its meaning.
-  The suggested shape (a summary paragraph, one fact per bullet, links
-  inside sentences) is a convention, not a rule.
+- `status` (`active`, `superseded`, or `archived`) and `bw-superseded_by`
+  mark a note that a newer one replaced. Search then shows the newer note
+  first.
+- `bw-sources` lists where the note's knowledge came from.
+- brain-wiki reads the body's headings and links, never its meaning. The
+  suggested shape (a summary paragraph, one fact per bullet, links inside
+  sentences) is a convention, not a rule.
 
-Edit notes in any editor, then run `brain validate` (it checks the notes git
-sees as changed, or the paths you name). `brain lint` checks the whole
-brain, and `brain lint --fix` repairs what is safe to repair, as one
-undoable run. Notes from brain-wiki 0.1 (format 1 or 2) still work;
-`brain lint --fix` converts them ([Maintenance](maintenance.md#convert-notes-from-brain-wiki-01)).
+Edit notes in any editor, then check them:
+
+- `brain validate` checks the frontmatter of the notes git sees as changed,
+  or of the paths you name. It reports a missing `id` and gives one to add.
+- `brain lint` checks the whole brain.
+- `brain lint --fix` repairs what is safe to repair, as one undoable run.
+
+Notes from brain-wiki 0.1 (format 1 or 2) still work, and `brain lint --fix`
+converts them. See
+[Maintenance](maintenance.md#convert-notes-from-brain-wiki-01).
 
 ## Next
 

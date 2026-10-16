@@ -7,17 +7,8 @@ source: "docs/design/visualizer.md#9-testing"
 ---
 # Testing (Visualizer)
 
-- Server: token or cookie required on every route; loopback by default,
-  and `--host` binds beyond it with the token still required; CSP; every
-  API shape on fixture brains.
-- Constellations: deterministic, size limits, single constellation for
-  small brains.
-- Export: titles containing HTML and script are inert; CSP hashes match.
-- Front end (in brain-wiki-viz): type check and unit tests for layout
-  determinism and level selection (`npm run check`). Here: the bundle is
-  complete and stamped with a clean commit, and matches a rebuild of it.
-- Browser: headless Chrome screenshots of each level on the fixture and a
-  generated 10k brain, interaction scripts (search, fly to a topic, select a
-  note, `Esc`), and frame time. Scripts drive the app through
-  `window.__brainViz` (the controller, the scene, and a `ready` flag), and
-  wait for `body[data-ready]`.
+- Server: the token or cookie is required on every route; loopback is the default, and `--host` binds beyond it with the token still required; the CSP; every API shape on fixture brains.
+- Constellations: deterministic, within the size limits, and one constellation for small brains.
+- Export: titles containing HTML and script are inert, and the CSP hashes match.
+- Front end, in brain-wiki-viz: type checks and unit tests for layout determinism and level selection (`npm run check`). Here: the bundle is complete, stamped with a clean commit, and matches a rebuild.
+- Browser: headless Chrome screenshots of each level on the fixture brain and a generated 10k brain, interaction scripts (search, fly to a topic, select a note, `Esc`), and frame time. Scripts drive the app through `window.__brainViz` (the controller, the scene, and a `ready` flag) and wait for `body[data-ready]`.

@@ -7,8 +7,9 @@ source: "docs/design/index-and-search.md#5-supersession-guard"
 ---
 # Supersession guard (Index and search)
 
-Given the set of hit node ids `H` (notes and hubs only), the guard reads the
-`superseded_by` edges that touch them:
+The guard adds, to every note or hub a search or read returns, the notes
+that replaced it and the notes it replaced. Given the hit node ids `H`, it
+reads the `superseded_by` edges that touch them:
 
 ```sql
 SELECT src, dst FROM edges
@@ -23,26 +24,28 @@ Then, in code:
 | `src` (the hit names a replacement) | `superseded_by` | The hit is outdated. The neighbor is current. |
 | `dst` (other notes name the hit) | `supersedes` | The hit replaced the neighbor (history). |
 
-- **Chains.** From a hit's replacement, `superseded_by` is followed up to 5
-  hops so the agent always gets the newest note; the notes passed on the way
-  are listed in `via_titles` (`superseded by C (via B)`). Cycles are a lint
-  error (BW307) and are cut at the first repeat.
-- **Budget.** Guard notes are added on top of the result limit. Each is
-  returned compactly (label, id, title, path, status, updated,
-  `via_titles`); the agent can `read` it. Each hit carries at most
-  `search.max_guards_per_hit` guards (default 10), ordered newest successor
-  first, then the notes it replaced, most recently updated first. The rest
-  are counted (`more_guards: n`) so the agent knows to look.
-- **Ranking.** Superseded notes still match, but `status_factor` ranks them
+- From a hit's replacement, `superseded_by` is followed up to 5 more hops,
+  so the agent gets the newest note. The notes passed on the way are listed
+  in `via_titles`. A cycle is a lint error (BW307), and the walk stops at
+  the first repeat.
+- Guard notes come on top of the result limit. Each is compact: `label`,
+  `id`, `title`, `path`, `status`, `updated`, and `via_titles`. The agent
+  reads one with `brain_read`.
+- Each hit carries at most `search.max_guards_per_hit` guards (default
+  10). Replacements come first, then the notes it replaced, each group
+  most recently updated first. The rest are counted in `more_guards`, so
+  the agent knows to look.
+- Superseded notes still match a query, but `status_factor` ranks them
   lower (§6.3).
-- **Banners.** Text output turns guards into one line each, the first
-  three in full, then a count:
 
-  ```
-  ⚠ SUPERSEDED by "Use SQLite FTS5 for local search" (topics/search/fts5.md): prefer it.
-  ↳ supersedes "Use ripgrep for search" (topics/search/ripgrep.md).
-  … 4 more replaced notes; brain_neighbors("topics/search/fts5.md", direction="in") lists them.
-  ```
+Text output turns guards into banners, the first three in full, then a
+count:
 
-  A chain adds ` (via B)` before the colon. Search results (§6.5) and reads
-  (§7) render banners the same way.
+```
+⚠ SUPERSEDED by "Use SQLite FTS5 for local search" (topics/search/fts5.md): prefer it.
+↳ supersedes "Use ripgrep for search" (topics/search/ripgrep.md).
+… 4 more replaced notes; brain_neighbors("topics/search/fts5.md", direction="in") lists them.
+```
+
+A chain adds ` (via B)` before the colon. Search results (§6.5) and reads
+(§7) show banners the same way.

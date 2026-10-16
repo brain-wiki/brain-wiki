@@ -7,6 +7,8 @@ source: "docs/design/overview.md#6-users-and-scenarios"
 ---
 # S2b: An agent updates a note
 
-**An agent updates a note.** The user says "Maya moved to the platform team."
+An agent updates a note
 
-**Flow (details in):** The agent edits the person's note and runs `brain validate` on it; `brain commit` records the change in git. [[write-path|write path]]
+**What happens:** The user says "Maya moved to the platform team." The agent edits Maya's note and runs `brain validate` on it, and `brain commit` records the change in git.
+
+**Details:** [[write-path|write path]]

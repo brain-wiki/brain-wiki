@@ -8,5 +8,9 @@ source: "docs/design/lint-and-reports.md#bw3xx-links"
 
 | Code | Rule | Severity (strict / migrate) | Fix |
 |---|---|---|---|
-| BW307 † | Supersession cycle on `bw-superseded_by`. | error / error | — |
-| BW310 | Body link does not resolve, or is ambiguous (the message lists the candidates). | warning / info | point the link at the note's current name, from the index's path history |
+| BW307 † | Supersession cycle along `bw-superseded_by`. | error / error | — |
+| BW310 | Body link does not resolve, or is ambiguous. | warning / info | Repoint it from the index's path history |
+
+An unresolved link's message suggests the closest title, and an ambiguous
+one lists up to five candidates. A wikilink to an attachment, such as
+`![[diagram.png]]`, is also BW310, because attachments are not notes.

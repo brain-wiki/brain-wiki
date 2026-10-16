@@ -9,18 +9,37 @@ source: "docs/design/index-and-search.md#61-inputs"
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| `query` | `""` | Free text. **Empty means browse**: no text matching, results ordered by `sort` (default `recent`) within the filters. |
-| `limit` | 8 | Results per page; guard notes come on top. Max 50 (the CLI refuses more rather than clamping). |
-| `topic` | all | Restrict to one or more topics, each with its sub-topics. Slugs match case-insensitively; an unknown slug is `not_found`, not an empty result. |
-| `type` | any | Restrict to note types (`decision`, `release`, `person`…), as in frontmatter. |
-| `tag` | any | Restrict to notes carrying all of these tags. |
-| `where` | none | Frontmatter property equality, e.g. `{"stage": "open"}`; values compare as strings, case-insensitively, lists match any item. Keys the index keeps as columns match too: `tags` and `aliases` (any item), `title`, `id` (as written), `type`, `status` (or a custom `stage`), `topic`, `created`, `updated`. |
-| `include_episodes` | on for a query, off when browsing | Pending episodes are searchable; a browse lists curated notes unless episodes are asked for. |
-| `include_archived` | false | Also return notes with `status: archived`. |
-| `include_archived_episodes` | false | Also return consolidated episodes (CLI `--include archived_episodes` only). |
-| `since`, `until` | none | Only nodes updated on or after / on or before a date. Relative forms `7d`, `4w`, `3m` are accepted. |
-| `sort` | `relevance` (`recent` when the query is empty) | `relevance`, `recent` (newest `updated` first), or `title` (CLI only, for listings). |
-| `cursor` | none | Opaque handle from a previous result's `next_cursor`, for the next page. |
-| `count_only` | false | Return only `total`: how many nodes match, before any limit. |
-| `facets` | false | Add counts of the matching nodes by `type`, `topic`, and `tag` (top 10 each), so the caller can narrow before reading. |
-| `format` | `text` | Text rendering style: `text` (default), or `paths` (one brain-relative path per line, for handing to file tools). The structured result is the same either way. |
+| `query` | `""` | Free text. Empty means browse. |
+| `limit` | 8 | Results per page, 1 to 50 |
+| `topic` | all | Topic slugs, each with its sub-topics |
+| `type` | any | Note types; a note of any of them matches |
+| `tag` | any | Tags; a note must carry all of them |
+| `where` | none | Frontmatter equality, e.g. `{"stage": "open"}` |
+| `include_episodes` | on for a query, off when browsing | Pending episodes |
+| `include_archived` | false | Notes with `status: archived` |
+| `include_archived_episodes` | false | Consolidated episodes (CLI only) |
+| `since`, `until` | none | Updated on or after, on or before |
+| `sort` | `relevance`, or `recent` when browsing | `relevance`, `recent`, or `title` (CLI only) |
+| `cursor` | none | `next_cursor` from the previous page |
+| `count_only` | false | Return only `total` |
+| `facets` | false | Counts of the matches by type, topic, and tag |
+| `format` | `text` | `text`, or `paths` for one path per line |
+
+- A query with no word characters browses, ordered by `sort` within the
+  filters.
+- A `limit` above 50 is refused by the CLI and the MCP schema. The MCP
+  `query` is at most 500 characters.
+- Topic slugs match case-insensitively. An unknown slug is `not_found`,
+  listing the known topics, rather than an empty result.
+- Tags ignore case and a leading `#`, and match sub-tags (`project`
+  matches `project/lumen`).
+- `where` values compare as case-insensitive strings, and a list matches
+  when any item does. Besides frontmatter properties, keys can be the
+  indexed columns `title`, `type`, `topic`, `created`, `updated`, `stage`,
+  `status` (also matching a custom stage), `tags`, `aliases`, and `id` (as
+  written). `bw-` fields other than `bw-stage` cannot be filtered.
+- `since` and `until` take `YYYY-MM-DD`, or `7d`, `4w`, `3m` (30 days), or
+  `1y` (365 days), and compare the date part of `updated`.
+- `facets` counts the top 10 values of each.
+- CLI spellings: `--where KEY=VALUE`, `--count`, `--paths`,
+  `--no-episodes`, and `--include archived,episodes,archived_episodes`.

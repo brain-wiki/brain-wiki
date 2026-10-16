@@ -7,6 +7,4 @@ source: "docs/proposal/remote-sync.md#5-what-leaves-the-machine"
 ---
 # What leaves the machine
 
-| Operation | What is sent | To whom |
-|---|---|---|
-| `brain sync` | File contents | The user's own remote |
+`brain sync` sends file contents to the user's own remote, and nowhere else.

@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Supersession guard
 
-The retrieval rule that a hit on a superseded note always comes with the note named in its `bw-superseded_by` (followed to the newest), and a hit on a newer note lists the notes it replaced.
+The retrieval rule that a hit on a superseded note comes with the note named in its `bw-superseded_by`, followed to the newest, and a hit on a newer note lists the notes it replaced.

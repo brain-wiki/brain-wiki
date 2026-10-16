@@ -2,21 +2,22 @@
 
 ## What agents can read
 
-Every agent that may use a brain reads all of it: every topic and note.
-Privacy levels inside a brain are being redesigned and are not available
-yet. Until then, keep separate parts of your life in separate brains, and
-limit which brains each agent may use (below).
+Every agent that may use a brain reads all of it: every topic and every
+note. brain-wiki has no privacy levels inside a brain. A redesign is
+proposed but not built. Until then, keep separate parts of your life in
+separate brains, and limit which brains each agent may use (see
+[Several brains](#several-brains)).
 
 Those limits apply to brain-wiki's own tools. An agent that can read files
-on your machine can still open a brain's Markdown directly, so notes an agent
-must never see belong outside its reach, not only outside its brain list.
+on your machine can still open a brain's Markdown directly. Keep notes an
+agent must never see outside its reach, not only outside its brain list.
 
 ## Agent profiles
 
-A profile says what an agent may change. Agents without their own profile
-may log episodes and edit notes. Change
-profiles with `brain agents grant HOST CAPABILITY…` and `brain agents revoke`
-(each change can be undone); the result in `brain.toml` looks like this:
+A profile says what an agent may change. An agent without its own profile
+may log episodes and edit notes. Change profiles with
+`brain agents grant HOST CAPABILITY…` and `brain agents revoke`. Each change
+can be undone. The result in `brain.toml` looks like this:
 
 ```toml
 [agents.default]          # any agent without its own profile
@@ -30,23 +31,27 @@ read_origin = false       # may it read the conversations episodes came from?
 | Capability | Lets the agent |
 |---|---|
 | `episodes` | Log what it learned to the inbox |
-| `edit` | Create and edit notes directly (then `brain validate`); also needed for `brain mv`, `brain lint --fix`, and archiving consolidated episodes |
-| `propose_rules` | Propose a standing rule; you always confirm it |
+| `edit` | Create and edit notes, move notes, run `brain lint --fix`, archive consolidated episodes, run `brain commit` |
+| `propose_rules` | Propose a standing rule, which you always confirm |
 | `harvest` | Turn its own past sessions into episodes |
 
-Profiles from brain-wiki 0.1 may list `consolidate` or `review`; those
-names are ignored now.
+- `read_origin = true` lets the agent read the conversation an episode came
+  from. Turn it on with `brain agents grant HOST read_origin`.
+- Only you change profiles, schedule jobs, and push. An agent acting with
+  `--as` is refused.
+- Profiles from brain-wiki 0.1 may list `consolidate` or `review`. Those
+  names are ignored now.
 
 ## Several brains
 
-Separate brains are the boundary between parts of your life (work and
-personal, for example). Limit which brains an agent may use:
+Separate brains are the boundary between parts of your life, such as work
+and personal. Limit which brains an agent may use:
 
 ```sh
 brain brains limit cursor work         # cursor sees only the work brain
 brain brains --as cursor               # check what it may use
 brain brains unlimit cursor            # every brain again
-brain connect cursor --brain work      # its default brain
+brain connect cursor --brain work      # the brain its MCP server starts with
 ```
 
 The limits live in the user config, `~/.config/brain-wiki/config.toml`,
@@ -56,19 +61,36 @@ under `[hosts.<app>] brains`.
 
 | Risk | Protection |
 |---|---|
-| A web page tells an agent to "remember" an instruction | Rules need your words and your confirmation; agents never edit `rules.md`; episodes from untrusted sources are marked and treated as data |
-| An agent writes a false fact into a note | Partly. A note does not record where each fact came from, so a fact an agent wrote looks like one you wrote. You can trace it through `bw-sources` on the note, the git history of each edit (with a commit job), and the archived episodes it came from |
-| A secret pasted into a session | Secret patterns are redacted before an episode is written; lint flags secrets anywhere in the brain |
-| An agent loses detail by rewriting a note | In a git brain, `brain commit` keeps every version and git restores any of them; without git, nothing does. brain-wiki's own changes are runs that `brain undo` reverses |
-| The visualizer reachable from the network | It listens on 127.0.0.1 unless you pass `--host`, needs a random token, and is read-only; with `--host`, the connection is not encrypted, so use it only on networks you trust |
+| A web page tells an agent to "remember" an instruction | Rules need your words and your confirmation |
+| An agent writes a false fact into a note | Partial: sources and git history |
+| A secret pasted into a session | Redaction in episodes, and lint |
+| An agent loses detail by rewriting a note | git history |
+| The visualizer reachable from the network | Local only by default, a random token, read-only |
+
+- Agents never edit `rules.md`. Episodes from sources you marked untrusted
+  are labeled and treated as data.
+- A note does not record who wrote each fact, so a fact an agent wrote
+  looks like one you wrote. You can trace it through `bw-sources` on the
+  note, the archived episodes it came from, and the git history of each edit
+  (with a commit job).
+- Secret patterns are redacted before an episode is written. Lint flags
+  text that matches a secret pattern anywhere in the brain (BW701).
+- In a git brain, `brain commit` keeps every version and git restores any of
+  them. Without git, nothing does. brain-wiki's own changes are runs that
+  `brain undo` reverses.
+- The visualizer listens on 127.0.0.1 unless you pass `--host`. With
+  `--host`, the connection is not encrypted, so use it only on networks you
+  trust.
 
 ## What is sent where
 
 brain-wiki itself makes no network calls. Content leaves your machine only
-when an agent you use reads it:
+when an agent you use reads it, or when you push a git brain to a remote:
 
 | Action | Sent to |
 |---|---|
 | Search and read from an agent | That agent's model provider |
 | Editing notes and consolidation | The model provider of the agent doing it |
-| Harvest with distillation | The distill preset's provider, or your in-session agent; `--raw` sends nothing |
+| Harvest with distillation | The distill preset's provider, or your in-session agent |
+| Harvest with `--raw` | Nothing |
+| `brain commit --push` | Your git remote |

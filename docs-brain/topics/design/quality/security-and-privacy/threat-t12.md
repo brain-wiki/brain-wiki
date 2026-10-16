@@ -7,6 +7,6 @@ source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T12: Corruption or loss by a buggy run
 
-**Corruption or loss by a buggy run.**
+Corruption or loss by a buggy run.
 
-**Mitigations:** brain-wiki's writers change only the lines they must; atomic per-file writes; a run never overwrites a file changed since it read it; pre-images and undo; git commits per run; crash recovery via run records ([[write-path|write path]]).
+**Mitigations:** brain-wiki's writers change only the lines they must. Writes are atomic per file, a run never overwrites a file changed since it read it, and pre-images, undo, git commits per run, and crash recovery back it up ([[write-path-7-runs|write path §7]]).

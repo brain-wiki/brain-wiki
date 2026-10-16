@@ -9,10 +9,9 @@ source: "docs/design/security-and-privacy.md#4-privacy-model"
 
 | Mechanism | Scope | Enforced by |
 |---|---|---|
-| Separate brains | Unrelated spheres (employer vs personal) | Directory boundary |
-| Host brain limits | Which brains a host may select | Config resolution |
+| Separate brains | Unrelated spheres (employer and personal) | Directory boundary |
+| Host brain limits | Which brains a host may select | Brain resolution |
 
-Inside one brain there is no access control: every host that may use it
-reads every note. Privacy levels and topic allowlists were removed because
-a level did not say what it protects against or from whom; a
-[[proposal-privacy|proposal]] drafts their replacement.
+Inside one brain there is no access control. Every host that may use it
+reads every note ([[d10-no-access-control-in-a-brain|D10]]).
+A [[proposal-privacy|proposal]] drafts finer control.

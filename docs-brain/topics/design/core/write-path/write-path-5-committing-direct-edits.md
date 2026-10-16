@@ -9,8 +9,9 @@ source: "docs/design/write-path.md#5-committing-direct-edits"
 
 brain-wiki's own runs commit as they apply (§7.3). Direct edits are
 committed by a snapshot command, run by hand or by an OS job, one job per
-brain. `brain validate` stays free of side effects. Every command acts on
-one brain: `--brain NAME|PATH`, else the default.
+brain ([[d35-git-history|D35]]). `brain validate` stays free
+of side effects. Every command acts on one brain: `--brain NAME|PATH`, else
+the default.
 
 ```
 brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run] [--json]

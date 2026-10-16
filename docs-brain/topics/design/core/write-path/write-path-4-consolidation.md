@@ -8,8 +8,8 @@ source: "docs/design/write-path.md#4-consolidation"
 # Consolidation
 
 Consolidation is an optional helper for folding the inbox into notes. It
-does not write notes itself: the agent edits them directly (§2.3), and the
-helper only gathers the work and archives what was handled.
+writes no notes itself. The agent edits them directly (§2.3), and the
+helper gathers the work and archives what was handled.
 
 ## Subsections
 - [[write-path-41-flow]]: Flow
