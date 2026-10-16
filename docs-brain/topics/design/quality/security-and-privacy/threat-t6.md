@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00CTV3Q87HMGH098KB
+id: 01M3250V00Y1J01BKJ90DFHJ83
 type: threat
 title: "T6: Path traversal and arbitrary writes via MCP arguments, import paths,…"
 aliases: ["threat T6"]
-source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T6: Path traversal and arbitrary writes via MCP arguments, import paths,…
 

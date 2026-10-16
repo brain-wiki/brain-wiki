@@ -11,7 +11,7 @@ How people and agents reach a brain: the CLI and MCP tools, agent hosts, import,
 Generated from `docs/`.
 
 ## Notes
-- [[interfaces]]: Interfaces: CLI, MCP, agent profiles (sub-topic)
+- [[cli-and-mcp]]: CLI and MCP (sub-topic)
 - [[agent-integrations]]: Agent integrations (sub-topic)
 - [[import]]: Import (sub-topic)
 - [[visualizer]]: Visualizer (sub-topic)

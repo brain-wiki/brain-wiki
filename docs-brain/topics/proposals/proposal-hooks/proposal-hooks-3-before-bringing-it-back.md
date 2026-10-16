@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00AQHQ8YMR7TCFGZMH
+id: 01M3250V0001GXZDEMVSBCBWZ9
 type: proposal
 title: "Before bringing it back"
-source: "docs/proposals/hooks.md#3-before-bringing-it-back"
+aliases: ["Host hooks: briefing, capture, and recall §3"]
+source: "docs/proposal/hooks.md#3-before-bringing-it-back"
 ---
 # Before bringing it back
 

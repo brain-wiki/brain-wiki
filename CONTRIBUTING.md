@@ -75,9 +75,12 @@ repository settings); private vulnerability reporting turned on (see
 
 | Path | What |
 |---|---|
+| `docs/user/` | The user guide |
 | `docs/design/` | The design of what is implemented. Read the relevant document before changing behavior, and update it in the same change. |
-| `docs/proposals/` | Designs not yet built, and the backlog. Building one moves its content into `docs/design/`. |
-| `src/brainwiki/` | The package (layout in `docs/design/13-engineering.md` §2) |
+| `docs/decision/` | One file per design decision, with what it rejected; a replaced decision stays, marked superseded |
+| `docs/proposal/` | Designs not yet built. Building one moves its content into `docs/design/`. |
+| `docs/roadmap/` | Milestones and status, open questions, verification items, and ideas without a design |
+| `src/brainwiki/` | The package (layout in `docs/design/engineering.md` §2) |
 | `src/brainwiki/assets/` | Prompts the engine uses; the skills' copies are generated from them |
 | `plugin.json`, `mcp.json`, `.mcp.json`, `mcp_config.json`, `rules/`, `skills/`, `.claude-plugin/`, `server.json` | The plugin, served from the repository root. These names, and `hooks/` and `hooks.json`, are reserved by hosts; the bundle ships no hooks. |
 | `src/brainwiki/viz/app/` | The visualizer's built bundle (source: brain-wiki-viz); do not edit by hand |
@@ -95,14 +98,14 @@ repository settings); private vulnerability reporting turned on (see
   code outside the package imports only that (tests may reach private
   modules). Inside a module, a name is public only when another module, a
   test, or a script uses it. `scripts/check_visibility.py` (part of
-  `scripts/check.py`) enforces both; `docs/design/13-engineering.md` §2 has
+  `scripts/check.py`) enforces both; `docs/design/engineering.md` §2 has
   the details.
 - **Writers never reflow text.** Anything that edits a note changes only the
   lines it must; add a test that untouched lines survive byte for byte.
 - **Every curated change goes through `runs.Run`** so it is recorded,
   locked, gated by lint, and undoable.
 - **The CLI starts fast**: subcommand modules are imported lazily, and only
-  `brain mcp` imports the MCP SDK (`docs/design/07-interfaces.md` §2.4).
+  `brain mcp` imports the MCP SDK (`docs/design/cli-and-mcp.md` §2.4).
 - One version number, in `pyproject.toml`; run `scripts/sync_versions.py`
   after changing it or any file under `src/brainwiki/assets/`.
 

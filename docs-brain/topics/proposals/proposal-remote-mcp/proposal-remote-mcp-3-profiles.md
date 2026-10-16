@@ -1,8 +1,9 @@
 ---
-id: 01M3250V006SCH2X32WHHZBJ0N
+id: 01M3250V00DKT2CJ74WFW0VZM0
 type: proposal
 title: "Profiles"
-source: "docs/proposals/remote-mcp.md#3-profiles"
+aliases: ["Remote MCP for chat apps §3"]
+source: "docs/proposal/remote-mcp.md#3-profiles"
 ---
 # Profiles
 

@@ -1,4 +1,4 @@
-"""Parse a Markdown note, hub, or episode into its structured parts (design doc 02 §6).
+"""Parse a Markdown note, hub, or episode into its structured parts (docs/design/brain-format.md §6).
 
 Frontmatter holds metadata only; the body is free Markdown. brain-wiki reads from the body only
 its headings and links, never what it means.

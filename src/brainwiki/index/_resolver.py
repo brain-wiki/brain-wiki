@@ -1,4 +1,4 @@
-"""Link target resolution, Obsidian-compatible with leniencies (design doc 02 §6.5)."""
+"""Link target resolution, Obsidian-compatible with leniencies (docs/design/brain-format.md §6.5)."""
 
 from __future__ import annotations
 

@@ -1,9 +1,9 @@
 ---
-id: 01M3250V007KQN8EEAHN4B1XSV
+id: 01M3250V00029XKPANXJ2A280K
 type: concept
 title: "Rule"
 aliases: ["rule"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Rule
 

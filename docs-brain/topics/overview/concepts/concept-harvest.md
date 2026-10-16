@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00205A19TRBD5FGND7
+id: 01M3250V002XW7FZNVAS8KMRDY
 type: concept
 title: "Harvest"
 aliases: ["harvest"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Harvest
 

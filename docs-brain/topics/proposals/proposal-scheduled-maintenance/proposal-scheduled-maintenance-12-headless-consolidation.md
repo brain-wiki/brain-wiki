@@ -1,14 +1,15 @@
 ---
-id: 01M3250V00QRG6QERF5E152D0B
+id: 01M3250V00ZM0689CSRC7CD8PC
 type: proposal
 title: "Headless consolidation"
-source: "docs/proposals/scheduled-maintenance.md#12-headless-consolidation"
+aliases: ["Scheduled maintenance §1.2"]
+source: "docs/proposal/scheduled-maintenance.md#12-headless-consolidation"
 ---
 # Headless consolidation
 
 A `command` backend ran consolidation without an agent session: one
 subprocess per packet, through the same presets `brain harvest --apply`
-uses ([[08-7-headless-presets|08 §7]]):
+uses ([[agent-integrations-7-headless-presets|agent integrations §7]]):
 
 ```toml
 [consolidate]

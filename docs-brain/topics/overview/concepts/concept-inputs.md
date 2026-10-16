@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00KGENDY66ZH2Q8WJC
+id: 01M3250V00S15D0TMS019G4ACG
 type: concept
 title: "Inputs"
 aliases: ["inputs"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Inputs
 

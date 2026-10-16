@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00726BD29A7F18WME5
+id: 01M3250V006V4AQQSV2ZTCXTJE
 type: proposal
 title: "Levels as allowed sinks"
-source: "docs/proposals/privacy.md#41-levels-as-allowed-sinks"
+aliases: ["Privacy §4.1"]
+source: "docs/proposal/privacy.md#41-levels-as-allowed-sinks"
 ---
 # Levels as allowed sinks
 

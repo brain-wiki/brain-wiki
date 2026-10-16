@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00Q72ZAGFEPQ7R1FAZ
+id: 01M3250V00TNPJ36KY6T8XFAYM
 type: proposal
 title: "Why the old model was removed"
-source: "docs/proposals/privacy.md#1-why-the-old-model-was-removed"
+aliases: ["Privacy §1"]
+source: "docs/proposal/privacy.md#1-why-the-old-model-was-removed"
 ---
 # Why the old model was removed
 

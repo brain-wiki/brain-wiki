@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00RTJG75C9M6HV5YB2
+id: 01M3250V002PABBBFTAZXAH78J
 type: concept
 title: "Origin"
 aliases: ["origin"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Origin
 

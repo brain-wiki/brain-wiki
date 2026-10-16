@@ -1,9 +1,9 @@
 ---
-id: 01M3250V0003M47DR2CGQQDX14
+id: 01M3250V00M2XHXPHYBX74G9SJ
 type: concept
 title: "Brain"
 aliases: ["brain"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Brain
 

@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00QCR8PFGG455WR3FK
+id: 01M3250V0090V8DK9YMJC582W6
 type: concept
 title: "Sources"
 aliases: ["sources"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Sources
 

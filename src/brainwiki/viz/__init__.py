@@ -1,4 +1,4 @@
-"""Local 3D map of a brain: graph export and a loopback server (design doc 12)."""
+"""Local 3D map of a brain: graph export and a loopback server (docs/design/visualizer.md)."""
 
 from __future__ import annotations
 

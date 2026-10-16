@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00JES1GTV22DDB6MNV
+id: 01M3250V00M9GXH0B7CS1WAXGQ
 type: proposal
 title: "Links (Privacy)"
-source: "docs/proposals/privacy.md#45-links"
+aliases: ["Privacy §4.5"]
+source: "docs/proposal/privacy.md#45-links"
 ---
 # Links (Privacy)
 

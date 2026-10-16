@@ -1,17 +1,16 @@
 """Build docs-brain/: the brain-wiki docs as a brain-wiki brain, organized by what each piece is.
 
-The topic tree (TREE) does not follow the files. `overview` holds what brain-wiki is, with its
-goals and concepts; `experience` the scenarios and the user guide; `design` the design
-documents, grouped into core, surfaces, and quality, and the decision log; `roadmap` the
-milestones, open questions, and verification items; `proposals` one topic per proposal; and
-`ideas` the backlog.
+The topic tree (TREE) follows the kind of content: `overview` (goals, concepts, prior art);
+`experience` (scenarios, the user guide); `design` (the design documents, grouped into core,
+surfaces, and quality, and the decisions); `roadmap` (milestones, open questions,
+verification items); `proposals`, one topic each; and `ideas`.
 
 Each `##` and `###` section becomes a note. Every row of an ID table (goals, scenarios,
-requirements, decisions, threats, milestones, questions, verification items), every glossary
-term, and every backlog idea becomes a typed note of its own, filed in the topic for its kind.
-A decision a later one replaced is `status: superseded` with `bw-superseded_by`. Links between
-documents become wikilinks. The docs stay the source of truth, so the brain is regenerated,
-never edited by hand.
+requirements, threats, milestones, questions, verification items), every glossary term, and
+every idea becomes a typed note of its own, filed in the topic for its kind. Each decision file
+is one decision note; one a later decision replaced is `status: superseded` with
+`bw-superseded_by`. Links between documents become wikilinks. The docs stay the source of
+truth, so the brain is regenerated, never edited by hand.
 
     uv run scripts/build_docs_brain.py           # write docs-brain/
     uv run scripts/build_docs_brain.py --check   # change nothing; exit 1 if docs-brain/ is stale
@@ -43,10 +42,12 @@ TABLE_RULE = re.compile(r"^\|[\s:|-]+\|$")
 CELL_SPLIT = re.compile(r"(?<!\\)\|")
 ROW_ID = re.compile(r"^(T-|[A-Z])(\d+)([a-z]?)$")
 MENTION = re.compile(r"\b([DGMQ]\d{1,2})\b")  # ids unambiguous in prose (not S3, R2, …)
-OVERVIEW = "docs/design/01-overview.md"
-ROADMAP = "docs/design/14-roadmap-and-open-questions.md"
-DECISION_LOG = "docs/design/README.md"
-PROPOSALS = "docs/proposals/README.md"
+DESIGN = "docs/design"
+OVERVIEW = f"{DESIGN}/overview.md"
+GLOSSARY = f"{DESIGN}/glossary.md"
+DECISIONS = "docs/decision"
+PROPOSALS = "docs/proposal/README.md"
+IDEAS = "docs/roadmap/ideas.md"
 
 # The topic tree, in the order hubs list it: (slug, parent, title, description). An empty title
 # or description comes from the document that fills the topic (its `#` heading, and its row in
@@ -60,6 +61,7 @@ TREE: list[tuple[str, str | None, str, str]] = [
     ),
     ("goals", "overview", "Goals", "What brain-wiki must achieve, each with how it is measured"),
     ("concepts", "overview", "Concepts", "The vocabulary, one note per term"),
+    ("prior-art", "overview", "", "What brain-wiki borrows from other projects, and the sources"),
     (
         "experience",
         None,
@@ -82,7 +84,7 @@ TREE: list[tuple[str, str | None, str, str]] = [
         "design",
         None,
         "Technical design",
-        "How brain-wiki works and why: the design documents and the decision log",
+        "How brain-wiki works and why: the design documents and the decisions",
     ),
     (
         "core",
@@ -92,8 +94,8 @@ TREE: list[tuple[str, str | None, str, str]] = [
     ),
     ("brain-format", "core", "", ""),
     ("config-and-storage", "core", "", ""),
-    ("index-and-retrieval", "core", "", ""),
-    ("write-path-and-consolidation", "core", "", ""),
+    ("index-and-search", "core", "", ""),
+    ("write-path", "core", "", ""),
     ("lint-and-reports", "core", "", ""),
     (
         "surfaces",
@@ -102,7 +104,7 @@ TREE: list[tuple[str, str | None, str, str]] = [
         "How people and agents reach a brain: the CLI and MCP tools, agent hosts, import, "
         "the visualizer, and onboarding",
     ),
-    ("interfaces", "surfaces", "", ""),
+    ("cli-and-mcp", "surfaces", "", ""),
     ("agent-integrations", "surfaces", "", ""),
     (
         "hosts",
@@ -126,54 +128,60 @@ TREE: list[tuple[str, str | None, str, str]] = [
         "decisions",
         "design",
         "Decisions",
-        "The decision log: what was decided, what was rejected, and where it is argued",
+        "What was decided, what was rejected, and where the design argues it",
     ),
     ("roadmap", None, "", "What is built, what comes next, and what is still open"),
-    ("milestones", "roadmap", "Milestones", "Implementation milestones and the build status"),
-    ("questions", "roadmap", "Open questions", "Decisions needed from the maintainer"),
+    ("milestones", "roadmap", "", "Implementation milestones and the build status"),
+    ("questions", "roadmap", "", "Decisions needed from the maintainer"),
     (
         "verification",
         "roadmap",
-        "Verification items",
+        "",
         "Assumptions about hosts and dependencies to check, and what checking found",
     ),
+    ("ideas", "roadmap", "", "Ideas without a design yet, one note each, grouped by area"),
     ("proposals", None, "Proposals", "Designs not built yet, one topic each"),
-    ("ideas", None, "Ideas", "Ideas without a design yet, one note each, grouped by area"),
 ]
-# Numbered design documents whose topic slug is not their file name.
-DOC_SLUGS = {"roadmap-and-open-questions": "roadmap"}
+# Documents that fill a topic of a different name; any other design document fills the topic
+# named after its file.
+DOCS = {
+    OVERVIEW: "overview",
+    GLOSSARY: "concepts",
+    f"{DESIGN}/README.md": "design",
+    f"{DECISIONS}/README.md": "decisions",
+    "docs/roadmap/README.md": "roadmap",
+    "docs/roadmap/milestones.md": "milestones",
+    "docs/roadmap/open-questions.md": "questions",
+    "docs/roadmap/verification.md": "verification",
+    IDEAS: "ideas",
+    PROPOSALS: "proposals",
+}
 # Sections filed in a topic other than their document's: (document, anchor) -> topic. Their
 # subsections follow them.
 SECTION_TOPICS = {
     (OVERVIEW, "3-goals"): "goals",
     (OVERVIEW, "6-users-and-scenarios"): "scenarios",
-    (OVERVIEW, "7-glossary"): "concepts",
-    (DECISION_LOG, "decision-log"): "decisions",
-    (ROADMAP, "1-implementation-milestones-stage-2"): "milestones",
-    (ROADMAP, "2-decisions-needed-from-the-maintainer"): "questions",
-    (ROADMAP, "3-verification-items"): "verification",
 }
-# ID tables: id prefix -> (note type, topic or None for the section's own, the document).
+# ID tables: id prefix -> (note type, topic or None for the table's own, the document).
 ROW_FAMILIES = {
     "G": ("goal", "goals", OVERVIEW),
     "S": ("scenario", "scenarios", OVERVIEW),
-    "C": ("requirement", None, "docs/design/03-config-and-storage.md"),
-    "R": ("requirement", None, "docs/design/04-index-and-retrieval.md"),
-    "W": ("requirement", None, "docs/design/05-write-path-and-consolidation.md"),
-    "I": ("requirement", None, "docs/design/09-import.md"),
-    "T": ("threat", None, "docs/design/10-security-and-privacy.md"),
-    "M": ("milestone", "milestones", ROADMAP),
-    "Q": ("question", "questions", ROADMAP),
-    "T-": ("verification", "verification", ROADMAP),
-    "O": ("requirement", None, "docs/design/15-skills-and-onboarding.md"),
-    "D": ("decision", "decisions", DECISION_LOG),
-    "P": ("requirement", None, "docs/proposals/privacy.md"),
+    "C": ("requirement", None, f"{DESIGN}/config-and-storage.md"),
+    "R": ("requirement", None, f"{DESIGN}/index-and-search.md"),
+    "W": ("requirement", None, f"{DESIGN}/write-path.md"),
+    "I": ("requirement", None, f"{DESIGN}/import.md"),
+    "T": ("threat", None, f"{DESIGN}/security-and-privacy.md"),
+    "O": ("requirement", None, f"{DESIGN}/skills-and-onboarding.md"),
+    "M": ("milestone", None, "docs/roadmap/milestones.md"),
+    "Q": ("question", None, "docs/roadmap/open-questions.md"),
+    "T-": ("verification", None, "docs/roadmap/verification.md"),
+    "P": ("requirement", None, "docs/proposal/privacy.md"),
 }
 # Folders whose documents become one note each, with their sections below it:
 # folder -> (topic, note type, stem prefix).
 GROUPS = {
     "docs/user": ("user-guide", "guide", "user"),
-    "docs/design/agents": ("hosts", "design", "agent"),
+    f"{DESIGN}/hosts": ("hosts", "design", "host"),
 }
 
 
@@ -231,16 +239,15 @@ class Section:
     note_title: str = ""
     topic: str = ""
     rows: list[Row] = field(default_factory=list)
-    rendered: bool = True  # False when its content became notes of another kind (ideas)
 
 
 @dataclass
 class Row:
-    """One entity from a table: an ID row, a glossary term, or a backlog idea."""
+    """One entity from a table: an ID row, a glossary term, or an idea."""
 
     id: str  # D3, S2b, T-4; the term; the idea's title
     kind: str  # note type
-    topic: str  # topic slug
+    topic: str  # topic slug, or "" for the table's own
     cells: dict[str, str]  # column -> text; the first is the note's opening paragraph
     section: Section
     stem: str
@@ -253,13 +260,14 @@ class Doc:
     path: Path  # relative to ROOT
     topic: str
     title: str
-    number: str | None
     key: str  # stem prefix
     description: str = ""
     intro: list[str] = field(default_factory=list)  # lines between the title and the first `##`
+    lead: Section | None = None  # the intro, for tables in it
     sections: list[Section] = field(default_factory=list)
     anchors: dict[str, Section] = field(default_factory=dict)
-    note: Section | None = None  # grouped docs (GROUPS): one note for the whole document
+    note: Section | None = None  # one note for the whole document (GROUPS, decisions)
+    whole: bool = False  # the note holds the sections too, instead of one note per section
     note_type: str = "reference"
 
     @property
@@ -267,9 +275,9 @@ class Doc:
         return self.path.as_posix()
 
 
-def parse(path: Path, topic: str, key: str, number: str | None) -> Doc:
+def parse(path: Path, topic: str, key: str) -> Doc:
     text = (ROOT / path).read_text(encoding="utf-8")
-    doc = Doc(path, topic, "", number, key)
+    doc = Doc(path, topic, "", key)
     fence = None
     current: Section | None = None
     top: Section | None = None
@@ -283,7 +291,7 @@ def parse(path: Path, topic: str, key: str, number: str | None) -> Doc:
             )
         match = None if fence or marker else HEADING.match(line)
         if match and len(match.group(1)) == 1 and not doc.title:
-            doc.title = re.sub(r"^\d+\s*·\s*", "", match.group(2))
+            doc.title = match.group(2)
             continue
         if match and len(match.group(1)) in (2, 3):
             level, heading = len(match.group(1)), match.group(2)
@@ -311,6 +319,7 @@ def parse(path: Path, topic: str, key: str, number: str | None) -> Doc:
             current.lines.append(line)
         elif doc.title:
             doc.intro.append(line)
+    doc.lead = Section(doc, 1, doc.title, None, doc.title, "", lines=list(doc.intro), topic=topic)
     return doc
 
 
@@ -351,7 +360,7 @@ def collect_rows(section: Section) -> None:
 def _rows(section: Section, header: list[str], cells: list[str]) -> list[Row] | None:
     doc = section.doc.posix
     first = header[0].strip("* ").lower()
-    if doc == OVERVIEW and first == "term":
+    if doc == GLOSSARY and first == "term":
         term = plain(cells[0])
         return [
             Row(
@@ -365,7 +374,7 @@ def _rows(section: Section, header: list[str], cells: list[str]) -> list[Row] | 
                 aliases=[term] if capital(term) != term else [],
             )
         ]
-    if doc == PROPOSALS and first == "area":
+    if doc == IDEAS and first == "area":
         return _ideas(section, dict(zip(header, cells, strict=False)))
     match = ROW_ID.match(cells[0])
     if not match:
@@ -377,7 +386,6 @@ def _rows(section: Section, header: list[str], cells: list[str]) -> list[Row] | 
     rid = cells[0]
     values = dict(zip(header[1:], cells[1:], strict=False))
     first_cell = next(iter(values.values()), "")
-    first_cell = re.sub(r"^\**Superseded by D\d+\.\**\s*", "", first_cell)  # what it decided
     return [
         Row(
             rid,
@@ -475,7 +483,7 @@ class Brain:
     def __init__(self) -> None:
         self.docs: dict[str, Doc] = {}  # posix path -> Doc
         self.files: dict[str, str] = {}
-        self.rows: dict[str, Row] = {}  # ID-table rows by id (threats as threat-T1)
+        self.mentions: dict[str, tuple[str, str]] = {}  # D5, M3, … -> (stem, title)
         self.topics: dict[str, Topic] = {}
 
     def folder(self, slug: str) -> str:
@@ -497,7 +505,7 @@ class Brain:
         other = self.docs.get(path)
         if other is None:
             return label
-        if anchor and anchor in other.anchors:
+        if anchor and anchor in other.anchors and not other.whole:
             stem = other.anchors[anchor].stem
         else:
             stem = other.note.stem if other.note else other.topic
@@ -537,6 +545,14 @@ class Brain:
             out.pop()
         return out
 
+    def related(self, text: str, own: str) -> list[str]:
+        """Links to the ids `text` mentions (D5, G2, M3, Q4), other than `own`."""
+        mentions = {m for m in MENTION.findall(text) if m != own and m in self.mentions}
+        return [
+            f"- [[{self.mentions[m][0]}]]: {self.mentions[m][1]}"
+            for m in sorted(mentions, key=lambda m: (m[0], int(m[1:])))
+        ]
+
     def note(
         self,
         topic: str,
@@ -574,7 +590,7 @@ class Brain:
 
 def name_sections(doc: Doc, sections: list[Section]) -> None:
     for s in sections:
-        s.stem = f"{doc.number}-{s.anchor}" if doc.number else f"{doc.key}-{s.anchor}"
+        s.stem = f"{doc.key}-{s.anchor}"
         name_sections(doc, s.children)
 
 
@@ -585,36 +601,56 @@ def walk(sections: list[Section]):
 
 
 def load_docs(brain: Brain) -> list[Doc]:
-    reading = {}  # design doc file name -> what it settles (from the README's reading order)
-    readme = (ROOT / DECISION_LOG).read_text(encoding="utf-8")
-    for match in re.finditer(r"^\| \d+ \| \[[^\]]+\]\(([^)]+)\) \| (.+?) \|$", readme, re.M):
-        reading[match.group(1)] = match.group(2)
     docs: list[Doc] = []
-    for path in sorted((ROOT / "docs/design").glob("[0-9][0-9]-*.md")):
-        number, slug = path.stem.split("-", 1)
-        doc = parse(path.relative_to(ROOT), DOC_SLUGS.get(slug, slug), number, number)
-        doc.description = reading.get(path.name, "")
-        doc.note_type = "design"
+
+    def add(path: Path, topic: str, key: str, note_type: str) -> Doc:
+        doc = parse(path.relative_to(ROOT), topic, key)
+        doc.note_type = note_type
         docs.append(doc)
-    docs.append(parse(Path(DECISION_LOG), "design", "design", None))
+        return doc
+
+    for path in sorted((ROOT / DESIGN).glob("*.md")):
+        rel = path.relative_to(ROOT).as_posix()
+        add(
+            path,
+            DOCS.get(rel, path.stem),
+            "design" if path.stem == "README" else path.stem,
+            "design",
+        )
     for folder, (topic, note_type, prefix) in GROUPS.items():
         for path in sorted((ROOT / folder).glob("*.md")):
-            doc = parse(path.relative_to(ROOT), topic, f"{prefix}-{path.stem.lower()}", None)
+            doc = add(path, topic, f"{prefix}-{path.stem.lower()}", note_type)
             doc.note = Section(doc, 1, doc.title, None, doc.title, "", stem=doc.key)
-            doc.note_type = note_type
-            docs.append(doc)
-    docs.append(parse(Path(PROPOSALS), "proposals", "proposals", None))
-    for path in sorted((ROOT / "docs/proposals").glob("*.md")):
+    for path in sorted((ROOT / "docs/roadmap").glob("*.md")):
+        rel = path.relative_to(ROOT).as_posix()
+        key = "roadmap" if path.stem == "README" else f"roadmap-{path.stem}"
+        add(path, DOCS[rel], key, "reference")
+    add(ROOT / DECISIONS / "README.md", "decisions", "decisions", "reference")
+    for path in sorted((ROOT / DECISIONS).glob("d[0-9]*.md")):
+        doc = add(path, "decisions", path.stem, "decision")
+        doc.note = Section(doc, 1, doc.title, None, doc.title, "", stem=doc.key)
+        doc.whole = True
+    add(ROOT / PROPOSALS, "proposals", "proposals", "reference")
+    for path in sorted((ROOT / "docs/proposal").glob("*.md")):
         if path.name != "README.md":
-            doc = parse(
-                path.relative_to(ROOT), f"proposal-{path.stem}", f"proposal-{path.stem}", None
-            )
-            doc.note_type = "proposal"
-            docs.append(doc)
+            add(path, f"proposal-{path.stem}", f"proposal-{path.stem}", "proposal")
     for doc in docs:
         brain.docs[doc.posix] = doc
         name_sections(doc, doc.sections)
     return docs
+
+
+def _reading_order() -> dict[str, str]:
+    """Design document path -> what it settles, from the design README's table."""
+    out = {}
+    for line in (ROOT / DESIGN / "README.md").read_text(encoding="utf-8").splitlines():
+        cells = cells_of(line) or []
+        for i, cell in enumerate(cells[:-1]):
+            match = LINK.fullmatch(cell)
+            if match and match.group(2).endswith(".md"):
+                out[posixpath.normpath(f"{DESIGN}/{match.group(2)}")] = cells[i + 1]
+                break
+    return out
 
 
 def build() -> dict[str, str]:
@@ -623,27 +659,29 @@ def build() -> dict[str, str]:
     for slug, parent, title, description in TREE:
         brain.topics[slug] = Topic(slug, parent, title, description)
     statuses = _proposal_statuses()
+    reading = _reading_order()
     for doc in docs:  # a topic a whole document fills takes its title, intro, and source
         if doc.note is not None:
             continue
         if doc.topic.startswith("proposal-"):
-            status, changes = statuses.get(doc.path.name, ("", ""))
+            changes = statuses.get(doc.path.name, "")
             brain.topics[doc.topic] = Topic(doc.topic, "proposals", doc.title, changes)
+        if doc.topic not in brain.topics:
+            raise SystemExit(f"build_docs_brain: {doc.posix} has no topic in TREE ({doc.topic})")
         topic = brain.topics[doc.topic]
         topic.title = topic.title or doc.title
-        topic.description = topic.description or doc.description
+        topic.description = topic.description or reading.get(doc.posix, "")
         topic.source = doc.posix
         topic.intro = _intro(brain, doc)
     for folder, (topic, _, _) in GROUPS.items():
         brain.topics[topic].source = f"{folder}/"
-
-    for (doc, anchor), slug in SECTION_TOPICS.items():
-        if anchor not in brain.docs[doc].anchors:  # a renamed heading must not refile silently
+    for (path, anchor), slug in SECTION_TOPICS.items():
+        if anchor not in brain.docs[path].anchors:  # a renamed heading must not refile silently
             raise SystemExit(
-                f"build_docs_brain: no section #{anchor} in {doc}; update SECTION_TOPICS"
+                f"build_docs_brain: no section #{anchor} in {path}; update SECTION_TOPICS"
             )
         if brain.topics[slug].source == "docs/":  # a topic one section fills names it
-            brain.topics[slug].source = f"{doc}#{anchor}"
+            brain.topics[slug].source = f"{path}#{anchor}"
 
     # Titles must read well in search results, so repeated section names get their document.
     counts: dict[str, int] = {}
@@ -651,53 +689,55 @@ def build() -> dict[str, str]:
         for s in walk(doc.sections):
             counts[s.title.lower()] = counts.get(s.title.lower(), 0) + 1
     for doc in docs:
-        for s in walk(doc.sections):
-            s.note_title = s.title if counts[s.title.lower()] == 1 else f"{s.title} ({doc.title})"
-            inherited = s.parent.topic if s.parent else doc.topic
-            s.topic = SECTION_TOPICS.get((doc.posix, s.anchor), inherited)
+        if doc.whole:
+            rid = doc.title.split(":", 1)[0]
+            brain.mentions[rid] = (doc.key, doc.title)
+            continue
+        for s in [doc.lead, *walk(doc.sections)]:
+            if s is not doc.lead:
+                s.note_title = (
+                    s.title if counts[s.title.lower()] == 1 else f"{s.title} ({doc.title})"
+                )
+                inherited = s.parent.topic if s.parent else doc.topic
+                s.topic = SECTION_TOPICS.get((doc.posix, s.anchor), inherited)
             collect_rows(s)
             for row in s.rows:
                 row.topic = row.topic or s.topic
                 if ROW_ID.match(row.id):
-                    brain.rows[f"threat-{row.id}" if row.kind == "threat" else row.id] = row
-    backlog = brain.docs[PROPOSALS].anchors.get("backlog")
-    if backlog is not None:  # its table became the idea notes; the ideas hub takes its intro
-        backlog.rendered = False
-        backlog.stem = "ideas"
-        brain.topics["ideas"].source = f"{PROPOSALS}#backlog"
+                    key = f"threat-{row.id}" if row.kind == "threat" else row.id
+                    brain.mentions[key] = (row.stem, row.title)
 
     for doc in docs:
         render_doc(brain, doc)
-    render_ideas(brain, [r for s in walk(brain.docs[PROPOSALS].sections) for r in s.rows])
     for topic in brain.topics.values():
         render_hub(brain, topic)
     brain.files["brain.toml"] = manifest(brain)
     return brain.files
 
 
-def _proposal_statuses() -> dict[str, tuple[str, str]]:
-    """Proposal file name -> (status, what it changes), from the proposals README's table."""
+def _proposal_statuses() -> dict[str, str]:
+    """Proposal file name -> what it changes, from the proposals README's table."""
     out = {}
-    text = (ROOT / PROPOSALS).read_text(encoding="utf-8")
-    for line in text.splitlines():
+    for line in (ROOT / PROPOSALS).read_text(encoding="utf-8").splitlines():
         cells = cells_of(line)
         match = LINK.match(cells[0]) if cells and len(cells) >= 3 else None
         if match:
-            out[match.group(2)] = (cells[1], cells[2])
+            out[match.group(2)] = cells[2]
     return out
 
 
 def _intro(brain: Brain, doc: Doc) -> list[str]:
     """The document's opening text, without a table the topic's own notes replace."""
-    lines = [line for line in doc.intro if not line.startswith("|")]
-    return brain.body(doc, lines)
+    return brain.body(doc, [line for line in doc.intro if not line.startswith("|")])
 
 
 def render_doc(brain: Brain, doc: Doc) -> None:
+    if doc.whole:
+        render_whole(brain, doc)
+        return
+
     def tree(sections: list[Section], depth: int, parent_topic: str) -> None:
         for s in sections:  # every note is listed in its hub, nested under its parent there
-            if not s.rendered:
-                continue
             here = depth if s.topic == parent_topic else 0
             entries = brain.topics[s.topic].entries
             entries.append((s.stem, s.note_title, here))
@@ -705,6 +745,12 @@ def render_doc(brain: Brain, doc: Doc) -> None:
                 entries.append((row.stem, row.title, here + 1))
             tree(s.children, here + 1, s.topic)
 
+    if doc.posix == IDEAS:
+        render_ideas(brain, doc, doc.lead.rows)
+    else:
+        for row in sorted(doc.lead.rows, key=row_key):
+            brain.topics[row.topic].entries.append((row.stem, row.title, 0))
+            render_row(brain, doc, row)
     if doc.note is not None:  # a grouped document: one note, its sections below it
         brain.topics[doc.topic].entries.append((doc.note.stem, doc.title, 0))
         tree(doc.sections, 1, doc.topic)
@@ -722,15 +768,13 @@ def render_doc(brain: Brain, doc: Doc) -> None:
     else:
         tree(doc.sections, 0, doc.topic)
     for s in walk(doc.sections):
-        if not s.rendered:
-            continue
         body = brain.body(doc, s.lines)
         if s.children:
             body += ["", "## Subsections", *[f"- [[{c.stem}]]: {c.note_title}" for c in s.children]]
         if s.rows:
             items = sorted(s.rows, key=row_key)
             body += ["", "## Items", *[f"- [[{r.stem}]]: {r.title}" for r in items]]
-        aliases = [f"{doc.number} §{s.number}"] if doc.number and s.number else None
+        aliases = [f"{doc.title} §{s.number}"] if s.number else None
         brain.note(
             s.topic,
             s.stem,
@@ -745,6 +789,30 @@ def render_doc(brain: Brain, doc: Doc) -> None:
             render_row(brain, doc, row)
 
 
+def render_whole(brain: Brain, doc: Doc) -> None:
+    """A decision: one note with all of its text; superseded when its status says so."""
+    lines = list(doc.intro)
+    for s in walk(doc.sections):
+        lines += ["#" * s.level + " " + s.heading, *s.lines]
+    text = "\n".join(lines)
+    replaced = re.search(r"Superseded by \[?(D\d+)", text)
+    successor = brain.mentions.get(replaced.group(1)) if replaced else None
+    rid = doc.title.split(":", 1)[0]
+    brain.topics[doc.topic].entries.append((doc.key, doc.title, 0))
+    brain.note(
+        doc.topic,
+        doc.key,
+        key=f"row:{DESIGN}/README.md#{rid}",  # the id it had in the old decision log
+        kind=doc.note_type,
+        title=doc.title,
+        source=doc.posix,
+        body=brain.body(doc, lines),
+        related=brain.related(text, rid),
+        aliases=[rid],
+        superseded_by=successor[0] if successor else None,
+    )
+
+
 def render_row(brain: Brain, doc: Doc, row: Row) -> None:
     related = []
     body = []
@@ -755,40 +823,33 @@ def render_row(brain: Brain, doc: Doc, row: Row) -> None:
         elif text:
             body += [f"**{column}:** {text}", ""]
     if row.kind == "milestone" and int(row.id[1:]) > 0:
-        previous = brain.rows.get(f"M{int(row.id[1:]) - 1}")
+        previous = brain.mentions.get(f"M{int(row.id[1:]) - 1}")
         if previous is not None:
-            related.append(f"- Follows [[{previous.stem}]]: {previous.title}")
+            related.append(f"- Follows [[{previous[0]}]]: {previous[1]}")
     joined = " ".join(row.cells.values())
-    mentions = {m for m in MENTION.findall(joined) if m != row.id}
-    for other in sorted(mentions, key=lambda m: (m[0], int(m[1:]))):
-        if other in brain.rows:
-            related.append(f"- [[{brain.rows[other].stem}]]: {brain.rows[other].title}")
+    related += brain.related(joined, row.id)
     stage = None
     if row.kind == "question":
         stage = "decided" if "Decided" in joined else "open"
     elif row.kind == "verification":
         stage = "answered" if re.search(r"\*\*(Verified|No|Antigravity|CLI)", joined) else "open"
-    replaced = re.match(r"^Superseded by (D\d+)", plain(next(iter(row.cells.values()), "")))
-    successor = brain.rows.get(replaced.group(1)) if replaced else None
     brain.note(
         row.topic,
         row.stem,
         key=f"row:{doc.path}#{row.id}",
         kind=row.kind,
         title=row.title,
-        source=f"{doc.posix}#{row.section.anchor}",
+        source=f"{doc.posix}#{row.section.anchor}" if row.section.anchor else doc.posix,
         body=body[:-1],
         related=list(dict.fromkeys(related)),
         aliases=row.aliases,
         stage=stage,
-        superseded_by=successor.stem if successor else None,
     )
 
 
-def render_ideas(brain: Brain, ideas: list[Row]) -> None:
-    """Idea notes, listed in the ideas hub under their area."""
+def render_ideas(brain: Brain, doc: Doc, ideas: list[Row]) -> None:
+    """Idea notes, listed in the ideas hub under their area, in the order the table has them."""
     entries = brain.topics["ideas"].entries
-    doc = brain.docs[PROPOSALS]
     area = None
     for row in ideas:
         if row.cells["Area"] != area:

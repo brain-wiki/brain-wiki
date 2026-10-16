@@ -184,8 +184,8 @@ Known limitations:
 
 - No privacy levels inside a brain: every agent that may use a brain
   reads all of it. Keep separate lives in separate brains
-  ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposals/privacy.md)).
+  ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposal/privacy.md)).
 - Maintenance runs when you ask your agent; there is no scheduler
-  ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposals/scheduled-maintenance.md)).
+  ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposal/scheduled-maintenance.md)).
 - Chat apps that need a remote MCP server (ChatGPT, claude.ai, the Gemini
-  app) are not supported ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposals/remote-mcp.md)).
+  app) are not supported ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposal/remote-mcp.md)).

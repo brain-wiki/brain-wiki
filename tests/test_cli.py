@@ -1,4 +1,4 @@
-"""The command line itself: parsing, help, exit codes, and what starting it imports (07 §2)."""
+"""The command line itself: parsing, help, exit codes, and what starting it imports (docs/design/cli-and-mcp.md §2)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from brainwiki import __version__
 from brainwiki.cli._main import main
 
 # What `brain --help` must not import: the expensive parts load only for the command that uses
-# them, and Typer's rich help stays off (07 §2.4).
+# them, and Typer's rich help stays off (docs/design/cli-and-mcp.md §2.4).
 _HEAVY = ("brainwiki.engine", "mcp", "brainwiki.viz", "brainwiki.bench", "rich")
 
 

@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00X7X59QWFVF93S5J9
+id: 01M3250V00DNCHPC83CEGZBFVM
 type: proposal
 title: "Why it was removed (Scheduled maintenance)"
-source: "docs/proposals/scheduled-maintenance.md#2-why-it-was-removed"
+aliases: ["Scheduled maintenance §2"]
+source: "docs/proposal/scheduled-maintenance.md#2-why-it-was-removed"
 ---
 # Why it was removed (Scheduled maintenance)
 

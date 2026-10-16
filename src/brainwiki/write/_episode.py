@@ -1,4 +1,4 @@
-"""`write_episode()`: the one function every episode writer goes through (design doc 05 §2.1)."""
+"""`write_episode()`: the one function every episode writer goes through (docs/design/write-path.md §2.1)."""
 
 from __future__ import annotations
 

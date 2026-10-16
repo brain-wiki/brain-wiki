@@ -7,7 +7,7 @@ pre-release (such as 0.1.0.dev0), else the newest dated release in CHANGELOG.md.
 copies that version into every plugin manifest and every `brain-wiki==<version>` pin,
 regenerates the skill references that mirror src/brainwiki/assets/, and writes Antigravity's
 always-on rule from the static instruction block in src/brainwiki/hosts/_instructions.py
-(design docs 08 §3.2, 13 §4, 15 §2).
+(docs/design/agent-integrations.md §3.2, docs/design/engineering.md §4, docs/design/skills-and-onboarding.md §2).
 
     python scripts/sync_versions.py           # write changes
     python scripts/sync_versions.py --check   # change nothing; exit 1 on drift (for CI)

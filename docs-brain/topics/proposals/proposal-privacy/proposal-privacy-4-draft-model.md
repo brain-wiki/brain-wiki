@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00YRFBDZ03Y1X0FTEF
+id: 01M3250V00EVNMYT4ND4K86FP0
 type: proposal
 title: "Draft model"
-source: "docs/proposals/privacy.md#4-draft-model"
+aliases: ["Privacy §4"]
+source: "docs/proposal/privacy.md#4-draft-model"
 ---
 # Draft model
 

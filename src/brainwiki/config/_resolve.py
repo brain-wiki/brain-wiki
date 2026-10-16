@@ -1,4 +1,4 @@
-"""Choose exactly one brain for a command or MCP call (design doc 03 §3)."""
+"""Choose exactly one brain for a command or MCP call (docs/design/config-and-storage.md §3)."""
 
 from __future__ import annotations
 
@@ -149,7 +149,7 @@ def _check_host_limit(brain: Brain, host: str | None, allowed: list[str] | None)
 
 
 def route_brain(cwd: str | None, host: str, user: UserConfig) -> Brain | None:
-    """The brain a session's working directory belongs to, or None (05 §2.2, Route).
+    """The brain a session's working directory belongs to, or None (docs/design/write-path.md §2.2, Route).
 
     What the folder says comes first (its project file, the brain it is inside); routes are the
     fallback, so a catch-all like `~/**` never overrides a project's own brain. Unlike

@@ -2,7 +2,7 @@
 id: 01M3250V00SP9ZKNENW922F2K3
 type: hub
 title: "Proposals"
-source: "docs/proposals/README.md"
+source: "docs/proposal/README.md"
 ---
 # Proposals
 
@@ -15,7 +15,7 @@ could do.
 When a proposal is built, its content moves into the design documents it
 changes, in the same change as the code, and the proposal is deleted.
 
-Generated from `docs/proposals/README.md`.
+Generated from `docs/proposal/README.md`.
 
 ## Notes
 - [[proposal-hooks]]: Host hooks: briefing, capture, and recall (sub-topic)

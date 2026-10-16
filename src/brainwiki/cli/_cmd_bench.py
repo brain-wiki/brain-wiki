@@ -1,4 +1,4 @@
-"""bench: run the evaluation suites (design doc 11)."""
+"""bench: run the evaluation suites (docs/design/eval-bench.md)."""
 
 from __future__ import annotations
 

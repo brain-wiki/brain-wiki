@@ -1,4 +1,4 @@
-"""The topic tree (design doc 02 §2): which folders are topics, their parents, what they inherit.
+"""The topic tree (docs/design/brain-format.md §2): which folders are topics, their parents, what they inherit.
 
 A topic is a folder directly under the topics directory, or a folder at any depth below it that
 has a hub. Its slug, not its path, is its identity, so folders can be reorganized.

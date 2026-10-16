@@ -1,4 +1,4 @@
-"""The relation grammar: five families, eight canonical verbs, aliases (design doc 02 §6.4).
+"""The relation grammar: five families, eight canonical verbs, aliases (docs/design/brain-format.md §6.4).
 
 A relation is `[[Target]] (qualifier) — note`, held in a `bw-<verb>` frontmatter list, or (format 1)
 a `- verb [[Target]] …` line under `## Relations`.

@@ -1,9 +1,9 @@
 ---
-id: 01M3250V001WGS0MFEJRMZKJAZ
+id: 01M3250V00DDMBY138GHR5C7ZW
 type: threat
 title: "T5: Secrets stored in the brain"
 aliases: ["threat T5"]
-source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T5: Secrets stored in the brain
 

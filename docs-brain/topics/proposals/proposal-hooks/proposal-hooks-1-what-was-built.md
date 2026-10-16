@@ -1,8 +1,9 @@
 ---
-id: 01M3250V0020CC1CDW2C5DPJYR
+id: 01M3250V0089A920T0HRVX658N
 type: proposal
 title: "What was built (Host hooks: briefing, capture, and recall)"
-source: "docs/proposals/hooks.md#1-what-was-built"
+aliases: ["Host hooks: briefing, capture, and recall §1"]
+source: "docs/proposal/hooks.md#1-what-was-built"
 ---
 # What was built (Host hooks: briefing, capture, and recall)
 

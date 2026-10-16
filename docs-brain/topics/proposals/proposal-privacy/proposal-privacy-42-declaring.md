@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00AYXAPKYFBG3MCZ25
+id: 01M3250V002V1D57C4BX9Y9JXV
 type: proposal
 title: "Declaring"
-source: "docs/proposals/privacy.md#42-declaring"
+aliases: ["Privacy §4.2"]
+source: "docs/proposal/privacy.md#42-declaring"
 ---
 # Declaring
 

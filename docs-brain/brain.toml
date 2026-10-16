@@ -22,6 +22,11 @@ title = "Concepts"
 path = "topics/overview/concepts"
 description = "The vocabulary, one note per term"
 
+[topics.prior-art]
+title = "Prior art"
+path = "topics/overview/prior-art"
+description = "What brain-wiki borrows from other projects, and the sources"
+
 [topics.experience]
 title = "User experience"
 path = "topics/experience"
@@ -40,7 +45,7 @@ description = "How to install, connect, use, and maintain brain-wiki"
 [topics.design]
 title = "Technical design"
 path = "topics/design"
-description = "How brain-wiki works and why: the design documents and the decision log"
+description = "How brain-wiki works and why: the design documents and the decisions"
 
 [topics.core]
 title = "Core engine"
@@ -50,42 +55,42 @@ description = "The brain format, configuration and storage, the index, the write
 [topics.brain-format]
 title = "Brain format"
 path = "topics/design/core/brain-format"
-description = "The on-disk contract: layout, manifest, notes, links, supersession, episodes, rules (normative)"
+description = "What a brain looks like on disk: layout, brain.toml, notes, links, supersession, episodes, rules"
 
 [topics.config-and-storage]
 title = "Config and storage"
 path = "topics/design/core/config-and-storage"
-description = "User config, multiple brains, brain selection, machine state, git, desktop sync tools"
+description = "The user config, several brains, choosing a brain, machine state, git, sync tools"
 
-[topics.index-and-retrieval]
-title = "Index and retrieval"
-path = "topics/design/core/index-and-retrieval"
-description = "SQLite schema, freshness, search ranking, the supersession guard, read, neighbors, orientation"
+[topics.index-and-search]
+title = "Index and search"
+path = "topics/design/core/index-and-search"
+description = "The SQLite index, freshness, search ranking, the supersession guard, read, neighbors, orientation"
 
-[topics.write-path-and-consolidation]
-title = "Write path and consolidation"
-path = "topics/design/core/write-path-and-consolidation"
-description = "Direct edits and brain validate, episodes and provenance, the consolidation helper, brain commit and brain schedule, runs and undo, rules"
+[topics.write-path]
+title = "Write path"
+path = "topics/design/core/write-path"
+description = "Direct edits and brain validate, episodes, consolidation, brain commit and brain schedule, runs and undo, rules"
 
 [topics.lint-and-reports]
 title = "Lint and reports"
 path = "topics/design/core/lint-and-reports"
-description = "Rules, profiles, fixes, generated reports, pre-commit use"
+description = "Lint rules, profiles, fixes, reports, the pre-commit hook"
 
 [topics.surfaces]
 title = "Interfaces and integrations"
 path = "topics/design/surfaces"
 description = "How people and agents reach a brain: the CLI and MCP tools, agent hosts, import, the visualizer, and onboarding"
 
-[topics.interfaces]
-title = "Interfaces: CLI, MCP, agent profiles"
-path = "topics/design/surfaces/interfaces"
-description = "CLI commands, MCP tools and schemas, agent profiles, error model"
+[topics.cli-and-mcp]
+title = "CLI and MCP"
+path = "topics/design/surfaces/cli-and-mcp"
+description = "Commands, MCP tools and their schemas, agent profiles, errors"
 
 [topics.agent-integrations]
 title = "Agent integrations"
 path = "topics/design/surfaces/agent-integrations"
-description = "Plugin bundle, instruction block, brain connect, harvest; one page per host in agents/"
+description = "The plugin, the instruction block, brain connect, harvest; one page per host in hosts/"
 
 [topics.hosts]
 title = "Agent hosts"
@@ -95,17 +100,17 @@ description = "One page per host: install, instructions, harvest, and verificati
 [topics.import]
 title = "Import"
 path = "topics/design/surfaces/import"
-description = "Adopting existing Markdown folders and Obsidian vaults"
+description = "Adopting Markdown folders and Obsidian vaults"
 
 [topics.visualizer]
 title = "Visualizer"
 path = "topics/design/surfaces/visualizer"
-description = "3D brain map"
+description = "The 3D brain map"
 
 [topics.skills-and-onboarding]
 title = "Skills and onboarding"
 path = "topics/design/surfaces/skills-and-onboarding"
-description = "The three skills, the guided setup flow, and brain doctor --json"
+description = "The three skills, guided setup, and brain doctor --json"
 
 [topics.quality]
 title = "Quality and safety"
@@ -115,7 +120,7 @@ description = "Security and privacy, the eval bench, and engineering practice"
 [topics.security-and-privacy]
 title = "Security and privacy"
 path = "topics/design/quality/security-and-privacy"
-description = "Threat model and mitigations"
+description = "Threats and how they are handled"
 
 [topics.eval-bench]
 title = "Eval bench"
@@ -125,15 +130,15 @@ description = "Retrieval, lint, and performance suites"
 [topics.engineering]
 title = "Engineering"
 path = "topics/design/quality/engineering"
-description = "Repo layout, dependencies, packaging, testing, performance budgets, release"
+description = "Repository layout, dependencies, packaging, testing, performance budgets, releases"
 
 [topics.decisions]
 title = "Decisions"
 path = "topics/design/decisions"
-description = "The decision log: what was decided, what was rejected, and where it is argued"
+description = "What was decided, what was rejected, and where the design argues it"
 
 [topics.roadmap]
-title = "Roadmap and open questions"
+title = "Roadmap"
 path = "topics/roadmap"
 description = "What is built, what comes next, and what is still open"
 
@@ -152,15 +157,15 @@ title = "Verification items"
 path = "topics/roadmap/verification"
 description = "Assumptions about hosts and dependencies to check, and what checking found"
 
+[topics.ideas]
+title = "Ideas"
+path = "topics/roadmap/ideas"
+description = "Ideas without a design yet, one note each, grouped by area"
+
 [topics.proposals]
 title = "Proposals"
 path = "topics/proposals"
 description = "Designs not built yet, one topic each"
-
-[topics.ideas]
-title = "Ideas"
-path = "topics/ideas"
-description = "Ideas without a design yet, one note each, grouped by area"
 
 [topics.proposal-hooks]
 title = "Host hooks: briefing, capture, and recall"

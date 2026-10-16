@@ -2,16 +2,16 @@
 id: 01M3250V00A5VXJMD41DBF42CJ
 type: hub
 title: "Scenarios"
-source: "docs/design/01-overview.md#6-users-and-scenarios"
+source: "docs/design/overview.md#6-users-and-scenarios"
 ---
 # Scenarios
 
 User and agent journeys, each with the design that serves it
 
-Generated from `docs/design/01-overview.md#6-users-and-scenarios`.
+Generated from `docs/design/overview.md#6-users-and-scenarios`.
 
 ## Notes
-- [[01-6-users-and-scenarios]]: Users and scenarios
+- [[overview-6-users-and-scenarios]]: Users and scenarios
   - [[s0]]: S0: Onboarding
   - [[s1]]: S1: Session start
   - [[s2]]: S2: Recall during a task

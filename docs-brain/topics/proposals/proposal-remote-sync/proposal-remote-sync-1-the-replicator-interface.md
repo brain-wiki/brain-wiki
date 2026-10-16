@@ -1,8 +1,9 @@
 ---
-id: 01M3250V004G10ZVTP71QS58SX
+id: 01M3250V00CY9Z1XPSC2AFZWD3
 type: proposal
 title: "The replicator interface"
-source: "docs/proposals/remote-sync.md#1-the-replicator-interface"
+aliases: ["Remote sync and object storage §1"]
+source: "docs/proposal/remote-sync.md#1-the-replicator-interface"
 ---
 # The replicator interface
 
@@ -33,4 +34,4 @@ lease object for cross-device exclusion.
 
 A sync component must treat a missing local file inside a known cloud-drive
 folder as unknown, not deleted: online-only placeholders look like missing
-files ([[03-63-coexisting-with-desktop-sync-tools|03 §6.3]]).
+files ([[config-and-storage-63-coexisting-with-desktop-sync-tools|config and storage §6.3]]).

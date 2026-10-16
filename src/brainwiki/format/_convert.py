@@ -1,4 +1,4 @@
-"""Formats 1 and 2 into format 3 (design doc 02 §13).
+"""Formats 1 and 2 into format 3 (docs/design/brain-format.md §13).
 
 Claims and typed relations become body Markdown (`## Facts`, `## History`, `## Related`); the
 episodes and URLs claims cited become `bw-sources`; a note superseded through a relation gets

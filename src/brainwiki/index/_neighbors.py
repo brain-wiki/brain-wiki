@@ -1,4 +1,4 @@
-"""Follow a note's links without reading bodies (design doc 04 §9.2)."""
+"""Follow a note's links without reading bodies (docs/design/index-and-search.md §9.2)."""
 
 from __future__ import annotations
 

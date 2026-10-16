@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00K6YCCZGBPC502WTJ
+id: 01M3250V00DVYXDD0EHM6MY86A
 type: threat
 title: "T2: Poisoned knowledge"
 aliases: ["threat T2"]
-source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T2: Poisoned knowledge
 

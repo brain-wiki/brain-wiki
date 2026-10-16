@@ -1,4 +1,4 @@
-"""Orientation: the short, budgeted briefing an agent fetches with `brain_orient` (design doc 04 §8)."""
+"""Orientation: the short, budgeted briefing an agent fetches with `brain_orient` (docs/design/index-and-search.md §8)."""
 
 from __future__ import annotations
 
@@ -191,7 +191,7 @@ def _query_examples(info: dict[str, Any], topics: list[dict[str, Any]]) -> list[
 
 
 def _writing_lines(engine: Engine, topics: list[dict[str, Any]]) -> list[str]:
-    """How to write a valid note, for agents that may edit (02 §6)."""
+    """How to write a valid note, for agents that may edit (docs/design/brain-format.md §6)."""
     from brainwiki.format import STATUSES
 
     layout = engine.manifest.layout

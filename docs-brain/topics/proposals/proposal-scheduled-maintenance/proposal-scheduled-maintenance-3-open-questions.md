@@ -1,8 +1,9 @@
 ---
-id: 01M3250V002Q6JJ9NYWXYK3TCC
+id: 01M3250V002RC42995H71ZA9NB
 type: proposal
 title: "Open questions (Scheduled maintenance)"
-source: "docs/proposals/scheduled-maintenance.md#3-open-questions"
+aliases: ["Scheduled maintenance §3"]
+source: "docs/proposal/scheduled-maintenance.md#3-open-questions"
 ---
 # Open questions (Scheduled maintenance)
 

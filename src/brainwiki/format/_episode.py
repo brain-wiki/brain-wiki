@@ -1,4 +1,4 @@
-"""Episode documents: immutable inbox files (design doc 02 §9)."""
+"""Episode documents: immutable inbox files (docs/design/brain-format.md §9)."""
 
 from __future__ import annotations
 

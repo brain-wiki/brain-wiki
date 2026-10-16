@@ -62,7 +62,7 @@ CREATE TABLE path_history (
   PRIMARY KEY (node_id, path)
 );
 
--- Where links point (02 §6.5): body links (`links_to`), plus the note links held in metadata,
+-- Where links point (docs/design/brain-format.md §6.5): body links (`links_to`), plus the note links held in metadata,
 -- `bw-superseded_by` (`superseded_by`) and `bw-sources` (`source`). `src` is always the note
 -- that holds the link (`declared_in`); `dst` is the note it resolves to (`other`), or NULL.
 CREATE TABLE edges (

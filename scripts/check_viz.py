@@ -1,4 +1,4 @@
-"""Check the committed visualizer bundle (design doc 12 §5).
+"""Check the committed visualizer bundle (docs/design/visualizer.md §5).
 
 The front end's source lives in the brain-wiki-viz repository; this repository commits only
 its build, in src/brainwiki/viz/app/.

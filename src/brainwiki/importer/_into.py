@@ -1,4 +1,4 @@
-"""`brain import <folder> --into <brain>`: copy notes in as topics, rewriting links (design doc 09 §5)."""
+"""`brain import <folder> --into <brain>`: copy notes in as topics, rewriting links (docs/design/import.md §5)."""
 
 from __future__ import annotations
 

@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00387X1J37FAE42H5K
+id: 01M3250V00WPP9KVE1DP1J10ZD
 type: concept
 title: "Link"
 aliases: ["link"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Link
 

@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00ZJ4PD61RAFV75ZZ5
+id: 01M3250V00DKSDA8SD0C9NM909
 type: proposal
 title: "Probe coverage"
-source: "docs/proposals/public-benchmarks.md#2-probe-coverage"
+aliases: ["Public memory benchmarks §2"]
+source: "docs/proposal/public-benchmarks.md#2-probe-coverage"
 ---
 # Probe coverage
 

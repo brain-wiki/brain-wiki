@@ -1,4 +1,4 @@
-"""Episodes this device wrote itself (design doc 05 §2.1).
+"""Episodes this device wrote itself (docs/design/write-path.md §2.1).
 
 A file under the inbox can claim any provenance in its frontmatter. `write_episode()` leaves a
 marker per episode in the device's state directory, holding the episode's content hash; the

@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00AD6R4KSSFTVEH0E0
+id: 01M3250V00Z6E489YNT0XQR63N
 type: proposal
 title: "Routine templates"
-source: "docs/proposals/scheduled-maintenance.md#11-routine-templates"
+aliases: ["Scheduled maintenance §1.1"]
+source: "docs/proposal/scheduled-maintenance.md#11-routine-templates"
 ---
 # Routine templates
 

@@ -2,7 +2,7 @@
 id: 01M3250V007YQ0H9K676ZGX29Z
 type: hub
 title: "Host hooks: briefing, capture, and recall"
-source: "docs/proposals/hooks.md"
+source: "docs/proposal/hooks.md"
 ---
 # Host hooks: briefing, capture, and recall
 
@@ -13,13 +13,13 @@ bring it back only after the checks in §3.
 
 Agents today learn about the brains from the static instruction block and
 fetch the briefing with `brain_orient`
-([[08-32-the-static-instruction-block|08 §3.2]]).
+([[agent-integrations-32-the-static-instruction-block|agent integrations §3.2]]).
 They record what they learn with `brain_log_episode`, and `brain harvest`
 turns past sessions into episodes afterwards
-([[05-22-harvesting-sessions|05 §2.2]]).
+([[write-path-22-harvesting-sessions|write path §2.2]]).
 This proposal is what host lifecycle hooks added on top.
 
-Generated from `docs/proposals/hooks.md`.
+Generated from `docs/proposal/hooks.md`.
 
 ## Notes
 - [[proposal-hooks-1-what-was-built]]: What was built (Host hooks: briefing, capture, and recall)

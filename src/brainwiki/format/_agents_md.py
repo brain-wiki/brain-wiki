@@ -1,4 +1,4 @@
-"""The generated block inside a brain's `AGENTS.md` (design doc 02 §11)."""
+"""The generated block inside a brain's `AGENTS.md` (docs/design/brain-format.md §11)."""
 
 from __future__ import annotations
 

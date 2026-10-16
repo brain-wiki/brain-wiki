@@ -1,4 +1,4 @@
-"""The topic tree (design doc 02 §2): nested topics, inheritance, reorganizing."""
+"""The topic tree (docs/design/brain-format.md §2): nested topics, inheritance, reorganizing."""
 
 from __future__ import annotations
 

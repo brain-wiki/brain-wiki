@@ -1,0 +1,45 @@
+---
+id: 01M3250V009Y8JG2NZMZ7HF3SR
+type: design
+title: "What brain-wiki is"
+aliases: ["Overview §2"]
+source: "docs/design/overview.md#2-what-brain-wiki-is"
+---
+# What brain-wiki is
+
+brain-wiki is a local-first memory layer that any agent can read from and
+write to, stored as plain Markdown in a folder the user owns.
+
+```
+            ┌────────────────────── agent hosts ───────────────────────┐
+            │ Claude Code    Codex    Antigravity    OpenClaw    Cursor │
+            │      any MCP client          a human in Obsidian / vim    │
+            └───────┬──────────────┬──────────────────┬────────────────┘
+               plugin│        MCP (stdio)│        plain files│
+            ┌───────▼──────────────▼──────────────────▼────────────────┐
+            │                  brain-wiki engine (Python)              │
+            │  config · parse · index · search · lint · consolidate    │
+            └───────┬──────────────────────────────────┬───────────────┘
+                    │ read/write Markdown              │ derived cache
+            ┌───────▼───────────────────┐   ┌──────────▼──────────────┐
+            │ brain directory (owned by │   │ SQLite index + run log  │
+            │ the user, anywhere on disk│   │ in the user cache/state │
+            │ optionally a git repo)    │   │ directories (rebuildable)│
+            └───────────────────────────┘   └─────────────────────────┘
+```
+
+A **brain** is a directory of Markdown files with a small manifest. It holds:
+
+- **Topic notes**: curated, self-contained Markdown pages grouped into
+  topic folders, each topic with a short hub page. Frontmatter holds
+  metadata; facts and wikilinks to other notes are ordinary Markdown in the
+  body.
+- **Supersession**: a note that a newer note replaced says so in its
+  metadata (`status: superseded`, `bw-superseded_by`), and retrieval always
+  returns the newer note with it.
+- **An inbox of episodes**: raw, append-only observations written by agents
+  (or the user) during work.
+- **Rules**: a short list of standing directives from the user.
+
+## Subsections
+- [[overview-21-two-uses]]: Two uses

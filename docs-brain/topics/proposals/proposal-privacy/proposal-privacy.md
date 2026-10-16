@@ -2,19 +2,19 @@
 id: 01M3250V00XJVVNWC8RPQ75246
 type: hub
 title: "Privacy"
-source: "docs/proposals/privacy.md"
+source: "docs/proposal/privacy.md"
 ---
 # Privacy
 
 Levels defined by where content may go (model, tools, outputs, exports), declared in a topic's `index.md`; replaces the removed privacy levels
 
 Status: draft · Open questions in §6 · Replaces the privacy levels removed in
-D10 ([[design-decision-log|design README]])
+D10 ([[decisions|design README]])
 
 Today every host that may use a brain reads all of it. This proposal drafts
 what replaces the removed privacy levels.
 
-Generated from `docs/proposals/privacy.md`.
+Generated from `docs/proposal/privacy.md`.
 
 ## Notes
 - [[proposal-privacy-1-why-the-old-model-was-removed]]: Why the old model was removed

@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00E4CSMTV59CKJ8ZRY
+id: 01M3250V00P6BXASD699NZ8X1X
 type: concept
 title: "Topic"
 aliases: ["topic"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Topic
 

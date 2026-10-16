@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00FBJMH3N6BYPV2HAX
+id: 01M3250V003M9G5J26178E5XVC
 type: proposal
 title: "Enforcement points"
-source: "docs/proposals/privacy.md#44-enforcement-points"
+aliases: ["Privacy §4.4"]
+source: "docs/proposal/privacy.md#44-enforcement-points"
 ---
 # Enforcement points
 

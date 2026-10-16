@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00X357V8QX77BHCCE8
+id: 01M3250V00YXVZ2AJEYJ6ZPQH6
 type: threat
 title: "T4: Leakage to model providers"
 aliases: ["threat T4"]
-source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T4: Leakage to model providers
 

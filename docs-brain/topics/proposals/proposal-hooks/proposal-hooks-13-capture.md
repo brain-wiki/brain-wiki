@@ -1,8 +1,9 @@
 ---
-id: 01M3250V002QAYCTVS3M353J7C
+id: 01M3250V00B4XAPJRDPK8RPMPT
 type: proposal
 title: "Capture"
-source: "docs/proposals/hooks.md#13-capture"
+aliases: ["Host hooks: briefing, capture, and recall §1.3"]
+source: "docs/proposal/hooks.md#13-capture"
 ---
 # Capture
 

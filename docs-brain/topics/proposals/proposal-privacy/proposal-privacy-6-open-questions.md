@@ -1,8 +1,9 @@
 ---
-id: 01M3250V005JCXBXK4HNJCDMN6
+id: 01M3250V002G4DTEPMKC8NERBT
 type: proposal
 title: "Open questions (Privacy)"
-source: "docs/proposals/privacy.md#6-open-questions"
+aliases: ["Privacy §6"]
+source: "docs/proposal/privacy.md#6-open-questions"
 ---
 # Open questions (Privacy)
 

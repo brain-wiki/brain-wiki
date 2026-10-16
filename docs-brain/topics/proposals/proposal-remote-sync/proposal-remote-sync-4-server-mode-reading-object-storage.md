@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00GR3JDY52685XPZZA
+id: 01M3250V00KR8GSN8TKRV79BAB
 type: proposal
 title: "Server mode reading object storage"
-source: "docs/proposals/remote-sync.md#4-server-mode-reading-object-storage"
+aliases: ["Remote sync and object storage §4"]
+source: "docs/proposal/remote-sync.md#4-server-mode-reading-object-storage"
 ---
 # Server mode reading object storage
 
@@ -11,7 +12,7 @@ where there is no persistent disk (a container platform). Its brain is a
 bucket prefix, so it has no local copy by design.
 
 The engine reads and writes brain files through `LocalStore`
-([[03-64-file-access|03 §6.4]]). Server mode
+([[config-and-storage-64-file-access|config and storage §6.4]]). Server mode
 puts a narrow interface in front of it:
 
 ```python
@@ -28,5 +29,5 @@ and S3 are strongly consistent for read-after-write and listing, so no
 extra consistency handling is needed. The index for a server would live on
 local ephemeral disk and be rebuilt at startup. `LocalStore` already takes
 an expected hash on writes, which is the "write only if unchanged" check
-consolidation relies on ([[05-73-apply|05 §7.3]]),
+consolidation relies on ([[write-path-73-apply|write path §7.3]]),
 so the interface adds little.

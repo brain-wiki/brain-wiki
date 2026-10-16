@@ -1,8 +1,9 @@
 ---
-id: 01M3250V009NDXQHHWEH1SKRMB
+id: 01M3250V00ED9KVE23NN3R2EH3
 type: proposal
 title: "Rules for every hook"
-source: "docs/proposals/hooks.md#15-rules-for-every-hook"
+aliases: ["Host hooks: briefing, capture, and recall §1.5"]
+source: "docs/proposal/hooks.md#15-rules-for-every-hook"
 ---
 # Rules for every hook
 

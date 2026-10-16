@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00867VBSDDP4H4ZSXR
+id: 01M3250V00033J2E3BV6ZDRTB1
 type: proposal
 title: "Outputs"
-source: "docs/proposals/hooks.md#12-outputs"
+aliases: ["Host hooks: briefing, capture, and recall §1.2"]
+source: "docs/proposal/hooks.md#12-outputs"
 ---
 # Outputs
 

@@ -1,8 +1,9 @@
 ---
-id: 01M3250V008MP9AJ2ERQ0BHJTE
+id: 01M3250V005ZXGSFS3A950PASA
 type: proposal
 title: "Inputs from hooks"
-source: "docs/proposals/hooks.md#14-inputs-from-hooks"
+aliases: ["Host hooks: briefing, capture, and recall §1.4"]
+source: "docs/proposal/hooks.md#14-inputs-from-hooks"
 ---
 # Inputs from hooks
 

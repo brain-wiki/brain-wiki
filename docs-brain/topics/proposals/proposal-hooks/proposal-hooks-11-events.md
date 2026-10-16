@@ -1,8 +1,9 @@
 ---
-id: 01M3250V0046729MSWNVAC628Y
+id: 01M3250V00FC627BHSS1YN4CYC
 type: proposal
 title: "Events"
-source: "docs/proposals/hooks.md#11-events"
+aliases: ["Host hooks: briefing, capture, and recall §1.1"]
+source: "docs/proposal/hooks.md#11-events"
 ---
 # Events
 

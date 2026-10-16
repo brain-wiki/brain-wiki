@@ -24,4 +24,4 @@ Of particular interest:
 - content from a brain or a session that reaches a shell command.
 
 The threat model is in
-[`docs/design/10-security-and-privacy.md`](docs/design/10-security-and-privacy.md).
+[`docs/design/security-and-privacy.md`](docs/design/security-and-privacy.md).

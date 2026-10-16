@@ -1,8 +1,9 @@
 ---
-id: 01M3250V001C023SWH157JJF5D
+id: 01M3250V00SM1QFRF43K4NRWMZ
 type: proposal
 title: "What was built (Scheduled maintenance)"
-source: "docs/proposals/scheduled-maintenance.md#1-what-was-built"
+aliases: ["Scheduled maintenance §1"]
+source: "docs/proposal/scheduled-maintenance.md#1-what-was-built"
 ---
 # What was built (Scheduled maintenance)
 

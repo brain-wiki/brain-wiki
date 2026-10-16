@@ -1,8 +1,9 @@
 ---
-id: 01M3250V009YEDPAHQP53KT5M3
+id: 01M3250V002J43W25GP87MP72E
 type: proposal
 title: "Requirements gathered from the hosts"
-source: "docs/proposals/remote-mcp.md#1-requirements-gathered-from-the-hosts"
+aliases: ["Remote MCP for chat apps §1"]
+source: "docs/proposal/remote-mcp.md#1-requirements-gathered-from-the-hosts"
 ---
 # Requirements gathered from the hosts
 

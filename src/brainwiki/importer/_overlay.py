@@ -1,4 +1,4 @@
-"""Overlay import: an existing folder becomes a brain without moving notes (design doc 09 §3)."""
+"""Overlay import: an existing folder becomes a brain without moving notes (docs/design/import.md §3)."""
 
 from __future__ import annotations
 

@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00G09701XTP6F2MCST
+id: 01M3250V00YXQNNCKQKY30KKJR
 type: proposal
 title: "Options"
-source: "docs/proposals/privacy.md#5-options"
+aliases: ["Privacy §5"]
+source: "docs/proposal/privacy.md#5-options"
 ---
 # Options
 

@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00FN3CC5TJKWB4W0G7
+id: 01M3250V00SZ2GXWPQ87CZ9QAT
 type: proposal
 title: "Object storage through fsspec (GCS, S3)"
-source: "docs/proposals/remote-sync.md#3-object-storage-through-fsspec-gcs-s3"
+aliases: ["Remote sync and object storage §3"]
+source: "docs/proposal/remote-sync.md#3-object-storage-through-fsspec-gcs-s3"
 ---
 # Object storage through fsspec (GCS, S3)
 
@@ -69,4 +70,4 @@ config. Optional end-to-end encryption would encrypt each object with
 `age` in the replicator, store plaintext hashes in the manifest, and leave
 the local copy in plain text (agents must read it). For a remote the user
 does not fully trust, this client-side encryption is the recommendation
-([[10-7-encryption-documentation-not-code-in-v01|10 §7]]).
+([[security-and-privacy-7-encryption-documentation-not-code-in-v01|security §7]]).

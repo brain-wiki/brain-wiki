@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00830YKV2FCQ84T8BJ
+id: 01M3250V004M6MK3V9C14T2992
 type: proposal
 title: "Alternatives considered (Remote sync and object storage)"
-source: "docs/proposals/remote-sync.md#6-alternatives-considered"
+aliases: ["Remote sync and object storage §6"]
+source: "docs/proposal/remote-sync.md#6-alternatives-considered"
 ---
 # Alternatives considered (Remote sync and object storage)
 

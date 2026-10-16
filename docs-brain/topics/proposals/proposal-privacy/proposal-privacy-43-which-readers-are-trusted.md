@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00ZNHH60AS4V8W8GD7
+id: 01M3250V00QR3Y66YT0FT0YT5D
 type: proposal
 title: "Which readers are trusted"
-source: "docs/proposals/privacy.md#43-which-readers-are-trusted"
+aliases: ["Privacy §4.3"]
+source: "docs/proposal/privacy.md#43-which-readers-are-trusted"
 ---
 # Which readers are trusted
 

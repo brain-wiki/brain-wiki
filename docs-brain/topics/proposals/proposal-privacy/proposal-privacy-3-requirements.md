@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00PNCRGN5Q230BC7K9
+id: 01M3250V00R7FCVQRCZTQ8B0Y3
 type: proposal
 title: "Requirements (Privacy)"
-source: "docs/proposals/privacy.md#3-requirements"
+aliases: ["Privacy §3"]
+source: "docs/proposal/privacy.md#3-requirements"
 ---
 # Requirements (Privacy)
 

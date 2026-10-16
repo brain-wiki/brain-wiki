@@ -1,4 +1,4 @@
-"""`brain commit`: snapshot direct edits into git and sync with origin (design doc 05 §5.1)."""
+"""`brain commit`: snapshot direct edits into git and sync with origin (docs/design/write-path.md §5.1)."""
 
 from __future__ import annotations
 

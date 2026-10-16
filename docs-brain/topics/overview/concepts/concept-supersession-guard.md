@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00J540FWCRCYKM4VM7
+id: 01M3250V00VA0B555RCD66503J
 type: concept
 title: "Supersession guard"
 aliases: ["supersession guard"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Supersession guard
 

@@ -1,8 +1,9 @@
 ---
-id: 01M3250V002Q2BRA9S89W8QYDF
+id: 01M3250V00TM70FT8ZV0A9EA9F
 type: proposal
 title: "Why it was removed (Host hooks: briefing, capture, and recall)"
-source: "docs/proposals/hooks.md#2-why-it-was-removed"
+aliases: ["Host hooks: briefing, capture, and recall §2"]
+source: "docs/proposal/hooks.md#2-why-it-was-removed"
 ---
 # Why it was removed (Host hooks: briefing, capture, and recall)
 

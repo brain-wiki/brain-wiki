@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00PFS067Z4M28N3FQN
+id: 01M3250V004NG647ZTN739RE0X
 type: concept
 title: "Agent profile"
 aliases: ["agent profile"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Agent profile
 

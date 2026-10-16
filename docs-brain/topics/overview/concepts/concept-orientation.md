@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00B8P171DV50A67E6Y
+id: 01M3250V00H13K16WRPRSDBWER
 type: concept
 title: "Orientation"
 aliases: ["orientation"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Orientation
 

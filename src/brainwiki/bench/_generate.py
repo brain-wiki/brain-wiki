@@ -1,4 +1,4 @@
-"""Seeded synthetic brains with planted ground truth (design doc 11 §4).
+"""Seeded synthetic brains with planted ground truth (docs/design/eval-bench.md §4).
 
 Everything is fictional: notes about invented software projects, written in a vocabulary of
 common English words plus generated pseudo-words, drawn with a Zipf distribution so FTS ranks
@@ -122,7 +122,7 @@ class Truth:
         return out
 
     def expected_guards(self, node_id: str) -> set[tuple[str, str]]:
-        """The guards (label, id) a hit must carry (doc 04 §5); `superseded_by` is the newest."""
+        """The guards (label, id) a hit must carry (docs/design/index-and-search.md §5); `superseded_by` is the newest."""
         shown = {("supersedes", other) for other in self.older.get(node_id, [])}
         chain = self.chain(node_id)
         if chain:

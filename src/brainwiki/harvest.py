@@ -1,4 +1,4 @@
-"""Harvest: turn finished host sessions into episodes (design doc 05 §2.2).
+"""Harvest: turn finished host sessions into episodes (docs/design/write-path.md §2.2).
 
 discover ─► filter ─► route ─► extract ─► distill (or raw) ─► write episodes ─► advance watermark
 

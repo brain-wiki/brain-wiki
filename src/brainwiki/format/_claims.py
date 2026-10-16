@@ -1,4 +1,4 @@
-"""Claims: `bw-claims` strings, or (format 1) list items under `## Claims` (design doc 02 §6.3)."""
+"""Claims: `bw-claims` strings, or (format 1) list items under `## Claims` (docs/design/brain-format.md §6.3)."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ class Claim:
 
     @property
     def inputs(self) -> str:
-        """Failing closed: anything but absent or `local` reads as unverified (05 §3)."""
+        """Failing closed: anything but absent or `local` reads as unverified (docs/design/write-path.md §3)."""
         value = self.meta.get("inputs", "local")
         return value if value in ("local", "external") else "unknown"
 

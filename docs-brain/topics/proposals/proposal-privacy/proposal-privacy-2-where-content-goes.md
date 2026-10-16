@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00T1CCE4A47VX5X5F2
+id: 01M3250V000WFC5NPQSX412GAG
 type: proposal
 title: "Where content goes"
-source: "docs/proposals/privacy.md#2-where-content-goes"
+aliases: ["Privacy §2"]
+source: "docs/proposal/privacy.md#2-where-content-goes"
 ---
 # Where content goes
 

@@ -1,9 +1,9 @@
 ---
-id: 01M3250V000W7CBGDGW0N90ZQF
+id: 01M3250V00B5MEHV1NA2Y60DGR
 type: concept
 title: "Episode"
 aliases: ["episode"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Episode
 

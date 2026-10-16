@@ -1,4 +1,4 @@
-"""Run every check CI runs, locally: `uv run scripts/check.py` (design doc 13 §8)."""
+"""Run every check CI runs, locally: `uv run scripts/check.py` (docs/design/engineering.md §8)."""
 
 from __future__ import annotations
 

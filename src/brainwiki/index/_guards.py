@@ -1,5 +1,5 @@
 """The supersession guard: a hit on a superseded note always comes with the note that replaced it
-(design doc 04 §5). A note names its replacement in `bw-superseded_by`."""
+(docs/design/index-and-search.md §5). A note names its replacement in `bw-superseded_by`."""
 
 from __future__ import annotations
 

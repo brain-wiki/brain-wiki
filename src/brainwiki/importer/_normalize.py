@@ -1,4 +1,4 @@
-"""Text-level normalization shared by overlay phase 1 and `--into` (design doc 09 §4)."""
+"""Text-level normalization shared by overlay phase 1 and `--into` (docs/design/import.md §4)."""
 
 from __future__ import annotations
 

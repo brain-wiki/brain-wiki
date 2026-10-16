@@ -1,20 +1,19 @@
 ---
 id: 01M3250V00HEG4EVVAB6BFFM60
 type: hub
-title: "Roadmap and open questions"
-source: "docs/design/14-roadmap-and-open-questions.md"
+title: "Roadmap"
+source: "docs/roadmap/README.md"
 ---
-# Roadmap and open questions
+# Roadmap
 
 What is built, what comes next, and what is still open
 
-Status: draft for review
+Designs not yet built are in [[proposals|docs/proposal]].
 
-Generated from `docs/design/14-roadmap-and-open-questions.md`.
+Generated from `docs/roadmap/README.md`.
 
 ## Notes
 - [[milestones]]: Milestones (sub-topic)
 - [[questions]]: Open questions (sub-topic)
 - [[verification]]: Verification items (sub-topic)
-- [[14-4-future-work]]: Future work
-- [[14-prior-art]]: Prior art
+- [[ideas]]: Ideas (sub-topic)

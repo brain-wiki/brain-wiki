@@ -1,6 +1,6 @@
-"""`brain doctor`: a report of configuration, brains, hosts, and SQLite (design doc 15 §3.4).
+"""`brain doctor`: a report of configuration, brains, hosts, and SQLite (docs/design/skills-and-onboarding.md §3.4).
 
-Read-only except for one repair: runs a crash left half-applied are rolled back (05 §10).
+Read-only except for one repair: runs a crash left half-applied are rolled back (docs/design/write-path.md §10).
 """
 
 from __future__ import annotations
@@ -62,7 +62,7 @@ def _host_connection(host: str) -> dict[str, Any] | None:
 
 
 def _missing_instructions(connection: dict[str, Any]) -> list[str]:
-    """Instruction files `brain connect` wrote that no longer carry the block (08 §3.2)."""
+    """Instruction files `brain connect` wrote that no longer carry the block (docs/design/agent-integrations.md §3.2)."""
     from brainwiki.hosts import find_block
 
     missing = []
@@ -101,7 +101,7 @@ def _brain_summary(name: str, path: Path) -> dict[str, Any]:
 
 def _index_summary(brain: Any) -> dict[str, Any]:
     """Roll back interrupted runs, then count notes from the index the way `brain brains` and
-    the briefing do: a topic's hub is its index, not one of its notes (04 §8)."""
+    the briefing do: a topic's hub is its index, not one of its notes (docs/design/index-and-search.md §8)."""
     from brainwiki.engine import Engine
     from brainwiki.runs import list_records, recover
 
@@ -117,7 +117,7 @@ def _index_summary(brain: Any) -> dict[str, Any]:
 
 def _stale_references(user: UserConfig) -> list[dict[str, Any]]:
     """Config entries that name a brain no longer registered: left by a removal before 0.2, or
-    by a hand edit (03 §2). `brain brains remove` now drops them itself."""
+    by a hand edit (docs/design/config-and-storage.md §2). `brain brains remove` now drops them itself."""
     names = set(user.brains)
     found: dict[str, list[str]] = {}
     for host, cfg in sorted(user.hosts.items()):

@@ -1,4 +1,4 @@
-"""Agent profiles: grant or revoke capabilities in brain.toml as one undoable run (07 §1), and the
+"""Agent profiles: grant or revoke capabilities in brain.toml as one undoable run (docs/design/cli-and-mcp.md §1), and the
 checks write paths use to refuse what the caller's profile does not allow."""
 
 from __future__ import annotations

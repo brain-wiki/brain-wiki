@@ -1,5 +1,5 @@
 """`brain setup`, the onboarding flow as a terminal wizard, and `brain setup --guide`, the same
-flow as instructions for an AI agent (design doc 15 §3).
+flow as instructions for an AI agent (docs/design/skills-and-onboarding.md §3).
 
 The wizard runs the brain-setup skill's steps except install: detect, brain, connect,
 permissions, harvest, verify, summary and next steps. Every write outside the brain is shown as a dry run first,
@@ -244,7 +244,7 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
 def _offer_commit_job(
     name: str, root: Path, ask: _Ask, out: Callable[[str], None], summary: list[str]
 ) -> None:
-    """For a git brain with no commit job, offer one (`brain schedule add commit`, 05 §5.2)."""
+    """For a git brain with no commit job, offer one (`brain schedule add commit`, docs/design/write-path.md §5.2)."""
     from brainwiki.config import open_brain
     from brainwiki.errors import BrainError, UsageError
     from brainwiki.runs import is_work_tree, run_git

@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00ENPER35D6Q60JREE
+id: 01M3250V009KXDWVH7SWTWJ6FP
 type: threat
 title: "T14: Supply chain"
 aliases: ["threat T14"]
-source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T14: Supply chain
 

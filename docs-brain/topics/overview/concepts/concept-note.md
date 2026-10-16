@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00B0M0BY0TAB1BSHBD
+id: 01M3250V0031XHB0BEHGGBMD78
 type: concept
 title: "Note"
 aliases: ["note"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Note
 

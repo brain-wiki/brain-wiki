@@ -1,4 +1,4 @@
-"""`--to-episodes` and `--from <host>`: documents and agent memory files become episodes (09 §6)."""
+"""`--to-episodes` and `--from <host>`: documents and agent memory files become episodes (docs/design/import.md §6)."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ _HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$")
 
 
 def memory_files(host: str, override: Path | None = None) -> list[Path]:
-    """Where each host keeps its own memory (09 §6; locations change, so they live in code)."""
+    """Where each host keeps its own memory (docs/design/import.md §6; locations change, so they live in code)."""
     home = Path.home()
     if override:
         if not override.exists():

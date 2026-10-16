@@ -1,9 +1,9 @@
 ---
-id: 01M3250V001ZC5MKPWCYNQ15XF
+id: 01M3250V00A3ZV5XSCPWEEW5C9
 type: concept
 title: "Index"
 aliases: ["index"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Index
 

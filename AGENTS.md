@@ -7,9 +7,10 @@ user's brain, use the brain-wiki MCP tools or the `brain` skill.
 
 - Setup: `uv sync`. Run everything CI runs: `uv run scripts/check.py`.
 - Design first: implemented behavior is specified in `docs/design/`; change
-  the relevant document together with the code. Unbuilt designs live in
-  `docs/proposals/`; when one is built, move its content into `docs/design/`
-  and delete the proposal.
+  the relevant document together with the code. A design decision gets a
+  file in `docs/decision/`. Unbuilt designs live in `docs/proposal/`; when
+  one is built, move its content into `docs/design/` and delete the
+  proposal. Milestones, open questions, and ideas are in `docs/roadmap/`.
 - Every curated change goes through `brainwiki.runs.Run`; writers change
   only the lines they must.
 - Only `brain mcp` may import the MCP SDK; the CLI imports subcommand

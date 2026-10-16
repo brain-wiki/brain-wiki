@@ -1,4 +1,4 @@
-"""Rules: the strictest write path (design doc 05 §6). Consolidation never calls this module."""
+"""Rules: the strictest write path (docs/design/write-path.md §6). Consolidation never calls this module."""
 
 from __future__ import annotations
 

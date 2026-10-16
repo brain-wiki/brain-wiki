@@ -1,4 +1,4 @@
-"""Origin context: a bounded window of the conversation an episode came from (design doc 05 §4.6)."""
+"""Origin context: a bounded window of the conversation an episode came from (docs/design/write-path.md §4.6)."""
 
 from __future__ import annotations
 

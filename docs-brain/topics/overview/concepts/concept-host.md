@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00RDSGSHQVVYY6M6EZ
+id: 01M3250V00R1B1GJX8B59AEHQN
 type: concept
 title: "Host"
 aliases: ["host"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Host
 

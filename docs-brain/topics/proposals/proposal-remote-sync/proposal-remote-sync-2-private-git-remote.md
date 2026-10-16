@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00S2GFV3VHYQDXCJ4M
+id: 01M3250V00YS2RPZ1J5TTVSPWP
 type: proposal
 title: "Private git remote"
-source: "docs/proposals/remote-sync.md#2-private-git-remote"
+aliases: ["Remote sync and object storage §2"]
+source: "docs/proposal/remote-sync.md#2-private-git-remote"
 ---
 # Private git remote
 

@@ -13,6 +13,6 @@ Generated from `docs/`.
 ## Notes
 - [[brain-format]]: Brain format (sub-topic)
 - [[config-and-storage]]: Config and storage (sub-topic)
-- [[index-and-retrieval]]: Index and retrieval (sub-topic)
-- [[write-path-and-consolidation]]: Write path and consolidation (sub-topic)
+- [[index-and-search]]: Index and search (sub-topic)
+- [[write-path]]: Write path (sub-topic)
 - [[lint-and-reports]]: Lint and reports (sub-topic)

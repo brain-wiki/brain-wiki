@@ -1,4 +1,4 @@
-"""Which brains a host may use, and what each holds (design doc 04 §9.1)."""
+"""Which brains a host may use, and what each holds (docs/design/index-and-search.md §9.1)."""
 
 from __future__ import annotations
 

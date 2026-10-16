@@ -1,4 +1,4 @@
-"""Cross-file lint rules, answered from the index so whole-brain lint stays fast (design doc 06 §4)."""
+"""Cross-file lint rules, answered from the index so whole-brain lint stays fast (docs/design/lint-and-reports.md §4)."""
 
 from __future__ import annotations
 

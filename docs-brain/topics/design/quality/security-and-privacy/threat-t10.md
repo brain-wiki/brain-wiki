@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00BH7PC91942XS1XF6
+id: 01M3250V00H4J077K4ZFD40JHF
 type: threat
 title: "T10: Command injection"
 aliases: ["threat T10"]
-source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T10: Command injection
 

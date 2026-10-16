@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00X03S8DA9XCESPJRV
+id: 01M3250V00YQ7V08KXTCB2HYTC
 type: threat
 title: "T18: Over-reading agent transcripts"
 aliases: ["threat T18"]
-source: "docs/design/10-security-and-privacy.md#3-threats-and-mitigations"
+source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 ---
 # T18: Over-reading agent transcripts
 

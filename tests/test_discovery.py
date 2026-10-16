@@ -1,4 +1,4 @@
-"""Progressive discovery: brain brains, search filters and browse, read handles, neighbors (04 §6-§9)."""
+"""Progressive discovery: brain brains, search filters and browse, read handles, neighbors (docs/design/index-and-search.md §6-§9)."""
 
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ def test_cli_brains_lists_brains(example: Path, capsys: pytest.CaptureFixture[st
     assert listed.startswith("* ex") and "Lumen design notes" in listed
 
 
-# -- search filters and browse (04 §6) -------------------------------------------------
+# -- search filters and browse (docs/design/index-and-search.md §6) -------------------------------------------------
 
 
 def _engine(root: Path, host: str | None = None):
@@ -198,7 +198,7 @@ def test_cli_search_flags(brain_dir: Path, capsys: pytest.CaptureFixture[str]):
     assert main(["search", "--where", "nope"]) == 2
 
 
-# -- read handles and neighbors (04 §7, §9.2) ------------------------------------------
+# -- read handles and neighbors (docs/design/index-and-search.md §7, §9.2) ------------------------------------------
 
 
 def test_read_gives_a_handle_for_every_link_and_backlink(example: Path):
@@ -275,7 +275,7 @@ def test_cli_neighbors(example: Path, capsys: pytest.CaptureFixture[str]):
     assert sorted(rest) == ["topics/search/index.md", "topics/storage/sqlite-version-policy.md"]
 
 
-# -- the briefing (04 §8) ---------------------------------------------------------------
+# -- the briefing (docs/design/index-and-search.md §8) ---------------------------------------------------------------
 
 
 def test_briefing_describes_the_brain(example: Path):
@@ -338,7 +338,7 @@ def test_instructions_follow_the_host_profile(example: Path):
     assert len(server_instructions(Access(edit=True))) < 2000
 
 
-# -- Obsidian-style browsing commands (07 §2) -------------------------------------------
+# -- Obsidian-style browsing commands (docs/design/cli-and-mcp.md §2) -------------------------------------------
 
 
 def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
@@ -406,7 +406,9 @@ def test_listing_input_is_checked(example: Path, capsys: pytest.CaptureFixture[s
     assert main(["links", "fts5", "--paths", "--limit", "1"]) == 0
     assert "(--cursor 1)" in capsys.readouterr().err
     listed = list_brains(None)["brains"][0]["notes"]
-    assert run_doctor()["brains"][0]["notes"] == listed  # hubs are not notes (04 §8)
+    assert (
+        run_doctor()["brains"][0]["notes"] == listed
+    )  # hubs are not notes (docs/design/index-and-search.md §8)
 
 
 def test_global_options_work_before_the_command(example: Path, capsys: pytest.CaptureFixture[str]):

@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00X077A45MVKC2V4BR
+id: 01M3250V00JDHBWTANTHC0NKS6
 type: proposal
 title: "Deployment options"
-source: "docs/proposals/remote-mcp.md#2-deployment-options"
+aliases: ["Remote MCP for chat apps §2"]
+source: "docs/proposal/remote-mcp.md#2-deployment-options"
 ---
 # Deployment options
 

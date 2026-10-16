@@ -1,8 +1,9 @@
 ---
-id: 01M3250V00HJC53P27TNW2D86Z
+id: 01M3250V00X64APSB2G0V43E64
 type: proposal
 title: "Targets"
-source: "docs/proposals/public-benchmarks.md#1-targets"
+aliases: ["Public memory benchmarks §1"]
+source: "docs/proposal/public-benchmarks.md#1-targets"
 ---
 # Targets
 

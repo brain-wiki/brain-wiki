@@ -1,9 +1,9 @@
 ---
-id: 01M3250V00KNWFN805DKR8RKR7
+id: 01M3250V000AM0ESX38GH4KAZX
 type: concept
 title: "Consolidation"
 aliases: ["consolidation"]
-source: "docs/design/01-overview.md#7-glossary"
+source: "docs/design/glossary.md"
 ---
 # Consolidation
 
