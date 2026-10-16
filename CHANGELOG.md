@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.2.1 (unreleased)
+
 ## 0.2.0 (2026-10-15)
 
 Format 3: a note is an ordinary Markdown page. This release changes the file
