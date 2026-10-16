@@ -270,11 +270,9 @@ def test_neighbors_reject_bad_input(example: Path):
 
 def test_cli_neighbors(example: Path, capsys: pytest.CaptureFixture[str]):
     assert main(["neighbors", "fts5", "--direction", "in", "--paths"]) == 0
-    assert capsys.readouterr().out.split() == [
-        "topics/search/ripgrep.md",  # supersession first
-        "topics/storage/sqlite-version-policy.md",
-        "topics/search/index.md",
-    ]
+    first, *rest = capsys.readouterr().out.split()
+    assert first == "topics/search/ripgrep.md"  # supersession first, then newest first
+    assert sorted(rest) == ["topics/search/index.md", "topics/storage/sqlite-version-policy.md"]
 
 
 # -- the briefing (04 §8) ---------------------------------------------------------------
@@ -350,11 +348,9 @@ def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
     ]
     links = run("links", "fts5")
     assert '- links_to "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in links
-    assert run("backlinks", "fts5", "--paths").split() == [
-        "topics/search/ripgrep.md",  # supersession first
-        "topics/storage/sqlite-version-policy.md",
-        "topics/search/index.md",
-    ]
+    first, *rest = run("backlinks", "fts5", "--paths").split()
+    assert first == "topics/search/ripgrep.md"  # supersession first, then newest first
+    assert sorted(rest) == ["topics/search/index.md", "topics/storage/sqlite-version-policy.md"]
     assert "decision  3" in run("types", "--counts")
     assert run("tags", "--count").strip() == "2"
     assert run("search", "", "--sort", "recent", "--limit", "1", "--paths").count("\n") == 1

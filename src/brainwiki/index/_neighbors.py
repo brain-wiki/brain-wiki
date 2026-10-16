@@ -58,7 +58,7 @@ def neighbors(
                     continue
                 edge = {"rel": row["rel"], "src": row["src"], "dst": row["dst"]}
                 found.append((_PRIORITY.get(row["rel"], 9), current, edge, dict(row)))
-        found.sort(key=lambda f: (f[0], -_stamp(f[3]["updated"])))
+        found.sort(key=lambda f: (f[0], -_stamp(f[3]["updated"]), f[3]["path"]))
         next_frontier: list[str] = []
         for _, parent, edge, row in found:
             other = row["id"]

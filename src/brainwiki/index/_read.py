@@ -183,7 +183,7 @@ def _backlinks(engine: Engine, node_id: str, limit: int = 10) -> tuple[list[dict
         """SELECT n.id, n.title, n.path, n.topic, e.rel
            FROM edges e JOIN nodes n ON n.id = e.declared_in
            WHERE e.other=? AND e.declared_in != ?
-           ORDER BY e.rel != 'superseded_by', n.updated DESC""",
+           ORDER BY e.rel != 'superseded_by', n.updated DESC, n.path""",
         (node_id, node_id),
     ).fetchall()
     seen: dict[str, dict[str, Any]] = {}
