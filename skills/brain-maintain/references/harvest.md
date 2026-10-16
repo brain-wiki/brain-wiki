@@ -138,7 +138,7 @@ use this fallback:
    so a repeat does not write a duplicate.
 4. Report how many sessions you read and how many episodes you logged.
 
-Episodes written this way are marked unverified, because brain-wiki did not
+Episodes written this way get `inputs: unknown`, because brain-wiki did not
 check where they came from.
 
 ## Packet

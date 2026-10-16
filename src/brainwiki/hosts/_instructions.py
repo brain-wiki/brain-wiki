@@ -39,9 +39,9 @@ _ORIENT = """\
   with `brain_neighbors`. Every result names the next handle to open.
 """
 _FILES = """\
-- You may also read the brain's Markdown files directly, read-only, at the
-  path `brain_list` gives: grep and glob are fine for bulk scans. The tools
-  add link resolution and supersession warnings.
+- You may also read the brain's Markdown files directly, at the path
+  `brain_list` gives: grep and glob are fine for bulk scans. The tools add
+  link resolution and supersession warnings.
 """
 _GUARDS = """\
 - A superseded hit comes with the note that replaced it. Prefer the current

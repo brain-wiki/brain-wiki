@@ -101,6 +101,19 @@ def test_settle_leaves_out_files_changed_just_now(repo: Path):
     assert git(repo, "status", "--porcelain") == ""
 
 
+def test_the_brains_lint_hook_never_blocks_a_snapshot(repo: Path):
+    assert main(["lint", "--install-hook"]) == 0
+    broken = write(repo, "topics/lumen/broken.md", "# No id yet\n")  # BW103, a lint error
+    _age(broken, 600)
+    git(repo, "add", "topics/lumen/broken.md")
+    by_hand = subprocess.run(
+        ["git", "-C", str(repo), "commit", "-q", "-m", "by hand"], capture_output=True, text=True
+    )
+    assert by_hand.returncode != 0 and "BW103" in by_hand.stdout + by_hand.stderr
+    assert main(["commit", "--no-fetch"]) == 0
+    assert "A topics/lumen/broken.md" in _message(repo)
+
+
 def test_message_names_the_topic_files_and_agent(repo: Path):
     _note(repo, "topics/lumen/sync/crdt.md")
     _note(repo, "topics/lumen/sync/offline.md")

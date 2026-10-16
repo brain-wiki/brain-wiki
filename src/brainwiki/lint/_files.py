@@ -177,9 +177,14 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
     fm, raw = doc.fm, doc.frontmatter.raw
     raw_id = fm.get("id")
     if raw_id is None:
+        minted = new_ulid()  # in the message too, so an agent can add the line itself
         problems.append(
             Problem(
-                "BW103", rel, 1, "note has no id", fix=Fix("mint an id", _set({"id": new_ulid()}))
+                "BW103",
+                rel,
+                1,
+                f"note has no id; add `id: {minted}` to its frontmatter",
+                fix=Fix("mint an id", _set({"id": minted})),
             )
         )
     elif not is_ulid(str(raw_id)):

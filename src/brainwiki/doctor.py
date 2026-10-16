@@ -9,10 +9,13 @@ import json
 import shutil
 import sqlite3
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from brainwiki import __version__
 from brainwiki.config import config_file, load_user_config, state_dir
+
+if TYPE_CHECKING:
+    from brainwiki.config import UserConfig
 
 _HOST_PROBES: dict[str, dict[str, list[str]]] = {
     "claude-code": {"bins": ["claude"], "dirs": ["~/.claude"]},
@@ -112,6 +115,33 @@ def _index_summary(brain: Any) -> dict[str, Any]:
     return {"notes": notes, "recovered_runs": recovered, "uncommitted_runs": uncommitted}
 
 
+def _stale_references(user: UserConfig) -> list[dict[str, Any]]:
+    """Config entries that name a brain no longer registered: left by a removal before 0.2, or
+    by a hand edit (03 §2). `brain brains remove` now drops them itself."""
+    names = set(user.brains)
+    found: dict[str, list[str]] = {}
+    for host, cfg in sorted(user.hosts.items()):
+        if cfg.brain and cfg.brain not in names:
+            found.setdefault(cfg.brain, []).append(f"hosts.{host}.brain")
+        for name in cfg.brains or []:
+            if name not in names:
+                found.setdefault(name, []).append(f"hosts.{host}.brains")
+    for pattern, name in (user.harvest.get("routes") or {}).items():
+        if name not in names:
+            found.setdefault(name, []).append(f"harvest.routes[{pattern!r}]")
+    return [
+        {
+            "code": "stale_brain_reference",
+            "severity": "warning",
+            "message": f"{', '.join(keys)} in the user config name brain {name!r}, which is not "
+            "registered",
+            "fix": f"brain brains add {name} <path> if it moved; otherwise remove those entries "
+            f"from {user.path}",
+        }
+        for name, keys in sorted(found.items())
+    ]
+
+
 def run_doctor() -> dict[str, Any]:
     user = load_user_config()
     report: dict[str, Any] = {
@@ -183,6 +213,7 @@ def run_doctor() -> dict[str, Any]:
                 "fix": f"brain brains default {sorted(user.brains)[0]}",
             }
         )
+    report["problems"] += _stale_references(user)
     if not report["sqlite"]["fts5"]:
         report["problems"].append(
             {

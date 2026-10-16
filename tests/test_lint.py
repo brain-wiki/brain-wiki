@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -359,6 +360,12 @@ def test_validate_checks_changed_notes_and_refuses_protected_files(
     assert '"BW121"' in out and "rules.md is never edited directly" in out
     assert main(["validate", "--brain", str(example), "topics/search/fts5.md"]) == 0
     assert "Valid: 1 file(s) checked" in capsys.readouterr().out
+    new = example / "topics/search/prefix.md"
+    new.write_text("---\ntitle: Prefix queries\n---\n# Prefix queries\n\nFast.\n")
+    assert main(["validate", "--brain", str(example), "topics/search/prefix.md"]) == 1
+    line = re.search(r"add `(id: [0-9A-HJKMNP-TV-Z]{26})`", capsys.readouterr().out).group(1)
+    new.write_text(new.read_text().replace("---\n", f"---\n{line}\n", 1))
+    assert main(["validate", "--brain", str(example), "topics/search/prefix.md"]) == 0
 
 
 def test_lint_usage_errors(brain_dir: Path, capsys):

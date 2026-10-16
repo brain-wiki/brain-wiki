@@ -181,17 +181,35 @@ def _rename_references(doc: tomlkit.TOMLDocument, old: str, new: str) -> None:
             routes[pattern] = new
 
 
-def unregister_brain(name: str, *, path: Path | None = None) -> bool:
+def unregister_brain(name: str, *, path: Path | None = None) -> list[str] | None:
+    """Remove a brain entry and every reference to its name, in one write: the default, host
+    defaults, host brain limits, and harvest routes. A host whose limit listed only this brain
+    keeps an empty list, so removing a brain never widens what a host may read. Returns what
+    else was removed (as `key` descriptions), or None when no brain has the name."""
     path = path or config_file()
     doc = _load_doc(path)
     brains = doc.get("brains")
     if not brains or name not in brains:
-        return False
+        return None
     del brains[name]
+    cleaned = []
     if doc.get("default") == name:
         del doc["default"]
+        cleaned.append("default")
+    for host, table in (doc.get("hosts") or {}).items():
+        if table.get("brain") == name:
+            del table["brain"]
+            cleaned.append(f"hosts.{host}.brain")
+        allowed = table.get("brains")
+        if isinstance(allowed, list) and name in allowed:
+            table["brains"] = [b for b in allowed if b != name]
+            cleaned.append(f"hosts.{host}.brains")
+    routes = (doc.get("harvest") or {}).get("routes")
+    for pattern in [p for p in routes or {} if routes[p] == name]:
+        del routes[pattern]
+        cleaned.append(f"harvest.routes[{pattern!r}]")
     _save_doc(path, doc)
-    return True
+    return cleaned
 
 
 def set_value(dotted: str, value: Any, *, path: Path | None = None) -> None:

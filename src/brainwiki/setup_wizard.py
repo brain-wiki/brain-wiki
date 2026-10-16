@@ -130,6 +130,7 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
             summary.append(
                 f"Adopted {result['root']} as brain {result['brain']!r} (undo: brain brains remove {result['brain']})"
             )
+            _offer_commit_job(result["brain"], Path(result["root"]), ask, out, summary)
         else:
             from brainwiki.lifecycle import init_brain, init_git
 
@@ -146,9 +147,12 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
                 summary.append(
                     f"git: {problem}" if problem else "git: initialized, with a first commit"
                 )
+                _offer_commit_job(name, root, ask, out, summary)
     else:
         default = next((b for b in report["brains"] if b.get("default")), report["brains"][0])
         out(f"Brain: {default['name']} at {default['path']}")
+        if default.get("ok"):
+            _offer_commit_job(default["name"], Path(default["path"]), ask, out, summary)
 
     # Connect
     for host in report["hosts"]:
@@ -235,6 +239,43 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
     if user.brains:
         out("\nNext:\n" + "\n".join(f"- {s}" for s in _next_steps(hosts)))
     return 0
+
+
+def _offer_commit_job(
+    name: str, root: Path, ask: _Ask, out: Callable[[str], None], summary: list[str]
+) -> None:
+    """For a git brain with no commit job, offer one (`brain schedule add commit`, 05 §5.2)."""
+    from brainwiki.config import open_brain
+    from brainwiki.errors import UsageError
+    from brainwiki.runs import is_work_tree, run_git
+    from brainwiki.schedule import make_job, scheduler
+
+    root = root.expanduser()
+    if not is_work_tree(root):
+        return
+    try:
+        backend = scheduler()
+    except UsageError:  # no scheduler on this platform yet
+        return
+    brain_id = open_brain(root).id
+    if any(job.brain_id == brain_id for job in backend.jobs()):
+        return
+    out(
+        "\nAgents edit notes directly, and git keeps their history once `brain commit` records "
+        "the edits. A scheduled job can run it for you."
+    )
+    if not _yes(ask, "Commit agents' edits every 15 minutes?", True):
+        return
+    remote = run_git(root, "remote", "get-url", "origin").returncode == 0
+    push = remote and _yes(ask, "Also push each commit to the brain's git remote?")
+    plan = backend.install(make_job(brain_id, name, "15m", push), dry_run=False)
+    if plan.manual:
+        out(f"No scheduler here; add this to your crontab (`crontab -e`):\n{plan.text.rstrip()}")
+        return
+    summary.append(
+        f"Commits {name!r} every 15 minutes{' and pushes' if push else ''} "
+        f"(undo: brain schedule remove commit --brain {name})"
+    )
 
 
 def _permissions(

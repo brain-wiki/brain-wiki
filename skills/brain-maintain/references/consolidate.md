@@ -44,7 +44,8 @@ Lumen searches notes with SQLite FTS5 instead of shelling out to ripgrep.
 - Tried ripgrep over 10k notes: 1.8 s per query, too slow for search-as-you-type.
 ```
 
-- Frontmatter holds metadata only: `id` (keep it; a new note may omit it),
+- Frontmatter holds metadata only: `id` (keep it; for a new note,
+  `brain_validate` gives the `id:` line to add),
   `type`, `title`, `aliases`, `tags`, `status`, `bw-superseded_by`,
   `bw-sources`, `created`, `updated`. Set `updated` to today.
 - The first paragraph summarizes the note.

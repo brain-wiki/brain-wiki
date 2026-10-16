@@ -251,6 +251,30 @@ def test_to_episodes_and_from_host(
     assert any("agent: claude-code" in t and "inputs: unknown" in t for t in texts)
 
 
+def test_setup_wizard_offers_a_commit_job_for_a_git_brain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    from tests.test_schedule import FakeCron
+
+    from brainwiki.schedule import _jobs
+
+    cron = FakeCron()
+    monkeypatch.setattr(_jobs, "_runner", cron)
+    monkeypatch.setattr(_jobs, "_platform", lambda: "linux")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(tmp_path / "gitconfig"))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    for var in ("GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"):
+        monkeypatch.setenv(var, "Test")
+    for var in ("GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"):
+        monkeypatch.setenv(var, "test@example.com")
+    answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "y", "y"])  # git; commit job
+    output: list[str] = []
+    assert run_wizard(None, ask=lambda _: next(answers, "n"), out=output.append) == 0
+    assert "# >>> brain-wiki commit " in cron.text and "commit --brain mine" in cron.text
+    assert "--push" not in cron.text  # no remote, so no push question
+    assert any("Commits 'mine' every 15 minutes (undo:" in line for line in output)
+
+
 def test_setup_wizard_creates_brain(tmp_path: Path):
     answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "n"])
     output: list[str] = []

@@ -90,7 +90,8 @@ def brains(args: Any) -> int:
         if len(rest) != 1:
             raise UsageError("brain brains remove NAME")
         path = user.brains.get(rest[0])
-        if not unregister_brain(rest[0]):
+        cleaned = unregister_brain(rest[0])
+        if cleaned is None:
             raise NotFound(f"no brain named {rest[0]!r}")
         try:
             brain_id = open_brain(path).id if path else None
@@ -106,8 +107,9 @@ def brains(args: Any) -> int:
         job = bool(brain_id) and remove_job(brain_id)
         emit(
             args,
-            {"removed": rest[0], "job_removed": job},
+            {"removed": rest[0], "references": cleaned, "job_removed": job},
             f"Removed {rest[0]!r} from the user config (the brain folder is untouched)"
+            + (f"; also removed {', '.join(cleaned)}" if cleaned else "")
             + ("; removed its commit job" if job else ""),
         )
         return 0

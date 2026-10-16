@@ -12,6 +12,7 @@ _CLIENT_NAMES = (
     ("agy", "antigravity"),
     ("openclaw", "openclaw"),
     ("cursor", "cursor"),
+    ("opencode", "opencode"),
 )
 
 

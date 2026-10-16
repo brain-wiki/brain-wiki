@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
 from typing import Any
@@ -110,6 +111,10 @@ def lint(args: Any) -> int:
             emit(args, data, text)
             return 1 if outcome.remaining.errors else 0
         staged = None
+        if args.staged and os.environ.get("BRAIN_WIKI_SNAPSHOT"):
+            # `brain commit` snapshots broken states too, so they can be restored (05 §5.1).
+            emit(args, {"skipped": "snapshot"}, "Snapshot commit: lint does not block it.")
+            return 0
         if args.staged:
             from brainwiki.lint import staged_files
 

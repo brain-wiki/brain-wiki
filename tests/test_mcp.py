@@ -8,6 +8,7 @@ from mcp import Client
 from mcp_types import ElicitResult, Implementation
 
 from brainwiki.config._user import register_brain
+from brainwiki.hosts import host_from_client_name
 from brainwiki.mcp._server import _INSTRUCTIONS, build_server
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
@@ -193,6 +194,8 @@ async def test_host_from_client_name_and_not_configured(
     ) as client:
         await client.call_tool("brain_orient", {})
     assert server._brainwiki_state.host == "claude-code"
+    for client_name, host in (("opencode", "opencode"), ("OpenCode 1.2", "opencode"), ("x", None)):
+        assert host_from_client_name(client_name) == host
     monkeypatch.setenv("BRAIN_WIKI_CONFIG", str(tmp_path / "empty.toml"))
     monkeypatch.chdir(tmp_path)
     async with Client(build_server("claude-code")) as client:

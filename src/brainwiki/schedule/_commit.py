@@ -1,4 +1,4 @@
-"""`brain commit`: snapshot direct edits into git and sync with origin (notes-as-content §4.4)."""
+"""`brain commit`: snapshot direct edits into git and sync with origin (design doc 05 §5.1)."""
 
 from __future__ import annotations
 
@@ -61,9 +61,11 @@ class CommitResult:
 
 
 def _git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    """git that never prompts: no terminal password prompt, ssh in batch mode, no editor."""
+    """git that never prompts: no terminal password prompt, ssh in batch mode, no editor. The
+    brain's own lint hook sees BRAIN_WIKI_SNAPSHOT and lets a snapshot through; other hooks run."""
     env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_EDITOR": ":", "LC_ALL": "C"}
     env.setdefault("GIT_SSH_COMMAND", "ssh -o BatchMode=yes")
+    env["BRAIN_WIKI_SNAPSHOT"] = "1"
     return subprocess.run(
         ["git", "-C", str(root), *args], capture_output=True, text=True, env=env, check=False
     )

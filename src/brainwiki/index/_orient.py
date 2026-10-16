@@ -204,7 +204,8 @@ def _writing_lines(engine: Engine, topics: list[dict[str, Any]]) -> list[str]:
         "- Frontmatter is metadata only: `type` (note, decision, howto, person, …), `title`, "
         f'`status` ({" | ".join(STATUSES)}), `bw-superseded_by: "[[newer note]]"` with '
         '`status: superseded`, `bw-sources: ["[[archive/episodes/…]]", "https://…"]`, '
-        "`tags`, `aliases`, `updated`. Keep an existing `id`.",
+        "`tags`, `aliases`, `updated`. Keep an existing `id`; for a new note, "
+        "`brain_validate` gives the `id:` line to add.",
         "- Body: a one-paragraph summary, then one fact per bullet; link notes with "
         "`[[wikilinks]]` inside sentences.",
         "- Then run `brain_validate` on the files you changed and fix what it reports.",

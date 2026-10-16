@@ -1,4 +1,4 @@
-"""What `brain doctor` reports about commit jobs (notes-as-content §4.4)."""
+"""What `brain doctor` reports about commit jobs (design doc 05 §5.2)."""
 
 from __future__ import annotations
 

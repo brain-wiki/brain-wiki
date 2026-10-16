@@ -32,11 +32,13 @@ _RULES = [
     ),
     _RuleInfo("BW118", "error", "warning", False, "unknown bw- field in a note"),
     _RuleInfo(
-        "BW119", "error", "warning", True, "bw-superseded_by is malformed or does not resolve"
+        "BW119",
+        "error",
+        "warning",
+        True,
+        "bw-superseded_by is malformed, unresolved, or without status: superseded",
     ),
-    _RuleInfo(
-        "BW120", "error", "warning", False, "bw-sources item is malformed or does not resolve"
-    ),
+    _RuleInfo("BW120", "error", "warning", False, "bw-sources item is not a link or a URL"),
     _RuleInfo("BW121", "error", "error", False, "file is never edited directly"),
     _RuleInfo("BW122", "warning", "info", False, "bw-sources link does not resolve"),
     _RuleInfo("BW307", "error", "error", False, "supersession cycle (bw-superseded_by)"),

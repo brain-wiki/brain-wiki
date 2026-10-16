@@ -207,6 +207,43 @@ def test_rename_checks_first_and_carries_every_reference(brain_dir: Path, tmp_pa
     assert user.harvest["routes"] == {"~/lumen/**": "lumen"}
 
 
+def test_remove_drops_every_reference_without_widening_access(
+    brain_dir: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    from brainwiki.cli import main
+    from brainwiki.config._user import add_harvest_route, register_brain, set_value
+    from brainwiki.lifecycle import init_brain
+
+    register_brain("work", init_brain(tmp_path / "brains" / "work", "work"))
+    set_value("hosts.codex.brain", "test")
+    set_value("hosts.codex.brains", ["test", "work"])
+    set_value("hosts.cursor.brains", ["test"])
+    add_harvest_route("~/lumen/**", "test")
+    add_harvest_route("~/work/**", "work")
+    assert main(["brains", "remove", "test"]) == 0
+    assert "also removed default, hosts.codex.brain, hosts.codex.brains" in capsys.readouterr().out
+    user = load_user_config()
+    assert set(user.brains) == {"work"} and user.default is None
+    assert (user.hosts["codex"].brain, user.hosts["codex"].brains) == (None, ["work"])
+    assert user.hosts["cursor"].brains == []  # still limited: it may read no brain, not all
+    assert user.harvest["routes"] == {"~/work/**": "work"}
+
+
+def test_doctor_flags_config_entries_that_name_unregistered_brains(brain_dir: Path):
+    from brainwiki.config._user import add_harvest_route, set_value
+    from brainwiki.doctor import run_doctor
+
+    set_value("hosts.codex.brain", "gone")
+    set_value("hosts.codex.brains", ["test", "gone"])
+    add_harvest_route("~/old/**", "gone")
+    (problem,) = [p for p in run_doctor()["problems"] if p["code"] == "stale_brain_reference"]
+    assert problem["message"].startswith(
+        "hosts.codex.brain, hosts.codex.brains, harvest.routes['~/old/**'] in the user config "
+        "name brain 'gone'"
+    )
+    assert problem["fix"].startswith("brain brains add gone <path> if it moved")
+
+
 def test_brain_names_are_checked(brain_dir: Path, capsys: pytest.CaptureFixture[str]):
     from brainwiki.cli import main
 
