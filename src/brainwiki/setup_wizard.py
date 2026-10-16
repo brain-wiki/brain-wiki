@@ -246,7 +246,7 @@ def _offer_commit_job(
 ) -> None:
     """For a git brain with no commit job, offer one (`brain schedule add commit`, 05 §5.2)."""
     from brainwiki.config import open_brain
-    from brainwiki.errors import UsageError
+    from brainwiki.errors import BrainError, UsageError
     from brainwiki.runs import is_work_tree, run_git
     from brainwiki.schedule import make_job, scheduler
 
@@ -268,7 +268,13 @@ def _offer_commit_job(
         return
     remote = run_git(root, "remote", "get-url", "origin").returncode == 0
     push = remote and _yes(ask, "Also push each commit to the brain's git remote?")
-    plan = backend.install(make_job(brain_id, name, "15m", push), dry_run=False)
+    try:
+        plan = backend.install(make_job(brain_id, name, "15m", push), dry_run=False)
+    except BrainError as exc:  # the scheduler refused (launchctl failed): setup goes on
+        out(
+            f"Could not schedule it ({exc.message}); later: brain schedule add commit --brain {name}"
+        )
+        return
     if plan.manual:
         out(f"No scheduler here; add this to your crontab (`crontab -e`):\n{plan.text.rstrip()}")
         return

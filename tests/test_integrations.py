@@ -275,6 +275,27 @@ def test_setup_wizard_offers_a_commit_job_for_a_git_brain(
     assert any("Commits 'mine' every 15 minutes (undo:" in line for line in output)
 
 
+def test_setup_wizard_goes_on_when_the_scheduler_refuses(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    from brainwiki.schedule import _jobs
+
+    monkeypatch.setattr(_jobs, "_platform", lambda: "darwin")  # launchctl fails in tests
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(tmp_path / "gitconfig"))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    for var in ("GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"):
+        monkeypatch.setenv(var, "Test")
+    for var in ("GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"):
+        monkeypatch.setenv(var, "test@example.com")
+    answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "y", "y"])
+    output: list[str] = []
+    assert run_wizard(None, ask=lambda _: next(answers, "n"), out=output.append) == 0
+    assert any(line.startswith("Could not schedule it (launchctl bootstrap") for line in output), (
+        output
+    )
+    assert any("Verify: search works." in line for line in output)
+
+
 def test_setup_wizard_creates_brain(tmp_path: Path):
     answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "n"])
     output: list[str] = []
