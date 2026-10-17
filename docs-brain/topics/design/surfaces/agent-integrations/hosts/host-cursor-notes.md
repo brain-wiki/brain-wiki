@@ -16,5 +16,3 @@ source: "docs/design/hosts/cursor.md#notes"
   `.cursor/rules/brain-wiki.mdc` with `alwaysApply: true`.
 - Cursor does not expand the Agent Plugins `${PLUGIN_ROOT}` variables (it
   has its own). brain-wiki's MCP entry uses none.
-- The headless preset never passes `--force`, so file changes are only
-  proposed.

@@ -7,14 +7,15 @@ source: "docs/design/write-path.md#52-brain-schedule"
 ---
 # `brain schedule`
 
-`brain schedule` installs one job per brain with the platform's own
-scheduler. Jobs are keyed by the brain's id, so adding again replaces the
-brain's job and a rename does not orphan it.
+`brain schedule` installs jobs with the platform's own scheduler: one
+commit job per brain, and one consolidate job per brain and host (§4.8).
+Jobs are keyed by the brain's id (and the host), so adding again replaces
+the job and a rename does not orphan it.
 
 | Platform | Job | Install | Remove |
 |---|---|---|---|
-| Linux | User crontab block between `# >>> brain-wiki commit <brain-id>` and `# <<< brain-wiki commit <brain-id>` | Read `crontab -l`, replace or add the block, write with `crontab -` | Drop the block |
-| macOS | LaunchAgent `io.github.brain-wiki.commit.<brain-id>` | Write `~/Library/LaunchAgents/<label>.plist`, then `launchctl bootstrap gui/<uid> <plist>` | `launchctl bootout gui/<uid>/<label>`, then delete the plist |
+| Linux | User crontab block between `# >>> brain-wiki commit <brain-id>` and `# <<< brain-wiki commit <brain-id>` (`consolidate <brain-id>.<host>` for a consolidate job) | Read `crontab -l`, replace or add the block, write with `crontab -` | Drop the block |
+| macOS | LaunchAgent `io.github.brain-wiki.commit.<brain-id>` (`io.github.brain-wiki.consolidate.<brain-id>.<host>`) | Write `~/Library/LaunchAgents/<label>.plist`, then `launchctl bootstrap gui/<uid> <plist>` | `launchctl bootout gui/<uid>/<label>`, then delete the plist |
 | Windows | Not supported | — | — |
 
 - Other crontab lines stay byte for byte. On Windows, `add` and `remove`
@@ -24,13 +25,17 @@ brain's job and a rename does not orphan it.
   so a failing brain never delays another.
 - `--push` is chosen per job and off by default. Without it the job commits
   and fetches but never pushes. To change it, add the job again.
+- A consolidate job runs daily at `--at` (default 21:30): a cron line
+  `MM HH * * *`, or a LaunchAgent `StartCalendarInterval`. Its log is
+  `<state>/logs/consolidate-<brain-id>-<host>.log`, and it also carries
+  `PATH`, so the host CLI is found as it was at install time.
 - Schedules live only in the OS scheduler, so there is nothing in
   brain-wiki's config to drift. `brain schedule list` reads every crontab
-  block or LaunchAgent (it ignores `--brain`) and shows, per job, the brain
-  (by id, or `unregistered`), the interval, whether it pushes, and the last
-  run and outcome.
-- `brain brains rename` rewrites the brain's job, found by id, and `brain
-  brains remove` removes it. A moved folder breaks the registration, not
+  block or LaunchAgent (it ignores `--brain`) and shows, per job, the kind,
+  the brain (by id, or `unregistered`), the interval and whether it pushes,
+  or the host, time, and options, and the last run and outcome.
+- `brain brains rename` rewrites the brain's jobs, found by id, and `brain
+  brains remove` removes them. A moved folder breaks the registration, not
   the job, and re-pointing the registration fixes both.
 - The job calls `brain` by the absolute path resolved at install time, and
   carries the `BRAIN_WIKI_CONFIG`, `_STATE_DIR`, `_CACHE_DIR`, and

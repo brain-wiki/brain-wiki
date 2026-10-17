@@ -14,7 +14,7 @@ verified with `agy` 1.3.3.
 | Rule confirmation | None; `brain_propose_rule` saves a proposal |
 | Harvest | `<app dir>/brain/<conversation-id>/.system_generated/logs/` |
 | Memory files | `~/.gemini/AGENTS.md`, `~/.gemini/GEMINI.md`, `~/.gemini/config/rules/*.md`, which the agent files into notes when asked to import them ([import §6](../import.md#6-documents-and-memory-files)) |
-| Headless preset | `agy --input-format stream-json --output-format stream-json --effort medium` ([agent integrations §7](../agent-integrations.md#7-headless-presets)) |
+| Unattended mode | Not built; headless runs deny tools that need approval (T-5) ([agent integrations §7](../agent-integrations.md#7-unattended-agent-mode)) |
 
 ## Notes
 

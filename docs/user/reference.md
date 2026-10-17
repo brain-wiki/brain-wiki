@@ -36,6 +36,8 @@ The commands, in the order `brain --help` lists them:
 | `brain review list \| show ID \| accept ID \| reject ID` | Agents' rule proposals waiting for you |
 | `brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run]` | Commit direct edits to git and sync with origin |
 | `brain schedule [list] \| add commit [--every 15m] [--push] [--dry-run] \| remove commit [--dry-run]` | OS jobs that run `brain commit` |
+| `brain schedule add consolidate --host HOST [--at 21:30] [--harvest] [--include AGENT\|unowned]… [--dry-run]`, `remove consolidate --host HOST` | A daily job that starts the host's agent to consolidate |
+| `brain consolidate --run --host HOST [--harvest] [--include …] [--dry-run]` | One scheduled consolidation, as the job runs it |
 | `brain runs [list \| show [RUN]]` | Run history on this device |
 | `brain undo [RUN] [--force]` | Undo a run |
 | `brain lint [PATH…] [options]` | Check the brain against the format |
@@ -109,9 +111,11 @@ The commands, in the order `brain --help` lists them:
 
 - `brain commit` exits 1 on a rebase conflict or a rejected push. An agent
   (`--as HOST`) may run it only with `edit`, and never with `--push`.
-- `brain schedule` installs one job per brain and is refused with `--as`.
-  `--every` values and platforms are in
-  [Maintenance](maintenance.md#commit-direct-edits).
+- `brain schedule` installs one commit job per brain and one consolidate
+  job per brain and host, and is refused with `--as`. `--every` values and
+  platforms are in [Maintenance](maintenance.md#commit-direct-edits);
+  scheduled consolidation in
+  [Maintenance](maintenance.md#consolidate-on-a-schedule).
 
 ### Lint, runs, and undo
 
@@ -212,7 +216,7 @@ number, followed by the facet lines with `--facets`.
 |---|---|
 | `<brain>/brain.toml` | Settings that travel with the brain: format, layout, topics, agent profiles, lint, search, consolidation, git, reports, budgets |
 | `~/.config/brain-wiki/config.toml` | Per machine: registered brains, default brain, per-host settings, harvest |
-| `~/.local/state/brain-wiki/` | Run records and pre-images for undo, locks, harvest and connect state, commit-job state (`schedule/`), logs |
+| `~/.local/state/brain-wiki/` | Run records and pre-images for undo, locks, harvest and connect state, commit-job state (`schedule/`), scheduled consolidation outcomes, logs |
 | `~/.cache/brain-wiki/` | The search index, rebuilt when missing |
 | `~/.local/share/brain-wiki/plugin/<host>/` | Plugin copies written by `brain connect` |
 

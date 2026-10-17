@@ -1,6 +1,8 @@
-"""`brain schedule`: one OS job per brain that runs `brain commit` (write-path.md §5.2).
+"""`brain schedule`: OS jobs that run `brain commit` for a brain (write-path.md §5.2), and
+`brain consolidate --run` for a brain and host (write-path.md §4.8).
 
 The OS scheduler is the source of truth: a user crontab block on Linux, a LaunchAgent on macOS.
+A commit job is keyed by the brain's id, a consolidate job by the brain's id and the host.
 Backends run commands through an injected runner, so tests never touch the real ones.
 """
 
@@ -26,7 +28,8 @@ from brainwiki.schedule._durations import (
     parse_every,
 )
 
-_LABEL_PREFIX = "io.github.brain-wiki.commit."
+_LABEL_PREFIX = "io.github.brain-wiki."
+_KINDS = ("commit", "consolidate")
 _ENV_VARS = (
     "BRAIN_WIKI_CONFIG",
     "BRAIN_WIKI_STATE_DIR",
@@ -61,7 +64,8 @@ def _platform() -> str:
 
 @dataclass
 class Job:
-    """A job to install: `program commit --brain NAME [--push]` every `every`."""
+    """A job to install: `program commit --brain NAME [--push]` every `every`, or
+    `program consolidate --run --host HOST --brain NAME [--harvest] [--include X]…` daily `at`."""
 
     brain_id: str
     brain_name: str
@@ -70,16 +74,42 @@ class Job:
     program: list[str]
     env: dict[str, str] = field(default_factory=dict)
     log: Path | None = None
+    kind: str = "commit"
+    host: str | None = None
+    at: str | None = None  # "HH:MM", for consolidate
+    harvest: bool = False
+    include: list[str] = field(default_factory=list)
+
+    @property
+    def ident(self) -> str:
+        return self.brain_id if self.kind == "commit" else f"{self.brain_id}.{self.host}"
 
     @property
     def argv(self) -> list[str]:
+        if self.kind == "consolidate":
+            argv = [*self.program, "consolidate", "--run", "--host", str(self.host)]
+            argv += ["--brain", self.brain_name] + (["--harvest"] if self.harvest else [])
+            for item in self.include:
+                argv += ["--include", item]
+            return argv
         return [*self.program, "commit", "--brain", self.brain_name] + (
             ["--push"] if self.push else []
         )
 
     @property
+    def cron(self) -> str:
+        if self.kind == "consolidate":
+            hour, minute = _parse_at(self.at)
+            return f"{minute} {hour} * * *"
+        return cron_schedule(self.every)
+
+    @property
     def log_path(self) -> Path:
-        return self.log or log_path(self.brain_id)
+        if self.log:
+            return self.log
+        if self.kind == "consolidate":
+            return state_dir() / "logs" / f"consolidate-{self.brain_id}-{self.host}.log"
+        return log_path(self.brain_id)
 
 
 @dataclass
@@ -89,6 +119,11 @@ class InstalledJob:
     every: str | None
     push: bool
     where: str  # "crontab" or the plist's path
+    kind: str = "commit"
+    host: str | None = None
+    at: str | None = None
+    harvest: bool = False
+    include: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -116,14 +151,66 @@ def _program_argv() -> list[str]:
     return [sys.executable, "-m", "brainwiki"]
 
 
+def _parse_at(at: str | None) -> tuple[int, int]:
+    """(hour, minute) of "HH:MM"."""
+    text = at or ""
+    hour, _, minute = text.partition(":")
+    if not (hour.isdigit() and minute.isdigit() and int(hour) < 24 and int(minute) < 60):
+        raise UsageError(f"--at must be a time of day like 21:30, not {at!r}")
+    return int(hour), int(minute)
+
+
 def make_job(brain_id: str, brain_name: str, every: str, push: bool) -> Job:
     every = parse_every(every)[0]
     env = {k: os.environ[k] for k in _ENV_VARS if os.environ.get(k)}
     return Job(brain_id, brain_name, every, push, _program_argv(), env)
 
 
-def _job_from_argv(brain_id: str, argv: list[str], every: str | None, where: str) -> InstalledJob:
-    name = argv[argv.index("--brain") + 1] if "--brain" in argv[:-1] else None
+def make_consolidate_job(
+    brain_id: str, brain_name: str, host: str, at: str, harvest: bool, include: list[str]
+) -> Job:
+    hour, minute = _parse_at(at)
+    env = {k: os.environ[k] for k in _ENV_VARS if os.environ.get(k)}
+    # cron and launchd start with a minimal PATH; the host CLI must be found the same way.
+    if os.environ.get("PATH"):
+        env["PATH"] = os.environ["PATH"]
+    return Job(
+        brain_id,
+        brain_name,
+        "",
+        False,
+        _program_argv(),
+        env,
+        kind="consolidate",
+        host=host,
+        at=f"{hour:02d}:{minute:02d}",
+        harvest=harvest,
+        include=list(include),
+    )
+
+
+def _option(argv: list[str], flag: str) -> str | None:
+    return argv[argv.index(flag) + 1] if flag in argv[:-1] else None
+
+
+def _job_from_argv(
+    brain_id: str, argv: list[str], every: str | None, where: str, *, at: str | None = None
+) -> InstalledJob:
+    name = _option(argv, "--brain")
+    if "consolidate" in argv and "--run" in argv:
+        include = [argv[i + 1] for i, a in enumerate(argv[:-1]) if a == "--include"]
+        return InstalledJob(
+            brain_id,
+            name,
+            None,
+            False,
+            where,
+            kind="consolidate",
+            host=_option(argv, "--host"),
+            at=at,
+            harvest="--harvest" in argv,
+            include=include,
+        )
     return InstalledJob(brain_id, name, every, "--push" in argv, where)
 
 
@@ -137,12 +224,12 @@ def _renamed(argv: list[str], new_name: str) -> list[str]:
 # -- Linux: user crontab ----------------------------------------------------------------------
 
 
-def _start(brain_id: str) -> str:
-    return f"# >>> brain-wiki commit {brain_id}"
+def _start(ident: str, kind: str = "commit") -> str:
+    return f"# >>> brain-wiki {kind} {ident}"
 
 
-def _end(brain_id: str) -> str:
-    return f"# <<< brain-wiki commit {brain_id}"
+def _end(ident: str, kind: str = "commit") -> str:
+    return f"# <<< brain-wiki {kind} {ident}"
 
 
 def _cron_line(schedule: str, argv: list[str], env: dict[str, str], log: Path) -> str:
@@ -168,8 +255,8 @@ def _parse_cron_line(line: str) -> tuple[str, list[str], dict[str, str], str | N
     return schedule, tokens, env, log
 
 
-def _find_block(lines: list[str], brain_id: str) -> tuple[int, int] | None:
-    start, end = _start(brain_id), _end(brain_id)
+def _find_block(lines: list[str], ident: str, kind: str = "commit") -> tuple[int, int] | None:
+    start, end = _start(ident, kind), _end(ident, kind)
     for i, line in enumerate(lines):
         if line.rstrip("\r\n") == start:
             for j in range(i + 1, len(lines)):
@@ -178,19 +265,27 @@ def _find_block(lines: list[str], brain_id: str) -> tuple[int, int] | None:
     return None
 
 
-def _blocks(text: str) -> dict[str, str]:
-    """brain id -> the job line, for every brain-wiki block in a crontab."""
-    out: dict[str, str] = {}
+def _blocks(text: str) -> dict[tuple[str, str], str]:
+    """(kind, ident) -> the job line, for every brain-wiki block in a crontab."""
+    out: dict[tuple[str, str], str] = {}
     lines = text.splitlines()
-    prefix = _start("")
-    for line in lines:
-        brain_id = line[len(prefix) :].strip() if line.startswith(prefix) else ""
-        found = _find_block(lines, brain_id) if brain_id else None
-        if found:
-            body = [x for x in lines[found[0] + 1 : found[1]] if x.strip() and x[0] != "#"]
-            if body:
-                out[brain_id] = body[0]
+    for kind in _KINDS:
+        prefix = _start("", kind)
+        for line in lines:
+            ident = line[len(prefix) :].strip() if line.startswith(prefix) else ""
+            found = _find_block(lines, ident, kind) if ident else None
+            if found:
+                body = [x for x in lines[found[0] + 1 : found[1]] if x.strip() and x[0] != "#"]
+                if body:
+                    out[(kind, ident)] = body[0]
     return out
+
+
+def _at_from_cron(schedule: str) -> str | None:
+    fields = schedule.split()
+    if len(fields) == 5 and fields[2:] == ["*", "*", "*"] and all(f.isdigit() for f in fields[:2]):
+        return f"{int(fields[1]):02d}:{int(fields[0]):02d}"
+    return None
 
 
 class _Cron:
@@ -216,13 +311,13 @@ class _Cron:
             raise NotAvailable(f"crontab - failed: {(written.stderr or '').strip()}")
 
     def _block(self, job: Job) -> str:
-        line = _cron_line(cron_schedule(job.every), job.argv, job.env, job.log_path)
-        return f"{_start(job.brain_id)}\n{line}\n{_end(job.brain_id)}\n"
+        line = _cron_line(job.cron, job.argv, job.env, job.log_path)
+        return f"{_start(job.ident, job.kind)}\n{line}\n{_end(job.ident, job.kind)}\n"
 
     @staticmethod
-    def _replace(text: str, brain_id: str, block: str) -> str:
+    def _replace(text: str, ident: str, block: str, kind: str = "commit") -> str:
         lines = text.splitlines(keepends=True)
-        found = _find_block(lines, brain_id)
+        found = _find_block(lines, ident, kind)
         if found:
             start, end = found
             return "".join(lines[:start]) + block + "".join(lines[end + 1 :])
@@ -238,15 +333,15 @@ class _Cron:
         plan = _Plan(self.name, block, ["crontab -l", "crontab -"])
         if not dry_run:
             job.log_path.parent.mkdir(parents=True, exist_ok=True)
-            self._write(self._replace(current, job.brain_id, block))
+            self._write(self._replace(current, job.ident, block, job.kind))
         return plan
 
-    def remove(self, brain_id: str, dry_run: bool) -> _Plan | None:
+    def remove(self, ident: str, dry_run: bool, kind: str = "commit") -> _Plan | None:
         current = self._read()
         if not current:
             return None
         lines = current.splitlines(keepends=True)
-        found = _find_block(lines, brain_id)
+        found = _find_block(lines, ident, kind)
         if not found:
             return None
         start, end = found
@@ -257,21 +352,36 @@ class _Cron:
 
     def jobs(self) -> list[InstalledJob]:
         out = []
-        for brain_id, line in _blocks(self._read() or "").items():
+        for (kind, ident), line in _blocks(self._read() or "").items():
             schedule, argv, _env, _log = _parse_cron_line(line)
-            out.append(_job_from_argv(brain_id, argv, every_from_cron(schedule), self.name))
+            brain_id = ident.split(".", 1)[0] if kind == "consolidate" else ident
+            every = every_from_cron(schedule) if kind == "commit" else None
+            out.append(_job_from_argv(brain_id, argv, every, self.name, at=_at_from_cron(schedule)))
         return out
 
     def rename(self, brain_id: str, new_name: str) -> bool:
         current = self._read()
-        line = _blocks(current or "").get(brain_id)
-        if current is None or line is None:
+        if current is None:
             return False
-        schedule, argv, env, log = _parse_cron_line(line)
-        new_line = _cron_line(schedule, _renamed(argv, new_name), env, Path(log or "/dev/null"))
-        block = f"{_start(brain_id)}\n{new_line}\n{_end(brain_id)}\n"
-        self._write(self._replace(current, brain_id, block))
-        return True
+        renamed = False
+        for (kind, ident), line in _blocks(current).items():
+            if (ident.split(".", 1)[0] if kind == "consolidate" else ident) != brain_id:
+                continue
+            schedule, argv, env, log = _parse_cron_line(line)
+            new_line = _cron_line(schedule, _renamed(argv, new_name), env, Path(log or "/dev/null"))
+            block = f"{_start(ident, kind)}\n{new_line}\n{_end(ident, kind)}\n"
+            current = self._replace(current, ident, block, kind)
+            renamed = True
+        if renamed:
+            self._write(current)
+        return renamed
+
+    def remove_all(self, brain_id: str) -> bool:
+        removed = False
+        for kind, ident in list(_blocks(self._read() or "")):
+            if (ident.split(".", 1)[0] if kind == "consolidate" else ident) == brain_id:
+                removed = self.remove(ident, False, kind) is not None or removed
+        return removed
 
 
 # -- macOS: LaunchAgents ----------------------------------------------------------------------
@@ -285,8 +395,8 @@ class _Launchd:
         self.dir = agents_dir
         self.uid = uid
 
-    def _path(self, brain_id: str) -> Path:
-        return self.dir / f"{_LABEL_PREFIX}{brain_id}.plist"
+    def _path(self, ident: str, kind: str = "commit") -> Path:
+        return self.dir / f"{_LABEL_PREFIX}{kind}.{ident}.plist"
 
     def _launchctl(self, *args: str, check: bool = True) -> None:
         done = self.run(["launchctl", *args], None)
@@ -296,12 +406,16 @@ class _Launchd:
     @staticmethod
     def plist(job: Job) -> dict[str, Any]:
         data: dict[str, Any] = {
-            "Label": _LABEL_PREFIX + job.brain_id,
+            "Label": f"{_LABEL_PREFIX}{job.kind}.{job.ident}",
             "ProgramArguments": job.argv,
-            "StartInterval": parse_every(job.every)[1],
             "StandardOutPath": str(job.log_path),
             "StandardErrorPath": str(job.log_path),
         }
+        if job.kind == "consolidate":
+            hour, minute = _parse_at(job.at)
+            data["StartCalendarInterval"] = {"Hour": hour, "Minute": minute}
+        else:
+            data["StartInterval"] = parse_every(job.every)[1]
         if job.env:
             data["EnvironmentVariables"] = dict(job.env)
         return data
@@ -316,7 +430,7 @@ class _Launchd:
 
     def install(self, job: Job, dry_run: bool) -> _Plan:
         data = self.plist(job)
-        path = self._path(job.brain_id)
+        path = self._path(job.ident, job.kind)
         commands = [f"launchctl bootstrap gui/{self.uid} {shlex.quote(str(path))}"]
         if path.exists():
             commands.insert(0, f"launchctl bootout gui/{self.uid}/{data['Label']}")
@@ -326,11 +440,11 @@ class _Launchd:
             self._load(path, data, replacing=path.exists())
         return plan
 
-    def remove(self, brain_id: str, dry_run: bool) -> _Plan | None:
-        path = self._path(brain_id)
+    def remove(self, ident: str, dry_run: bool, kind: str = "commit") -> _Plan | None:
+        path = self._path(ident, kind)
         if not path.exists():
             return None
-        label = _LABEL_PREFIX + brain_id
+        label = f"{_LABEL_PREFIX}{kind}.{ident}"
         plan = _Plan(
             self.name,
             path.read_text(encoding="utf-8"),
@@ -349,27 +463,48 @@ class _Launchd:
             return None
         return data if isinstance(data, dict) else None
 
+    def _installed(self) -> list[tuple[str, str, Path, dict[str, Any]]]:
+        """(kind, ident, path, plist) for every brain-wiki LaunchAgent."""
+        out = []
+        for kind in _KINDS:
+            prefix = f"{_LABEL_PREFIX}{kind}."
+            for path in sorted(self.dir.glob(f"{prefix}*.plist")):
+                data = self._read(path)
+                if data is not None:
+                    out.append((kind, path.name[len(prefix) : -len(".plist")], path, data))
+        return out
+
     def jobs(self) -> list[InstalledJob]:
         out = []
-        for path in sorted(self.dir.glob(f"{_LABEL_PREFIX}*.plist")):
-            data = self._read(path)
-            if data is None:
-                continue
-            brain_id = path.name[len(_LABEL_PREFIX) : -len(".plist")]
+        for kind, ident, path, data in self._installed():
+            brain_id = ident.split(".", 1)[0] if kind == "consolidate" else ident
             every = every_from_seconds(int(data.get("StartInterval") or 0))
-            out.append(
-                _job_from_argv(brain_id, list(data.get("ProgramArguments") or []), every, str(path))
+            when = data.get("StartCalendarInterval") or {}
+            at = (
+                f"{int(when.get('Hour', 0)):02d}:{int(when.get('Minute', 0)):02d}"
+                if isinstance(when, dict) and when
+                else None
             )
+            argv = list(data.get("ProgramArguments") or [])
+            out.append(_job_from_argv(brain_id, argv, every, str(path), at=at))
         return out
 
     def rename(self, brain_id: str, new_name: str) -> bool:
-        path = self._path(brain_id)
-        data = self._read(path) if path.exists() else None
-        if data is None:
-            return False
-        data["ProgramArguments"] = _renamed(list(data.get("ProgramArguments") or []), new_name)
-        self._load(path, data, replacing=True)
-        return True
+        renamed = False
+        for kind, ident, path, data in self._installed():
+            if (ident.split(".", 1)[0] if kind == "consolidate" else ident) != brain_id:
+                continue
+            data["ProgramArguments"] = _renamed(list(data.get("ProgramArguments") or []), new_name)
+            self._load(path, data, replacing=True)
+            renamed = True
+        return renamed
+
+    def remove_all(self, brain_id: str) -> bool:
+        removed = False
+        for kind, ident, _path, _data in self._installed():
+            if (ident.split(".", 1)[0] if kind == "consolidate" else ident) == brain_id:
+                removed = self.remove(ident, False, kind) is not None or removed
+        return removed
 
 
 def scheduler(
@@ -397,7 +532,7 @@ def scheduler(
 
 
 def list_jobs() -> list[InstalledJob]:
-    """Every installed commit job; empty where no backend works."""
+    """Every installed job; empty where no backend works."""
     try:
         return scheduler().jobs()
     except (UsageError, NotAvailable):
@@ -405,7 +540,7 @@ def list_jobs() -> list[InstalledJob]:
 
 
 def rename_job(brain_id: str, new_name: str) -> bool:
-    """Point the brain's job at its new registered name. True when there was a job."""
+    """Point the brain's jobs at its new registered name. True when there was one."""
     try:
         return scheduler().rename(brain_id, new_name)
     except (UsageError, NotAvailable):
@@ -413,8 +548,8 @@ def rename_job(brain_id: str, new_name: str) -> bool:
 
 
 def remove_job(brain_id: str) -> bool:
-    """Remove the brain's job. True when there was one."""
+    """Remove the brain's jobs, of every kind. True when there was one."""
     try:
-        return scheduler().remove(brain_id, dry_run=False) is not None
+        return scheduler().remove_all(brain_id)
     except (UsageError, NotAvailable):
         return False

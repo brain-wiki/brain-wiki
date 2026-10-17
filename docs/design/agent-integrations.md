@@ -260,7 +260,7 @@ Harvest looks only at sessions modified within `since`, and skips:
 The `brain-maintain` skill, or the `harvest` MCP prompt, drives
 `brain_harvest_prepare`, the agent's note edits, and `brain_harvest_done`,
 in the host agent. A scheduled run can include it
-([proposal](../proposal/episode-lifecycle.md)). The packet keeps user and
+([write path §4.8](write-path.md#48-scheduled-consolidation)). The packet keeps user and
 assistant text and tool names with a short argument summary, but no tool
 output. The readers strip text the host injected (reminders, command
 echoes), and secrets are scrubbed before turns reach the agent. A
@@ -308,14 +308,44 @@ One reader per host lists sessions and yields normalized turns with
 - Readers are tested against synthetic sessions in each host's format.
   Fixtures recorded from real host versions are open (T-6, T-11).
 
-## 7. Headless presets
+## 7. Unattended agent mode
 
-`brainwiki/presets.py` runs a host CLI once with tools off. Harvest used it
-to distill sessions into episodes until harvest began filing notes
-([D36](../decision/d36-harvest-into-notes.md)); no command uses it now.
-Scheduled consolidation needs the opposite, an agent with tools on that
-edits the brain, and is designed in the
-[episode lifecycle proposal](../proposal/episode-lifecycle.md#7-unattended-agent-mode-per-host).
+Scheduled consolidation ([write path §4.8](write-path.md#48-scheduled-consolidation))
+starts a host's own CLI without a person: tools on, file access limited to
+the brain, and brain-wiki's MCP server attached. `brainwiki/presets.py`
+holds the exact flags, tested against a recording stand-in, because CLIs
+change faster than this document.
+
+| Host | Command (sketch) | Status |
+|---|---|---|
+| Claude Code | `claude -p --output-format json --no-session-persistence --mcp-config <brain-wiki entry> --strict-mcp-config --tools Read,Edit,Write,Glob,Grep --allowedTools Read,Edit,Write,Glob,Grep,mcp__brain-wiki --permission-mode dontAsk --add-dir <brain>` | Built; to verify against a real CLI before release (§9) |
+| Codex | `codex exec` with `--sandbox workspace-write` | Not built: MCP servers in exec mode and approval-free runs to verify |
+| Antigravity | `agy` headless | Not built: headless runs deny tools that need approval, and a denied call ends the turn (T-5) |
+| Cursor | `cursor-agent -p` | Not built: availability and tool scoping to verify |
+| OpenClaw | Gateway automations | Not built: whether automations can be created from outside |
+
+How the Claude Code run is kept in bounds:
+
+- The prompt goes on stdin. The final text is `result` of the JSON output;
+  `is_error` or a non-zero exit fails the run.
+- `--tools` leaves only the file tools, so there is no shell and no web
+  fetch, and `--strict-mcp-config` loads only brain-wiki's server.
+- `--permission-mode dontAsk` denies anything `--allowedTools` does not
+  allow, instead of waiting for a person.
+- The working directory is a fresh folder under brain-wiki's state
+  directory, and `--add-dir` gives file access to the brain. Harvest skips
+  sessions under the state directory, and `--no-session-persistence` keeps
+  the run out of the host's session store, so harvest never reads a
+  scheduled run back into the brain.
+- A run times out after an hour.
+
+A host without a verified mode consolidates in sessions only. If it never
+does, its pending episodes show in orientation, and the user can ask
+another agent to take them.
+
+Harvest distilled sessions into episodes with headless presets that ran
+these CLIs with tools off, until harvest began filing notes
+([D36](../decision/d36-harvest-into-notes.md)). Those presets are removed.
 
 ## 8. `brain connect`
 
@@ -387,3 +417,4 @@ host before a release.
 | Reader parses real sessions; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
 | Origin lookup returns the right window, and `not_available` when deleted | ✓ | ✓ | ✓ | — |
 | `brain connect` and `--uninstall` round trip | ✓ | ✓ | ✓ | ✓ |
+| Unattended mode: a scheduled run edits only the brain, calls brain-wiki's tools without a prompt, and leaves no session behind | ✓ | — | — | — |

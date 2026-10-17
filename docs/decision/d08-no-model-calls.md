@@ -1,12 +1,12 @@
 # D8: brain-wiki calls no model itself
 
 Status: accepted.
-Argued in: [write path](../design/write-path.md), [agent integrations §7](../design/agent-integrations.md#7-headless-presets).
+Argued in: [write path](../design/write-path.md), [agent integrations §7](../design/agent-integrations.md#7-unattended-agent-mode).
 
 brain-wiki has no model client and needs no API keys. Work that needs a model runs in one of two places:
 
-- The host agent, through MCP tools, prompts, and skills. Consolidation and the in-agent harvest recipe work this way.
-- A headless preset, which runs an agent CLI the user already has (Claude Code, Codex, Antigravity, Cursor, or Ollama) as a subprocess. `brain harvest --apply` uses one to distill sessions into episodes.
+- The host agent, through MCP tools, prompts, and skills. Consolidation, harvest, and import work this way.
+- An agent CLI the user already has, started as a subprocess the way a person would run it. Scheduled consolidation starts one unattended (`brain consolidate --run`); until harvest began filing notes ([D36](d36-harvest-into-notes.md)), `brain harvest --apply` ran one with tools off to distill sessions.
 
 ## Alternatives considered
 

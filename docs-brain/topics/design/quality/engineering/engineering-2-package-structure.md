@@ -30,7 +30,7 @@ src/brainwiki/
                     setup_wizard, obsidian, ids, errors, logs
 ```
 
-`presets.py` runs headless host CLIs ([[agent-integrations-7-headless-presets|agent integrations §7]]). The wheel
+`presets.py` starts host CLIs unattended for scheduled consolidation ([[agent-integrations-7-unattended-agent-mode|agent integrations §7]]). The wheel
 also carries the root plugin files under `brainwiki/assets/plugin/` (§4).
 
 Dependency direction (an arrow means "may import"):

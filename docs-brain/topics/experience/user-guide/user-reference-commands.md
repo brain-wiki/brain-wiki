@@ -40,6 +40,8 @@ The commands, in the order `brain --help` lists them:
 | `brain review list \| show ID \| accept ID \| reject ID` | Agents' rule proposals waiting for you |
 | `brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run]` | Commit direct edits to git and sync with origin |
 | `brain schedule [list] \| add commit [--every 15m] [--push] [--dry-run] \| remove commit [--dry-run]` | OS jobs that run `brain commit` |
+| `brain schedule add consolidate --host HOST [--at 21:30] [--harvest] [--include AGENT\|unowned]… [--dry-run]`, `remove consolidate --host HOST` | A daily job that starts the host's agent to consolidate |
+| `brain consolidate --run --host HOST [--harvest] [--include …] [--dry-run]` | One scheduled consolidation, as the job runs it |
 | `brain runs [list \| show [RUN]]` | Run history on this device |
 | `brain undo [RUN] [--force]` | Undo a run |
 | `brain lint [PATH…] [options]` | Check the brain against the format |

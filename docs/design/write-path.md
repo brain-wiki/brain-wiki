@@ -165,7 +165,7 @@ The recipe, in the host agent:
 
 1. The user asks ("harvest my sessions"), or runs `/brain:harvest` (the
    `harvest` MCP prompt), or a scheduled run includes harvest
-   ([proposal](../proposal/episode-lifecycle.md)).
+   (§4.8).
 2. The agent calls `brain_harvest_prepare {since, max_sessions, project}`
    (defaults `7d`, 10). It returns that host's new sessions for the current
    brain as condensed, scrubbed turns, at most about 15k tokens, named
@@ -379,13 +379,15 @@ Running prepare again shows what is left.
 |---|---|
 | The user asks their agent ("consolidate my brain") | The skill or the `consolidate` MCP prompt drives prepare, edits, `brain_validate`, and `brain_consolidate_done`, repeating while episodes remain |
 | The user works from a terminal | `brain consolidate --prepare`, then any model or person edits notes, then `brain consolidate --done EPISODE[:PATTERN:NOTE]…` |
+| A schedule the user set up | `brain schedule add consolidate --host H` runs `brain consolidate --run --host H` daily (§4.8) |
 
 `--prepare` prints the guidance followed by the packet. `--json` prints the
 packet alone, and `--out FILE` writes `{guidance, packet}` as JSON.
 
-brain-wiki never consolidates on its own. Running an LLM costs money and
-attention, and the user chooses when. Scheduled consolidation is a
-[proposal](../proposal/episode-lifecycle.md).
+brain-wiki never consolidates on its own initiative. Running an LLM costs
+money and attention, so consolidation runs when the user asks or on a
+schedule the user installed, and in-session consolidation stays the
+default.
 
 ### 4.3 Selecting and packaging work
 
@@ -606,6 +608,60 @@ another agent to take them:
 Orientation suggests consolidating when the caller's own pending episodes
 reach 20 or the oldest is more than 7 days old.
 
+### 4.8 Scheduled consolidation
+
+`brain schedule add consolidate --host H` installs a daily OS job, like the
+commit job (§5.2), that runs `brain consolidate --run --host H`. That
+command starts the host's own CLI unattended in the brain, the way a
+person would run it, with brain-wiki's MCP server attached. brain-wiki
+calls no model itself ([D8](../decision/d08-no-model-calls.md)).
+
+```
+brain schedule add consolidate --host claude-code [--at 21:30] [--harvest]
+                               [--include AGENT|unowned]… [--dry-run]
+brain schedule remove consolidate --host claude-code [--dry-run]
+brain consolidate --run --host claude-code [--harvest] [--include …] [--dry-run]
+```
+
+`brain consolidate --run --host H`:
+
+1. Checks before it starts: H's profile has `edit`, H has an unattended
+   mode and its CLI is on `PATH`
+   ([agent integrations §7](agent-integrations.md#7-unattended-agent-mode)),
+   and the brain's write lock is free.
+2. Selects H's own episodes (§4.3), plus those of the agents `--include`
+   names (`unowned` for the unowned ones). With `--harvest`, it also
+   counts H's new sessions; harvest must be on for H, or the run notes
+   that it is off. With nothing to do, it records `nothing` and stops.
+3. Starts H's CLI with a prompt that asks it to call
+   `brain_consolidate_prepare` (with the included agents), follow the
+   guidance, and call `brain_consolidate_done`, repeating up to 5 rounds,
+   then the same for harvest with `--harvest`. The prompt says nobody is
+   watching: no questions, nothing outside the brain, no rules.
+4. After the agent exits, validates the files it changed (`brain
+   validate`). In a git brain, frontmatter errors fail the run and nothing
+   is committed; otherwise it runs `brain commit`.
+5. Records the outcome per brain and host: when, status (`ok`, `nothing`,
+   `failed`), the summary of the `consolidate` runs the agent made, the
+   error, and notes. The record is in brain-wiki's state directory, because
+   it describes this machine.
+
+`--dry-run` makes the checks and counts and starts nothing. The command is
+the user's: it is refused under `--as`.
+
+`brain schedule add consolidate` makes the same checks with a dry run and
+refuses when one fails, so a job cannot fail silently every night the way
+the scheduled maintenance removed before 0.1 did. The job runs only while
+the machine is on: cron skips a missed time, and launchd runs it at the
+next wake. It uses the user's plan or API key for that host, like any
+session.
+
+A failed run shows in orientation ("Scheduled consolidation by claude-code
+failed at …"), in `brain doctor` (`scheduled_consolidation_failed`, with
+the dry run to try), and in `reports/consolidation.md`. Review is the git
+diff of the snapshot commit; `brain undo` of a `consolidate` run returns its
+episodes to the inbox.
+
 ## 5. Committing direct edits
 
 brain-wiki's own runs commit as they apply (§7.3). Direct edits are
@@ -689,14 +745,15 @@ Failures and limits:
 
 ### 5.2 `brain schedule`
 
-`brain schedule` installs one job per brain with the platform's own
-scheduler. Jobs are keyed by the brain's id, so adding again replaces the
-brain's job and a rename does not orphan it.
+`brain schedule` installs jobs with the platform's own scheduler: one
+commit job per brain, and one consolidate job per brain and host (§4.8).
+Jobs are keyed by the brain's id (and the host), so adding again replaces
+the job and a rename does not orphan it.
 
 | Platform | Job | Install | Remove |
 |---|---|---|---|
-| Linux | User crontab block between `# >>> brain-wiki commit <brain-id>` and `# <<< brain-wiki commit <brain-id>` | Read `crontab -l`, replace or add the block, write with `crontab -` | Drop the block |
-| macOS | LaunchAgent `io.github.brain-wiki.commit.<brain-id>` | Write `~/Library/LaunchAgents/<label>.plist`, then `launchctl bootstrap gui/<uid> <plist>` | `launchctl bootout gui/<uid>/<label>`, then delete the plist |
+| Linux | User crontab block between `# >>> brain-wiki commit <brain-id>` and `# <<< brain-wiki commit <brain-id>` (`consolidate <brain-id>.<host>` for a consolidate job) | Read `crontab -l`, replace or add the block, write with `crontab -` | Drop the block |
+| macOS | LaunchAgent `io.github.brain-wiki.commit.<brain-id>` (`io.github.brain-wiki.consolidate.<brain-id>.<host>`) | Write `~/Library/LaunchAgents/<label>.plist`, then `launchctl bootstrap gui/<uid> <plist>` | `launchctl bootout gui/<uid>/<label>`, then delete the plist |
 | Windows | Not supported | — | — |
 
 - Other crontab lines stay byte for byte. On Windows, `add` and `remove`
@@ -706,13 +763,17 @@ brain's job and a rename does not orphan it.
   so a failing brain never delays another.
 - `--push` is chosen per job and off by default. Without it the job commits
   and fetches but never pushes. To change it, add the job again.
+- A consolidate job runs daily at `--at` (default 21:30): a cron line
+  `MM HH * * *`, or a LaunchAgent `StartCalendarInterval`. Its log is
+  `<state>/logs/consolidate-<brain-id>-<host>.log`, and it also carries
+  `PATH`, so the host CLI is found as it was at install time.
 - Schedules live only in the OS scheduler, so there is nothing in
   brain-wiki's config to drift. `brain schedule list` reads every crontab
-  block or LaunchAgent (it ignores `--brain`) and shows, per job, the brain
-  (by id, or `unregistered`), the interval, whether it pushes, and the last
-  run and outcome.
-- `brain brains rename` rewrites the brain's job, found by id, and `brain
-  brains remove` removes it. A moved folder breaks the registration, not
+  block or LaunchAgent (it ignores `--brain`) and shows, per job, the kind,
+  the brain (by id, or `unregistered`), the interval and whether it pushes,
+  or the host, time, and options, and the last run and outcome.
+- `brain brains rename` rewrites the brain's jobs, found by id, and `brain
+  brains remove` removes them. A moved folder breaks the registration, not
   the job, and re-pointing the registration fixes both.
 - The job calls `brain` by the absolute path resolved at install time, and
   carries the `BRAIN_WIKI_CONFIG`, `_STATE_DIR`, `_CACHE_DIR`, and

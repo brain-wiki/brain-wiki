@@ -28,6 +28,6 @@ Generated from `docs/design/agent-integrations.md`.
   - [[agent-integrations-62-how-it-runs]]: How it runs
   - [[agent-integrations-63-detecting-external-inputs]]: Detecting external inputs
   - [[agent-integrations-64-session-readers]]: Session readers
-- [[agent-integrations-7-headless-presets]]: Headless presets
+- [[agent-integrations-7-unattended-agent-mode]]: Unattended agent mode
 - [[agent-integrations-8-brain-connect]]: `brain connect`
 - [[agent-integrations-9-test-matrix]]: Test matrix

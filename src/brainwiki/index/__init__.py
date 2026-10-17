@@ -6,7 +6,12 @@ from brainwiki.index import _written as written
 from brainwiki.index._brains import format_brain_list, list_brains
 from brainwiki.index._db import open_index
 from brainwiki.index._guards import stale_links
-from brainwiki.index._inbox import consolidation_runs, pending_by_agent
+from brainwiki.index._inbox import (
+    consolidation_runs,
+    pending_by_agent,
+    scheduled_run_path,
+    scheduled_runs,
+)
 from brainwiki.index._neighbors import format_neighbors_text, neighbors
 from brainwiki.index._orient import agents_block, orient, topic_rows
 from brainwiki.index._read import format_read_text, read, resolve_target
@@ -46,6 +51,8 @@ __all__ = [
     "read",
     "resolve_target",
     "scan",
+    "scheduled_run_path",
+    "scheduled_runs",
     "search",
     "slugify",
     "stale_links",

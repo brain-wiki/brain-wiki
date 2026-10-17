@@ -35,4 +35,4 @@ Generated from `docs/proposal/privacy.md`.
   - [[proposal-privacy-44-enforcement-points]]: Enforcement points
   - [[proposal-privacy-45-links]]: Links (Privacy)
 - [[proposal-privacy-5-options]]: Options
-- [[proposal-privacy-6-open-questions]]: Open questions (Privacy)
+- [[proposal-privacy-6-open-questions]]: Open questions

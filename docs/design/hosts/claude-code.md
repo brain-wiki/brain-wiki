@@ -11,7 +11,7 @@ are in [agent integrations](../agent-integrations.md).
 | Skills | `brain`, `brain-setup`, `brain-maintain` from the plugin |
 | Harvest | `~/.claude/projects/<working-dir slug>/<session-id>.jsonl` |
 | Memory files | `~/.claude/projects/*/memory/*.md` and `~/.claude/CLAUDE.md`, which the agent files into notes when asked to import them ([import §6](../import.md#6-documents-and-memory-files)) |
-| Headless preset | `claude --bare -p --output-format json` ([agent integrations §7](../agent-integrations.md#7-headless-presets)) |
+| Unattended mode | `claude -p` with brain-wiki's MCP server, file tools only, and `--permission-mode dontAsk` ([agent integrations §7](../agent-integrations.md#7-unattended-agent-mode)) |
 
 ## Notes
 

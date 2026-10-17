@@ -694,7 +694,7 @@ def _mv(
 @_app.command(
     "consolidate",
     help="gather pending episodes to fold into notes (--prepare), then archive the ones "
-    "handled (--done)",
+    "handled (--done); --run --host H runs one scheduled consolidation",
 )
 def _consolidate(
     ctx: typer.Context,
@@ -738,6 +738,30 @@ def _consolidate(
             "note it changed, or skip:REASON (repeatable)",
         ),
     ] = None,
+    run: Annotated[
+        bool,
+        typer.Option(
+            "--run", help="start --host's agent unattended to consolidate (what a schedule runs)"
+        ),
+    ] = False,
+    host: Annotated[
+        str | None, typer.Option("--host", help="with --run, the agent app to start")
+    ] = None,
+    harvest: Annotated[
+        bool, typer.Option("--harvest", help="with --run, also harvest the host's new sessions")
+    ] = False,
+    include: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--include",
+            metavar="AGENT|unowned",
+            help="with --run, also take this agent's or the unowned episodes (repeatable)",
+        ),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="with --run, check and count; start nothing"),
+    ] = False,
     brain: _Brain = None,
     as_host: _As = None,
     json: _Json = False,
@@ -753,6 +777,11 @@ def _consolidate(
         unowned=unowned,
         all=all_,
         done=list(done or []),
+        run=run,
+        host=host,
+        harvest=harvest,
+        include=list(include or []),
+        dry_run=dry_run,
     )
 
 
@@ -826,18 +855,27 @@ def _commit(
     return _call(ctx, "commit", settle=settle, no_fetch=no_fetch, push=push, dry_run=dry_run)
 
 
-_schedule_app = _sub_app("OS jobs that run `brain commit` for a brain (bare: list them)")
+_schedule_app = _sub_app(
+    "OS jobs that run `brain commit` for a brain, or a host's consolidation (bare: list them)"
+)
 _app.add_typer(_schedule_app, name="schedule")
 
-_Job = Annotated[Literal["commit"], typer.Argument(metavar="commit", help="the job: commit")]
+_Job = Annotated[
+    Literal["commit", "consolidate"],
+    typer.Argument(metavar="commit|consolidate", help="the job: commit, or consolidate"),
+]
+_JobHost = Annotated[
+    str | None, typer.Option("--host", help="consolidate: the agent app that runs it")
+]
 _ScheduleDryRun = Annotated[
     bool, typer.Option("--dry-run", help="show the job and the commands; change nothing")
 ]
 
 
 def _schedule(ctx: typer.Context, action: str, **values: Any) -> _Call:
-    values = {"every": "15m", "push": False, "dry_run": False} | values
-    return _call(ctx, "schedule", action=action, **values)
+    defaults = {"job": "commit", "every": None, "push": False, "dry_run": False, "host": None}
+    defaults |= {"at": None, "harvest": False, "include": []}
+    return _call(ctx, "schedule", action=action, **(defaults | values))
 
 
 @_schedule_app.callback(invoke_without_command=True)
@@ -847,36 +885,68 @@ def _schedule_root(
     return _schedule(ctx, "list") if ctx.invoked_subcommand is None else None
 
 
-@_schedule_app.command("add", help="run `brain commit` for the brain on a schedule")
+@_schedule_app.command(
+    "add", help="run `brain commit`, or a host's consolidation, for the brain on a schedule"
+)
 def _schedule_add(
     ctx: typer.Context,
     job: _Job,
     every: Annotated[
-        str,
-        typer.Option("--every", help="5m, 10m, 15m, 20m, 30m, or 1h, 2h, 3h, 4h, 6h, 8h, 12h, 24h"),
-    ] = "15m",
-    push: Annotated[bool, typer.Option("--push", help="the job also pushes")] = False,
+        str | None,
+        typer.Option(
+            "--every",
+            help="commit: 5m, 10m, 15m, 20m, 30m, or 1h, 2h, 3h, 4h, 6h, 8h, 12h, 24h (default 15m)",
+        ),
+    ] = None,
+    push: Annotated[bool, typer.Option("--push", help="commit: the job also pushes")] = False,
+    host: _JobHost = None,
+    at: Annotated[
+        str | None, typer.Option("--at", help="consolidate: time of day, e.g. 21:30 (default)")
+    ] = None,
+    harvest: Annotated[
+        bool, typer.Option("--harvest", help="consolidate: also harvest the host's new sessions")
+    ] = False,
+    include: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--include",
+            metavar="AGENT|unowned",
+            help="consolidate: also take this agent's or the unowned episodes (repeatable)",
+        ),
+    ] = None,
     dry_run: _ScheduleDryRun = False,
     brain: _Brain = None,
     as_host: _As = None,
     json: _Json = False,
 ) -> _Call:
-    return _schedule(ctx, "add", every=every, push=push, dry_run=dry_run)
+    return _schedule(
+        ctx,
+        "add",
+        job=job,
+        every=every,
+        push=push,
+        host=host,
+        at=at,
+        harvest=harvest,
+        include=list(include or []),
+        dry_run=dry_run,
+    )
 
 
 @_schedule_app.command("remove", help="remove the brain's job")
 def _schedule_remove(
     ctx: typer.Context,
     job: _Job,
+    host: _JobHost = None,
     dry_run: _ScheduleDryRun = False,
     brain: _Brain = None,
     as_host: _As = None,
     json: _Json = False,
 ) -> _Call:
-    return _schedule(ctx, "remove", dry_run=dry_run)
+    return _schedule(ctx, "remove", job=job, host=host, dry_run=dry_run)
 
 
-@_schedule_app.command("list", help="every brain's job: interval, push, last run")
+@_schedule_app.command("list", help="every brain's jobs: when, options, last run")
 def _schedule_list(
     ctx: typer.Context, brain: _Brain = None, as_host: _As = None, json: _Json = False
 ) -> _Call:

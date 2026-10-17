@@ -18,7 +18,6 @@ Generated from `docs/roadmap/ideas.md`.
   - [[idea-a-file-watcher-in-long-running]]: A file watcher in long-running processes for very large brains
   - [[idea-search-across-brains-with-each-result]]: Search across brains, with each result labeled by its brain
 - Consolidation
-  - [[idea-a-headless-consolidation-run]]: A headless consolidation run
   - [[idea-clustering-episodes-to-choose-what-to]]: Clustering episodes to choose what to consolidate together
   - [[idea-mcp-tools-for-rule-proposals]]: MCP tools for rule proposals
 - Writing over MCP

@@ -1,11 +1,11 @@
 ---
 id: 01M3250V00TM70FT8ZV0A9EA9F
 type: proposal
-title: "Why it was removed (Host hooks: briefing, capture, and recall)"
+title: "Why it was removed"
 aliases: ["Host hooks: briefing, capture, and recall §2"]
 source: "docs/proposal/hooks.md#2-why-it-was-removed"
 ---
-# Why it was removed (Host hooks: briefing, capture, and recall)
+# Why it was removed
 
 - The briefing hook duplicated the instruction block. The block tells
   agents to call `brain_orient` before work that may depend on the brain,

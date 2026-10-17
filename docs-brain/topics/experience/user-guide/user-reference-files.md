@@ -10,7 +10,7 @@ source: "docs/user/reference.md#files"
 |---|---|
 | `<brain>/brain.toml` | Settings that travel with the brain: format, layout, topics, agent profiles, lint, search, consolidation, git, reports, budgets |
 | `~/.config/brain-wiki/config.toml` | Per machine: registered brains, default brain, per-host settings, harvest |
-| `~/.local/state/brain-wiki/` | Run records and pre-images for undo, locks, harvest and connect state, commit-job state (`schedule/`), logs |
+| `~/.local/state/brain-wiki/` | Run records and pre-images for undo, locks, harvest and connect state, commit-job state (`schedule/`), scheduled consolidation outcomes, logs |
 | `~/.cache/brain-wiki/` | The search index, rebuilt when missing |
 | `~/.local/share/brain-wiki/plugin/<host>/` | Plugin copies written by `brain connect` |
 

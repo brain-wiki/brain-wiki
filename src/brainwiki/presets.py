@@ -1,7 +1,8 @@
-"""Headless presets for harvest distillation (agent-integrations.md §7).
+"""Unattended agent runs for scheduled consolidation (agent-integrations.md §7).
 
-Each preset runs a host CLI once, prompt on stdin, in an empty temporary directory. Exact flags
-live here, not in the docs, because CLIs change faster than documents.
+brain-wiki calls no model itself (D8): a scheduled run starts the host's own CLI, the way a
+person would, with tools on, file access limited to the brain, and brain-wiki's MCP server
+attached. Exact flags live here, not in the docs, because CLIs change faster than documents.
 """
 
 from __future__ import annotations
@@ -13,193 +14,103 @@ import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from brainwiki.config import state_dir
 from brainwiki.errors import NotAvailable, UsageError
 
-# Headless runs cannot approve tools; Antigravity ends the turn with no output after a denied
-# tool call, and its custom agents cannot drop tools (T-5), so the prompt has to say it.
-_HEADLESS_PREAMBLE = (
-    "You are running headless: everything you need is in this message. Do not call tools, "
-    "load skills, or read files; reply directly.\n\n"
-)
+# File tools only: no shell, no web. The brain-wiki MCP server is the only other tool source.
+_CLAUDE_TOOLS = "Read,Edit,Write,Glob,Grep"
 
 
 @dataclass
 class _Call:
-    model: str | None
-    schema: str | None  # JSON Schema as a string, for CLIs that constrain output
+    brain_root: Path
+    mcp_config: str  # JSON: {"mcpServers": {"brain-wiki": {...}}}
     workdir: Path
 
 
-def _plain(prompt: str) -> str:
-    return prompt
-
-
 @dataclass
-class _Preset:
-    name: str
+class _Mode:
+    host: str
     binary: str
     argv: Callable[[_Call], list[str]]
-    extract: Callable[[str, _Call], str]
-    uses_schema: bool = False
-    stdin: Callable[[str], str] = _plain
-
-
-def _pick(data: dict[str, Any], keys: tuple[str, ...], fallback: str) -> str:
-    for key in keys:
-        value = data.get(key)
-        if isinstance(value, (dict, list)):
-            return json.dumps(value)
-        if isinstance(value, str) and value.strip():
-            return value
-    return fallback
-
-
-def _json_field(stdout: str, *keys: str) -> str:
-    try:
-        data = json.loads(stdout)
-    except ValueError:
-        return stdout
-    return _pick(data, keys, stdout) if isinstance(data, dict) else stdout
+    result: Callable[[str], tuple[bool, str]]  # stdout -> (ok, final text)
 
 
 def _claude(call: _Call) -> list[str]:
-    argv = ["claude", "--bare", "-p", "--output-format", "json"]
-    if call.schema:
-        argv += ["--json-schema", call.schema]
-    return argv + (["--model", call.model] if call.model else [])
-
-
-def _codex(call: _Call) -> list[str]:
-    argv = [
-        "codex",
-        "exec",
-        "-",
-        "--json",
-        "--ephemeral",
-        "--skip-git-repo-check",
-        "--sandbox",
-        "read-only",
-    ]
-    argv += ["-o", str(call.workdir / "last-message.txt")]
-    return argv + (["-m", call.model] if call.model else [])
-
-
-def _codex_extract(stdout: str, call: _Call) -> str:
-    last = call.workdir / "last-message.txt"
-    if last.is_file() and last.read_text(encoding="utf-8").strip():
-        return last.read_text(encoding="utf-8")
-    message = ""
-    for line in stdout.splitlines():
-        try:
-            event = json.loads(line)
-        except ValueError:
-            continue
-        item = event.get("item") if isinstance(event, dict) else None
-        if isinstance(item, dict) and item.get("type") == "agent_message" and item.get("text"):
-            message = item["text"]
-    return message or stdout
-
-
-def _agy(call: _Call) -> list[str]:
-    # `agy -p` takes the prompt as its value; stream-json input keeps it on stdin and off argv.
-    # No --json-schema: agy drops fields the schema does not declare and forces an extra turn.
-    # The default (high) effort spent five minutes thinking on a one-episode packet.
-    argv = ["agy", "--input-format", "stream-json", "--output-format", "stream-json"]
-    argv += ["--effort", "medium"]
-    return argv + (["--model", call.model] if call.model else [])
-
-
-def _agy_stdin(prompt: str) -> str:
-    return json.dumps({"event": "user", "message": {"content": prompt}}) + "\n"
-
-
-def _agy_extract(stdout: str, call: _Call) -> str:
-    result: dict[str, Any] | None = None
-    for line in stdout.splitlines():
-        try:
-            event = json.loads(line)
-        except ValueError:
-            continue
-        if isinstance(event, dict) and event.get("event") == "result":
-            result = event.get("result") if isinstance(event.get("result"), dict) else None
-    return _pick(result, ("response",), stdout) if result else stdout
-
-
-_PRESETS: dict[str, _Preset] = {
-    "claude-code": _Preset(
-        "claude-code",
+    return [
         "claude",
-        _claude,
-        lambda out, _: _json_field(out, "structured_output", "result"),
-        True,
-    ),
-    "codex": _Preset("codex", "codex", _codex, _codex_extract),
-    "antigravity": _Preset("antigravity", "agy", _agy, _agy_extract, stdin=_agy_stdin),
-    "cursor": _Preset(
-        "cursor",
-        "agent",
-        lambda c: (
-            ["agent", "-p", "--output-format", "json"] + (["--model", c.model] if c.model else [])
-        ),
-        lambda out, _: _json_field(out, "result"),
-    ),
-    "ollama": _Preset(
-        "ollama", "ollama", lambda c: ["ollama", "run", c.model or "llama3.1"], lambda out, _: out
-    ),
+        "-p",
+        "--output-format",
+        "json",
+        # Not saved, so harvest never reads brain-wiki's own run back into the brain.
+        "--no-session-persistence",
+        "--mcp-config",
+        call.mcp_config,
+        "--strict-mcp-config",
+        "--tools",
+        _CLAUDE_TOOLS,
+        "--allowedTools",
+        f"{_CLAUDE_TOOLS},mcp__brain-wiki",
+        # Anything not allowed above is denied instead of waiting for a person.
+        "--permission-mode",
+        "dontAsk",
+        "--add-dir",
+        str(call.brain_root),
+    ]
+
+
+def _claude_result(stdout: str) -> tuple[bool, str]:
+    try:
+        data = json.loads(stdout)
+    except ValueError:
+        return False, stdout.strip()[-2000:]
+    if not isinstance(data, dict):
+        return False, stdout.strip()[-2000:]
+    text = str(data.get("result") or "")
+    return not data.get("is_error") and data.get("subtype", "success") == "success", text
+
+
+_MODES: dict[str, _Mode] = {
+    "claude-code": _Mode("claude-code", "claude", _claude, _claude_result),
 }
 
 
-def run_command(
-    command: str | list[str],
+def check_unattended(host: str) -> str:
+    """The host CLI's path, or why a scheduled run cannot start it."""
+    mode = _MODES.get(host)
+    if mode is None:
+        raise UsageError(
+            f"{host} has no unattended mode brain-wiki can start yet (supported: "
+            f"{', '.join(_MODES)}); it consolidates in sessions"
+        )
+    found = shutil.which(mode.binary)
+    if found is None:
+        raise NotAvailable(f"{host} needs `{mode.binary}` on PATH, installed and signed in")
+    return found
+
+
+def run_unattended(
+    host: str,
     prompt: str,
     *,
-    model: str | None = None,
-    timeout: int = 600,
-    schema: dict[str, Any] | None = None,
+    brain_root: Path,
+    mcp_entry: dict[str, object],
+    timeout: int = 3600,
 ) -> str:
-    """Run a preset (or a custom argv) once and return the model's final text."""
-    work = state_dir() / "headless"  # under the state dir, so harvest skips these sessions
-    work.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="run-", dir=work) as tmp:
-        call = _Call(model or None, None, Path(tmp))
-        prompt = _HEADLESS_PREAMBLE + prompt
-        stdin = prompt
-        if isinstance(command, list):
-            if not command:
-                raise UsageError("the custom command is empty")
-            argv, extract, binary, name = (
-                list(command),
-                (lambda out, _: out),
-                command[0],
-                command[0],
-            )
-        else:
-            preset = _PRESETS.get(command)
-            if preset is None:
-                raise UsageError(
-                    f"unknown preset {command!r}; use one of {', '.join(_PRESETS)} or an argv list"
-                )
-            if preset.uses_schema and schema is not None:
-                call.schema = json.dumps(schema, separators=(",", ":"))
-            argv, extract, binary, name = (
-                preset.argv(call),
-                preset.extract,
-                preset.binary,
-                preset.name,
-            )
-            stdin = preset.stdin(prompt)
-        if shutil.which(binary) is None:
-            raise NotAvailable(
-                f"preset {name!r} needs `{binary}` on PATH; pick another with --distill "
-                f"({', '.join(_PRESETS)}), or --raw for no model"
-            )
+    """Run the host's agent once with `prompt` on stdin and return its final text. The working
+    directory is a fresh folder under the state directory, which harvest skips."""
+    check_unattended(host)
+    mode = _MODES[host]
+    runs = state_dir() / "runs"
+    runs.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=f"consolidate-{host}-", dir=runs) as tmp:
+        call = _Call(brain_root, json.dumps({"mcpServers": {"brain-wiki": mcp_entry}}), Path(tmp))
+        argv = mode.argv(call)
         try:
             done = subprocess.run(
                 argv,
-                input=stdin,
+                input=prompt,
                 capture_output=True,
                 text=True,
                 cwd=tmp,
@@ -207,10 +118,11 @@ def run_command(
                 check=False,
             )
         except subprocess.TimeoutExpired as exc:
-            raise NotAvailable(
-                f"{name} timed out after {timeout} s ({' '.join(argv[:3])} …)"
-            ) from exc
-        if done.returncode != 0:
-            tail = (done.stderr or done.stdout).strip().splitlines()[-5:]
-            raise NotAvailable(f"{name} exited with {done.returncode}: " + " | ".join(tail))
-        return extract(done.stdout, call)
+            raise NotAvailable(f"{host} timed out after {timeout} s") from exc
+        except OSError as exc:
+            raise NotAvailable(f"could not start {mode.binary}: {exc}") from exc
+        ok, text = mode.result(done.stdout)
+        if done.returncode != 0 or not ok:
+            tail = (done.stderr or text or done.stdout).strip().splitlines()[-5:]
+            raise NotAvailable(f"{host} exited with {done.returncode}: " + " | ".join(tail))
+        return text

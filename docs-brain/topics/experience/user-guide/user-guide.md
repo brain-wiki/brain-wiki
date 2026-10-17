@@ -33,6 +33,7 @@ Generated from `docs/user/`.
   - [[user-maintenance-commit-direct-edits]]: Commit direct edits
   - [[user-maintenance-share-a-brain-between-machines]]: Share a brain between machines
   - [[user-maintenance-consolidate]]: Consolidate
+    - [[user-maintenance-consolidate-on-a-schedule]]: Consolidate on a schedule
   - [[user-maintenance-rule-proposals]]: Rule proposals
   - [[user-maintenance-lint-and-reports]]: Lint and reports
   - [[user-maintenance-convert-notes-from-brain-wiki-01]]: Convert notes from brain-wiki 0.1

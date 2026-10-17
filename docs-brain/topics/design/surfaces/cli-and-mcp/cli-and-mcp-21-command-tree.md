@@ -32,11 +32,14 @@ brain orphans | unresolved                             # notes nothing links to;
 brain validate [PATH]...                               # check the frontmatter of edited notes
 brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run]
 brain schedule [list] | add commit [--every 15m] [--push] [--dry-run] | remove commit [--dry-run]
+brain schedule add consolidate --host HOST [--at 21:30] [--harvest] [--include AGENT|unowned]... [--dry-run]
+brain schedule remove consolidate --host HOST [--dry-run]
 
 brain rules add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--agent HOST]... [--unowned] [--all] [--out FILE.json]
 brain consolidate --done EPISODE[:PATTERN:NOTE | :skip:REASON]...
+brain consolidate --run --host HOST [--harvest] [--include AGENT|unowned]... [--dry-run]
 brain harvest [--from HOST]... [--since 30d] [--project PATH]      # list the sessions waiting
 brain harvest --status                                 # per host: on or off, sessions left
 brain harvest enable HOST... | disable HOST... | route PATTERN BRAIN
@@ -95,4 +98,5 @@ Where each command is specified:
 `consolidate` needs exactly one of `--prepare` and `--done`; with
 `--prepare`, `--json` prints the packet and `--out` writes
 `{guidance, packet}`. `--agent`, `--unowned`, `--all`, and `--out` go only
-with `--prepare`.
+with `--prepare`; `--host`, `--harvest`, `--include`, and `--dry-run` only
+with `--run`.

@@ -9,11 +9,11 @@ source: "docs/design/security-and-privacy.md#5-data-that-leaves-the-machine"
 
 brain-wiki itself contacts only the user's own git remote, through `git`,
 when `brain commit` syncs. There is no telemetry. Other data leaves through
-the hosts and presets the user runs:
+the hosts the user runs:
 
 | Operation | What is sent | To whom |
 |---|---|---|
 | Agent tool calls (orient, search, read) | Results, to the host | The host's model provider, as part of the conversation |
-| Consolidation in the agent | The packet, and the notes the agent reads | The host's model provider |
+| Consolidation in the agent, in a session or a scheduled run | The packet, and the notes the agent reads | The host's model provider |
 | Harvest | Condensed turns of the selected sessions, without tool output and with secrets scrubbed, and the notes the agent reads | The host's model provider |
 | `brain commit` | Brain files fetched from origin, and pushed with `--push` | The user's git remote |

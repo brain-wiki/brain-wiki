@@ -40,6 +40,16 @@ them ([write path](docs/design/write-path.md)).
   episodes. `brain harvest --apply`, `--raw`, `--distill`, and the
   `[harvest] distill` setting are removed; `brain harvest` lists sessions.
   `brain origin` and `brain_read_origin` accept session URLs.
+- **Scheduled consolidation for Claude Code.** `brain schedule add
+  consolidate --host claude-code [--at 21:30] [--harvest] [--include
+  AGENT|unowned]` installs a daily crontab block or LaunchAgent that runs
+  `brain consolidate --run --host claude-code`: it checks the profile, the
+  CLI, and the lock, starts `claude -p` with only file tools and
+  brain-wiki's MCP server, validates, commits, and records the outcome.
+  `add` refuses when the dry run fails; a failed run shows in orientation,
+  `brain doctor`, and `reports/consolidation.md`. Other hosts consolidate in
+  sessions until their unattended modes are verified. The headless distill
+  presets are removed.
 - **Importing documents is agent work.** `brain import --to-episodes` and
   `brain import --from HOST` are removed. Ask an agent to file documents or
   its memory files into notes; the `brain` skill says how. `--overlay` and
@@ -229,6 +239,6 @@ Known limitations:
   reads all of it. Keep separate lives in separate brains
   ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposal/privacy.md)).
 - Maintenance runs when you ask your agent; there is no scheduler
-  ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposal/scheduled-maintenance.md)).
+  ([proposal](https://github.com/brain-wiki/brain-wiki/blob/v0.2.0/docs/proposals/scheduled-maintenance.md)).
 - Chat apps that need a remote MCP server (ChatGPT, claude.ai, the Gemini
   app) are not supported ([proposal](https://github.com/brain-wiki/brain-wiki/blob/main/docs/proposal/remote-mcp.md)).

@@ -3,8 +3,11 @@ consolidation (write-path.md §4.7)."""
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from brainwiki.config import brain_state_dir
 from brainwiki.ids import ulid_datetime
 
 if TYPE_CHECKING:
@@ -64,3 +67,23 @@ def consolidation_runs(engine: Engine) -> list[dict[str, Any]]:
 def last_consolidations(engine: Engine) -> dict[str, dict[str, Any]]:
     """Each agent's latest `consolidate` run in `log.md`."""
     return {run["agent"]: run for run in consolidation_runs(engine) if run["agent"]}
+
+
+def scheduled_run_path(brain_key: str, host: str) -> Path:
+    """Where the last scheduled consolidation for this brain and host is recorded."""
+    return brain_state_dir(brain_key) / "scheduled" / f"{host}.json"
+
+
+def scheduled_runs(engine: Engine) -> dict[str, dict[str, Any]]:
+    """The last scheduled consolidation per host on this machine: when, status (`ok`,
+    `nothing`, `failed`), summary, and error."""
+    directory = brain_state_dir(engine.brain.key) / "scheduled"
+    out: dict[str, dict[str, Any]] = {}
+    for path in sorted(directory.glob("*.json")) if directory.is_dir() else []:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(data, dict):
+            out[path.stem] = data
+    return out

@@ -137,12 +137,13 @@ The state directory holds:
 | `brains/<brain-key>/runs/` | Run records and pre-images, for undo ([write path §8](write-path.md#8-undo)) |
 | `brains/<brain-key>/written/`, `dedupe/` | Episode markers ([write path §2.1](write-path.md#21-ways-an-episode-is-written)) |
 | `brains/<brain-id>/root` | The folder that owns the brain's id on this device |
+| `brains/<brain-key>/scheduled/<host>.json` | The last scheduled consolidation per host ([write path §4.8](write-path.md#48-scheduled-consolidation)) |
 | `harvest/` | Harvest watermarks and in-agent harvest runs |
 | `locks/<brain-key>.lock` | Per-brain write locks |
 | `connect/` | `brain connect` records and backups |
-| `headless/` | Working folders for headless preset runs |
+| `runs/` | Working folders for scheduled consolidation runs, which harvest skips |
 | `schedule/<brain-id>.json` | The last `brain commit` outcome per brain |
-| `logs/` | `brain-wiki.log`, and `schedule-<brain-id>.log` per commit job |
+| `logs/` | `brain-wiki.log`, `schedule-<brain-id>.log` per commit job, and `consolidate-<brain-id>-<host>.log` per consolidate job |
 
 What deleting each directory costs:
 

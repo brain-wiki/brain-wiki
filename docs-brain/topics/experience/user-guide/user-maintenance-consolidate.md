@@ -33,3 +33,6 @@ the conversations they came from.
 Orientation and `brain doctor` show the pending episodes per agent and
 each agent's last consolidation. `reports/consolidation.md` lists recent
 runs with what came of each episode.
+
+## Subsections
+- [[user-maintenance-consolidate-on-a-schedule]]: Consolidate on a schedule

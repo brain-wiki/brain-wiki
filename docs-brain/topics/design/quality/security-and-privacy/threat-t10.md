@@ -9,4 +9,4 @@ source: "docs/design/security-and-privacy.md#3-threats-and-mitigations"
 
 Command injection. Transcript or note content reaches a shell.
 
-**Mitigations:** Nothing read from a brain or a session is put into a command line. Headless presets pass the prompt on stdin. No code uses `shell=True`, which ruff's `S` rules check.
+**Mitigations:** Nothing read from a brain or a session is put into a command line. Scheduled runs pass the prompt on stdin. No code uses `shell=True`, which ruff's `S` rules check.

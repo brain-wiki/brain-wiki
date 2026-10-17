@@ -128,6 +128,11 @@ Direct edits are not runs; in a git brain they reach history through
   should also push (default no; `--push`), then run it without `--dry-run`.
   `brain schedule remove commit` removes it. Scheduling is the user's
   decision; it is refused under `--as`.
+- To have Claude Code consolidate nightly:
+  `brain schedule add consolidate --host claude-code --dry-run` shows the
+  checks and the job; with the user's yes, run it without `--dry-run`
+  (`--at HH:MM`, `--harvest`, `--include AGENT|unowned` as they choose).
+  Other agent apps consolidate in sessions.
 
 ## 6. Undo
 

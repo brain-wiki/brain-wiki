@@ -82,7 +82,7 @@ is refused:
 | `commit` | Needs `edit`, also with `--dry-run`. The commit trailer names the host. `--push` is refused. |
 | `origin` | Needs `read_origin`. |
 | `validate`, `consolidate --prepare`, reads | Need nothing. |
-| `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `schedule add`/`remove`, `undo` | Refused. These are the user's decisions. |
+| `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `schedule add`/`remove`, `consolidate --run`, `undo` | Refused. These are the user's decisions. |
 | `import`, `harvest` | Not checked: they run with the owner's rights. `harvest` only lists sessions. |
 
 No capability lets an agent undo runs, because it could undo the user's
@@ -131,11 +131,14 @@ brain orphans | unresolved                             # notes nothing links to;
 brain validate [PATH]...                               # check the frontmatter of edited notes
 brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run]
 brain schedule [list] | add commit [--every 15m] [--push] [--dry-run] | remove commit [--dry-run]
+brain schedule add consolidate --host HOST [--at 21:30] [--harvest] [--include AGENT|unowned]... [--dry-run]
+brain schedule remove consolidate --host HOST [--dry-run]
 
 brain rules add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--agent HOST]... [--unowned] [--all] [--out FILE.json]
 brain consolidate --done EPISODE[:PATTERN:NOTE | :skip:REASON]...
+brain consolidate --run --host HOST [--harvest] [--include AGENT|unowned]... [--dry-run]
 brain harvest [--from HOST]... [--since 30d] [--project PATH]      # list the sessions waiting
 brain harvest --status                                 # per host: on or off, sessions left
 brain harvest enable HOST... | disable HOST... | route PATTERN BRAIN
@@ -194,7 +197,8 @@ Where each command is specified:
 `consolidate` needs exactly one of `--prepare` and `--done`; with
 `--prepare`, `--json` prints the packet and `--out` writes
 `{guidance, packet}`. `--agent`, `--unowned`, `--all`, and `--out` go only
-with `--prepare`.
+with `--prepare`; `--host`, `--harvest`, `--include`, and `--dry-run` only
+with `--run`.
 
 ### 2.2 Conventions
 

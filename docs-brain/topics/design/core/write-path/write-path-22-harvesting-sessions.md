@@ -61,7 +61,7 @@ The recipe, in the host agent:
 
 1. The user asks ("harvest my sessions"), or runs `/brain:harvest` (the
    `harvest` MCP prompt), or a scheduled run includes harvest
-   ([[proposal-episode-lifecycle|proposal]]).
+   (§4.8).
 2. The agent calls `brain_harvest_prepare {since, max_sessions, project}`
    (defaults `7d`, 10). It returns that host's new sessions for the current
    brain as condensed, scrubbed turns, at most about 15k tokens, named

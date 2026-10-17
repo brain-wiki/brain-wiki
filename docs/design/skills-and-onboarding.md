@@ -333,6 +333,7 @@ suite, which is not built ([eval bench §3.5](eval-bench.md#35-agent)).
 - Maintenance in every session: it costs tokens and attention in sessions
   meant for other work, so maintenance runs when the user asks.
 - Scheduled maintenance (routine templates, a headless consolidation
-  backend) was built and removed before 0.1
-  ([proposal](../proposal/scheduled-maintenance.md)). Only `brain commit`
-  runs on a schedule ([D35](../decision/d35-git-history.md)).
+  backend) was built and removed before 0.1. What runs on a schedule now
+  is `brain commit` ([D35](../decision/d35-git-history.md)) and a host's
+  consolidation ([D37](../decision/d37-per-agent-consolidation.md)), both
+  set up with `brain schedule`.

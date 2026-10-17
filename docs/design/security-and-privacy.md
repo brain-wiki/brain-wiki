@@ -50,7 +50,7 @@ mitigations in the code, along with what data leaves the machine.
 | T7 | Hostile files attack the tools: YAML bombs, huge files, pathological regexes, invalid UTF-8. | YAML is parsed with the safe loader, and frontmatter over 64 KiB is refused. Files over 2 MiB are indexed by path only. Parsers are line-oriented with linear-time regexes, and FTS queries are built from quoted tokens. Parse failures degrade to plain text. | — |
 | T8 | XSS in the visualizer. A note title or body contains HTML or script. | Note content is inserted as text, never as HTML. Previews render Markdown through an escaping renderer. The page has a strict Content-Security-Policy (`default-src 'none'`, scripts and styles from the page's own origin) and loads no remote resources. | — |
 | T9 | `brain viz` reachable from the network. | Binds to 127.0.0.1 unless `--host` names another address, on a free port unless `--port` is given. Every request needs a random token, given in the URL once and then kept in a cookie. The server is read-only, stops after 30 minutes idle, and prints a warning when it listens beyond loopback. | Other local users cannot guess the token. With `--host`, traffic is plain HTTP, so anyone on the network path can read the token and then the brain ([visualizer §8](visualizer.md#8-safety)). |
-| T10 | Command injection. Transcript or note content reaches a shell. | Nothing read from a brain or a session is put into a command line. Headless presets pass the prompt on stdin. No code uses `shell=True`, which ruff's `S` rules check. | — |
+| T10 | Command injection. Transcript or note content reaches a shell. | Nothing read from a brain or a session is put into a command line. Scheduled runs pass the prompt on stdin. No code uses `shell=True`, which ruff's `S` rules check. | — |
 | T11 | Memory echo. What brain-wiki returned to an agent is harvested back as new evidence. | Harvest drops tool output bodies ([write path §3.3](write-path.md#33-invariants)). The consolidation packet shows each episode's agent and inputs. | An agent that restates recalled content in its own words can still echo it. Provenance makes it visible. |
 | T12 | Corruption or loss by a buggy run. | brain-wiki's writers change only the lines they must. Writes are atomic per file, a run never overwrites a file changed since it read it, and pre-images, undo, git commits per run, and crash recovery back it up ([write path §7](write-path.md#7-runs)). | — |
 | T13 | Sync-tool damage: conflict copies, half-synced files. | No SQLite or locks in the brain. Lint detects conflict copies (BW112). brain-wiki's edits are line-local, so merges stay small. Git brains share through origin, not a sync tool ([config and storage §6.2](config-and-storage.md#62-local-folder-with-optional-git)). | Sync tools can still lose edits, and a `.git` folder synced between two committing machines can be corrupted. |
@@ -74,12 +74,12 @@ A [proposal](../proposal/privacy.md) drafts finer control.
 
 brain-wiki itself contacts only the user's own git remote, through `git`,
 when `brain commit` syncs. There is no telemetry. Other data leaves through
-the hosts and presets the user runs:
+the hosts the user runs:
 
 | Operation | What is sent | To whom |
 |---|---|---|
 | Agent tool calls (orient, search, read) | Results, to the host | The host's model provider, as part of the conversation |
-| Consolidation in the agent | The packet, and the notes the agent reads | The host's model provider |
+| Consolidation in the agent, in a session or a scheduled run | The packet, and the notes the agent reads | The host's model provider |
 | Harvest | Condensed turns of the selected sessions, without tool output and with secrets scrubbed, and the notes the agent reads | The host's model provider |
 | `brain commit` | Brain files fetched from origin, and pushed with `--push` | The user's git remote |
 

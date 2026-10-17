@@ -27,5 +27,6 @@ Generated from `docs/roadmap/milestones.md`.
 - [[m11]]: M11: Release readiness
 - [[m12]]: M12: Agent context and discovery (D25–D28)
 - [[m13]]: M13: Format 3 (D32–D35)
+- [[m14]]: M14: Episode lifecycle (D36, D37)
 - [[roadmap-milestones-not-built]]: Not built (Milestones)
 - [[roadmap-milestones-what-the-tests-do-not-yet-prove]]: What the tests do not yet prove

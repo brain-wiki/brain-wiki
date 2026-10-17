@@ -1,11 +1,11 @@
 ---
 id: 01M3250V002G4DTEPMKC8NERBT
 type: proposal
-title: "Open questions (Privacy)"
+title: "Open questions"
 aliases: ["Privacy §6"]
 source: "docs/proposal/privacy.md#6-open-questions"
 ---
-# Open questions (Privacy)
+# Open questions
 
 | # | Question | Options |
 |---|---|---|

@@ -8,7 +8,7 @@ source: "docs/decision/d36-harvest-into-notes.md"
 # D36: Harvest and import file into notes, not episodes
 
 Status: accepted.
-Argued in: [[write-path-22-harvesting-sessions|write path §2.2]], [[import-6-documents-and-memory-files|import §6]], [[proposal-episode-lifecycle|episode lifecycle proposal]].
+Argued in: [[write-path-22-harvesting-sessions|write path §2.2]], [[import-6-documents-and-memory-files|import §6]].
 
 Harvest and import are already off the busy path, so they skip the inbox. The agent whose sessions they are, or the agent the user asks to import documents or memory files, applies the consolidation patterns directly and files notes. A note cites a session with a session URL (`session://<host>/<session id>#turns=A-B`) and a document with its URL or the record note made from it. brain-wiki still reads, filters, routes, and scrubs sessions and computes their provenance (D20); `brain_harvest_done` checks that the notes cite the session before it advances the watermark. `brain harvest --apply`, `--raw`, and `--distill`, and `brain import --to-episodes` and `--from`, are removed.
 

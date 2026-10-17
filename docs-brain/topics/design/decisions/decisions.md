@@ -49,3 +49,4 @@ Generated from `docs/decision/README.md`.
 - [[d34-direct-edits]]: D34: Agents edit notes directly
 - [[d35-git-history]]: D35: Git is the history of direct edits
 - [[d36-harvest-into-notes]]: D36: Harvest and import file into notes, not episodes
+- [[d37-per-agent-consolidation]]: D37: Each agent consolidates its own episodes, in a session or on a schedule

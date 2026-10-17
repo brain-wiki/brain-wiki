@@ -1,11 +1,11 @@
 ---
 id: 01M3250V0089A920T0HRVX658N
 type: proposal
-title: "What was built (Host hooks: briefing, capture, and recall)"
+title: "What was built"
 aliases: ["Host hooks: briefing, capture, and recall §1"]
 source: "docs/proposal/hooks.md#1-what-was-built"
 ---
-# What was built (Host hooks: briefing, capture, and recall)
+# What was built
 
 One entry point, `brain hook <host|auto> <event>`, read the host's JSON
 payload on stdin and wrote the JSON the host expects on stdout.
@@ -27,6 +27,6 @@ path of the installed `brain`:
 ## Subsections
 - [[proposal-hooks-11-events]]: Events
 - [[proposal-hooks-12-outputs]]: Outputs
-- [[proposal-hooks-13-capture]]: Capture (Host hooks: briefing, capture, and recall)
+- [[proposal-hooks-13-capture]]: Capture
 - [[proposal-hooks-14-inputs-from-hooks]]: Inputs from hooks
 - [[proposal-hooks-15-rules-for-every-hook]]: Rules for every hook

@@ -14,6 +14,7 @@ source: "docs/design/skills-and-onboarding.md#6-alternatives-considered"
 - Maintenance in every session: it costs tokens and attention in sessions
   meant for other work, so maintenance runs when the user asks.
 - Scheduled maintenance (routine templates, a headless consolidation
-  backend) was built and removed before 0.1
-  ([[proposal-scheduled-maintenance|proposal]]). Only `brain commit`
-  runs on a schedule ([[d35-git-history|D35]]).
+  backend) was built and removed before 0.1. What runs on a schedule now
+  is `brain commit` ([[d35-git-history|D35]]) and a host's
+  consolidation ([[d37-per-agent-consolidation|D37]]), both
+  set up with `brain schedule`.

@@ -9,4 +9,4 @@ The plugin ships three skills: `brain` (use a brain), `brain-setup` (a guided se
 
 - One broad skill.
 - A wizard that runs only in a terminal.
-- Scheduled maintenance. It was built and removed before 0.1 ([proposal](../proposal/scheduled-maintenance.md)).
+- Scheduled maintenance. It was built and removed before 0.1; scheduled consolidation returned per host ([D37](d37-per-agent-consolidation.md)).

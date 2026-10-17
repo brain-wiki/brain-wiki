@@ -9,6 +9,7 @@ from brainwiki.consolidate._prepare import (
     packet_text,
     prepare,
 )
+from brainwiki.consolidate._run import run_scheduled
 
 __all__ = [
     "Outcome",
@@ -18,4 +19,5 @@ __all__ = [
     "packet_text",
     "parse_outcome",
     "prepare",
+    "run_scheduled",
 ]

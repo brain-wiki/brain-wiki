@@ -10,7 +10,7 @@ source: "docs/design/agent-integrations.md#62-how-it-runs"
 The `brain-maintain` skill, or the `harvest` MCP prompt, drives
 `brain_harvest_prepare`, the agent's note edits, and `brain_harvest_done`,
 in the host agent. A scheduled run can include it
-([[proposal-episode-lifecycle|proposal]]). The packet keeps user and
+([[write-path-48-scheduled-consolidation|write path §4.8]]). The packet keeps user and
 assistant text and tool names with a short argument summary, but no tool
 output. The readers strip text the host injected (reminders, command
 echoes), and secrets are scrubbed before turns reach the agent. A

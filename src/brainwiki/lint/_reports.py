@@ -77,9 +77,18 @@ def _inbox(engine: Engine) -> str:
 
 
 def _consolidation(engine: Engine) -> str:
-    from brainwiki.index import consolidation_runs
+    from brainwiki.index import consolidation_runs, scheduled_runs
 
     lines: list[str] = []
+    scheduled = scheduled_runs(engine)
+    if scheduled:
+        lines += ["", "## Scheduled runs on this machine", ""]
+        for host, run in sorted(scheduled.items()):
+            detail = run.get("error") if run.get("status") == "failed" else run.get("summary")
+            lines.append(
+                f"- **{host}** {run.get('at')}: {run.get('status')}"
+                + (f", {detail}" if detail else "")
+            )
     for run in reversed(consolidation_runs(engine)[-_MAX_RUNS:]):
         lines += ["", f"## {run['at']} · {run['agent'] or 'owner'} · {run['run']}", ""]
         lines.append(run["summary"] or "(no summary)")

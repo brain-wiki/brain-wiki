@@ -15,5 +15,5 @@ source: "docs/design/cli-and-mcp.md#3-mcp-server"
 - [[cli-and-mcp-34-tools]]: Tools
 - [[cli-and-mcp-35-prompts]]: Prompts
 - [[cli-and-mcp-36-errors]]: Errors
-- [[cli-and-mcp-37-lifecycle]]: Lifecycle (CLI and MCP)
+- [[cli-and-mcp-37-lifecycle]]: Lifecycle
 - [[cli-and-mcp-38-not-built]]: Not built (CLI and MCP)

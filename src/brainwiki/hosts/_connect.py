@@ -132,6 +132,11 @@ def _mcp_entry(brain: str, host: str, brain_name: str | None, *, typed: bool) ->
     return entry
 
 
+def server_entry(host: str, brain_name: str | None) -> dict[str, Any]:
+    """The MCP server entry that runs the installed `brain mcp` for this host and brain."""
+    return _mcp_entry(_brain_executable(), host, brain_name, typed=True)
+
+
 def _materialize(
     host: str, *, brain_name: str | None, access: ins.Access | None = None
 ) -> dict[str, str]:

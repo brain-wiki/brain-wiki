@@ -20,3 +20,4 @@ host before a release.
 | Reader parses real sessions; harvest dry run lists, routes, and skips correctly | ✓ | ✓ | ✓ | — |
 | Origin lookup returns the right window, and `not_available` when deleted | ✓ | ✓ | ✓ | — |
 | `brain connect` and `--uninstall` round trip | ✓ | ✓ | ✓ | ✓ |
+| Unattended mode: a scheduled run edits only the brain, calls brain-wiki's tools without a prompt, and leaves no session behind | ✓ | — | — | — |

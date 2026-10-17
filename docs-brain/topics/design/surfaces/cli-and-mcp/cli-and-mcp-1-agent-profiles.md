@@ -77,7 +77,7 @@ is refused:
 | `commit` | Needs `edit`, also with `--dry-run`. The commit trailer names the host. `--push` is refused. |
 | `origin` | Needs `read_origin`. |
 | `validate`, `consolidate --prepare`, reads | Need nothing. |
-| `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `schedule add`/`remove`, `undo` | Refused. These are the user's decisions. |
+| `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `schedule add`/`remove`, `consolidate --run`, `undo` | Refused. These are the user's decisions. |
 | `import`, `harvest` | Not checked: they run with the owner's rights. `harvest` only lists sessions. |
 
 No capability lets an agent undo runs, because it could undo the user's

@@ -1,11 +1,11 @@
 ---
 id: 01M3250V00B4XAPJRDPK8RPMPT
 type: proposal
-title: "Capture (Host hooks: briefing, capture, and recall)"
+title: "Capture"
 aliases: ["Host hooks: briefing, capture, and recall §1.3"]
 source: "docs/proposal/hooks.md#13-capture"
 ---
-# Capture (Host hooks: briefing, capture, and recall)
+# Capture
 
 ```toml
 # user config.toml

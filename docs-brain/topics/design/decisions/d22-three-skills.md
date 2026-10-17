@@ -16,7 +16,8 @@ The plugin ships three skills: `brain` (use a brain), `brain-setup` (a guided se
 
 - One broad skill.
 - A wizard that runs only in a terminal.
-- Scheduled maintenance. It was built and removed before 0.1 ([[proposal-scheduled-maintenance|proposal]]).
+- Scheduled maintenance. It was built and removed before 0.1; scheduled consolidation returned per host ([[d37-per-agent-consolidation|D37]]).
 
 ## Related
 - [[d35-git-history]]: D35: Git is the history of direct edits
+- [[d37-per-agent-consolidation]]: D37: Each agent consolidates its own episodes, in a session or on a schedule

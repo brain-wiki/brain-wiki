@@ -106,7 +106,7 @@ def _index_summary(brain: Any) -> dict[str, Any]:
     """Roll back interrupted runs, then count notes from the index the way `brain brains` and
     the briefing do: a topic's hub is its index, not one of its notes (index-and-search.md §8)."""
     from brainwiki.engine import Engine
-    from brainwiki.index import pending_by_agent
+    from brainwiki.index import pending_by_agent, scheduled_runs
     from brainwiki.runs import list_records, recover
 
     with Engine(brain) as engine:
@@ -115,6 +115,7 @@ def _index_summary(brain: Any) -> dict[str, Any]:
         notes = engine.db.execute("SELECT COUNT(*) FROM nodes WHERE kind = 'note'").fetchone()[0]
         waiting = pending_by_agent(engine)
         stale_days = engine.manifest.lint.stale_inbox_days
+        scheduled = scheduled_runs(engine)
     uncommitted = [
         {"run": r.run, "error": r.git_error} for r in list_records(brain.key) if r.git_error
     ][:10]
@@ -124,7 +125,24 @@ def _index_summary(brain: Any) -> dict[str, Any]:
         "uncommitted_runs": uncommitted,
         "pending_by_agent": waiting,
         "stale_inbox_days": stale_days,
+        "scheduled_consolidation": scheduled,
     }
+
+
+def _scheduled_problems(name: str, summary: dict[str, Any]) -> list[dict[str, Any]]:
+    """A host's last scheduled consolidation failed (write-path.md §4.8)."""
+    return [
+        {
+            "code": "scheduled_consolidation_failed",
+            "severity": "warning",
+            "message": f"brain {name!r}: the scheduled consolidation by {host} failed at "
+            f"{run.get('at')}: {run.get('error')}",
+            "fix": f"brain consolidate --run --host {host} --brain {name} --dry-run, then fix "
+            "what it reports; the job's log is in brain-wiki's state directory under logs/",
+        }
+        for host, run in sorted((summary.get("scheduled_consolidation") or {}).items())
+        if run.get("status") == "failed"
+    ]
 
 
 def _waiting_problems(name: str, summary: dict[str, Any]) -> list[dict[str, Any]]:
@@ -203,6 +221,7 @@ def run_doctor() -> dict[str, Any]:
                 }
             )
         report["problems"] += _waiting_problems(name, summary)
+        report["problems"] += _scheduled_problems(name, summary)
         for item in summary.get("uncommitted_runs", []):
             report["problems"].append(
                 {

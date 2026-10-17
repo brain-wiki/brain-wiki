@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from brainwiki.format import parse_rules
 from brainwiki.ids import is_ulid, ulid_datetime
-from brainwiki.index._inbox import last_consolidations, pending_by_agent
+from brainwiki.index._inbox import last_consolidations, pending_by_agent, scheduled_runs
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
@@ -285,6 +285,12 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
                 for agent, run in sorted(last.items(), key=lambda kv: kv[1]["at"], reverse=True)[:3]
             )
         )
+    for host, run in sorted(scheduled_runs(engine).items()):
+        if run.get("status") == "failed":
+            inbox_lines.append(
+                f"Scheduled consolidation by {host} failed at {str(run.get('at'))[:16]}: "
+                f"{run.get('error')}. Tell the user; `brain doctor` has the fix."
+            )
     mine = waiting.get(me) if me else {"count": inbox["pending"], "oldest": None}
     if mine and (
         mine["count"] >= 20

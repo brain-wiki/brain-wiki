@@ -11,7 +11,7 @@ mechanics shared by all hosts are in
 | Instructions | Printed for Settings → Rules; `.cursor/rules/brain-wiki.mdc` with `--scope project` |
 | Skills | From the bundle only |
 | Harvest | None: no session reader |
-| Headless preset | `agent -p --output-format json` ([agent integrations §7](../agent-integrations.md#7-headless-presets)) |
+| Unattended mode | Not built; `cursor-agent -p` to verify ([agent integrations §7](../agent-integrations.md#7-unattended-agent-mode)) |
 
 ## Notes
 
@@ -25,8 +25,6 @@ mechanics shared by all hosts are in
   `.cursor/rules/brain-wiki.mdc` with `alwaysApply: true`.
 - Cursor does not expand the Agent Plugins `${PLUGIN_ROOT}` variables (it
   has its own). brain-wiki's MCP entry uses none.
-- The headless preset never passes `--force`, so file changes are only
-  proposed.
 
 ## Other MCP clients
 

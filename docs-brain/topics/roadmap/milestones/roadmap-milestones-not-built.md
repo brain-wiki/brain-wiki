@@ -8,7 +8,7 @@ source: "docs/roadmap/milestones.md#not-built"
 
 | Not built | Where it is now |
 |---|---|
-| Scheduled maintenance: routine templates and headless consolidation. `brain schedule` installs only commit jobs (D35) | [[proposal-scheduled-maintenance\|Scheduled maintenance proposal]] |
+| Unattended consolidation for Codex, Antigravity, Cursor, and OpenClaw; they consolidate in sessions | [[agent-integrations-7-unattended-agent-mode\|agent integrations §7]] |
 | Commit jobs on Windows. `brain schedule` refuses to run there | [[config-and-storage-62-local-folder-with-optional-git\|config and storage §6.2]] |
 | The bench's `agent` suite and model comparisons | Checked by hand before releases ([[eval-bench-35-agent\|eval bench §3.5]]) |
 | Host hooks: a briefing at session start, capture, recall on each prompt, an OpenClaw hook pack | [[proposal-hooks\|Host hooks proposal]] |

@@ -544,7 +544,7 @@ def test_schedule_add_list_remove(repo: Path, cron: FakeCron, capsys: pytest.Cap
     assert jobs[brain_id]["outcome"] == "nothing"
     assert jobs["b-gone"]["brain"] is None
     assert main(["schedule"]) == 0
-    assert "unregistered (b-gone): every 5m, does not push" in capsys.readouterr().out
+    assert "unregistered (b-gone): commit every 5m, does not push" in capsys.readouterr().out
     assert main(["schedule", "add", "commit"]) == 0  # replaces the job
     assert cron.text.count(f"brain-wiki commit {brain_id}") == 2
     assert "*/15 * * * *" in cron.text and "--push" not in cron.text
@@ -609,3 +609,63 @@ def test_doctor_reports_jobs_and_old_edits(repo: Path, cron: FakeCron):
     assert main(["schedule", "add", "commit"]) == 0
     codes = {p["code"] for p in run_doctor()["problems"]}
     assert "uncommitted_edits" not in codes
+
+
+def test_schedule_consolidate_checks_then_installs(
+    repo: Path,
+    cron: FakeCron,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    brain_id = open_brain(repo).id
+    path = os.environ["PATH"]
+    monkeypatch.setenv("PATH", str(tmp_path / "nobin"))
+    assert main(["schedule", "add", "consolidate"]) == 2
+    assert "needs --host HOST" in capsys.readouterr().err
+    assert main(["schedule", "add", "consolidate", "--host", "codex"]) == 2
+    assert "no unattended mode" in capsys.readouterr().err
+    assert main(["schedule", "add", "consolidate", "--host", "claude-code"]) == 2
+    assert "needs `claude` on PATH" in capsys.readouterr().err
+    assert main(["schedule", "add", "commit", "--host", "claude-code"]) == 2
+    claude = write(tmp_path, "bin/claude", "#!/bin/sh\nexit 0\n")
+    claude.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{claude.parent}:{path}")
+    argv = ["schedule", "add", "consolidate", "--host", "claude-code", "--at", "6:15"]
+    assert main([*argv, "--harvest", "--include", "cursor"]) == 0
+    out = capsys.readouterr().out
+    assert "claude-code's consolidation of test daily at 06:15, with harvest" in out
+    assert "Now: nothing to do." in out
+    assert f"# >>> brain-wiki consolidate {brain_id}.claude-code\n" in cron.text
+    (line,) = [x for x in cron.text.splitlines() if " consolidate --run " in x]
+    assert line.startswith("15 6 * * * ") and " PATH=" in line
+    assert "consolidate --run --host claude-code --brain test --harvest --include cursor" in line
+    assert line.endswith(f"consolidate-{brain_id}-claude-code.log 2>&1")
+    assert main(["schedule", "add", "commit"]) == 0  # a second kind of job, side by side
+    capsys.readouterr()
+    assert main(["schedule", "list", "--json"]) == 0
+    jobs = {j["kind"]: j for j in json.loads(capsys.readouterr().out)["jobs"]}
+    consolidate = jobs["consolidate"]
+    assert (consolidate["host"], consolidate["at"], consolidate["harvest"]) == (
+        "claude-code",
+        "06:15",
+        True,
+    )
+    assert consolidate["include"] == ["cursor"] and jobs["commit"]["every"] == "15m"
+    assert main(["schedule", "remove", "consolidate", "--host", "claude-code"]) == 0
+    assert " consolidate --run " not in cron.text and f"brain-wiki commit {brain_id}" in cron.text
+    assert main(["schedule", "add", "consolidate", "--host", "claude-code", "--at", "25:00"]) == 2
+
+
+def test_consolidate_jobs_follow_a_renamed_or_removed_brain(
+    repo: Path, cron: FakeCron, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    claude = write(tmp_path, "bin/claude", "#!/bin/sh\nexit 0\n")
+    claude.chmod(0o755)
+    monkeypatch.setenv("PATH", str(claude.parent), prepend=":")
+    assert main(["schedule", "add", "consolidate", "--host", "claude-code"]) == 0
+    assert main(["schedule", "add", "commit"]) == 0
+    assert _jobs.rename_job(open_brain(repo).id, "renamed")
+    assert cron.text.count("--brain renamed") == 2
+    assert _jobs.remove_job(open_brain(repo).id)
+    assert "brain-wiki" not in cron.text

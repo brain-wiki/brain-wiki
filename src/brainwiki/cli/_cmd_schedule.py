@@ -82,30 +82,60 @@ def schedule(args: Any) -> int:
 
     if args.action == "list":
         return _list(args, scheduler())
-    from brainwiki.config import load_user_config
     from brainwiki.engine import open_engine
     from brainwiki.write import require_owner
 
+    consolidate = args.job == "consolidate"
+    if consolidate and (args.every or args.push):
+        raise UsageError("--every and --push go with the commit job")
+    if not consolidate and (args.host or args.at or args.harvest or args.include):
+        raise UsageError("--host, --at, --harvest, and --include go with the consolidate job")
+    if consolidate and not args.host:
+        raise UsageError("the consolidate job needs --host HOST, the agent app that runs it")
     with open_engine(args.brain, host=args.as_host) as engine:
         require_owner(engine, "schedule jobs")
         brain = engine.brain
     backend = scheduler()
     if args.action == "remove":
-        plan = backend.remove(brain.id, dry_run=args.dry_run)
+        ident = f"{brain.id}.{args.host}" if consolidate else brain.id
+        plan = backend.remove(ident, dry_run=args.dry_run, kind=args.job)
+        what = f"{args.host}'s consolidate job" if consolidate else "the commit job"
         if plan is None:
-            emit(args, {"removed": False}, f"No commit job for {brain.display_name}.")
+            emit(
+                args,
+                {"removed": False},
+                f"No {what.removeprefix('the ')} for {brain.display_name}.",
+            )
             return 0
         verb = "Would remove" if args.dry_run else "Removed"
-        text = f"{verb} the commit job for {brain.display_name} ({plan.backend})"
+        text = f"{verb} {what} for {brain.display_name} ({plan.backend})"
         if args.dry_run:
             text += ":\n" + plan.text.rstrip() + "\n\nCommands:\n  " + "\n  ".join(plan.commands)
         emit(args, {"removed": not args.dry_run, "plan": vars(plan)}, text)
         return 0
+    name = _registered_name(brain)
+    if consolidate:
+        return _add_consolidate(args, backend, brain, name)
 
     from brainwiki.runs import is_work_tree
     from brainwiki.schedule import make_job, parse_every
 
-    every = parse_every(args.every)[0]
+    every = parse_every(args.every or "15m")[0]
+    root = brain.root.resolve()
+    if not is_work_tree(root):
+        raise UsageError(f"brain {name!r} is not a git work tree; run `git init` in {root} first")
+    job = make_job(brain.id, name, every, args.push)
+    plan = backend.install(job, dry_run=args.dry_run)
+    data = {"brain": name, "id": brain.id, "every": every, "push": args.push, "plan": vars(plan)}
+    what = f"`brain commit --brain {name}{' --push' if args.push else ''}` every {every}"
+    after = "" if args.push else "It commits and fetches but never pushes; add --push to push."
+    return _report_install(args, plan, data, what, job.log_path, after)
+
+
+def _registered_name(brain: Any) -> str:
+    """The name the job uses for the brain: jobs name brains, so it must be registered."""
+    from brainwiki.config import load_user_config
+
     root = brain.root.resolve()
     name = next(
         (n for n, p in load_user_config().brains.items() if p.expanduser().resolve() == root),
@@ -116,11 +146,47 @@ def schedule(args: Any) -> int:
             f"the brain at {root} is not registered; the job names it, so register it first "
             "with `brain brains add NAME PATH`"
         )
-    if not is_work_tree(root):
-        raise UsageError(f"brain {name!r} is not a git work tree; run `git init` in {root} first")
-    job = make_job(brain.id, name, every, args.push)
+    return name
+
+
+def _add_consolidate(args: Any, backend: Any, brain: Any, name: str) -> int:
+    """Install a host's daily consolidation after the checks a run makes pass (write-path.md
+    §4.8): a profile with `edit`, the host CLI and its unattended mode, and a dry run."""
+    from brainwiki.consolidate import run_scheduled
+    from brainwiki.schedule import make_consolidate_job
+
+    job = make_consolidate_job(
+        brain.id, name, args.host, args.at or "21:30", args.harvest, args.include
+    )
+    check = run_scheduled(
+        brain, args.host, harvest=args.harvest, include=args.include, dry_run=True
+    )
+    if check.status == "failed":
+        raise UsageError(f"not scheduled: {check.error}")
     plan = backend.install(job, dry_run=args.dry_run)
-    data = {"brain": name, "id": brain.id, "every": every, "push": args.push, "plan": vars(plan)}
+    data = {
+        "brain": name,
+        "id": brain.id,
+        "host": args.host,
+        "at": job.at,
+        "harvest": args.harvest,
+        "include": args.include,
+        "check": check.to_json(),
+        "plan": vars(plan),
+    }
+    what = f"{args.host}'s consolidation of {name} daily at {job.at}" + (
+        ", with harvest" if args.harvest else ""
+    )
+    after = (
+        f"Now: {check.summary}. The machine must be on at {job.at}; failures show in "
+        "orientation and `brain doctor`."
+    )
+    return _report_install(args, plan, data, what, job.log_path, after)
+
+
+def _report_install(
+    args: Any, plan: Any, data: dict[str, Any], what: str, log: Path, after: str
+) -> int:
     detail = plan.text.rstrip() + "\n\nCommands:\n  " + "\n  ".join(plan.commands)
     if plan.manual:
         emit(
@@ -130,16 +196,11 @@ def schedule(args: Any) -> int:
             f"crontab by hand (`crontab -e`):\n\n{plan.text.rstrip()}",
         )
         return 1
-    what = f"`brain commit --brain {name}{' --push' if args.push else ''}` every {every}"
     if args.dry_run:
         emit(args, data | {"installed": False}, f"Would run {what} ({plan.backend}):\n{detail}")
         return 0
-    emit(
-        args,
-        data | {"installed": True},
-        f"Scheduled {what} ({plan.backend}); log: {job.log_path}"
-        + ("" if args.push else "\nIt commits and fetches but never pushes; add --push to push."),
-    )
+    text = f"Scheduled {what} ({plan.backend}); log: {log}" + (f"\n{after}" if after else "")
+    emit(args, data | {"installed": True}, text)
     return 0
 
 
@@ -148,32 +209,74 @@ def _list(args: Any, backend: Any) -> int:
     from brainwiki.schedule import last_run
 
     names: dict[str, str] = {}
+    brains: dict[str, Any] = {}
     for name, path in load_user_config().brains.items():
         with contextlib.suppress(BrainError, OSError):  # unreadable: doctor reports it
-            names.setdefault(open_brain(path).id, name)
+            brain = open_brain(path, name)
+            names.setdefault(brain.id, name)
+            brains.setdefault(brain.id, brain)
     rows = []
     for job in backend.jobs():
-        record = last_run(job.brain_id) or {}
-        rows.append(
-            {
-                "brain": names.get(job.brain_id),
-                "id": job.brain_id,
-                "job_brain": job.brain_name,
+        row: dict[str, Any] = {
+            "kind": job.kind,
+            "brain": names.get(job.brain_id),
+            "id": job.brain_id,
+            "job_brain": job.brain_name,
+            "where": job.where,
+        }
+        if job.kind == "consolidate":
+            record = _scheduled_record(brains.get(job.brain_id), job.host)
+            row |= {
+                "host": job.host,
+                "at": job.at,
+                "harvest": job.harvest,
+                "include": job.include,
+                "last_run": record.get("at"),
+                "outcome": record.get("status"),
+            }
+        else:
+            record = last_run(job.brain_id) or {}
+            row |= {
                 "every": job.every,
                 "push": job.push,
-                "where": job.where,
                 "last_run": record.get("time"),
                 "outcome": record.get("outcome"),
             }
-        )
+        rows.append(row)
     if not rows:
-        text = "No commit jobs. Add one with `brain schedule add commit`."
-    else:
-        text = "\n".join(
-            f"{r['brain'] or 'unregistered'} ({r['id']}): every {r['every'] or '?'}, "
-            + ("pushes" if r["push"] else "does not push")
-            + (f"; last run {r['last_run']}: {r['outcome']}" if r["last_run"] else "; not run yet")
-            for r in rows
+        text = (
+            "No jobs. Add one with `brain schedule add commit`, or "
+            "`brain schedule add consolidate --host HOST`."
         )
+    else:
+        text = "\n".join(_job_line(r) for r in rows)
     emit(args, {"jobs": rows}, text)
     return 0
+
+
+def _scheduled_record(brain: Any, host: str | None) -> dict[str, Any]:
+    if brain is None or not host:
+        return {}
+    import json
+
+    from brainwiki.index import scheduled_run_path
+
+    try:
+        return json.loads(scheduled_run_path(brain.key, host).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _job_line(r: dict[str, Any]) -> str:
+    who = f"{r['brain'] or 'unregistered'} ({r['id']})"
+    last = f"; last run {r['last_run']}: {r['outcome']}" if r["last_run"] else "; not run yet"
+    if r["kind"] == "consolidate":
+        extra = (", with harvest" if r["harvest"] else "") + (
+            f", including {', '.join(r['include'])}" if r["include"] else ""
+        )
+        return f"{who}: {r['host']} consolidates daily at {r['at'] or '?'}{extra}{last}"
+    return (
+        f"{who}: commit every {r['every'] or '?'}, "
+        + ("pushes" if r["push"] else "does not push")
+        + last
+    )
