@@ -1,6 +1,6 @@
 ---
 id: 01M3250V0088Y1M641G16F4DB0
-type: hub
+type: topic
 title: "Write path"
 source: "docs/design/write-path.md"
 ---

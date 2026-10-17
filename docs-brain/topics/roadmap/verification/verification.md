@@ -1,6 +1,6 @@
 ---
 id: 01M3250V009JKE8SX48VFW0Q43
-type: hub
+type: topic
 title: "Verification items"
 source: "docs/roadmap/verification.md"
 ---

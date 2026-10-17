@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00GAADEF59YKM1NN2J
-type: hub
+type: topic
 title: "Agent hosts"
 source: "docs/design/hosts/"
 ---

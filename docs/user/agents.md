@@ -74,7 +74,7 @@ server in each new session on a slow network. With the command installed
 | `brain_list` | Which brains this agent may use, what each holds, which is the default here |
 | `brain_orient` | One brain's briefing: rules, contents, topics, recent changes, inbox, example queries |
 | `brain_search` | Search, or browse with filters and `sort: recent` |
-| `brain_read` | Read a note, hub, or episode, with the paths of its links and backlinks |
+| `brain_read` | Read a note, topic page, or episode, with the paths of its links and backlinks |
 | `brain_neighbors` | Follow a note's links and backlinks, up to 3 hops |
 | `brain_validate` | Check the frontmatter of notes the agent changed |
 | `brain_log_episode` | Record a learning in the inbox when no note fits yet |

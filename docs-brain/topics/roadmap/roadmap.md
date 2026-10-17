@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00HEG4EVVAB6BFFM60
-type: hub
+type: topic
 title: "Roadmap"
 source: "docs/roadmap/README.md"
 ---

@@ -50,8 +50,8 @@ The model the agent runs on sees every episode and candidate note in the
 packet. Keeping notes away from a cloud model means keeping them in a
 separate brain ([[proposal-privacy|privacy proposal]]).
 
-Candidates for each episode are the hubs of its hinted topics, then up to 5
-notes or hubs found by an FTS query over the episode's 12 most frequent
+Candidates for each episode are the pages of its hinted topics, then up to
+5 notes or topic pages found by an FTS query over the episode's 12 most frequent
 words. Archived notes are excluded.
 
 The packet is JSON with brain-relative paths. The guidance comes before it:

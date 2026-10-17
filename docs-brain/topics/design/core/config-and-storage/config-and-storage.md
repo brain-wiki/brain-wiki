@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00SWXGPABZ3BEXZDK6
-type: hub
+type: topic
 title: "Config and storage"
 source: "docs/design/config-and-storage.md"
 ---

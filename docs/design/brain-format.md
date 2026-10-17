@@ -37,10 +37,10 @@ root. The default layout follows. Every folder name is configurable in
 ├── .gitattributes              written by `brain init`
 ├── topics/
 │   └── <topic>/
-│       ├── index.md            hub page for the topic
+│       ├── index.md            the topic page
 │       ├── <note>.md           curated notes
 │       ├── <subfolder>/…       further organization inside the topic
-│       └── <sub-topic>/        a folder with its own hub is a topic too, at any depth
+│       └── <sub-topic>/        a folder with its own topic page is a topic too, at any depth
 │           └── index.md
 ├── inbox/
 │   ├── episodes/
@@ -72,14 +72,14 @@ Rules:
 
 ### 2.1 Topics
 
-A topic is the unit people browse, search filters by, and a hub
-summarizes. Topics are folders, so every file browser shows them, and they
+A topic is the unit people browse and search filters by, and its topic
+page summarizes it. Topics are folders, so every file browser shows them, and they
 form a tree ([D30](../decision/d30-topic-tree.md)).
 
 - A topic is a folder directly under `topics/`, or a folder at any depth
-  below it that has a hub (`layout.hub_filename`, §8). There are no named
+  below it that has a topic page (`layout.topic_page`, §8). There are no named
   levels: `people/` and `people/rin-sato/` are both topics.
-- A folder without a hub inside a topic is plain organization. Its notes
+- A folder without a topic page inside a topic is plain organization. Its notes
   belong to the enclosing topic.
 - A topic's parent is the nearest enclosing topic. A note belongs to the
   topic whose folder holds it. No frontmatter field declares membership.
@@ -120,12 +120,12 @@ name = "personal"                           # display name (optional)
 description = "Personal notes and projects" # one line shown by brain_list (optional)
 
 [layout]                                    # all optional; defaults shown
-topics_dir   = "topics"
-inbox_dir    = "inbox"
-archive_dir  = "archive"
-reports_dir  = "reports"
-hub_filename = "index.md"                   # or "{folder}.md" for folder-note style
-ignore       = []                           # extra glob patterns, relative to the brain root
+topics_dir  = "topics"
+inbox_dir   = "inbox"
+archive_dir = "archive"
+reports_dir = "reports"
+topic_page  = "index.md"                    # or "{folder}.md" for folder-note style
+ignore      = []                            # extra glob patterns, relative to the brain root
 
 [budgets]
 rules_max_lines     = 100
@@ -142,7 +142,7 @@ stale_inbox_days = 14
 freshness_ms       = 1000
 max_guards_per_hit = 10
 status_factor      = { active = 1.0, superseded = 0.35, archived = 0.2 }
-kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7, archived_episode = 0.5 }
+kind_factor        = { topic = 1.15, note = 1.0, episode = 0.7, archived_episode = 0.5 }
 recency_half_life_days = 180
 
 [consolidate]
@@ -176,9 +176,12 @@ Rules:
   SHOULD produce a lint warning (BW109).
 - Inline tables (`status_factor = { … }`) are TOML, not frontmatter. The
   flat-values rule of §4 applies to note frontmatter only.
-- An undeclared topic still works. Its title comes from its hub, and its
-  description from the hub's `description` property. A declaration sets
+- An undeclared topic still works. Its title comes from its topic page,
+  and its description from the page's `description` property. A declaration sets
   the title, the description, or a path (for imported vaults).
+- Older `brain.toml` files may use the names from when topic pages were
+  called hubs. `layout.hub_filename` is read as `layout.topic_page`, and a
+  `hub` key in `search.kind_factor` as `topic`.
 - Declared topic slugs MUST match `^[a-z0-9][a-z0-9-]{0,63}$` (BW409).
 - `[budgets]` limits are hard. Rule writes refuse to exceed theirs, lint
   reports `rules.md` (BW402) and `AGENTS.md` (BW403), and orientation is
@@ -239,13 +242,13 @@ Rules:
 - Ids are permanent. Renaming or moving a file never changes its id.
 - Ids MUST be unique within a brain. Lint reports duplicates (BW105),
   usually a copied file, and `--fix` mints a new id for each newer copy
-  of a note or hub.
+  of a note or topic page.
 - Format 2 also gave each claim a `c-` id. The conversion to format 3
   drops them (§13).
 
 ## 6. Notes
 
-Notes and hubs (§8) share the rules in this section.
+Notes and topic pages (§8) share the rules in this section.
 
 ### 6.1 Frontmatter
 
@@ -278,7 +281,7 @@ bw-sources:
 | `bw-stage` | no | string | Free workflow state |
 | `created`, `updated` | no | ISO 8601 date or date-time | — |
 
-- Suggested `type` values: `note`, `hub`, `concept`, `decision`, `howto`,
+- Suggested `type` values: `note`, `topic`, `concept`, `decision`, `howto`,
   `reference`, `person`, `project`, `source`, `meeting`, `record` (a dated
   account of something that happened, which consolidation writes under
   `topics/<topic>/records/`).
@@ -451,16 +454,17 @@ notes come on top of the top-k results
 Format 3 has no conflict relation. A note that disagrees with another says
 so in a sentence with a link.
 
-## 8. Topic hubs
+## 8. Topic pages
 
-A hub is the file named `layout.hub_filename` at the root of a topic
-folder. It gives a person or an agent a one-page entry point. A note with
-`type: hub` elsewhere in a topic is indexed as a hub too.
+A topic page is the file named `layout.topic_page` at the root of a topic
+folder. It is the topic's own page, a one-page entry point for a person or
+an agent. Only that file is a topic page: a note's `type` never makes it
+one ([D38](../decision/d38-topic-pages.md)).
 
 ```markdown
 ---
 id: 01J9Z7M3…
-type: hub
+type: topic
 title: Search
 ---
 # Search
@@ -473,11 +477,13 @@ How local search works in this project and why. Storage details are in
 - [[SQLite version policy]]: minimum versions and fallbacks
 ```
 
-- With `hub_filename = "{folder}.md"`, the hub of `topics/search/` is
+- `type` defaults to `topic` on a topic page. Like every `type`, it is
+  open vocabulary, so a page written with `type: hub` keeps working.
+- With `topic_page = "{folder}.md"`, the page of `topics/search/` is
   `topics/search/search.md`.
-- Hubs have no length limit. Detail belongs in notes in the topic's
-  folder, and the hub links them, one line each.
-- A parent topic's hub need not list its sub-topics, since the folders
+- Topic pages have no length limit. Detail belongs in notes in the
+  topic's folder, and the page links them, one line each.
+- A parent topic's page need not list its sub-topics, since the folders
   already form the topic tree (§2). A crowded topic splits into
   sub-topics.
 - `## Notes` lists the topic's notes with a short gloss. It is navigation
@@ -485,7 +491,7 @@ How local search works in this project and why. Storage details are in
   reaches through body links, is BW405.
   `brain lint --fix --select BW405` appends the missing entries and never
   removes lines a person wrote.
-- An optional `description` property on the hub is the topic's one-line
+- An optional `description` property on the page is the topic's one-line
   description when `brain.toml` does not declare one.
 
 ## 9. Episodes
@@ -606,7 +612,7 @@ outside the markers is preserved.
 # This folder is a brain-wiki brain: personal
 
 - Read `rules.md` first: standing directives from the user.
-- Knowledge lives in `topics/<topic>/`; each topic has a hub (`index.md`).
+- Knowledge lives in `topics/<topic>/`; each topic has a page (`index.md`).
 - To add or correct knowledge, edit or create a note, then run
   `brain validate <path>` (MCP: `brain_validate`) and fix what it reports. Something
   not organized yet goes in `inbox/episodes/YYYY/MM/<ULID>.md` (or the MCP tool
@@ -614,7 +620,7 @@ outside the markers is preserved.
 - A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note
   with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
 
-| Topic | Hub | About |
+| Topic | Page | About |
 |---|---|---|
 | search | topics/search/index.md | How local search works and why. |
 <!-- brain-wiki:end -->
@@ -628,12 +634,13 @@ bullet becomes "To record something, add a new file under
 matches the host instruction block
 ([agent integrations §3.2](agent-integrations.md#32-the-static-instruction-block)).
 
-- The topic table lists the top-level topics alphabetically, with the hub
-  path and the description (or title) plus the number of sub-topics.
+- The topic table lists the top-level topics alphabetically, with each
+  topic page's path and the description (or title) plus the number of
+  sub-topics.
 - The whole file is limited to `budgets.agents_md_max_lines`, counting
   the user's text outside the markers. When the table does not fit, it
   keeps the most recently updated topics and ends with a row pointing to
-  the hubs.
+  the topic pages.
 - Agents never edit `AGENTS.md`, inside or outside the markers. The user
   may.
 - `brain init` writes the block. `brain lint --fix` (BW403, BW408),
@@ -717,7 +724,7 @@ converts it to format 3:
 | `bw-claims-superseded` items, or struck-through format 1 claims | `## History` bullets: `- ~~text~~ (reason)` |
 | Claim `src` | `bw-sources` items |
 | `bw-<verb>` relations, or format 1 `## Relations` items | `## Related` bullets |
-| `bw-part_of` naming the note's own hub | Dropped, since membership is the folder (§2) |
+| `bw-part_of` naming the page of the note's own topic | Dropped, since membership is the folder (§2) |
 | `bw-superseded_by` relation | The `bw-superseded_by` field and `status: superseded` |
 | `bw-supersedes: X`, or a format 1 `supersedes` line | A `## Related` bullet, plus a fix on note X |
 | A relation item that does not parse | Moved unchanged to `## Related` |
@@ -729,7 +736,8 @@ converts it to format 3:
   references (`host:session#T…`) are dropped. Items merge into an existing
   `bw-sources` without duplicates.
 - A relation bullet starts with its verb as a phrase, as in the example
-  below. "The note's own hub" means its hub path, folder name, or slug.
+  below. "The page of the note's own topic" means the page's path, the folder's
+  name, or the topic's slug.
 - A `bw-superseded_by` relation sets `status: superseded` only when the
   status was `active`.
 - For `bw-supersedes: X`, a second BW117 fix on X sets

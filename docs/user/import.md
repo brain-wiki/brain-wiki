@@ -17,7 +17,7 @@
 ## Adopt an Obsidian vault or Markdown folder
 
 ```sh
-brain import ~/notes --overlay                 # report: topics, hubs, counts, what would change
+brain import ~/notes --overlay                 # report: topics, topic pages, counts, what would change
 brain import ~/notes --overlay --apply         # phase 0: adopt in place
 ```
 
@@ -39,7 +39,7 @@ Later phases are optional. Each one is a separate undoable run:
 | Phase | Changes |
 |---|---|
 | `--phase 1` | Notes without an `id` get one; non-standard `status` values (`draft`, `done`) move to `bw-stage` |
-| `--phase 2` | Topics without a hub get one; notes missing from their hub are listed in it |
+| `--phase 2` | Topics without a topic page get one; notes missing from their page are listed in it |
 
 ```sh
 brain import ~/notes --overlay --phase 1            # see the diff
@@ -62,7 +62,7 @@ brain import ~/old-notes --into personal --topic archive --apply
 - Top-level folders become topics, or everything goes into `--topic`.
 - Notes get ids, `status` values are mapped as in phase 1, and path links
   are rewritten.
-- New topics get hubs, and the `AGENTS.md` topic table is refreshed, in
+- New topics get topic pages, and the `AGENTS.md` topic table is refreshed, in
   separate runs. Undo all of them to revert.
 - The source folder is left untouched.
 

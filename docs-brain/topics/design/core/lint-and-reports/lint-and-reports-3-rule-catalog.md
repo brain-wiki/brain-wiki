@@ -20,7 +20,7 @@ marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
 | BW102 † | Frontmatter holds a nested mapping or a list of lists. | error / warning | — |
 | BW103 † | Note has no `id`. | error / info | Mint an id |
 | BW104 † | `id` is not a ULID. | error / warning | Mint a new id |
-| BW105 † | Two files share an `id`. | error / error | Mint new ids for the newer notes or hubs |
+| BW105 † | Two files share an `id`. | error / error | Mint new ids for the newer notes or topic pages |
 | BW106 † | `status` is not `active`, `superseded`, or `archived`. | error / info | Map it, keeping the old value in `bw-stage` |
 | BW109 | Unknown key in `brain.toml`. | warning / warning | — |
 | BW110 | Two paths differ only by letter case. | warning / warning | — |
@@ -42,7 +42,7 @@ marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
   describes, and leaves an existing `bw-stage` alone.
 - BW112 matches common sync-tool conflict names, and `note (1).md` or
   `note 2.md` when `note.md` exists with different content.
-- BW114 checks notes, hubs, `rules.md`, `AGENTS.md`, and `log.md`.
+- BW114 checks notes, topic pages, `rules.md`, `AGENTS.md`, and `log.md`.
 - BW117 lists what makes the note format 1 or 2
   ([[brain-format-13-format-versioning|brain format §13]]). A
   `bw-supersedes` relation adds a second BW117 whose fix marks the note it
@@ -69,14 +69,14 @@ one lists up to five candidates. A wikilink to an attachment, such as
 |---|---|---|---|
 | BW402 | `rules.md` exceeds its line or character budget. | error / error | — |
 | BW403 | `AGENTS.md` exceeds `budgets.agents_md_max_lines`. | error / warning | Regenerate the block |
-| BW404 | A topic folder has no hub. | warning / info | Create a hub listing the topic's notes |
-| BW405 | Note is not in its hub's `## Notes`, and no chain of body links reaches it from a note that is. | info / off | Append a line to `## Notes` |
-| BW406 | Orphan: no other note, hub, or episode links to it. | info / off | — |
+| BW404 | A topic folder has no topic page. | warning / info | Create a topic page listing the topic's notes |
+| BW405 | Note is not in its topic page's `## Notes`, and no chain of body links reaches it from a note that is. | info / off | Append a line to `## Notes` |
+| BW406 | Orphan: no other note, topic page, or episode links to it. | info / off | — |
 | BW407 | Note outside any topic. | info / off | — |
 | BW408 | `AGENTS.md` or its managed block is missing or out of date. | warning / warning | Create the file or regenerate the block |
 | BW409 | A topic slug declared in `brain.toml` is invalid. | error / warning | — |
 
-A deeper folder without a hub is not a topic
+A deeper folder without a topic page is not a topic
 ([[brain-format-2-directory-layout|brain format §2.1]]), so BW404 concerns
 top-level folders and declared topics.
 

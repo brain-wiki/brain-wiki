@@ -36,7 +36,7 @@ def _manifest_text(found: Survey, name: str) -> str:
         "",
         "[layout]",
         'topics_dir = "."',
-        f"hub_filename = {_toml_string(found.hub_filename)}",
+        f"topic_page = {_toml_string(found.topic_page)}",
         "ignore = [" + ", ".join(_toml_string(i) for i in found.ignore) + "]",
         "",
         "[lint]",
@@ -64,7 +64,7 @@ def report(found: Survey, name: str) -> str:
         f"# Import plan: {found.root}",
         "",
         f"- Notes: {counts['notes']} ({counts['with_frontmatter']} with frontmatter, {counts['with_id']} with ids)",
-        f"- Obsidian vault: {'yes' if found.obsidian else 'no'}; hub style: {found.hub_filename}",
+        f"- Obsidian vault: {'yes' if found.obsidian else 'no'}; topic pages: {found.topic_page}",
         f"- Topics ({len(found.topics)}): "
         + ", ".join(f"{s} ← {f}/" for s, f in found.topics.items()),
         f"- Ignored folders: {', '.join(found.ignore) or 'none'}",
@@ -84,7 +84,7 @@ def report(found: Survey, name: str) -> str:
         "Touches no existing note.",
         f"- 1 · Identity and status: mints ids for {counts['notes'] - counts['with_id']} notes; "
         f"maps {sum(found.statuses.values())} status values into status + stage.",
-        "- 2 · Structure: creates missing hubs and lists notes in them.",
+        "- 2 · Structure: creates missing topic pages and lists notes in them.",
         "",
         "Run each phase separately: `brain import PATH --overlay --apply [--phase N]`.",
         "",
@@ -207,11 +207,11 @@ def apply_phase(
     if phase == 2:
         result = lint(engine, select=["BW404", "BW405"], fixes=True)
         run, _ = plan_fixes(engine, result, include_info=True)
-        run.kind, run.summary = "import", "import phase 2: hubs"
+        run.kind, run.summary = "import", "import phase 2: topic pages"
     else:
         run = Run(engine, "import", summary="import phase 1: ids and status")
         rows = engine.db.execute(
-            "SELECT f.path FROM files f JOIN nodes n ON n.id = f.node_id WHERE n.kind IN ('note', 'hub') AND f.parse_errors = 0"
+            "SELECT f.path FROM files f JOIN nodes n ON n.id = f.node_id WHERE n.kind IN ('note', 'topic') AND f.parse_errors = 0"
         ).fetchall()
         for row in rows:
             text = run.read(row["path"])

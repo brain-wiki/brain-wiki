@@ -228,7 +228,7 @@ adding provenance.
 
 ### 2.3 Direct edits
 
-Agents whose profile has `edit` create and edit notes and hubs under
+Agents whose profile has `edit` create and edit notes and topic pages under
 `topics/` with their own file tools, then run `brain validate` (MCP
 `brain_validate`) on what they changed. A correction and new knowledge take
 the same path. Orientation's "Writing notes" section tells an agent with
@@ -434,8 +434,8 @@ The model the agent runs on sees every episode and candidate note in the
 packet. Keeping notes away from a cloud model means keeping them in a
 separate brain ([privacy proposal](../proposal/privacy.md)).
 
-Candidates for each episode are the hubs of its hinted topics, then up to 5
-notes or hubs found by an FTS query over the episode's 12 most frequent
+Candidates for each episode are the pages of its hinted topics, then up to
+5 notes or topic pages found by an FTS query over the episode's 12 most frequent
 words. Archived notes are excluded.
 
 The packet is JSON with brain-relative paths. The guidance comes before it:
@@ -551,7 +551,7 @@ source, but never becomes a statement about the user.
 
 It also tells the model to:
 
-- prefer an existing note, and create one (listed in its hub's
+- prefer an existing note, and create one (listed in its topic page's
   `## Notes`) only when nothing fits;
 - write a one-paragraph summary, one specific fact per bullet, and
   wikilinks inside sentences, recording failed approaches as facts;

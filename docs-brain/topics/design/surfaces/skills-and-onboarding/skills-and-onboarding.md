@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00HBEMJ13GZB2E7ZTE
-type: hub
+type: topic
 title: "Skills and onboarding"
 source: "docs/design/skills-and-onboarding.md"
 ---

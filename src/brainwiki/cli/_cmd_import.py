@@ -125,6 +125,6 @@ def _into(args: Any, source: Path) -> int:
         tidy = [r.run for r in tidy_after_import(engine)]
     text = f"Imported {summary['files']} files ({record.run})."
     if tidy:
-        text += f" Then added hubs and refreshed AGENTS.md ({', '.join(tidy)}); undo all to revert."
+        text += f" Then added topic pages and refreshed AGENTS.md ({', '.join(tidy)}); undo all to revert."
     emit(args, record.to_json() | summary | {"tidy_runs": tidy}, text)
     return 0

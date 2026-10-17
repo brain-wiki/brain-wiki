@@ -244,7 +244,7 @@ def test_neighbors_follow_links_by_direction_and_depth(example: Path):
         out = neighbors(eng, "fts5", direction="out")
         into = neighbors(eng, "sqlite-version-policy", direction="in")
         history = neighbors(eng, "ripgrep", depth=3)
-        hub = neighbors(eng, "Search", limit=2)
+        page = neighbors(eng, "Search", limit=2)
     assert [(n["title"], n["via"]["relation"]) for n in out["nodes"][1:]] == [
         ("SQLite version policy", "links_to"),
         ("Vector-only search proposal", "links_to"),
@@ -259,8 +259,8 @@ def test_neighbors_follow_links_by_direction_and_depth(example: Path):
     assert {n["via"]["relation"] for n in into["nodes"][1:]} == {"linked_from"}
     assert history["nodes"][1]["via"]["relation"] == "superseded_by"  # supersession first
     assert max(n["depth"] for n in history["nodes"]) == 3
-    assert hub["truncated"] and len(hub["nodes"]) == 3
-    assert '- links_to "Use SQLite FTS5 for local search"' in format_neighbors_text(hub)
+    assert page["truncated"] and len(page["nodes"]) == 3
+    assert '- links_to "Use SQLite FTS5 for local search"' in format_neighbors_text(page)
 
 
 def test_neighbors_reject_bad_input(example: Path):
@@ -306,9 +306,9 @@ def test_briefing_teaches_writing_only_to_agents_that_edit(example: Path):
     with _engine(example, "some-host") as reader:  # the default profile only logs episodes
         assert "## Writing notes" not in orient(reader)["text"]
     toml = example / "brain.toml"
-    toml.write_text(toml.read_text() + '\n[layout]\nhub_filename = "{folder}.md"\n')
+    toml.write_text(toml.read_text() + '\n[layout]\ntopic_page = "{folder}.md"\n')
     with _engine(example, "trusted") as editor:
-        assert "a folder with an `<folder>.md` hub" in orient(editor)["text"]
+        assert "a folder with a topic page, `<folder>.md`." in orient(editor)["text"]
 
 
 def test_briefing_truncates_topics_with_a_browse_pointer(example: Path):
@@ -415,7 +415,7 @@ def test_listing_input_is_checked(example: Path, capsys: pytest.CaptureFixture[s
     listed = list_brains(None)["brains"][0]["notes"]
     assert (
         run_doctor()["brains"][0]["notes"] == listed
-    )  # hubs are not notes (index-and-search.md §8)
+    )  # topic pages are not notes (index-and-search.md §8)
 
 
 def test_global_options_work_before_the_command(example: Path, capsys: pytest.CaptureFixture[str]):

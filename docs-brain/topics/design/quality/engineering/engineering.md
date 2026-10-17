@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00GWVPYV5TG69HAX1N
-type: hub
+type: topic
 title: "Engineering"
 source: "docs/design/engineering.md"
 ---

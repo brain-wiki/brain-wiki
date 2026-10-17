@@ -104,7 +104,7 @@ def _brain_summary(name: str, path: Path) -> dict[str, Any]:
 
 def _index_summary(brain: Any) -> dict[str, Any]:
     """Roll back interrupted runs, then count notes from the index the way `brain brains` and
-    the briefing do: a topic's hub is its index, not one of its notes (index-and-search.md §8)."""
+    the briefing do: a topic's page is not one of its notes (index-and-search.md §8)."""
     from brainwiki.engine import Engine
     from brainwiki.index import pending_by_agent, scheduled_runs
     from brainwiki.runs import list_records, recover

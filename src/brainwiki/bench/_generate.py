@@ -82,7 +82,7 @@ class Node:
     path: str
     title: str
     topic: str | None
-    kind: str = "note"  # note | hub | episode
+    kind: str = "note"  # note | topic | episode
     status: str = "active"
     token: str = ""  # unique planted token in the body
 
@@ -180,11 +180,11 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
     topic_about = {
         t: f"How the fictional {t.title()} project builds and runs." for t in topic_slugs
     }
-    hubs: dict[str, Node] = {}
+    pages: dict[str, Node] = {}
     for t in topic_slugs:
-        hub = Node(g.ulid(_EPOCH), "index", f"topics/{t}/index.md", topic_titles[t], t, "hub")
-        hubs[t] = hub
-        truth.nodes[hub.id] = hub
+        page = Node(g.ulid(_EPOCH), "index", f"topics/{t}/index.md", topic_titles[t], t, "topic")
+        pages[t] = page
+        truth.nodes[page.id] = page
 
     # Notes: unique titles, one unique token each.
     titles: set[str] = set()
@@ -297,24 +297,24 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
             ),
         )
 
-    # Hubs list their notes.
+    # Topic pages list their notes.
     for t in topic_slugs:
-        hub = hubs[t]
+        page = pages[t]
         listed = by_topic[t]
         lines = [
             "---",
-            f"id: {hub.id}",
-            "type: hub",
-            f"title: {hub.title}",
+            f"id: {page.id}",
+            "type: topic",
+            f"title: {page.title}",
             "---",
-            f"# {hub.title}",
+            f"# {page.title}",
             "",
             topic_about[t],
             "",
             "## Notes",
             *[f"- [[{n.slug}]]: {n.title.lower()}" for n in listed],
         ]
-        _write(root / hub.path, "\n".join(lines) + "\n")
+        _write(root / page.path, "\n".join(lines) + "\n")
 
     # Pending episodes, some unverified.
     for i in range(max(5, notes // 50)):
@@ -344,7 +344,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
         _write(root / node.path, "\n".join([*fm, "---", *body]) + "\n")
 
     _write_manifest(root, g.ulid(_EPOCH), topic_slugs, topic_titles, topic_about)
-    rows = [(t, hubs[t].path, topic_about[t]) for t in sorted(topic_slugs)]
+    rows = [(t, pages[t].path, topic_about[t]) for t in sorted(topic_slugs)]
     agents = (root / "AGENTS.md").read_text(encoding="utf-8")
     _write(root / "AGENTS.md", replace_block(agents, default_agents_block("bench", rows)))
 

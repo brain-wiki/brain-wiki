@@ -1,6 +1,6 @@
 ---
 id: 01M3250V0035S3B20WS62YDMX5
-type: hub
+type: topic
 title: "User guide"
 source: "docs/user/"
 ---

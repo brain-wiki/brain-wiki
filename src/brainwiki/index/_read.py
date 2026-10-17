@@ -1,4 +1,4 @@
-"""Read a note, hub, or episode with guard banners (index-and-search.md §7)."""
+"""Read a note, topic page, or episode with guard banners (index-and-search.md §7)."""
 
 from __future__ import annotations
 
@@ -62,10 +62,10 @@ def read(
     node = resolve_target(engine, target)
     text = engine.store.read_text(node["path"])
     kind = node["kind"]
-    mode = mode or ("section" if section else "outline" if kind == "hub" else "full")
+    mode = mode or ("section" if section else "outline" if kind == "topic" else "full")
     guard_info = (
         guards_for(engine, [node["id"]])[node["id"]]
-        if kind in ("note", "hub")
+        if kind in ("note", "topic")
         else {"guards": [], "more_guards": 0}
     )
     result: dict[str, Any] = {
@@ -119,7 +119,7 @@ def read(
         result["links"] = _links(engine, node["id"])
         result["backlinks"], result["backlinks_total"] = _backlinks(engine, node["id"])
         handles = _handle_lines(result)
-        if handles and kind in ("note", "hub"):
+        if handles and kind in ("note", "topic"):
             result["content"] += "\n\n---\n" + "\n".join(handles)
     if kind in ("episode", "archived_episode"):
         result["content"] = (

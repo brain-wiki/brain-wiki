@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00CX6WRR7MZDNYRRSA
-type: hub
+type: topic
 title: "Security and privacy"
 source: "docs/design/security-and-privacy.md"
 ---

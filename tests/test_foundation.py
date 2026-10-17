@@ -74,6 +74,15 @@ def test_manifest_defaults_and_unknown_keys():
     assert m.profile(None).can("harvest") and not m.profile(None).can("consolidate")
 
 
+def test_manifest_reads_settings_named_for_hubs():
+    m = parse_manifest(
+        'format = 3\nid = "x"\n[layout]\nhub_filename = "{folder}.md"\n'
+        "[search.kind_factor]\nhub = 1.3\nnote = 1.0\n"
+    )
+    assert m.layout.topic_page == "{folder}.md" and not m.unknown_keys
+    assert m.search.kind_factor == {"topic": 1.3, "note": 1.0}
+
+
 @pytest.mark.parametrize(
     ("extra", "where"),
     [
@@ -82,7 +91,7 @@ def test_manifest_defaults_and_unknown_keys():
         ('[search]\nfreshness_ms = "x"', "search.freshness_ms"),
         ('[layout]\nignore = "drafts"', "layout.ignore"),
         ('[agents.codex]\nwrite = "edit"', "agents.codex.write"),
-        ('[search.kind_factor]\nhub = "high"', "search.kind_factor"),
+        ('[search.kind_factor]\ntopic = "high"', "search.kind_factor"),
         ("[topics.search]\ntitle = 3", "topics.search.title"),
     ],
 )

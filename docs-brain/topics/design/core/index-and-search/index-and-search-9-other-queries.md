@@ -21,7 +21,7 @@ source: "docs/design/index-and-search.md#9-other-queries"
 | Neighborhood graph | visualizer | Nodes plus edges; see [[visualizer\|visualizer]] |
 | Pending episodes | `brain consolidate --prepare`, orientation | `kind = 'episode'`, ordered by id |
 
-A stale link is a body link from an active note (not a hub) to a
+A stale link is a body link from an active note (not a topic page) to a
 superseded or archived note. A link from a note to the note it replaced is
 not stale.
 
@@ -81,5 +81,5 @@ edges without reading bodies, and returns a small subgraph.
 - Within a depth, supersession comes first, then body links, then
   citations, each newest first, so `limit` keeps what matters.
 
-Typical uses: what a hub lists (`out`), what refers to a decision (`in`),
+Typical uses: what a topic page lists (`out`), what refers to a decision (`in`),
 and how a note evolved (`both`, depth 3).

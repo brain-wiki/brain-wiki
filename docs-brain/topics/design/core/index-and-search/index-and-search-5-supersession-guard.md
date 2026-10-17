@@ -7,7 +7,7 @@ source: "docs/design/index-and-search.md#5-supersession-guard"
 ---
 # Supersession guard (Index and search)
 
-The guard adds, to every note or hub a search or read returns, the notes
+The guard adds, to every note or topic page a search or read returns, the notes
 that replaced it and the notes it replaced. Given the hit node ids `H`, it
 reads the `superseded_by` edges that touch them:
 

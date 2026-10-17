@@ -128,7 +128,7 @@ def test_format2_converts_to_body_markdown():
     assert found.supersedes == ["Use ripgrep for search"]
     assert "default search backend" in parse_document("x.md", NOTE_V2).body_text
 
-    out = to_format3(NOTE_V2, hub_names=frozenset({"topics/search/index", "search"}))
+    out = to_format3(NOTE_V2, page_names=frozenset({"topics/search/index", "search"}))
     assert not legacy(out)
     assert out.endswith(
         "Prose with a [[SQLite version policy]] link.\n\n"
@@ -146,7 +146,9 @@ def test_format2_converts_to_body_markdown():
         "[[archive/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7]]",
         "https://sqlite.org/fts5.html",
     ]
-    assert "part_of" not in out and "bw-claims" not in out  # the hub link is the folder's job
+    assert (
+        "part_of" not in out and "bw-claims" not in out
+    )  # the topic page link is the folder's job
     assert to_format3(out) == out
 
 

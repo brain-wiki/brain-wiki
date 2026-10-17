@@ -7,7 +7,7 @@ source: "docs/design/brain-format.md#6-notes"
 ---
 # Notes
 
-Notes and hubs (§8) share the rules in this section.
+Notes and topic pages (§8) share the rules in this section.
 
 
 ### 6.1 Frontmatter
@@ -41,7 +41,7 @@ bw-sources:
 | `bw-stage` | no | string | Free workflow state |
 | `created`, `updated` | no | ISO 8601 date or date-time | — |
 
-- Suggested `type` values: `note`, `hub`, `concept`, `decision`, `howto`,
+- Suggested `type` values: `note`, `topic`, `concept`, `decision`, `howto`,
   `reference`, `person`, `project`, `source`, `meeting`, `record` (a dated
   account of something that happened, which consolidation writes under
   `topics/<topic>/records/`).

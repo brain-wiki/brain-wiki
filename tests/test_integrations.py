@@ -191,7 +191,7 @@ def test_overlay_survey_adopt_and_phases(tmp_path: Path):
         topics = {
             r["topic"]
             for r in engine.db.execute(
-                "SELECT DISTINCT topic FROM nodes WHERE kind IN ('note','hub')"
+                "SELECT DISTINCT topic FROM nodes WHERE kind IN ('note','topic')"
             )
         }
         assert topics == {"projects", "areas"}

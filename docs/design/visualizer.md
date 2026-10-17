@@ -18,7 +18,7 @@ This is the second design. The first drew every note in one 3D force graph. At 1
 
 ```
  Galaxy ──► Constellation ──► Topic ──► Note
- groups of     topics as        hub core,     one note in focus,
+ groups of     topics as        page core,    one note in focus,
  topics        nebulae          notes as      its linked neighborhood
                                 stars         lit, the rest dimmed
 ```
@@ -27,12 +27,12 @@ This is the second design. The first drew every note in one 3D force graph. At 1
 |---|---|---|
 | Galaxy | Constellations as labeled clusters, the flows between them, and the inbox at the center | `/api/world` |
 | Constellation | Its topics as clouds, sized by note count and brightened by recency, and the flows between them | `/api/world` |
-| Topic | The hub as a bright core, each sub-folder as a labeled branch with its notes around it, links between notes as trails, and links leaving the topic running toward the other topic | `/api/topic/<slug>` |
+| Topic | The topic page as a bright core, each sub-folder as a labeled branch with its notes around it, links between notes as trails, and links leaving the topic running toward the other topic | `/api/topic/<slug>` |
 | Note | The note and the notes it links to or from lit, the rest dimmed, with its details in the side panel | `/api/note/<id>` |
 
 How the levels behave:
 
-- Detail follows screen size, as on a map. A topic's stars load when its cloud grows past a size on screen, wherever the camera is. Labels appear the same way, in priority order: hubs, then flagged notes, then well-linked notes and the stars biggest on screen. Labels that would collide are hidden. Map labels name their units: "82 notes", "82 notes · 3 with issues", "5 session captures". At most 12 topics show their stars at once, nearest first.
+- Detail follows screen size, as on a map. A topic's stars load when its cloud grows past a size on screen, wherever the camera is. Labels appear the same way, in priority order: topic pages, then flagged notes, then well-linked notes and the stars biggest on screen. Labels that would collide are hidden. Map labels name their units: "82 notes", "82 notes · 3 with issues", "5 session captures". At most 12 topics show their stars at once, nearest first.
 - Zooming changes the level. Scrolling in on a constellation enters it once it fills about a quarter of the screen, and on a topic at about a fifth. Scrolling out leaves below a smaller size, so the level does not flicker, and panning to a neighbor at the same zoom switches to it. The camera stays where the user put it, and the change replaces the current history entry. Clicking selects directly: the camera flies there and a history entry is added. A selected note stays selected while its topic is on screen, and `Esc` goes up one level.
 - Constellations come from the topic tree ([brain format §2](brain-format.md#2-directory-layout)). Each top-level topic with sub-topics forms a constellation with everything below it. The remaining topics, and every topic of a flat brain, are grouped by the links between their notes, with deterministic modularity clustering into groups of 4 to 40 topics. Topics with no links to other topics are grouped in chunks of up to 40. A brain with 12 topics or fewer has one constellation and opens at that level.
 
@@ -67,7 +67,7 @@ The layout is deterministic and local. The same brain always produces the same m
 
 ### 3.2 Words and lines
 
-The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; Sources, not `bw-sources`; and the topic index, not the hub. Links read as plain verbs (Links to, Replaced by, Cites, and from the other end links here, replaced by this, cites this), and every number names its unit.
+The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Cites, and from the other end links here, replaced by this, cites this), and every number names its unit.
 
 The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. Links between notes come in three kinds. Each has a chip in the dock, and all are on by default:
 
@@ -98,7 +98,7 @@ Left panel, with three tabs:
 Right panel, headed Details, is always shown and says how to fill it when nothing is selected:
 
 - A group shows its topics.
-- A topic shows its description; counts of notes, notes changed in 7 days, and notes with issues; the last change; a breakdown of issues; a button to open the topic index; its sub-topics and folders with note counts; its most connected notes, hidden for topics of five notes or fewer; and linked topics.
+- A topic shows its description; counts of notes, notes changed in 7 days, and notes with issues; the last change; a breakdown of issues; a button to open the topic page; its sub-topics and folders with note counts; its most connected notes, hidden for topics of five notes or fewer; and linked topics.
 - A note shows where it lives ("In Guide › Sync › …"), type, status, and issue chips, and banners for a superseded note or the notes it replaces. Then come its summary, its outgoing links grouped as Replaced by, Links to, and Cites, and its backlinks with how each links here. A resolved link flies to its note, an unresolved one says "not found", and one outside the mapped topics says "not on the map". Last come the path, with a copy button, and an `obsidian://` link.
 - A clicked connection replaces the details of the focused place, and the map stays where it is, with the connection lit, until it closes (its ✕, `Esc`, or going to another place):
   - A link between two notes reads as a sentence: the two notes as cards that open them, and how they link ("links to", "supersedes", "cites"). Under "Where … says it" come the passages of the linking note that hold the link, rendered like the preview: the paragraph, or the list item or table row, for a body link, and the `bw-superseded_by` or `bw-sources` entry for a metadata link. A button reads the whole note, and "Both ways" says when the other note links back.
@@ -171,13 +171,13 @@ The HTML export's details panel shows only what the topic data carries (links an
 ```json
 {
   "brain": "personal", "generated": "2026-10-11T18:00:00Z", "profile": "owner",
-  "totals": {"topics": 250, "notes": 10250, "hubs": 250, "episodes": 200,
+  "totals": {"topics": 250, "notes": 10250, "pages": 250, "episodes": 200,
              "links": 29935, "flagged": 1925},
   "constellations": [{"id": "c1", "title": "Bispai · Ditpi · …", "color": "#6aa9ff",
                       "topics": ["bispai", "ditpi"]}],
   "topics": [{"slug": "search", "title": "Search", "description": "…", "parent": null,
               "color": "#6aa9ff", "constellation": "c1", "notes": 12,
-              "hub": "01J9…", "updated": "2026-10-09", "recent": 3,
+              "page": "01J9…", "updated": "2026-10-09", "recent": 3,
               "flags": {"stale": 2}, "flagged": 2}],
   "flows": [{"a": "search", "b": "storage", "total": 7,
              "rels": {"links_to": 6, "superseded_by": 1}}],
@@ -192,10 +192,10 @@ The HTML export's details panel shows only what the topic data carries (links an
 - `runs` lists the 20 most recent runs, leaving out failed and unfinished ones, with the notes each changed.
 - A constellation's `title` joins up to three topic titles. A constellation from the topic tree leads with its top topic. A clustered one leads with a topic linked to at least half of the others in it, such as a plugins topic linked to one topic per plugin, or else with its largest topics. The map labels a constellation by its first topic.
 
-`/api/topic/<slug>` returns `{slug, title, color, hub, path, nodes, links, external}`:
+`/api/topic/<slug>` returns `{slug, title, color, page, path, nodes, links, external}`:
 
 - `path` is the topic's folder, which the map uses to place notes by sub-folder.
-- `nodes` are the topic's notes and hub, in the node shape below.
+- `nodes` are the topic's notes and its topic page (kind `topic`), in the node shape below.
 - `links` are `{source, target, rel}` with both ends in the topic.
 - `external` are links between this topic's notes and other topics' notes, as `{source, target, rel, topic, title, dir}` with `dir` `out` or `in`. There are at most 400, metadata links first.
 
@@ -271,7 +271,7 @@ The map lists the flags in the order stale, superseded, orphan, lint error, and 
 | The first design, one 3D force graph of every note (`3d-force-graph`) | It did not scale: a global layout and payload, a tangle of lines, and no navigation. |
 | A force layout per topic, seeded by its folder tree | Deep or lopsided folder trees crossed themselves: 77 of 175 tree lines crossed on a 176-note topic five folders deep, and the 3D scatter hid how deep a folder sat. |
 | A radial tree per topic, with a slice per folder and a line per note | No crossings, but a folder of 200 daily notes became a spiky ball, lines routed along rings read as bent polylines, and nothing showed how much a note holds. |
-| Circle packing per topic, nested circles with no lines | Compact, but containment alone did not read as levels, the topic index often landed at the edge, and lines from a folder to its sub-folders ran through sibling circles (7 of 33 on a 176-note topic). Orbits around each folder's core fix both, at some cost in space when a folder has many sub-folders. |
+| Circle packing per topic, nested circles with no lines | Compact, but containment alone did not read as levels, the topic page often landed at the edge, and lines from a folder to its sub-folders ran through sibling circles (7 of 33 on a 176-note topic). Orbits around each folder's core fix both, at some cost in space when a folder has many sub-folders. |
 | Sunflower clusters inside folder outlines | No crossings, but golden-angle spacing laid notes out evenly, so a folder of 200 daily notes read as a grid rather than a cluster, and the outlines added clutter the links already conveyed. |
 | A 2.5D terrain atlas, with topics as territories and notes as towns | Easiest to navigate, but the galaxy keeps depth for separating dense clusters. Both would use the same levels and API. |
 | No build step, with vendored ES modules and hand-written JavaScript | Keeps contributors off Node, but panels of this size and custom shaders are much harder to maintain without types and a bundler. Committing the bundle keeps users off Node anyway. |

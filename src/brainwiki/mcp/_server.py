@@ -322,8 +322,8 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         name="brain_read",
         title="Read a note",
         annotations=_READ,
-        description="Read a note, hub, or episode by id, path, file name, alias, or title. "
-        "Modes: outline (the default for hubs), full (the default otherwise), section, raw.",
+        description="Read a note, topic page, or episode by id, path, file name, alias, or title. "
+        "Modes: outline (the default for topic pages), full (the default otherwise), section, raw.",
     )
     @guard
     def brain_read(
@@ -332,7 +332,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             Literal["outline", "full", "section", "raw"] | None,
             Field(
                 description="outline: summary, headings, links, backlinks; full: the body; section: one "
-                "section; raw: the file. Default: full, or outline for hubs."
+                "section; raw: the file. Default: full, or outline for topic pages."
             ),
         ] = None,
         section: Annotated[

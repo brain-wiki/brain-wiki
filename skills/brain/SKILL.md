@@ -91,8 +91,8 @@ what the brain already says.
 1. Search first, and prefer editing an existing note (read it with
    `brain_read(path, mode="raw")`). Otherwise create
    `topics/<topic>/<slug>.md` in a topic the briefing lists; a new topic is
-   a folder with an `index.md` hub, and a new note gets a line in its hub's
-   `## Notes`.
+   a folder with an `index.md` topic page, and a new note gets a line in its
+   topic page's `## Notes`.
 2. Frontmatter holds metadata only (all fields:
    [references/format.md](references/format.md)). Never change an existing
    `id`; for a new note, leave it out and add the `id:` line that

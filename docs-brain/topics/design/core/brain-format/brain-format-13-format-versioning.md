@@ -60,7 +60,7 @@ converts it to format 3:
 | `bw-claims-superseded` items, or struck-through format 1 claims | `## History` bullets: `- ~~text~~ (reason)` |
 | Claim `src` | `bw-sources` items |
 | `bw-<verb>` relations, or format 1 `## Relations` items | `## Related` bullets |
-| `bw-part_of` naming the note's own hub | Dropped, since membership is the folder (§2) |
+| `bw-part_of` naming the page of the note's own topic | Dropped, since membership is the folder (§2) |
 | `bw-superseded_by` relation | The `bw-superseded_by` field and `status: superseded` |
 | `bw-supersedes: X`, or a format 1 `supersedes` line | A `## Related` bullet, plus a fix on note X |
 | A relation item that does not parse | Moved unchanged to `## Related` |
@@ -72,7 +72,8 @@ converts it to format 3:
   references (`host:session#T…`) are dropped. Items merge into an existing
   `bw-sources` without duplicates.
 - A relation bullet starts with its verb as a phrase, as in the example
-  below. "The note's own hub" means its hub path, folder name, or slug.
+  below. "The page of the note's own topic" means the page's path, the folder's
+  name, or the topic's slug.
 - A `bw-superseded_by` relation sets `status: superseded` only when the
   status was `active`.
 - For `bw-supersedes: X`, a second BW117 fix on X sets

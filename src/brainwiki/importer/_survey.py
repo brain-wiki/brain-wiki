@@ -13,7 +13,7 @@ from brainwiki.format import STATUSES, parse_document
 from brainwiki.index import norm_key, slugify
 
 _DAILY = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
-_HUB_NAMES = ("index.md", "_index.md", "README.md")
+_PAGE_NAMES = ("index.md", "_index.md", "README.md")
 _TEMPLATE_NAMES = {"templates", "_templates", "template"}
 _INBOX_NAMES = {"inbox", "_inbox"}
 _ATTACHMENT_NAMES = {"attachments", "assets", "files", "images", "media", "_resources"}
@@ -30,7 +30,7 @@ class Survey:
     markdown_links: bool = False
     ignore: list[str] = field(default_factory=list)
     topics: dict[str, str] = field(default_factory=dict)  # slug -> folder
-    hub_filename: str = "index.md"
+    topic_page: str = "index.md"
     daily_folder: str | None = None
     counts: Counter[str] = field(default_factory=Counter)
     statuses: Counter[str] = field(default_factory=Counter)
@@ -45,7 +45,7 @@ class Survey:
             "notes": len(self.notes),
             "obsidian": self.obsidian,
             "topics": self.topics,
-            "hub_filename": self.hub_filename,
+            "topic_page": self.topic_page,
             "ignore": self.ignore,
             "daily_folder": self.daily_folder,
             "counts": dict(self.counts),
@@ -114,7 +114,7 @@ def survey(root: Path) -> Survey:
         docs.append(doc)
         keys.update({norm_key(rel), norm_key(path.name), doc.title.casefold()})
         keys.update(str(a).casefold() for a in (doc.fm.get("aliases") or []) if isinstance(a, str))
-    hub_votes: Counter[str] = Counter()
+    page_votes: Counter[str] = Counter()
     folders: dict[str, int] = Counter()
     daily: Counter[str] = Counter()
     for doc in docs:
@@ -136,14 +136,14 @@ def survey(root: Path) -> Survey:
         if len(parts) > 1:
             folders[parts[0]] += 1
             name = parts[-1]
-            if name in _HUB_NAMES and len(parts) == 2:
-                hub_votes[name] += 1
+            if name in _PAGE_NAMES and len(parts) == 2:
+                page_votes[name] += 1
             elif len(parts) == 2 and name[:-3] == parts[0]:
-                hub_votes["{folder}.md"] += 1
+                page_votes["{folder}.md"] += 1
             if _DAILY.match(name):
                 daily[parts[0]] += 1
-    if hub_votes:
-        result.hub_filename = hub_votes.most_common(1)[0][0]
+    if page_votes:
+        result.topic_page = page_votes.most_common(1)[0][0]
     if daily:
         folder, count = daily.most_common(1)[0]
         if count >= max(3, folders[folder] // 2):

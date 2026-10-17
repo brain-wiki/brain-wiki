@@ -161,18 +161,18 @@ def _norm(target: str) -> str:
 def to_format3(
     text: str,
     *,
-    hub_names: frozenset[str] = frozenset(),
+    page_names: frozenset[str] = frozenset(),
     inbox: str = "inbox",
     archive: str = "archive",
 ) -> str:
-    """The note in format 3. `hub_names` are the link targets that name the note's own hub (its
-    path without `.md`, its folder's name); a `part_of` link to one is dropped, since the folder
-    already says it."""
+    """The note in format 3. `page_names` are the link targets that name the page of the note's
+    own topic (its path without `.md`, its folder's name); a `part_of` link to one is dropped,
+    since the folder already says it."""
     fm = split(text)
     if fm.error or not legacy(text):
         return text
     newline = "\r\n" if "\r\n" in text else "\n"
-    hubs = {_norm(h) for h in hub_names}
+    pages = {_norm(p) for p in page_names}
     facts: list[str] = []
     history: list[str] = []
     related: list[str] = []
@@ -196,7 +196,7 @@ def to_format3(
         if isinstance(parsed, RelationError):
             related.append(f"- {_phrase(written)} {value}")
             return
-        if parsed.verb == "part_of" and _norm(parsed.target) in hubs:
+        if parsed.verb == "part_of" and _norm(parsed.target) in pages:
             return
         if parsed.verb == _SUPERSEDED_BY and superseded_by is None:
             superseded_by = f"[[{parsed.target}]]"

@@ -43,7 +43,7 @@ Values are scalars or lists of scalars; never nest mappings.
 | Field | Required | Values |
 |---|---|---|
 | `id` | yes | A ULID, unique in the brain. Never change one, even when the file moves. For a new note, `brain validate` reports a fresh one to add (`brain lint --fix` adds it itself). |
-| `type` | no (default `note`) | A lowercase word: `note`, `hub`, `decision`, `howto`, `person`, `project`, `reference`, … |
+| `type` | no (default `note`) | A lowercase word: `note`, `topic`, `decision`, `howto`, `person`, `project`, `reference`, … |
 | `title` | no | Default: the first `# ` heading, else the file name |
 | `aliases`, `tags` | no | Lists of strings, as in Obsidian |
 | `status` | no (default `active`) | `active`, `superseded`, or `archived` |
@@ -92,13 +92,13 @@ bw-superseded_by: "[[Store Lumen attachments as files]]"
 note, or a URL. It covers the whole note, not single facts. Consolidated
 episodes move to `archive/`, so cite the `archive/` path.
 
-## Topics and hubs
+## Topics and topic pages
 
-- A topic is a folder under `topics/` with a hub, `index.md`. A note belongs
-  to the topic of its folder.
+- A topic is a folder under `topics/` with a topic page, `index.md`. A note
+  belongs to the topic of its folder.
 - Topics nest: a folder with its own `index.md` inside a topic is a
-  sub-topic. Folders without a hub just organize notes.
-- A hub's `## Notes` list is navigation: add a line for a new note.
+  sub-topic. Folders without a topic page just organize notes.
+- A topic page's `## Notes` list is navigation: add a line for a new note.
   `brain lint --fix` adds missing entries and never removes lines.
 - To move or rename a note or a topic folder, use `brain mv SRC DST`, which
   also fixes links.

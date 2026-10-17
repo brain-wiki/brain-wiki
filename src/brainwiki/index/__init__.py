@@ -24,7 +24,7 @@ from brainwiki.index._search import (
     parse_cursor,
     search,
 )
-from brainwiki.index._topics import TopicTree, hub_name, slugify, topic_tree
+from brainwiki.index._topics import TopicTree, page_name, slugify, topic_tree
 
 __all__ = [
     "LinkNamer",
@@ -37,7 +37,6 @@ __all__ = [
     "format_neighbors_text",
     "format_read_text",
     "format_search_text",
-    "hub_name",
     "known_topics",
     "link_text",
     "list_brains",
@@ -46,6 +45,7 @@ __all__ = [
     "norm_key",
     "open_index",
     "orient",
+    "page_name",
     "parse_cursor",
     "pending_by_agent",
     "read",

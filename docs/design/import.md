@@ -53,7 +53,7 @@ Conventions it detects:
 |---|---|---|
 | Obsidian vault | A `.obsidian/` folder | Reads `useMarkdownLinks` and `attachmentFolderPath` from `app.json`, and the template folder from `templates.json` |
 | Topics | Top-level folders with notes | Each becomes a declared topic: `path` is the folder, the slug comes from its name |
-| Hub style | `index.md`, `_index.md`, `README.md`, or a folder note (`Folder/Folder.md`) directly in top-level folders | The most common one becomes `layout.hub_filename` (`{folder}.md` for folder notes) |
+| Topic page name | `index.md`, `_index.md`, `README.md`, or a folder note (`Folder/Folder.md`) directly in top-level folders | The most common one becomes `layout.topic_page` (`{folder}.md` for folder notes) |
 | Templates | A top-level folder named `templates`, `_templates`, or `template`, or Obsidian's template folder | Ignored |
 | Attachments | Obsidian's attachment folder, or a top-level folder named `attachments`, `assets`, `files`, `images`, `media`, or `_resources` | Ignored for knowledge, still linkable |
 | Daily notes | A folder where at least 3 notes, and at least half its notes, are named `YYYY-MM-DD.md` | Declared as the `journal` topic |
@@ -71,7 +71,7 @@ The report prints in the terminal on a dry run and is saved as
 `reports/import-plan.md` by phase 0. It shows:
 
 - note counts: notes, notes with frontmatter, notes with ids;
-- whether the folder is an Obsidian vault, and the hub style;
+- whether the folder is an Obsidian vault, and the topic page name;
 - the topics and the folders they come from, and the ignored folders;
 - non-standard `status` values with counts;
 - unresolved links, with the five most common targets;
@@ -81,7 +81,7 @@ The report prints in the terminal on a dry run and is saved as
 
 `--json` gives the same survey as data, including the oversized files.
 
-The generated `brain.toml` sets `layout.topics_dir = "."`, the hub style,
+The generated `brain.toml` sets `layout.topics_dir = "."`, the topic page name,
 the ignored folders, `lint.profile = "migrate"`,
 `[agents.default] write = ["edit"]`, and one `[topics.<slug>]`
 table per topic.
@@ -92,7 +92,7 @@ table per topic.
 |---|---|---|
 | 0, adopt | Adds `brain.toml`, `AGENTS.md`, `rules.md`, `log.md`, `inbox/`, `archive/`, `reports/`; registers the brain; commits in git | No |
 | 1, ids and status | Mints missing `id:`; maps non-standard `status` (§4.1); turns string `tags` and `aliases` into lists (§4.3) | Frontmatter lines only |
-| 2, hubs | Creates missing hubs; adds missing notes to hub `## Notes` lists | Hubs only |
+| 2, topic pages | Creates missing topic pages; adds missing notes to their `## Notes` lists | Topic pages only |
 
 Phase 0:
 
@@ -180,9 +180,9 @@ source stays untouched.
    files outside the source are counted and reported.
 3. Apply the phase 1 rules (§3.2) to the copies.
 4. Commit the run through the lint gate.
-5. Then add hubs for the new topics, and refresh the topic table in
-   `AGENTS.md`, as separate runs (the table can only be computed once the
-   hubs exist). The output names every run, so undoing them all reverts
+5. Then add topic pages for the new topics, and refresh the topic table
+   in `AGENTS.md`, as separate runs (the table can only be computed once
+   the pages exist). The output names every run, so undoing them all reverts
    the import.
 
 Only Markdown notes are copied. Attachments stay in the source, and links

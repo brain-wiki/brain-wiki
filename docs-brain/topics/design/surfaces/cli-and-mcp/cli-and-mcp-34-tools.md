@@ -21,7 +21,7 @@ destructive, and idempotent.
 | `brain_list` | read-only | Brains this host may use ([[index-and-search-9-other-queries\|index and search §9.1]]) |
 | `brain_orient` | read-only | One brain's briefing ([[index-and-search-8-orientation-the-briefing\|index and search §8]]) |
 | `brain_search` | read-only | Search or browse with filters and supersession guards ([[index-and-search-6-search\|index and search §6]]) |
-| `brain_read` | read-only | A note, hub, or episode, with handles on every link and backlink ([[index-and-search-7-read\|index and search §7]]) |
+| `brain_read` | read-only | A note, topic page, or episode, with handles on every link and backlink ([[index-and-search-7-read\|index and search §7]]) |
 | `brain_neighbors` | read-only | Follow a note's links in either direction ([[index-and-search-9-other-queries\|index and search §9.2]]) |
 | `brain_validate` | read-only | Check the frontmatter of notes the agent created or edited ([[write-path-23-direct-edits\|write path §2.3]]) |
 | `brain_log_episode` | writes, idempotent with `dedupe_key` | Write an episode ([[write-path-21-ways-an-episode-is-written\|write path §2.1]]) |

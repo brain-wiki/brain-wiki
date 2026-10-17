@@ -21,7 +21,7 @@ into prompts.
 | `reports/orphans.md` | Notes no other note links to |
 | `reports/lint.md` | The latest lint results |
 
-`stale.md` leaves out hubs, which list their topic's history, and a link
+`stale.md` leaves out topic pages, which list their topic's history, and a link
 from a note to the note it replaced. The visualizer's `stale` flag uses the
 same query ([[index-and-search-9-other-queries|index and search §9]]).
 

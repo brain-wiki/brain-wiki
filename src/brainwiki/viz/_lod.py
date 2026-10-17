@@ -217,7 +217,9 @@ class Atlas:
         self.topics = {t["slug"]: t for t in graph["topics"]}
         self.nodes = {n["id"]: n for n in graph["nodes"]}
         self.notes = [
-            n for n in graph["nodes"] if n["kind"] in ("note", "hub") and n["topic"] in self.topics
+            n
+            for n in graph["nodes"]
+            if n["kind"] in ("note", "topic") and n["topic"] in self.topics
         ]
         self._topic_of = {n["id"]: n["topic"] for n in self.notes}
         self._adj = topic_weights(self.notes, graph["links"])
@@ -238,7 +240,7 @@ class Atlas:
         self._world: dict[str, Any] | None = None
 
     def note(self, node_id: str) -> dict[str, Any] | None:
-        """A note or hub in one of the map's topics."""
+        """A note or topic page in one of the map's topics."""
         return self.nodes.get(node_id) if node_id in self._topic_of else None
 
     def world(self) -> dict[str, Any]:
@@ -253,9 +255,9 @@ class Atlas:
         constellations = []
         for i, group in enumerate(self.groups):
             ranked = sorted(group, key=lambda s: (-self.topics[s]["notes"], s))
-            hub = self._tree_root(group) or self._hub_topic(group)
-            if hub:  # the map labels a constellation by its first topic
-                ranked = [hub, *(s for s in ranked if s != hub)]
+            lead = self._tree_root(group) or self._central_topic(group)
+            if lead:  # the map labels a constellation by its first topic
+                ranked = [lead, *(s for s in ranked if s != lead)]
             titles = [self.topics[s]["title"] for s in ranked[:3]]
             constellations.append(
                 {
@@ -272,7 +274,7 @@ class Atlas:
             "totals": {
                 "topics": len(self.topics),
                 "notes": sum(1 for n in self.notes if n["kind"] == "note"),
-                "hubs": sum(1 for n in self.notes if n["kind"] == "hub"),
+                "pages": sum(1 for n in self.notes if n["kind"] == "topic"),
                 "episodes": self._episode_count(),
                 "links": len(links),
                 "flagged": len(flagged),
@@ -290,7 +292,7 @@ class Atlas:
         tops = [s for s in group if self._parents.get(s) not in inside]
         return tops[0] if len(tops) == 1 and len(group) > 1 else None
 
-    def _hub_topic(self, group: list[str]) -> str | None:
+    def _central_topic(self, group: list[str]) -> str | None:
         """The topic linked to at least half of the others in its group (a plugins topic
         and each plugin, people and each person), or None when no topic holds the group together."""
         if len(group) < 3:
@@ -318,7 +320,7 @@ class Atlas:
                     for flag in node["flags"]:
                         flags[flag] = flags.get(flag, 0) + 1
                 dates = [n["updated"] for n in members if n["updated"]]
-                notes = [n for n in members if n["kind"] == "note"]  # the hub is the index
+                notes = [n for n in members if n["kind"] == "note"]  # not the topic page
                 out.append(
                     {
                         "slug": slug,
@@ -328,7 +330,7 @@ class Atlas:
                         "color": self.colors[slug],
                         "constellation": self.constellation_of[slug],
                         "notes": len(notes),
-                        "hub": topic.get("hub"),
+                        "page": topic.get("page"),
                         "updated": max(dates) if dates else None,
                         "recent": sum(1 for n in notes if (n["updated"] or "") >= cutoff),
                         "flags": flags,
@@ -403,7 +405,7 @@ class Atlas:
             "slug": slug,
             "title": topic["title"],
             "color": self.colors[slug],
-            "hub": topic.get("hub"),
+            "page": topic.get("page"),
             "path": topic.get("path"),  # the map places notes by the folders below it
             "nodes": [n for n in self.notes if n["topic"] == slug],
             "links": list(self._inner.get(slug, [])),

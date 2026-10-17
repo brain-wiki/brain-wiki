@@ -1,6 +1,6 @@
 ---
 id: 01M3250V008ETZS5M3QZV045PM
-type: hub
+type: topic
 title: "Technical design"
 source: "docs/design/README.md"
 ---

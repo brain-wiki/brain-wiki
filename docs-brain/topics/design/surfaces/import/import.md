@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00WSP9J3VQ5M4EVHK9
-type: hub
+type: topic
 title: "Import"
 source: "docs/design/import.md"
 ---

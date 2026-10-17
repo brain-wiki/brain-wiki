@@ -1,6 +1,6 @@
 ---
 id: 01M3250V005GG7A4QJRC354M05
-type: hub
+type: topic
 title: "Open questions"
 source: "docs/roadmap/open-questions.md"
 ---

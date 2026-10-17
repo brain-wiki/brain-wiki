@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00G235XER6SSHFGFMG
-type: hub
+type: topic
 title: "Quality and safety"
 source: "docs/"
 ---

@@ -36,8 +36,8 @@ capturing agent's guess; use it or not.
 ## Steps
 
 1. Decide each episode's pattern. Prefer an existing note; create one only
-   when nothing fits (a new topic is a new folder with an `index.md` hub;
-   list a new note in its hub's `## Notes`).
+   when nothing fits (a new topic is a new folder with an `index.md` topic
+   page; list a new note in its topic page's `## Notes`).
 2. Edit the notes.
 3. Cite every episode a note draws on: add its `archive_to` path to the
    note's `bw-sources` as `"[[archive/episodes/…]]"` (without `.md`).

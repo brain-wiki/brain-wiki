@@ -24,7 +24,7 @@ source, but never becomes a statement about the user.
 
 It also tells the model to:
 
-- prefer an existing note, and create one (listed in its hub's
+- prefer an existing note, and create one (listed in its topic page's
   `## Notes`) only when nothing fits;
 - write a one-paragraph summary, one specific fact per bullet, and
   wikilinks inside sentences, recording failed approaches as facts;

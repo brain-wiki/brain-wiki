@@ -51,7 +51,7 @@ Give each session one outcome, as consolidation does:
    and read the notes it belongs with.
 2. Edit or create the notes. Prefer an existing note; one fact per bullet,
    specific (numbers, names, versions, dates), and failed approaches as
-   facts. A new note gets a line in its topic hub's `## Notes`; for a new
+   facts. A new note gets a line in its topic page's `## Notes`; for a new
    note, `brain_validate` gives the `id:` line to add.
 3. Cite the session: add its `source` URL to the `bw-sources` of every note
    you changed for it, as a quoted string:

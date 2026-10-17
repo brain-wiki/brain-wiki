@@ -7,14 +7,14 @@ source: "docs/design/index-and-search.md#7-read"
 ---
 # Read
 
-`read(target, mode)` returns one note, hub, or episode. The target is
+`read(target, mode)` returns one note, topic page, or episode. The target is
 matched by node id, path, or frontmatter id, then by the link resolution
 order of [[brain-format-6-notes|brain format §6.5]]. An ambiguous target
 is an error that lists the candidates instead of guessing.
 
 | Mode | Returns |
 |---|---|
-| `outline` (default for hubs) | Summary, headings, links, and backlinks |
+| `outline` (default for topic pages) | Summary, headings, links, and backlinks |
 | `full` (default for notes and episodes) | The body, then link and backlink lists |
 | `section` | One section's content |
 | `raw` | The file exactly as on disk, for an agent about to edit it |
@@ -22,7 +22,7 @@ is an error that lists the candidates instead of guessing.
 - The outline summary is the first paragraph that is not a heading, up to
   600 characters.
 - `full` returns the body without frontmatter or HTML comments. For notes
-  and hubs it appends "Links:" and "Linked from:" lists below a `---`
+  and topic pages it appends "Links:" and "Linked from:" lists below a `---`
   line, since the file's own wikilinks carry no paths.
 - `section` matches a heading's text, case-insensitively. Passing a
   section implies this mode. The mode without a section, or a section with

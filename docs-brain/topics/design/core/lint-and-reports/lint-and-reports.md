@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00EBA2YAZC7R2DA6M4
-type: hub
+type: topic
 title: "Lint and reports"
 source: "docs/design/lint-and-reports.md"
 ---

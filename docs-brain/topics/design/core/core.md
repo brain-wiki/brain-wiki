@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00Y8RMJK31H0MV112C
-type: hub
+type: topic
 title: "Core engine"
 source: "docs/"
 ---

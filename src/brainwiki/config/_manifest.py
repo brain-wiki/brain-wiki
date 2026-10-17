@@ -27,7 +27,7 @@ class Layout:
     inbox_dir: str = "inbox"
     archive_dir: str = "archive"
     reports_dir: str = "reports"
-    hub_filename: str = "index.md"
+    topic_page: str = "index.md"
     ignore: list[str] = field(default_factory=list)
 
     @property
@@ -70,7 +70,12 @@ class SearchCfg:
         default_factory=lambda: {"active": 1.0, "superseded": 0.35, "archived": 0.2}
     )
     kind_factor: dict[str, float] = field(
-        default_factory=lambda: {"hub": 1.15, "note": 1.0, "episode": 0.7, "archived_episode": 0.5}
+        default_factory=lambda: {
+            "topic": 1.15,
+            "note": 1.0,
+            "episode": 0.7,
+            "archived_episode": 0.5,
+        }
     )
     recency_half_life_days: float = 180.0
 
@@ -128,6 +133,8 @@ _SECTIONS: dict[str, type] = {
     "reports": ReportsCfg,
 }
 _TOP_LEVEL = {"format", "id", "name", "description", "topics", "agents", *_SECTIONS}
+# Settings renamed when topic pages stopped being called hubs; older brain.toml files use them.
+_RENAMED = {"layout.hub_filename": "topic_page"}
 _TOPIC_KEYS = {"path", "title", "description"}
 _AGENT_KEYS = {"write", "read_origin"}
 
@@ -221,13 +228,17 @@ def _section(cls: type, raw: Any, name: str, unknown: list[str]) -> Any:
     fields = cls.__dataclass_fields__
     defaults = cls()
     kwargs = {}
-    for key, value in raw.items():
+    for given, value in raw.items():
+        key = _RENAMED.get(f"{name}.{given}", str(given))
         if key in fields:
             kwargs[key] = _checked(
                 f"{name}.{key}", value, getattr(defaults, key), str(fields[key].type)
             )
         else:
             unknown.append(f"{name}.{key}")
+    factors = kwargs.get("kind_factor")
+    if factors is not None and "hub" in factors:
+        factors.setdefault("topic", factors.pop("hub"))
     return cls(**kwargs)
 
 

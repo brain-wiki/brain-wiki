@@ -36,7 +36,7 @@ Published numbers come only from this bench, with the command and version that p
 
 ### 3.1 `retrieval` (offline)
 
-The suite generates a format-3 brain (§4), runs the planted queries, and checks every note and hub in the top 8 results against the ground truth. The only guard is supersession ([[brain-format-7-supersession-guard|brain format §7]]).
+The suite generates a format-3 brain (§4), runs the planted queries, and checks every note and topic page in the top 8 results against the ground truth. The only guard is supersession ([[brain-format-7-supersession-guard|brain format §7]]).
 
 | Metric | Target |
 |---|---|
@@ -61,7 +61,7 @@ Each case copies a small hand-written format-3 brain, breaks one thing, and list
 | BW307 | A supersession cycle |
 | BW310 | A body link that does not resolve |
 | BW402 | `rules.md` over its budget |
-| BW404, BW406 | A topic folder without a hub, which also raises BW408; an orphan note, which also raises BW405 |
+| BW404, BW406 | A topic folder without a topic page, which also raises BW408; an orphan note, which also raises BW405 |
 | BW502, BW503 | An episode at the wrong path; an episode without provenance |
 | BW601, BW602 | A rule without a quote; a rule not from the owner |
 | BW701 | A secret in a note |
@@ -106,7 +106,7 @@ Reserved for end-to-end runs of real hosts with the plugin installed on a fixtur
 ## 4. Data
 
 - The generator (`brainwiki/bench/_generate.py`) is seeded, and the same seed writes byte-identical files. Notes are about invented software projects, in common English words plus generated pseudo-words drawn with a Zipf distribution, so FTS ranks them like real prose.
-- Each note has a summary, a `## Facts` list, and a `## Related` list of prose links. Body links mostly stay inside the note's own topic, and every topic has a hub.
+- Each note has a summary, a `## Facts` list, and a `## Related` list of prose links. Body links mostly stay inside the note's own topic, and every topic has a topic page.
 - Supersession chains of two to four notes make up about 3% of links, written as `bw-superseded_by` on the older notes.
 - Pending episodes, one per 50 notes and at least 5, record `inputs` as `local` or `unknown`.
 - The generator records the ground truth, including the chains and the queries. Queries come in three families: a token planted in one note (`exact`), a note's title (`title`), and a token planted three, two, and one times in three notes, for graded relevance (`group`).

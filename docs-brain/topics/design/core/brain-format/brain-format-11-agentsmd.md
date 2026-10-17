@@ -16,7 +16,7 @@ outside the markers is preserved.
 # This folder is a brain-wiki brain: personal
 
 - Read `rules.md` first: standing directives from the user.
-- Knowledge lives in `topics/<topic>/`; each topic has a hub (`index.md`).
+- Knowledge lives in `topics/<topic>/`; each topic has a page (`index.md`).
 - To add or correct knowledge, edit or create a note, then run
   `brain validate <path>` (MCP: `brain_validate`) and fix what it reports. Something
   not organized yet goes in `inbox/episodes/YYYY/MM/<ULID>.md` (or the MCP tool
@@ -24,7 +24,7 @@ outside the markers is preserved.
 - A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note
   with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
 
-| Topic | Hub | About |
+| Topic | Page | About |
 |---|---|---|
 | search | topics/search/index.md | How local search works and why. |
 <!-- brain-wiki:end -->
@@ -38,12 +38,13 @@ bullet becomes "To record something, add a new file under
 matches the host instruction block
 ([[agent-integrations-3-the-plugin-bundle|agent integrations §3.2]]).
 
-- The topic table lists the top-level topics alphabetically, with the hub
-  path and the description (or title) plus the number of sub-topics.
+- The topic table lists the top-level topics alphabetically, with each
+  topic page's path and the description (or title) plus the number of
+  sub-topics.
 - The whole file is limited to `budgets.agents_md_max_lines`, counting
   the user's text outside the markers. When the table does not fit, it
   keeps the most recently updated topics and ends with a row pointing to
-  the hubs.
+  the topic pages.
 - Agents never edit `AGENTS.md`, inside or outside the markers. The user
   may.
 - `brain init` writes the block. `brain lint --fix` (BW403, BW408),

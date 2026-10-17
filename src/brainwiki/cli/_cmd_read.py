@@ -101,7 +101,7 @@ def read(args: Any) -> int:
 
     with _engine(args) as engine:
         result = run(engine, args.target, mode=args.mode, section=args.section)
-    if result["mode"] == "raw" and result["kind"] in ("note", "hub") and not args.json:
+    if result["mode"] == "raw" and result["kind"] in ("note", "topic") and not args.json:
         sys.stdout.write(format_read_text(result))  # byte for byte: no added newline
         return 0
     emit(args, result, format_read_text(result))

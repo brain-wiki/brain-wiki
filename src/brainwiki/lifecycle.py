@@ -40,8 +40,8 @@ def default_agents_block(
 ) -> str:
     """`edit`: whether `[agents.default]`, the profile of agents that only read files, has it."""
     rows = topics or []
-    table = ["| Topic | Hub | About |", "|---|---|---|"]
-    table += [f"| {slug} | {hub} | {about} |" for slug, hub, about in rows] or [
+    table = ["| Topic | Page | About |", "|---|---|---|"]
+    table += [f"| {slug} | {page} | {about} |" for slug, page, about in rows] or [
         "| (none yet) | | |"
     ]
     write = (
@@ -62,7 +62,7 @@ def default_agents_block(
             f"# This folder is a brain-wiki brain: {name}",
             "",
             "- Read `rules.md` first: standing directives from the user.",
-            "- Knowledge lives in `topics/<topic>/`; each topic has a hub (`index.md`).",
+            "- Knowledge lives in `topics/<topic>/`; each topic has a page (`index.md`).",
             *write,
             "- A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note",
             "  with `status: superseded` names its replacement in `bw-superseded_by`: read that one.",

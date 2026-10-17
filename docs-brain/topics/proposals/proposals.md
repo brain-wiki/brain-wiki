@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00SP9ZKNENW922F2K3
-type: hub
+type: topic
 title: "Proposals"
 source: "docs/proposal/README.md"
 ---

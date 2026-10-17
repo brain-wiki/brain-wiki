@@ -2,13 +2,13 @@
 # This folder is a brain-wiki brain: brain-wiki-docs
 
 - Read `rules.md` first: standing directives from the user.
-- Knowledge lives in `topics/<topic>/`; each topic has a hub (`index.md`).
+- Knowledge lives in `topics/<topic>/`; each topic has a page (`index.md`).
 - Do not change files here. To record something, call the brain-wiki MCP tool
   `brain_log_episode`.
 - A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note
   with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
 
-| Topic | Hub | About |
+| Topic | Page | About |
 |---|---|---|
 | design | topics/design/design.md | How brain-wiki works and why: the design documents and the decisions (17 sub-topics) |
 | experience | topics/experience/experience.md | What using brain-wiki is like: the journeys it serves, and the user guide (2 sub-topics) |

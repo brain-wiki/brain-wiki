@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00STNK5VQBHDFWFNKH
-type: hub
+type: topic
 title: "CLI and MCP"
 source: "docs/design/cli-and-mcp.md"
 ---

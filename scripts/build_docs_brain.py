@@ -9,7 +9,7 @@ A note is a page worth opening on its own, so notes follow size (NOTE_LIMIT). A 
 fits is one note; a longer one is one note per `##` section, and a `###` subsection gets its own
 note only when its `##` section is still too long. A short document that would fill a topic of
 its own becomes a note in the parent topic, and one whose topic holds entities (terms,
-milestones, questions) puts its text in the topic's hub. Every row of an ID table people look
+milestones, questions) puts its text in the topic's page. Every row of an ID table people look
 up by id (goals, scenarios, milestones, questions, verification items), every glossary term,
 and every idea becomes a typed note of its own, filed in the topic for its kind; requirement
 and threat tables stay tables, since they are read together. Each decision file is one decision
@@ -56,9 +56,9 @@ IDEAS = "docs/roadmap/ideas.md"
 # Up to this many bytes, a document (or a `##` section of a longer one) is one note.
 NOTE_LIMIT = 10 * 1024
 
-# The topic tree, in the order hubs list it: (slug, parent, title, description). An empty title
-# or description comes from the document that fills the topic (its `#` heading, and its row in
-# the design README's reading order).
+# The topic tree, in the order topic pages list it: (slug, parent, title, description). An empty
+# title or description comes from the document that fills the topic (its `#` heading, and its row
+# in the design README's reading order).
 TREE: list[tuple[str, str | None, str, str]] = [
     (
         "overview",
@@ -274,8 +274,8 @@ class Doc:
     sections: list[Section] = field(default_factory=list)
     anchors: dict[str, Section] = field(default_factory=dict)
     note: Section | None = None  # the document's own note (GROUPS, decisions, short documents)
-    # decision: one decision note; note: one note holds the text; hub: the topic's hub holds it;
-    # split: one note per `##` section (under the document's note, or its topic's hub)
+    # decision: one decision note; note: one note holds the text; page: the topic's page holds
+    # it; split: one note per `##` section (under the document's note, or its topic's page)
     layout: str = "split"
     size: int = 0
     note_type: str = "reference"
@@ -666,7 +666,7 @@ def _reading_order() -> dict[str, str]:
 
 
 # Documents whose topic holds entity notes (terms, ideas, milestones, …); short ones put their
-# text in the topic's hub rather than in a note beside those entities.
+# text in the topic's page rather than in a note beside those entities.
 ENTITY_DOCS = {GLOSSARY, IDEAS, *(family[2] for family in ROW_FAMILIES.values())}
 
 
@@ -683,13 +683,13 @@ def choose_layout(brain: Brain, doc: Doc) -> None:
             or doc.path.name == "README.md"
             or any(t.parent == doc.topic for t in brain.topics.values())
         ):
-            doc.layout = "hub"
+            doc.layout = "page"
         else:  # a short document that would fill a topic alone: a note in the parent topic
             parent = brain.topics.pop(doc.topic).parent
             doc.note = Section(doc, 1, doc.title, None, doc.title, "", stem=doc.topic)
             doc.topic = parent or ""
             doc.layout = "note"
-    holder = doc.topic if doc.layout == "hub" else doc.note.stem if doc.note else None
+    holder = doc.topic if doc.layout == "page" else doc.note.stem if doc.note else None
     for s in walk(doc.sections):
         if doc.layout != "split":
             s.stem, s.inline = holder or s.stem, True
@@ -757,7 +757,7 @@ def build() -> dict[str, str]:
     for doc in docs:
         render_doc(brain, doc)
     for topic in brain.topics.values():
-        render_hub(brain, topic)
+        render_topic_page(brain, topic)
     brain.files["brain.toml"] = manifest(brain)
     return brain.files
 
@@ -779,7 +779,7 @@ def _intro(brain: Brain, doc: Doc) -> list[str]:
 
 
 def _text(sections: list[Section]) -> list[str]:
-    """Sections as written, headings included: the text of a note or hub that holds them."""
+    """Sections as written, headings included: the text of a note or topic page that holds them."""
     lines: list[str] = []
     for s in sections:
         lines += ["", "#" * s.level + " " + s.heading, *s.lines, *_text(s.children)]
@@ -802,7 +802,7 @@ def render_doc(brain: Brain, doc: Doc) -> None:
             brain.topics[row.topic].entries.append((row.stem, row.title, 0))
             render_row(brain, doc, row)
     inner = [r for s in walk(doc.sections) for r in s.rows]
-    if doc.layout in ("note", "hub"):
+    if doc.layout in ("note", "page"):
         depth = 1 if doc.layout == "note" else 0
         if doc.layout == "note":
             brain.topics[doc.topic].entries.append((doc.note.stem, doc.title, 0))
@@ -824,7 +824,7 @@ def render_doc(brain: Brain, doc: Doc) -> None:
         return
 
     def tree(sections: list[Section], depth: int, parent_topic: str) -> None:
-        for s in sections:  # every note is listed in its hub, nested under its parent there
+        for s in sections:  # every note is listed in its topic page, nested under its parent there
             if s.inline:
                 continue
             here = depth if s.topic == parent_topic else 0
@@ -935,7 +935,7 @@ def render_row(brain: Brain, doc: Doc, row: Row) -> None:
 
 
 def render_ideas(brain: Brain, doc: Doc, ideas: list[Row]) -> None:
-    """Idea notes, listed in the ideas hub under their area, in the order the table has them."""
+    """Idea notes, listed on the ideas topic page under their area, in the table's order."""
     entries = brain.topics["ideas"].entries
     area = None
     for row in ideas:
@@ -946,7 +946,7 @@ def render_ideas(brain: Brain, doc: Doc, ideas: list[Row]) -> None:
         render_row(brain, doc, row)
 
 
-def render_hub(brain: Brain, topic: Topic) -> None:
+def render_topic_page(brain: Brain, topic: Topic) -> None:
     children = [t for t in brain.topics.values() if t.parent == topic.slug]
     body = [topic.description, ""] if topic.description else []
     if topic.intro:
@@ -958,8 +958,8 @@ def render_hub(brain: Brain, topic: Topic) -> None:
     brain.note(
         topic.slug,
         topic.slug,
-        key=f"hub:{topic.slug}",
-        kind="hub",
+        key=f"hub:{topic.slug}",  # the id seed from when topic pages were hubs; ids never change
+        kind="topic",
         title=topic.title,
         source=topic.source,
         body=body,
@@ -975,7 +975,7 @@ def manifest(brain: Brain) -> str:
         f"description = {yaml_str(DESCRIPTION)}",
         "",
         "[layout]",
-        'hub_filename = "{folder}.md"',
+        'topic_page = "{folder}.md"',
     ]
     for topic in brain.topics.values():
         lines += [

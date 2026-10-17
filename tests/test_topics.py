@@ -58,7 +58,9 @@ def test_tree_slugs_and_parents():
     ]
     assert tree.roots() == ["people", "search"]
     assert tree.for_path("topics/people/rin-sato/meetings/2026-10-01.md") == "meetings"
-    assert tree.for_path("topics/people/rin-sato/drafts/idea.md") == "rin-sato"  # no hub: no topic
+    assert (
+        tree.for_path("topics/people/rin-sato/drafts/idea.md") == "rin-sato"
+    )  # no topic page: no topic
     assert tree.expand(["people"]) == {"people", "rin-sato", "meetings", "notes"}
 
 
@@ -88,10 +90,10 @@ def test_nested_topic_takes_its_notes(people: Path):
             "SELECT topic FROM nodes WHERE path='topics/people/rin-sato/priority.md'"
         ).fetchone()
         assert row["topic"] == "rin-sato"
-        hub = e.db.execute(
+        page = e.db.execute(
             "SELECT kind FROM nodes WHERE path='topics/people/rin-sato/index.md'"
         ).fetchone()
-        assert hub["kind"] == "hub"
+        assert page["kind"] == "topic"
         up = neighbors(e, "topics/people/rin-sato/index.md", direction="in")
         assert [n["path"] for n in up["nodes"] if n["id"] != up["root"]] == [
             "topics/people/index.md"
@@ -105,7 +107,23 @@ def test_nested_topic_takes_its_notes(people: Path):
         )
 
 
-def test_a_new_hub_makes_a_sub_topic_and_moves_notes_into_it(people: Path):
+def test_only_the_page_file_is_a_topic_page(people: Path):
+    _note(people, "topics/people/overview.md", "Overview", extra="type: hub\n")
+    _note(people, "topics/people/roster.md", "Roster", extra="type: topic\n")
+    with Engine(open_brain(people)) as e:
+        e.scan(force=True)
+        kinds = dict(e.db.execute("SELECT path, kind FROM nodes WHERE topic = 'people'"))
+        assert kinds == {
+            "topics/people/index.md": "topic",
+            "topics/people/overview.md": "note",
+            "topics/people/roster.md": "note",
+        }
+        assert next(r for r in orient(e)["topics"] if r["slug"] == "people")["page"] == (
+            "topics/people/index.md"
+        )
+
+
+def test_a_new_topic_page_makes_a_sub_topic_and_moves_notes_into_it(people: Path):
     _note(people, "topics/people/ann/one-on-one.md", "1:1 with Ann")
     with Engine(open_brain(people)) as e:
         e.scan(force=True)

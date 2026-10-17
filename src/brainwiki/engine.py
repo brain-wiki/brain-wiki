@@ -46,7 +46,7 @@ class Engine:
             self._db.close()
         self._db = open_index(self.brain.key, self.brain.root, self.manifest, rebuild=True)
         self.last_scan_ns = 0
-        self._hub_files = None
+        self._page_files = None
         return self.scan(force=True)
 
     def reload(self, brain: Brain, user: UserConfig | None = None) -> None:

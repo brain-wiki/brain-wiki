@@ -17,8 +17,8 @@ _ORDER = {"superseded_by": 0, "supersedes": 1}
 
 def stale_links(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     """Active notes that link to superseded or archived notes, other than the ones they replaced:
-    (src, src_path, src_title, dst, dst_path, dst_title, dst_status), one row per pair. Hubs list
-    their topic's history, so they are left out."""
+    (src, src_path, src_title, dst, dst_path, dst_title, dst_status), one row per pair. Topic
+    pages list their topic's history, so they are left out."""
     return conn.execute(
         """SELECT DISTINCT a.id AS src, a.path AS src_path, a.title AS src_title,
                   b.id AS dst, b.path AS dst_path, b.title AS dst_title, b.status AS dst_status

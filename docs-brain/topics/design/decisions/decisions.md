@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00M60JCXMCKT2164MR
-type: hub
+type: topic
 title: "Decisions"
 source: "docs/decision/README.md"
 ---
@@ -50,3 +50,4 @@ Generated from `docs/decision/README.md`.
 - [[d35-git-history]]: D35: Git is the history of direct edits
 - [[d36-harvest-into-notes]]: D36: Harvest and import file into notes, not episodes
 - [[d37-per-agent-consolidation]]: D37: Each agent consolidates its own episodes, in a session or on a schedule
+- [[d38-topic-pages]]: D38: A topic is a folder and its page

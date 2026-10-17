@@ -83,8 +83,8 @@ def plan_into(
 
 
 def tidy_after_import(engine: Engine) -> list[RunRecord]:
-    """Runs after `--into`: hubs for new topics and their listings, then the AGENTS.md topic
-    table, which can only be computed once the hubs exist; so a fresh import lints clean."""
+    """Runs after `--into`: pages for new topics and their listings, then the AGENTS.md topic
+    table, which can only be computed once the pages exist; so a fresh import lints clean."""
     from brainwiki.lint import lint
     from brainwiki.lint import plan as plan_fixes
 
@@ -96,7 +96,7 @@ def tidy_after_import(engine: Engine) -> list[RunRecord]:
             continue
         run.kind, run.summary = (
             "import",
-            "import: hubs" if codes[0] == "BW404" else "import: AGENTS.md",
+            "import: topic pages" if codes[0] == "BW404" else "import: AGENTS.md",
         )
         records.append(
             run.commit(log_lines=[f"- {len(run.entries)} files changed after the import"])

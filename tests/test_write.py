@@ -358,8 +358,8 @@ def test_mv_topic_folder_renames_its_topic(example: Path):
     assert "[topics.storage]" in (root / "brain.toml").read_text()
 
 
-def test_mv_topic_with_a_declared_path_and_folder_named_hubs(example: Path):
-    root = _registered(example, '\n[layout]\nhub_filename = "{folder}.md"\n')
+def test_mv_topic_with_a_declared_path_and_folder_named_pages(example: Path):
+    root = _registered(example, '\n[layout]\ntopic_page = "{folder}.md"\n')
     (root / "topics/budget/index.md").rename(root / "topics/budget/budget.md")
     toml = root / "brain.toml"
     toml.write_text(

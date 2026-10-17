@@ -34,8 +34,8 @@ scan(brain):
 - A name key changes when a file is added, removed, or renamed, or a
   title or alias is edited. Re-resolving every edge then heals dangling
   links without a full rebuild.
-- The topic tree comes from the folders under `topics/` and the hub files
-  the scan saw ([[brain-format-2-directory-layout|brain format §2.1]]).
+- The topic tree comes from the folders under `topics/` and the topic
+  pages the scan saw ([[brain-format-2-directory-layout|brain format §2.1]]).
 - When brain-wiki writes files, it rescans only those paths in the same
   step. A run's rescan also records the new hash of any episode it
   rewrote, so that change is not BW501.

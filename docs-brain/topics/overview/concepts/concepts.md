@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00Z4CKVC1MWBDDQZZ1
-type: hub
+type: topic
 title: "Concepts"
 source: "docs/design/glossary.md"
 ---
@@ -18,7 +18,6 @@ Generated from `docs/design/glossary.md`.
 - [[concept-episode]]: Episode
 - [[concept-harvest]]: Harvest
 - [[concept-host]]: Host
-- [[concept-hub]]: Hub
 - [[concept-index]]: Index
 - [[concept-inputs]]: Inputs
 - [[concept-link]]: Link
@@ -30,3 +29,4 @@ Generated from `docs/design/glossary.md`.
 - [[concept-sources]]: Sources
 - [[concept-supersession-guard]]: Supersession guard
 - [[concept-topic]]: Topic
+- [[concept-topic-page]]: Topic page

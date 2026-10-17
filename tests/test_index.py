@@ -78,11 +78,11 @@ def test_read_banners_and_modes(example: Path):
     with engine_for(example) as eng:
         res = read(eng, "ripgrep")
         assert res["banners"][0].startswith("⚠ SUPERSEDED by")
-        hub = read(eng, "Search")
+        page = read(eng, "Search")
         assert (
-            hub["mode"] == "outline"
-            and "Use SQLite FTS5 for local search" in hub["content"]
-            or hub["backlinks"]
+            page["mode"] == "outline"
+            and "Use SQLite FTS5 for local search" in page["content"]
+            or page["backlinks"]
         )
         full = read(eng, "FTS5 decision")
         assert "<!--" not in full["content"] and "{id:" not in full["content"]
@@ -154,10 +154,10 @@ def test_editing_a_note_keeps_incoming_links_resolved(example: Path):
             "SELECT raw_target FROM edges WHERE other IS NULL AND rel != 'links_to'"
         ).fetchall()
         assert unresolved == []
-        hub_links = eng.db.execute(
+        page_links = eng.db.execute(
             "SELECT other FROM edges WHERE raw_target='fts5' AND rel='links_to'"
         ).fetchall()
-        assert hub_links and all(r["other"] for r in hub_links)
+        assert page_links and all(r["other"] for r in page_links)
 
 
 def test_read_raw_is_the_file_and_section_flags_agree(

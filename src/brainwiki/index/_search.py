@@ -323,7 +323,7 @@ def search(
     if include_episodes is None:
         include_episodes = not browse
     kinds = (
-        ["note", "hub"]
+        ["note", "topic"]
         + (["episode"] if include_episodes else [])
         + (["archived_episode"] if include_archived_episodes else [])
     )
@@ -358,7 +358,7 @@ def search(
         result["truncated"] = False
         return result
     results = page
-    guard_info = guards_for(engine, [r["id"] for r in results if r["kind"] in ("note", "hub")])
+    guard_info = guards_for(engine, [r["id"] for r in results if r["kind"] in ("note", "topic")])
     for r in results:
         r.update(guard_info.get(r["id"], {"guards": [], "more_guards": 0}))
     more = total > offset + len(page)

@@ -1,6 +1,6 @@
 ---
 id: 01M3250V009V2KF8F680NDW7X1
-type: hub
+type: topic
 title: "Brain format"
 source: "docs/design/brain-format.md"
 ---
@@ -23,7 +23,7 @@ Generated from `docs/design/brain-format.md`.
 - [[brain-format-5-identifiers]]: Identifiers
 - [[brain-format-6-notes]]: Notes
 - [[brain-format-7-supersession-guard]]: Supersession guard (Brain format)
-- [[brain-format-8-topic-hubs]]: Topic hubs
+- [[brain-format-8-topic-pages]]: Topic pages
 - [[brain-format-9-episodes]]: Episodes
 - [[brain-format-10-rules]]: Rules (Brain format)
 - [[brain-format-11-agentsmd]]: `AGENTS.md`

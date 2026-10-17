@@ -14,7 +14,13 @@ from typing import TYPE_CHECKING, Any
 from brainwiki.format import parse_document
 from brainwiki.ids import is_ulid
 from brainwiki.index._resolver import Resolver, name_rows
-from brainwiki.index._topics import TopicTree, note_hub_changes, set_hub_files, topic_tree
+from brainwiki.index._topics import (
+    TopicTree,
+    note_page_changes,
+    page_name,
+    set_page_files,
+    topic_tree,
+)
 from brainwiki.index._written import is_marked
 from brainwiki.store import sha256_bytes
 
@@ -23,7 +29,7 @@ if TYPE_CHECKING:
 
 _MAX_INDEX_BYTES = 2 * 1024 * 1024
 _STATUSES = ("active", "superseded", "archived")
-_NODE_KINDS = ("note", "hub", "episode", "archived_episode", "agent_file")
+_NODE_KINDS = ("note", "topic", "episode", "archived_episode", "agent_file")
 _BASELINE_KEEP = (
     "INSERT OR IGNORE INTO episode_hashes(episode_id, sha256, path, first_seen) VALUES (?, ?, ?, ?)"
 )
@@ -76,11 +82,8 @@ def classify(engine: Engine, rel: str, topics: dict[str, str]) -> str:
     if rel.startswith((layout.archive_episodes_dir + "/", layout.archive_dir + "/agents/")):
         return "archived_episode"
     folder, _, filename = rel.rpartition("/")
-    for path in topics.values():
-        if folder == path:
-            hub = layout.hub_filename.replace("{folder}", folder.rsplit("/", 1)[-1])
-            if filename == hub:
-                return "hub"
+    if folder in topics.values() and filename == page_name(layout, folder):
+        return "topic"
     return "note"
 
 
@@ -147,9 +150,9 @@ def scan(
         candidates = list(seen)
         deleted = [p for p in paths if p not in seen and p in known]
     if paths is None:
-        set_hub_files(engine, seen)
+        set_page_files(engine, seen)
     else:
-        note_hub_changes(engine, seen, [p for p in paths if p not in seen])
+        note_page_changes(engine, seen, [p for p in paths if p not in seen])
     tree = topic_tree(engine)
     topics = tree.paths
     stored_tree = conn.execute("SELECT value FROM meta WHERE key='topic_tree'").fetchone()
@@ -275,14 +278,14 @@ def scan(
 
 
 def _retopic(conn: sqlite3.Connection, tree: TopicTree, stored: str | None) -> list[str]:
-    """Notes and hubs to re-index after the topic tree changed: their topic is different now, or
+    """Notes and topic pages to re-index after the topic tree changed: their topic is different now, or
     their topic moved or gained a parent."""
     old = json.loads(stored) if stored else {}
     new = json.loads(tree.signature)
     changed = {s for s in old.keys() | new.keys() if old.get(s) != new.get(s)}
     return [
         row["path"]
-        for row in conn.execute("SELECT path, topic FROM nodes WHERE kind IN ('note', 'hub')")
+        for row in conn.execute("SELECT path, topic FROM nodes WHERE kind IN ('note', 'topic')")
         if row["topic"] in changed or tree.for_path(row["path"]) != row["topic"]
     ]
 
@@ -363,7 +366,7 @@ def _index_file(
         text = ""
     doc = parse_document(rel, text)
     fm = doc.fm
-    topic = tree.for_path(rel) if kind in ("note", "hub") else None
+    topic = tree.for_path(rel) if kind in ("note", "topic") else None
     fm_id = str(fm.get("id")) if fm.get("id") is not None else None
     node_id = fm_id if fm_id and is_ulid(fm_id) else f"path:{rel}"
     if node_id != f"path:{rel}":
@@ -374,10 +377,9 @@ def _index_file(
     if status not in _STATUSES:
         status = "active"
     note_type = str(
-        fm.get("type") or ("hub" if kind == "hub" else "episode" if "episode" in kind else "note")
+        fm.get("type")
+        or ("topic" if kind == "topic" else "episode" if "episode" in kind else "note")
     )
-    if note_type == "hub" and kind == "note":
-        kind = "hub"
     aliases = _as_list(fm.get("aliases"))
     tags = _as_list(fm.get("tags"))
     updated = str(fm.get("updated") or fm.get("created") or _iso_from_ns(mtime_ns))

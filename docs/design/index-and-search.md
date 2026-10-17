@@ -54,7 +54,7 @@ CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 -- Every file seen in the brain (knowledge or not), for change detection.
 CREATE TABLE files (
   path         TEXT PRIMARY KEY,    -- brain-relative, '/' separators
-  kind         TEXT NOT NULL,       -- note, hub, episode, archived_episode, agent_file, proposal,
+  kind         TEXT NOT NULL,       -- note, topic, episode, archived_episode, agent_file, proposal,
                                     -- rules, archived_rules, agents_md, log, manifest, report, attachment
   mtime_ns     INTEGER NOT NULL,
   size         INTEGER NOT NULL,
@@ -63,11 +63,11 @@ CREATE TABLE files (
   parse_errors INTEGER NOT NULL DEFAULT 0
 );
 
--- Notes, hubs, and episodes (files in inbox/agents/ are stored as kind 'episode').
+-- Notes, topic pages, and episodes (files in inbox/agents/ are stored as kind 'episode').
 CREATE TABLE nodes (
   id           TEXT PRIMARY KEY,    -- ULID from frontmatter, or 'path:' || path
   path         TEXT NOT NULL UNIQUE,
-  kind         TEXT NOT NULL,       -- note, hub, episode, archived_episode
+  kind         TEXT NOT NULL,       -- note, topic (a topic page), episode, archived_episode
   topic        TEXT,                -- slug of the nearest enclosing topic, NULL outside topics
   title        TEXT NOT NULL,
   type         TEXT NOT NULL DEFAULT 'note',
@@ -184,8 +184,9 @@ How files become rows:
   while the file does not move, so an imported vault is searchable before
   anyone runs `lint --fix`. A note whose id is already taken by another
   indexed file gets a `path:` id too.
-- `type` defaults to `hub`, `episode`, or `note` by kind. A note with
-  `type: hub` is indexed as a hub.
+- A file is kind `topic` only when it is a topic page by its path
+  ([brain format §8](brain-format.md#8-topic-pages)), whatever its
+  `type`. `type` defaults to `topic`, `episode`, or `note` by kind.
 - A `status` outside the three values is indexed as `active`, and the
   value goes to `stage` when the note has no `bw-stage`.
 - `props` holds every frontmatter key except the standard ones (`id`,
@@ -260,8 +261,8 @@ scan(brain):
 - A name key changes when a file is added, removed, or renamed, or a
   title or alias is edited. Re-resolving every edge then heals dangling
   links without a full rebuild.
-- The topic tree comes from the folders under `topics/` and the hub files
-  the scan saw ([brain format §2.1](brain-format.md#21-topics)).
+- The topic tree comes from the folders under `topics/` and the topic
+  pages the scan saw ([brain format §2.1](brain-format.md#21-topics)).
 - When brain-wiki writes files, it rescans only those paths in the same
   step. A run's rescan also records the new hash of any episode it
   rewrote, so that change is not BW501.
@@ -276,7 +277,7 @@ scan(brain):
 
 ## 5. Supersession guard
 
-The guard adds, to every note or hub a search or read returns, the notes
+The guard adds, to every note or topic page a search or read returns, the notes
 that replaced it and the notes it replaced. Given the hit node ids `H`, it
 reads the `superseded_by` edges that touch them:
 
@@ -398,7 +399,7 @@ lexical = -bm25(fts, 8.0, 6.0, 3.0, 2.0, 1.0)   # title, aliases, tags, headings
 score   = lexical × status_factor × kind_factor × recency_factor
 
 status_factor  = active 1.0, superseded 0.35, archived 0.2
-kind_factor    = hub 1.15, note 1.0, episode 0.7, archived_episode 0.5
+kind_factor    = topic 1.15, note 1.0, episode 0.7, archived_episode 0.5
 recency_factor = 0.85 + 0.15 × 0.5^(age_days / 180)       # never below 0.85
 ```
 
@@ -484,14 +485,14 @@ snippet:
 
 ## 7. Read
 
-`read(target, mode)` returns one note, hub, or episode. The target is
+`read(target, mode)` returns one note, topic page, or episode. The target is
 matched by node id, path, or frontmatter id, then by the link resolution
 order of [brain format §6.5](brain-format.md#65-links). An ambiguous target
 is an error that lists the candidates instead of guessing.
 
 | Mode | Returns |
 |---|---|
-| `outline` (default for hubs) | Summary, headings, links, and backlinks |
+| `outline` (default for topic pages) | Summary, headings, links, and backlinks |
 | `full` (default for notes and episodes) | The body, then link and backlink lists |
 | `section` | One section's content |
 | `raw` | The file exactly as on disk, for an agent about to edit it |
@@ -499,7 +500,7 @@ is an error that lists the candidates instead of guessing.
 - The outline summary is the first paragraph that is not a heading, up to
   600 characters.
 - `full` returns the body without frontmatter or HTML comments. For notes
-  and hubs it appends "Links:" and "Linked from:" lists below a `---`
+  and topic pages it appends "Links:" and "Linked from:" lists below a `---`
   line, since the file's own wikilinks carry no paths.
 - `section` matches a heading's text, case-insensitively. Passing a
   section implies this mode. The mode without a section, or a section with
@@ -580,7 +581,7 @@ Sections, in output order:
    reach 20 or the oldest is more than 7 days old.
 7. How to query: up to three example calls built from this brain's own
    topics and types (a keyword search, a typed "latest" lookup, and
-   `brain_neighbors` on a hub).
+   `brain_neighbors` on a topic page).
 8. Writing notes, only when the calling profile has `edit`: where files go
    (`topics/<topic>/<slug>.md`, with the existing top-level topics), the
    frontmatter fields and `status` values
@@ -588,8 +589,8 @@ Sections, in output order:
    conventions ([brain format §6.2](brain-format.md#62-body)), and "run
    `brain_validate` on the files you changed".
 
-Note counts never include hubs. A hub is the topic's index and only dates
-the topic.
+Note counts never include topic pages. A topic page describes its topic
+and only dates it.
 
 Every section except topics and recent changes is always included. When
 the budget is tight, recent changes go first, the topic list takes the
@@ -619,7 +620,7 @@ The managed block of `AGENTS.md` is built from the same topic rows
 | Neighborhood graph | visualizer | Nodes plus edges; see [visualizer](visualizer.md) |
 | Pending episodes | `brain consolidate --prepare`, orientation | `kind = 'episode'`, ordered by id |
 
-A stale link is a body link from an active note (not a hub) to a
+A stale link is a body link from an active note (not a topic page) to a
 superseded or archived note. A link from a note to the note it replaced is
 not stale.
 
@@ -677,7 +678,7 @@ edges without reading bodies, and returns a small subgraph.
 - Within a depth, supersession comes first, then body links, then
   citations, each newest first, so `limit` keeps what matters.
 
-Typical uses: what a hub lists (`out`), what refers to a decision (`in`),
+Typical uses: what a topic page lists (`out`), what refers to a decision (`in`),
 and how a note evolved (`both`, depth 3).
 
 ## 10. Performance budgets

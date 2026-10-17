@@ -1,7 +1,7 @@
 """The topic tree (brain-format.md §2): which folders are topics, their parents, what they inherit.
 
 A topic is a folder directly under the topics directory, or a folder at any depth below it that
-has a hub. Its slug, not its path, is its identity, so folders can be reorganized.
+has a topic page. Its slug, not its path, is its identity, so folders can be reorganized.
 """
 
 from __future__ import annotations
@@ -24,13 +24,14 @@ def slugify(name: str) -> str:
     return slug[:64] or "topic"
 
 
-def hub_name(layout: Layout, folder: str) -> str:
-    return layout.hub_filename.replace("{folder}", folder.rsplit("/", 1)[-1])
+def page_name(layout: Layout, folder: str) -> str:
+    """The file name of the topic page in `folder` (`layout.topic_page`)."""
+    return layout.topic_page.replace("{folder}", folder.rsplit("/", 1)[-1])
 
 
-def _is_hub_file(layout: Layout, rel: str) -> bool:
+def _is_page_file(layout: Layout, rel: str) -> bool:
     folder, _, name = rel.rpartition("/")
-    return bool(folder) and name == hub_name(layout, folder)
+    return bool(folder) and name == page_name(layout, folder)
 
 
 @dataclass(frozen=True)
@@ -98,13 +99,16 @@ class TopicTree:
         )
 
 
-def _build_tree(manifest: Manifest, top_dirs: Iterable[str], hub_files: Iterable[str]) -> TopicTree:
-    """The tree from the folders directly under the topics directory and the hub files below it."""
+def _build_tree(
+    manifest: Manifest, top_dirs: Iterable[str], page_files: Iterable[str]
+) -> TopicTree:
+    """The tree from the folders directly under the topics directory and the topic pages below
+    it."""
     layout = manifest.layout
     base = "" if layout.topics_dir in (".", "") else layout.topics_dir.rstrip("/") + "/"
     reserved = (layout.inbox_dir, layout.archive_dir, layout.reports_dir)
     folders = set(top_dirs)
-    for rel in hub_files:
+    for rel in page_files:
         folder = posixpath.dirname(rel)
         if (
             folder
@@ -160,41 +164,41 @@ def _build_tree(manifest: Manifest, top_dirs: Iterable[str], hub_files: Iterable
 
 
 def topic_tree(engine: Engine) -> TopicTree:
-    """The engine's topic tree, rebuilt only when the top-level folders or hub files change."""
-    hubs = _hub_files(engine)
+    """The engine's topic tree, rebuilt only when the top-level folders or topic pages change."""
+    pages = _page_files(engine)
     top = _top_dirs(engine)
-    key = (id(engine.manifest), top, hubs)
+    key = (id(engine.manifest), top, pages)
     cached = getattr(engine, "_topic_tree", None)
     if cached is not None and cached[0] == key:
         return cached[1]
-    tree = _build_tree(engine.manifest, top, hubs)
+    tree = _build_tree(engine.manifest, top, pages)
     engine._topic_tree = (key, tree)  # type: ignore[attr-defined]
     return tree
 
 
-def _hub_files(engine: Engine) -> frozenset[str]:
-    """Hub files in the brain as of the last scan (the scan keeps this current)."""
-    cached = getattr(engine, "_hub_files", None)
+def _page_files(engine: Engine) -> frozenset[str]:
+    """Topic pages in the brain as of the last scan (the scan keeps this current)."""
+    cached = getattr(engine, "_page_files", None)
     if cached is None:
         layout = engine.manifest.layout
         rows = engine.db.execute("SELECT path FROM files")
-        cached = frozenset(r[0] for r in rows if _is_hub_file(layout, r[0]))
-        engine._hub_files = cached  # type: ignore[attr-defined]
+        cached = frozenset(r[0] for r in rows if _is_page_file(layout, r[0]))
+        engine._page_files = cached  # type: ignore[attr-defined]
     return cached
 
 
-def note_hub_changes(engine: Engine, present: Iterable[str], absent: Iterable[str]) -> None:
-    """Keep the hub-file set current after a scan saw files appear or disappear."""
+def note_page_changes(engine: Engine, present: Iterable[str], absent: Iterable[str]) -> None:
+    """Keep the topic-page set current after a scan saw files appear or disappear."""
     layout = engine.manifest.layout
-    current = set(_hub_files(engine))
-    current.update(p for p in present if _is_hub_file(layout, p))
-    current.difference_update(p for p in absent if _is_hub_file(layout, p))
-    engine._hub_files = frozenset(current)  # type: ignore[attr-defined]
+    current = set(_page_files(engine))
+    current.update(p for p in present if _is_page_file(layout, p))
+    current.difference_update(p for p in absent if _is_page_file(layout, p))
+    engine._page_files = frozenset(current)  # type: ignore[attr-defined]
 
 
-def set_hub_files(engine: Engine, paths: Iterable[str]) -> None:
+def set_page_files(engine: Engine, paths: Iterable[str]) -> None:
     layout = engine.manifest.layout
-    engine._hub_files = frozenset(p for p in paths if _is_hub_file(layout, p))  # type: ignore[attr-defined]
+    engine._page_files = frozenset(p for p in paths if _is_page_file(layout, p))  # type: ignore[attr-defined]
 
 
 def _top_dirs(engine: Engine) -> tuple[str, ...]:

@@ -157,7 +157,7 @@ def test_cross_file_rules(brain_dir: Path):
             f'bw-sources: ["[[archive/episodes/2026/10/gone]]"]\n---\n# {title}\n\n{body}\n',
         )
 
-    note(brain_dir, "topics/a/index.md", ids["a"], "Hub A", "## Notes\n- [[one]]")
+    note(brain_dir, "topics/a/index.md", ids["a"], "Topic A", "## Notes\n- [[one]]")
     replaced("topics/a/one.md", ids["b"], "One", "two", "See [[Tow]].")
     replaced("topics/a/two.md", ids["c"], "Two", "one")
     replaced("topics/a/three.md", ids["d"], "Three", "three")
@@ -220,7 +220,7 @@ def test_fix_is_one_undoable_run(brain_dir: Path):
         text = (brain_dir / "topics/a/x.md").read_text()
         assert "status: active" in text and "bw-stage: wip" in text and "id: " in text
         assert text.endswith("## Related\n\n- Requires [[y]]\n") and "## Relations" not in text
-        assert (brain_dir / "topics/a/index.md").exists()  # BW404 created the hub
+        assert (brain_dir / "topics/a/index.md").exists()  # BW404 created the topic page
         undo(e, outcome.record.run)
         assert (brain_dir / "topics/a/x.md").read_text() == before
         assert not (brain_dir / "topics/a/index.md").exists()
@@ -280,7 +280,7 @@ def test_reports(example: Path):
         "- [[topics/search/howto|How to search]] links to "
         "[[topics/search/ripgrep|Use ripgrep for search]] (superseded)"
     ) in text
-    assert "topics/search/fts5" not in text  # its successor and its hub may link to it
+    assert "topics/search/fts5" not in text  # its successor and its topic page may link to it
     with eng(example) as e:
         assert generate(e) == ["reports/index.md"]  # unchanged pages are not rewritten
 
@@ -312,7 +312,7 @@ def test_cli_lint_exit_codes_and_staged(
     assert (brain_dir / ".git/hooks/pre-commit").read_text().startswith("#!/bin/sh")
 
 
-def test_notes_nested_under_listed_notes_need_no_hub_line(brain_dir: Path):
+def test_notes_nested_under_listed_notes_need_no_page_line(brain_dir: Path):
     from brainwiki.ids import new_ulid
 
     ids = {k: new_ulid() for k in "habc"}

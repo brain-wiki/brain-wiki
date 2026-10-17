@@ -14,7 +14,7 @@ from brainwiki.cli._output import emit, warn
 from brainwiki.engine import Engine, open_engine
 from brainwiki.index import node_filters, parse_cursor
 
-_NOTE_KINDS = ["note", "hub"]
+_NOTE_KINDS = ["note", "topic"]
 _STATUSES = ["active", "superseded"]
 
 
@@ -199,7 +199,7 @@ def types(args: Any) -> int:
 
 
 def orphans(args: Any) -> int:
-    """Notes nothing else links to (hubs are entry points, so they are not listed)."""
+    """Notes nothing else links to (topic pages are entry points, so they are not listed)."""
     with _engine(args) as engine:
         where, params = _note_where(engine)
         rows = []

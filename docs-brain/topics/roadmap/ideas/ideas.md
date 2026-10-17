@@ -1,6 +1,6 @@
 ---
 id: 01M3250V0009P7WM2QWHN2J1BF
-type: hub
+type: topic
 title: "Ideas"
 source: "docs/roadmap/ideas.md"
 ---

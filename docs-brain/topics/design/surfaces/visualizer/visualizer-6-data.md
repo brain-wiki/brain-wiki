@@ -12,13 +12,13 @@ source: "docs/design/visualizer.md#6-data"
 ```json
 {
   "brain": "personal", "generated": "2026-10-11T18:00:00Z", "profile": "owner",
-  "totals": {"topics": 250, "notes": 10250, "hubs": 250, "episodes": 200,
+  "totals": {"topics": 250, "notes": 10250, "pages": 250, "episodes": 200,
              "links": 29935, "flagged": 1925},
   "constellations": [{"id": "c1", "title": "Bispai · Ditpi · …", "color": "#6aa9ff",
                       "topics": ["bispai", "ditpi"]}],
   "topics": [{"slug": "search", "title": "Search", "description": "…", "parent": null,
               "color": "#6aa9ff", "constellation": "c1", "notes": 12,
-              "hub": "01J9…", "updated": "2026-10-09", "recent": 3,
+              "page": "01J9…", "updated": "2026-10-09", "recent": 3,
               "flags": {"stale": 2}, "flagged": 2}],
   "flows": [{"a": "search", "b": "storage", "total": 7,
              "rels": {"links_to": 6, "superseded_by": 1}}],
@@ -33,10 +33,10 @@ source: "docs/design/visualizer.md#6-data"
 - `runs` lists the 20 most recent runs, leaving out failed and unfinished ones, with the notes each changed.
 - A constellation's `title` joins up to three topic titles. A constellation from the topic tree leads with its top topic. A clustered one leads with a topic linked to at least half of the others in it, such as a plugins topic linked to one topic per plugin, or else with its largest topics. The map labels a constellation by its first topic.
 
-`/api/topic/<slug>` returns `{slug, title, color, hub, path, nodes, links, external}`:
+`/api/topic/<slug>` returns `{slug, title, color, page, path, nodes, links, external}`:
 
 - `path` is the topic's folder, which the map uses to place notes by sub-folder.
-- `nodes` are the topic's notes and hub, in the node shape below.
+- `nodes` are the topic's notes and its topic page (kind `topic`), in the node shape below.
 - `links` are `{source, target, rel}` with both ends in the topic.
 - `external` are links between this topic's notes and other topics' notes, as `{source, target, rel, topic, title, dir}` with `dir` `out` or `in`. There are at most 400, metadata links first.
 

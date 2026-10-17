@@ -422,7 +422,7 @@ def _search(
     )
 
 
-@_app.command("read", help="read a note, hub, or episode")
+@_app.command("read", help="read a note, topic page, or episode")
 def _read(
     ctx: typer.Context,
     target: _Target,
@@ -431,7 +431,7 @@ def _read(
         typer.Option(
             "--mode",
             help="summary, headings, and links; the body; one section; or the raw file "
-            "(default: full; outline for hubs)",
+            "(default: full; outline for topic pages)",
         ),
     ] = None,
     section: Annotated[
@@ -1256,7 +1256,7 @@ def _import(
         int | None,
         typer.Option(
             "--phase",
-            help="overlay phase: 0 adopt (the default), 1 ids and status, 2 hubs",
+            help="overlay phase: 0 adopt (the default), 1 ids and status, 2 topic pages",
         ),
     ] = None,
     apply: Annotated[

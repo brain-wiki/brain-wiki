@@ -12,7 +12,7 @@ rules, which query the index.
 
 1. Force a scan, so the index matches the files
    ([[index-and-search-4-freshness|index and search §4]]).
-2. Run the file rules on each note, hub, episode, agent file, `rules.md`,
+2. Run the file rules on each note, topic page, episode, agent file, `rules.md`,
    `AGENTS.md`, proposal, and `log.md` in scope.
 3. Run the cross-file rules and keep the problems in scope.
 4. Apply `--select` and `--ignore`, set each severity from the profile for

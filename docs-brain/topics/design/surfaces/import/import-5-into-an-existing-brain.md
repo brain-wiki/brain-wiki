@@ -20,9 +20,9 @@ source stays untouched.
    files outside the source are counted and reported.
 3. Apply the phase 1 rules (§3.2) to the copies.
 4. Commit the run through the lint gate.
-5. Then add hubs for the new topics, and refresh the topic table in
-   `AGENTS.md`, as separate runs (the table can only be computed once the
-   hubs exist). The output names every run, so undoing them all reverts
+5. Then add topic pages for the new topics, and refresh the topic table
+   in `AGENTS.md`, as separate runs (the table can only be computed once
+   the pages exist). The output names every run, so undoing them all reverts
    the import.
 
 Only Markdown notes are copied. Attachments stay in the source, and links

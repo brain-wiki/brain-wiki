@@ -1,6 +1,6 @@
 ---
 id: 01M3250V0079HR5VMN09AZ2JJQ
-type: hub
+type: topic
 title: "Index and search"
 source: "docs/design/index-and-search.md"
 ---

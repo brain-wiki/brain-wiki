@@ -1,6 +1,6 @@
 ---
 id: 01M3250V001MDR0KBW0Q4R2P6F
-type: hub
+type: topic
 title: "Overview"
 source: "docs/design/overview.md"
 ---

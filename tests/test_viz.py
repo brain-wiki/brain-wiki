@@ -30,7 +30,7 @@ RIPGREP = "01M4KT3JPSB7BP2SNSCAVC2SF5"
 VECTOR = "01M4KT3JPSB7BP2SNSCAVC2SF6"
 POLICY = "01M4KT3JPSB7BP2SNSCAVC2SF8"
 GPU = "01M4KT3JPSB7BP2SNSCAVC2SFA"
-BUDGET_HUB = "01M4KT3JPSB7BP2SNSCAVC2SF9"
+BUDGET_PAGE = "01M4KT3JPSB7BP2SNSCAVC2SF9"
 EPISODE = "01M4KT3JPSB7BP2SNSCAVC2SFB"
 EVIL = '</script><script>alert("x")</script><img src=x onerror=alert(1)>'
 
@@ -61,9 +61,9 @@ def test_graph_nodes_links_and_flags(example: Path):
     assert graph["profile"] == "owner"
     kinds = {n["id"]: n["kind"] for n in graph["nodes"]}
     assert kinds[FTS5] == "note"
-    assert kinds["01M4KT3JPRY4W6766VT18CQS90"] == "hub"
+    assert kinds["01M4KT3JPRY4W6766VT18CQS90"] == "topic"
     assert kinds[EPISODE] == "episode"
-    assert len([k for k in kinds.values() if k in ("note", "hub")]) == 8
+    assert len([k for k in kinds.values() if k in ("note", "topic")]) == 8
 
     links = _links(graph)
     assert (RIPGREP, FTS5, "superseded_by") in links  # from its metadata
@@ -82,8 +82,8 @@ def test_graph_nodes_links_and_flags(example: Path):
 
     topics = {t["slug"]: t for t in graph["topics"]}
     assert set(topics) == {"budget", "search", "storage"}
-    assert topics["search"]["notes"] == 3  # its hub is the topic's index, not one of its notes
-    assert topics["search"]["hub"] == "01M4KT3JPRY4W6766VT18CQS90"
+    assert topics["search"]["notes"] == 3  # its topic page is not one of its notes
+    assert topics["search"]["page"] == "01M4KT3JPRY4W6766VT18CQS90"
     assert topics["search"]["description"] == "How local search works and why."
     assert len({t["color"] for t in topics.values()}) == 3
     assert graph["runs"] == []
@@ -93,7 +93,7 @@ def test_graph_shows_every_topic_to_any_host(example: Path):
     with engine_for(example, host="someone") as eng:
         graph = build_graph(eng)
     ids = {n["id"] for n in graph["nodes"]}
-    assert {GPU, BUDGET_HUB, FTS5} <= ids
+    assert {GPU, BUDGET_PAGE, FTS5} <= ids
     assert "budget" in {t["slug"] for t in graph["topics"]}
     assert graph["profile"] == "default"
     assert "superseded" in _node(graph, RIPGREP)["flags"]
@@ -219,7 +219,7 @@ def test_world_shape_and_totals(example: Path):
     assert world["totals"] == {
         "topics": 3,
         "notes": 5,
-        "hubs": 3,
+        "pages": 3,
         "episodes": 1,
         "links": 11,
         "flagged": 1,
@@ -232,7 +232,7 @@ def test_world_shape_and_totals(example: Path):
     topics = {t["slug"]: t for t in world["topics"]}
     search = topics["search"]
     assert search["notes"] == 3
-    assert search["hub"] == "01M4KT3JPRY4W6766VT18CQS90"
+    assert search["page"] == "01M4KT3JPRY4W6766VT18CQS90"
     assert search["description"] == "How local search works and why."
     assert search["constellation"] == "c1"
     assert search["flags"] == {"superseded": 1}
@@ -280,7 +280,7 @@ def test_topic_payload(example: Path):
     topic = atlas.topic("search")
     assert topic is not None
     assert topic["slug"] == "search"
-    assert topic["hub"] == "01M4KT3JPRY4W6766VT18CQS90"
+    assert topic["page"] == "01M4KT3JPRY4W6766VT18CQS90"
     assert {n["id"] for n in topic["nodes"]} >= {FTS5, RIPGREP, VECTOR}
     assert all(n["topic"] == "search" for n in topic["nodes"])
     inner = {(x["source"], x["target"], x["rel"]) for x in topic["links"]}
@@ -344,7 +344,7 @@ def _topic_graph(notes: dict[str, int], edges: list[tuple[str, str]]) -> dict:
     }
 
 
-def test_constellation_title_leads_with_its_hub_topic():
+def test_constellation_title_leads_with_its_central_topic():
     plugins = ["calendar", "kanban", "tasks", "web-clipper"]
     star = _topic_graph(
         {"plugins": 1, **dict.fromkeys(plugins, 3)}, [("plugins", p) for p in plugins]
@@ -410,7 +410,7 @@ def test_world_keeps_each_topics_strongest_flows():
         "brain": "b",
         "generated": "",
         "profile": "owner",
-        "topics": [{"slug": s, "title": s, "notes": 1, "hub": None} for s in slugs],
+        "topics": [{"slug": s, "title": s, "notes": 1, "page": None} for s in slugs],
         "nodes": nodes,
         "links": links,
         "runs": [],

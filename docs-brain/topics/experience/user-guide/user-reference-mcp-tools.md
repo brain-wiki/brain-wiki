@@ -17,7 +17,7 @@ may.
 | `brain_list` | The brains this agent may use, and what each holds | — |
 | `brain_orient` | The briefing: rules, topics, recent changes, inbox | — |
 | `brain_search` | Search, or browse with an empty query and filters | — |
-| `brain_read` | Read a note, hub, or episode | — |
+| `brain_read` | Read a note, topic page, or episode | — |
 | `brain_neighbors` | Follow a note's links and backlinks | — |
 | `brain_validate` | Check the frontmatter of notes the agent changed | — |
 | `brain_log_episode` | Record a learning in the inbox | — |

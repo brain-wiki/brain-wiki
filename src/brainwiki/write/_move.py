@@ -43,14 +43,14 @@ def plan_move(engine: Engine, src: str, dst: str) -> Run:
     managed = (layout.inbox_dir, layout.archive_dir, layout.reports_dir)
     if any(p == m or p.startswith(m + "/") for p in (src, dst) for m in managed):
         raise UsageError(
-            "mv moves notes, hubs, and topic folders; inbox, archive, and reports are managed by brain-wiki"
+            "mv moves notes, topic pages, and topic folders; inbox, archive, and reports are managed by brain-wiki"
         )
     if engine.store.abspath(src).is_dir():
         return _plan_folder(engine, src, dst)
     if not dst.lower().endswith(".md"):
         raise UsageError("the destination must be a .md path (or a folder, to move a topic)")
     node = engine.db.execute("SELECT id, kind FROM nodes WHERE path=?", (src,)).fetchone()
-    if node is None or node["kind"] not in ("note", "hub"):
+    if node is None or node["kind"] not in ("note", "topic"):
         raise NotFound(f"{src} is not a note in this brain")
     if engine.store.exists(dst):
         raise Conflict(f"{dst} already exists")
@@ -77,12 +77,12 @@ def _plan_folder(engine: Engine, src: str, dst: str) -> Run:
         raise NotFound(f"{src} holds no files")
     run = Run(engine, "mv", summary=f"mv {src}/ → {dst}/")
     mapping = {path: dst + path[len(src) :] for path in files}
-    hub_filename = engine.manifest.layout.hub_filename
-    if "{folder}" in hub_filename:  # a hub named after its folder follows the folder's name
-        old_hub = f"{src}/{hub_filename.replace('{folder}', posixpath.basename(src))}"
-        new_hub = f"{dst}/{hub_filename.replace('{folder}', posixpath.basename(dst))}"
-        if old_hub in mapping and new_hub not in mapping.values():
-            mapping[old_hub] = new_hub
+    topic_page = engine.manifest.layout.topic_page
+    if "{folder}" in topic_page:  # a page named after its folder follows the folder's name
+        old_page = f"{src}/{topic_page.replace('{folder}', posixpath.basename(src))}"
+        new_page = f"{dst}/{topic_page.replace('{folder}', posixpath.basename(dst))}"
+        if old_page in mapping and new_page not in mapping.values():
+            mapping[old_page] = new_page
     for old, new in mapping.items():
         run.move(old, new)
     _rewrite_links(engine, run, mapping)
@@ -177,13 +177,13 @@ def _agents_block_after(
                 slug if slug in declared else slugify(posixpath.basename(path))
             )
         about = row["description"] or (slug if row["title"] == row["slug"] else row["title"])
-        rows.append((slug, path, mapping.get(row["hub"], row["hub"]) or path, about))
+        rows.append((slug, path, mapping.get(row["page"], row["page"]) or path, about))
     table = []
-    for slug, path, hub, about in rows:
+    for slug, path, page, about in rows:
         if any(path.startswith(other + "/") for _, other, _, _ in rows):
             continue  # a sub-topic now
         below = sum(1 for _, other, _, _ in rows if other.startswith(path + "/"))
-        table.append((slug, hub, about + (f" ({below} sub-topics)" if below else "")))
+        table.append((slug, page, about + (f" ({below} sub-topics)" if below else "")))
     name = engine.brain.display_name
     edit = engine.manifest.profile("default").can("edit")
     old_block = extract_block(agents) or ""
@@ -193,7 +193,7 @@ def _agents_block_after(
     while True:
         shown = sorted(table[:keep])
         if keep < len(table):
-            shown.append((f"… {len(table) - keep} more", "see the hubs under topics/", ""))
+            shown.append((f"… {len(table) - keep} more", "see the topic pages under topics/", ""))
         block = default_agents_block(name, shown, edit=edit)
         if keep == 0 or len(block.splitlines()) <= budget:
             return block
@@ -207,7 +207,7 @@ def _rewrite_links(engine: Engine, run: Run, mapping: dict[str, str]) -> None:
     moved: dict[str, tuple[str, str]] = {}  # node id -> (old path, new path)
     for chunk in _chunks(list(mapping)):
         for row in conn.execute(
-            f"SELECT id, path FROM nodes WHERE kind IN ('note', 'hub') AND path IN ({','.join('?' * len(chunk))})",  # noqa: S608 - placeholders only
+            f"SELECT id, path FROM nodes WHERE kind IN ('note', 'topic') AND path IN ({','.join('?' * len(chunk))})",  # noqa: S608 - placeholders only
             chunk,
         ):
             moved[row["id"]] = (row["path"], mapping[row["path"]])

@@ -111,7 +111,7 @@ def _orphans(engine: Engine) -> str:
                ORDER BY n.path"""
         )
     ]
-    return _page("Orphans", "Notes nothing links to and no hub lists.", lines, "No orphans.")
+    return _page("Orphans", "Notes nothing links to and no topic page lists.", lines, "No orphans.")
 
 
 def _lint_page(result: LintResult) -> str:
@@ -137,7 +137,7 @@ def _index_page(engine: Engine, result: LintResult) -> str:
 
     stats = [
         ("Notes", count("SELECT COUNT(*) FROM nodes WHERE kind = 'note'")),
-        ("Hubs", count("SELECT COUNT(*) FROM nodes WHERE kind = 'hub'")),
+        ("Topic pages", count("SELECT COUNT(*) FROM nodes WHERE kind = 'topic'")),
         ("Links", count("SELECT COUNT(*) FROM edges WHERE rel = 'links_to'")),
         ("Pending episodes", count("SELECT COUNT(*) FROM nodes WHERE kind = 'episode'")),
         ("Archived episodes", count("SELECT COUNT(*) FROM nodes WHERE kind = 'archived_episode'")),

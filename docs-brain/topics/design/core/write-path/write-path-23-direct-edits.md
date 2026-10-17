@@ -7,7 +7,7 @@ source: "docs/design/write-path.md#23-direct-edits"
 ---
 # Direct edits
 
-Agents whose profile has `edit` create and edit notes and hubs under
+Agents whose profile has `edit` create and edit notes and topic pages under
 `topics/` with their own file tools, then run `brain validate` (MCP
 `brain_validate`) on what they changed. A correction and new knowledge take
 the same path. Orientation's "Writing notes" section tells an agent with

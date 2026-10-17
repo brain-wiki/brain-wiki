@@ -20,10 +20,10 @@ root. The default layout follows. Every folder name is configurable in
 ├── .gitattributes              written by `brain init`
 ├── topics/
 │   └── <topic>/
-│       ├── index.md            hub page for the topic
+│       ├── index.md            the topic page
 │       ├── <note>.md           curated notes
 │       ├── <subfolder>/…       further organization inside the topic
-│       └── <sub-topic>/        a folder with its own hub is a topic too, at any depth
+│       └── <sub-topic>/        a folder with its own topic page is a topic too, at any depth
 │           └── index.md
 ├── inbox/
 │   ├── episodes/
@@ -56,14 +56,14 @@ Rules:
 
 ### 2.1 Topics
 
-A topic is the unit people browse, search filters by, and a hub
-summarizes. Topics are folders, so every file browser shows them, and they
+A topic is the unit people browse and search filters by, and its topic
+page summarizes it. Topics are folders, so every file browser shows them, and they
 form a tree ([[d30-topic-tree|D30]]).
 
 - A topic is a folder directly under `topics/`, or a folder at any depth
-  below it that has a hub (`layout.hub_filename`, §8). There are no named
+  below it that has a topic page (`layout.topic_page`, §8). There are no named
   levels: `people/` and `people/rin-sato/` are both topics.
-- A folder without a hub inside a topic is plain organization. Its notes
+- A folder without a topic page inside a topic is plain organization. Its notes
   belong to the enclosing topic.
 - A topic's parent is the nearest enclosing topic. A note belongs to the
   topic whose folder holds it. No frontmatter field declares membership.

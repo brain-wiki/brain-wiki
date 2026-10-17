@@ -42,11 +42,11 @@ if TYPE_CHECKING:
     from brainwiki.runs import Run
 
 LINT_VERSION = "2"
-_NOTE_KINDS = ("note", "hub")
+_NOTE_KINDS = ("note", "topic")
 _EPISODE_KINDS = ("episode", "archived_episode")
 _SECRET_KINDS = (
     "note",
-    "hub",
+    "topic",
     "episode",
     "archived_episode",
     "agent_file",
@@ -154,19 +154,20 @@ def _parse_problems(doc: ParsedDoc, rel: str) -> list[Problem]:
     return out
 
 
-def _hub_names(ctx: FileContext, rel: str, kind: str) -> frozenset[str]:
-    """Link targets naming the hub a note belongs to (a hub's: its parent topic's hub)."""
-    from brainwiki.index import hub_name
+def _page_names(ctx: FileContext, rel: str, kind: str) -> frozenset[str]:
+    """Link targets naming the page of the topic a note belongs to (for a topic page: its parent
+    topic's page)."""
+    from brainwiki.index import page_name
 
     tree = ctx.tree
     slug = tree.for_path(rel)
-    if kind == "hub" and slug:
+    if kind == "topic" and slug:
         slug = tree.parent(slug)
     if not slug or slug not in tree.paths:
         return frozenset()
     folder = tree.paths[slug]
-    hub = f"{folder}/{hub_name(ctx.manifest.layout, folder)}"
-    return frozenset({hub.removesuffix(".md"), folder.rsplit("/", 1)[-1], slug})
+    page = f"{folder}/{page_name(ctx.manifest.layout, folder)}"
+    return frozenset({page.removesuffix(".md"), folder.rsplit("/", 1)[-1], slug})
 
 
 def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -> list[Problem]:
@@ -217,7 +218,7 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
         what = [k for k, _ in found.fields] + [f"## {n.title()}" for n, _ in found.sections]
         what += ["unprefixed stage"] if found.stage else []
         layout = ctx.manifest.layout
-        hubs = _hub_names(ctx, rel, kind)
+        pages = _page_names(ctx, rel, kind)
         line = (found.fields or found.sections or [("", None)])[0][1]
         problems.append(
             Problem(
@@ -229,7 +230,7 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                 fix=Fix(
                     "convert to format 3",
                     lambda t: to_format3(
-                        t, hub_names=hubs, inbox=layout.inbox_dir, archive=layout.archive_dir
+                        t, page_names=pages, inbox=layout.inbox_dir, archive=layout.archive_dir
                     ),
                 ),
             )

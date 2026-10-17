@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00GVKZ53BQN6JDRP56
-type: hub
+type: topic
 title: "Milestones"
 source: "docs/roadmap/milestones.md"
 ---

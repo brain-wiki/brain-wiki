@@ -19,6 +19,6 @@ source: "docs/design/brain-format.md#5-identifiers"
 - Ids are permanent. Renaming or moving a file never changes its id.
 - Ids MUST be unique within a brain. Lint reports duplicates (BW105),
   usually a copied file, and `--fix` mints a new id for each newer copy
-  of a note or hub.
+  of a note or topic page.
 - Format 2 also gave each claim a `c-` id. The conversion to format 3
   drops them (§13).

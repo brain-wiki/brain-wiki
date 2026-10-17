@@ -359,7 +359,7 @@ destructive, and idempotent.
 | `brain_list` | read-only | Brains this host may use ([index and search §9.1](index-and-search.md#91-brain-list)) |
 | `brain_orient` | read-only | One brain's briefing ([index and search §8](index-and-search.md#8-orientation-the-briefing)) |
 | `brain_search` | read-only | Search or browse with filters and supersession guards ([index and search §6](index-and-search.md#6-search)) |
-| `brain_read` | read-only | A note, hub, or episode, with handles on every link and backlink ([index and search §7](index-and-search.md#7-read)) |
+| `brain_read` | read-only | A note, topic page, or episode, with handles on every link and backlink ([index and search §7](index-and-search.md#7-read)) |
 | `brain_neighbors` | read-only | Follow a note's links in either direction ([index and search §9.2](index-and-search.md#92-neighbors)) |
 | `brain_validate` | read-only | Check the frontmatter of notes the agent created or edited ([write path §2.3](write-path.md#23-direct-edits)) |
 | `brain_log_episode` | writes, idempotent with `dedupe_key` | Write an episode ([write path §2.1](write-path.md#21-ways-an-episode-is-written)) |

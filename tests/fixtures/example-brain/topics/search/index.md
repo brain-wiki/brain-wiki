@@ -1,6 +1,6 @@
 ---
 id: 01M4KT3JPRY4W6766VT18CQS90
-type: hub
+type: topic
 title: Search
 ---
 # Search

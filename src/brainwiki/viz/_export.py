@@ -54,7 +54,7 @@ def build_graph(engine: Engine, *, topics: list[str] | None = None) -> dict[str,
 def _nodes(engine: Engine, wanted: set[str] | None) -> list[dict[str, Any]]:
     rows = engine.db.execute(
         """SELECT id, path, kind, topic, title, type, status, updated, aliases, line_count
-           FROM nodes WHERE kind IN ('note','hub','episode') ORDER BY path"""
+           FROM nodes WHERE kind IN ('note','topic','episode') ORDER BY path"""
     ).fetchall()
     out = []
     for row in rows:
@@ -143,16 +143,16 @@ def _topics(
     wanted: set[str] | None,
 ) -> list[dict[str, Any]]:
     counts: dict[str, int] = {}
-    hubs: dict[str, str] = {}
+    pages: dict[str, str] = {}
     for node in nodes:
-        if node["topic"] and node["kind"] == "note":  # the hub is the topic's index, not a note
+        if node["topic"] and node["kind"] == "note":  # a topic's page is not one of its notes
             counts[node["topic"]] = counts.get(node["topic"], 0) + 1
-        if node["kind"] == "hub" and node["topic"]:
-            hubs.setdefault(node["topic"], node["id"])
+        if node["kind"] == "topic" and node["topic"]:
+            pages[node["topic"]] = node["id"]
     rows = sorted(
         (r for r in rows if wanted is None or r["slug"] in wanted), key=lambda r: r["slug"]
     )
-    notes = [n for n in nodes if n["kind"] in ("note", "hub")]
+    notes = [n for n in nodes if n["kind"] in ("note", "topic")]
     shown = {r["slug"] for r in rows}
     parents = {r["slug"]: r.get("parent") if r.get("parent") in shown else None for r in rows}
     groups = tree_groups([r["slug"] for r in rows], parents, topic_weights(notes, links))
@@ -166,7 +166,7 @@ def _topics(
             "path": row.get("path"),
             "color": colors[row["slug"]],
             "notes": counts.get(row["slug"], 0),
-            "hub": hubs.get(row["slug"]),
+            "page": pages.get(row["slug"]),
         }
         for row in rows
     ]
@@ -204,7 +204,7 @@ def _resolve_paths(engine: Engine, paths: list[str], ids: set[str]) -> list[str]
             "UNION SELECT node_id, 'note' FROM path_history WHERE path=?",
             (path, path),
         ).fetchone()
-        if row and row[0] in ids and row[1] in ("note", "hub") and row[0] not in touched:
+        if row and row[0] in ids and row[1] in ("note", "topic") and row[0] not in touched:
             touched.append(row[0])
     return touched
 

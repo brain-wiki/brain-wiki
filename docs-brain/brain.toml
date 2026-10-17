@@ -5,7 +5,7 @@ name = "brain-wiki-docs"
 description = "The brain-wiki design and user guide, generated from docs/ (do not edit by hand)"
 
 [layout]
-hub_filename = "{folder}.md"
+topic_page = "{folder}.md"
 
 [topics.overview]
 title = "Overview"

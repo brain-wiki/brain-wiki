@@ -1,6 +1,6 @@
 ---
 id: 01M3250V004YKCZ9JFD8S79E8N
-type: hub
+type: topic
 title: "Goals"
 source: "docs/design/overview.md#3-goals"
 ---

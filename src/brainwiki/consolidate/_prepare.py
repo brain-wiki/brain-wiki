@@ -208,21 +208,21 @@ def _query_terms(text: str) -> str | None:
 
 
 def _candidates(engine: Engine, text: str, hints: list[str]) -> list[str]:
-    """Node ids: the hubs of hinted topics, then the notes that best match the episode's words."""
+    """Node ids: the pages of hinted topics, then the notes that best match the episode's words."""
     found: list[str] = []
     for slug in hints:
-        hub = engine.db.execute(
-            "SELECT id FROM nodes WHERE topic = ? AND kind = 'hub' ORDER BY path LIMIT 1", (slug,)
+        page = engine.db.execute(
+            "SELECT id FROM nodes WHERE topic = ? AND kind = 'topic' LIMIT 1", (slug,)
         ).fetchone()
-        if hub:
-            found.append(hub["id"])
+        if page:
+            found.append(page["id"])
     query = _query_terms(text)
     if query:
         try:
             rows = engine.db.execute(
                 """SELECT n.id FROM fts JOIN docs d ON d.rowid = fts.rowid
                    JOIN nodes n ON n.id = d.node_id
-                   WHERE fts MATCH ? AND n.kind IN ('note', 'hub') AND n.status != 'archived'
+                   WHERE fts MATCH ? AND n.kind IN ('note', 'topic') AND n.status != 'archived'
                    ORDER BY bm25(fts) LIMIT 30""",
                 (query,),
             ).fetchall()
@@ -348,15 +348,14 @@ def prepare(
     topics = []
     for slug, path in sorted(tree.paths.items()):
         declared = manifest.topics.get(slug)
-        hub = engine.db.execute(
-            "SELECT title FROM nodes WHERE topic = ? AND kind = 'hub' ORDER BY path LIMIT 1",
-            (slug,),
+        page = engine.db.execute(
+            "SELECT title FROM nodes WHERE topic = ? AND kind = 'topic' LIMIT 1", (slug,)
         ).fetchone()
         entry = {
             "slug": slug,
             "path": path,
             "title": (declared.title if declared and declared.title else None)
-            or (hub["title"] if hub else slug),
+            or (page["title"] if page else slug),
         }
         if declared and declared.description:
             entry["description"] = declared.description

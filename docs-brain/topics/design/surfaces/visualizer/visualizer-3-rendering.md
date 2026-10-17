@@ -38,7 +38,7 @@ The layout is deterministic and local. The same brain always produces the same m
 
 ### 3.2 Words and lines
 
-The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; Sources, not `bw-sources`; and the topic index, not the hub. Links read as plain verbs (Links to, Replaced by, Cites, and from the other end links here, replaced by this, cites this), and every number names its unit.
+The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Cites, and from the other end links here, replaced by this, cites this), and every number names its unit.
 
 The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. Links between notes come in three kinds. Each has a chip in the dock, and all are on by default:
 

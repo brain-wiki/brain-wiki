@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.3 (unreleased)
+
+- **Hubs are now topic pages.** A topic is a folder, and its page is the
+  file named `layout.topic_page` (`index.md` by default) at the folder's
+  root ([D38](docs/decision/d38-topic-pages.md)). A note with `type: hub`
+  elsewhere in a topic is no longer indexed as a second hub; it is an
+  ordinary note. New pages get `type: topic`.
+- **Renamed settings and fields.** `layout.hub_filename` is now
+  `layout.topic_page` and the `hub` key of `search.kind_factor` is now
+  `topic`; both old names still load. The index kind `hub` is now `topic`
+  (the index rebuilds itself). JSON output renames `hub` to `page` in
+  topic rows (`brain topics --json`, orientation, `brain viz`) and the
+  visualizer's `hubs` total to `pages`. `brain import --overlay --json`
+  reports `topic_page` instead of `hub_filename`.
+- **AGENTS.md wording.** The managed block's table header is now
+  `Topic | Page | About`, so existing brains report BW408 until
+  `brain lint --fix` regenerates the block.
+
 ## 0.3.2 (2026-10-16)
 
 - **Clicking a connection in `brain viz` opens it.** A click on a link, or

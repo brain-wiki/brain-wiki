@@ -124,7 +124,7 @@ def _duplicate_ids(conn: sqlite3.Connection) -> list[Problem]:
             if row is owner:
                 continue
             fix = None
-            if row["kind"] in ("note", "hub"):
+            if row["kind"] in ("note", "topic"):
                 fresh = new_ulid()
                 fix = Fix(
                     "re-mint this file's id",
@@ -290,24 +290,22 @@ def _supersession_cycles(
 def _structure_checks(
     engine: Engine, conn: sqlite3.Connection, ctx: FileContext, fixes: bool
 ) -> list[Problem]:
-    from brainwiki.index import agents_block
+    from brainwiki.index import agents_block, page_name
 
     out: list[Problem] = []
     manifest = engine.manifest
     layout = manifest.layout
     namer = LinkNamer(conn)
     for slug, folder in sorted(ctx.topics.items()):
-        hub_name = layout.hub_filename.replace("{folder}", folder.rsplit("/", 1)[-1])
-        hub_path = f"{folder}/{hub_name}"
-        hub = conn.execute(
-            "SELECT id, path FROM nodes WHERE topic=? AND kind='hub' ORDER BY (path = ?) DESC, path",
-            (slug, hub_path),
+        page_path = f"{folder}/{page_name(layout, folder)}"
+        page = conn.execute(
+            "SELECT id, path FROM nodes WHERE path=? AND kind='topic'", (page_path,)
         ).fetchone()
         notes = conn.execute(
             "SELECT id, path, title FROM nodes WHERE topic=? AND kind='note' ORDER BY path", (slug,)
         ).fetchall()
-        if hub is None:
-            if engine.store.exists(hub_path):
+        if page is None:
+            if engine.store.exists(page_path):
                 continue
             declared = manifest.topics.get(slug)
             title = (declared.title if declared and declared.title else None) or slug.replace(
@@ -319,7 +317,7 @@ def _structure_checks(
                     [
                         "---",
                         f"id: {new_ulid()}",
-                        "type: hub",
+                        "type: topic",
                         f"title: {title}",
                         "---",
                         f"# {title}",
@@ -335,13 +333,13 @@ def _structure_checks(
                     "BW404",
                     folder,
                     None,
-                    f"topic {slug!r} has no hub ({hub_path})",
-                    fix=Fix(f"create {hub_path}", create=content, target=hub_path),
+                    f"topic {slug!r} has no topic page ({page_path})",
+                    fix=Fix(f"create {page_path}", create=content, target=page_path),
                 )
             )
             continue
-        listed = _hub_listing(engine, conn, hub["id"], hub["path"])
-        reached = _reaches_hub(conn, [n["id"] for n in notes], listed)
+        listed = _page_listing(engine, conn, page["id"], page["path"])
+        reached = _reached_from(conn, [n["id"] for n in notes], listed)
         for note in notes:
             if note["id"] in listed or note["id"] in reached:
                 continue
@@ -351,11 +349,11 @@ def _structure_checks(
                     "BW405",
                     note["path"],
                     None,
-                    f"not listed in {hub['path']} ## Notes",
+                    f"not listed in {page['path']} ## Notes",
                     fix=Fix(
-                        f"list it in {hub['path']}",
+                        f"list it in {page['path']}",
                         lambda t, line=line: append_to_section(t, "notes", [line]),
-                        target=hub["path"],
+                        target=page["path"],
                     ),
                 )
             )
@@ -365,7 +363,7 @@ def _structure_checks(
            ORDER BY n.path"""
     ):
         out.append(
-            Problem("BW406", row["path"], None, "orphan: no incoming links and not in a hub")
+            Problem("BW406", row["path"], None, "orphan: no incoming links and not on a topic page")
         )
     for row in conn.execute(
         "SELECT path FROM nodes WHERE kind='note' AND topic IS NULL ORDER BY path"
@@ -413,9 +411,9 @@ def _structure_checks(
     return out
 
 
-def _reaches_hub(conn: sqlite3.Connection, note_ids: list[str], listed: set[str]) -> set[str]:
-    """Notes reached by links from the notes the hub lists, so a topic can nest notes under
-    section notes instead of listing every note in one long hub."""
+def _reached_from(conn: sqlite3.Connection, note_ids: list[str], listed: set[str]) -> set[str]:
+    """Notes reached by links from the notes the topic page lists, so a topic can nest notes
+    under section notes instead of listing every note in one long page."""
     wanted = set(note_ids)
     reached: set[str] = set()
     frontier = [n for n in listed if n in wanted]
@@ -434,9 +432,11 @@ def _reaches_hub(conn: sqlite3.Connection, note_ids: list[str], listed: set[str]
     return reached
 
 
-def _hub_listing(engine: Engine, conn: sqlite3.Connection, hub_id: str, hub_path: str) -> set[str]:
+def _page_listing(
+    engine: Engine, conn: sqlite3.Connection, page_id: str, page_path: str
+) -> set[str]:
     try:
-        doc = parse_document(hub_path, engine.store.read_text(hub_path))
+        doc = parse_document(page_path, engine.store.read_text(page_path))
     except (OSError, UnicodeDecodeError):
         return set()
     section = doc.section("notes")
@@ -448,7 +448,7 @@ def _hub_listing(engine: Engine, conn: sqlite3.Connection, hub_id: str, hub_path
     for row in conn.execute(
         "SELECT other, line FROM edges WHERE declared_in=? AND rel = 'links_to' "
         "AND other IS NOT NULL",
-        (hub_id,),
+        (page_id,),
     ):
         if row["line"] in section_range:
             listed.add(row["other"])

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 _CHECKED_KINDS = (
     "note",
-    "hub",
+    "topic",
     "episode",
     "archived_episode",
     "agent_file",

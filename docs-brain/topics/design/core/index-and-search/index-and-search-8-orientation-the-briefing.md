@@ -39,7 +39,7 @@ Sections, in output order:
    reach 20 or the oldest is more than 7 days old.
 7. How to query: up to three example calls built from this brain's own
    topics and types (a keyword search, a typed "latest" lookup, and
-   `brain_neighbors` on a hub).
+   `brain_neighbors` on a topic page).
 8. Writing notes, only when the calling profile has `edit`: where files go
    (`topics/<topic>/<slug>.md`, with the existing top-level topics), the
    frontmatter fields and `status` values
@@ -47,8 +47,8 @@ Sections, in output order:
    conventions ([[brain-format-6-notes|brain format §6.2]]), and "run
    `brain_validate` on the files you changed".
 
-Note counts never include hubs. A hub is the topic's index and only dates
-the topic.
+Note counts never include topic pages. A topic page describes its topic
+and only dates it.
 
 Every section except topics and recent changes is always included. When
 the budget is tight, recent changes go first, the topic list takes the

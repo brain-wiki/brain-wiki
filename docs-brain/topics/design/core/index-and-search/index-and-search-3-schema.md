@@ -20,7 +20,7 @@ CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 -- Every file seen in the brain (knowledge or not), for change detection.
 CREATE TABLE files (
   path         TEXT PRIMARY KEY,    -- brain-relative, '/' separators
-  kind         TEXT NOT NULL,       -- note, hub, episode, archived_episode, agent_file, proposal,
+  kind         TEXT NOT NULL,       -- note, topic, episode, archived_episode, agent_file, proposal,
                                     -- rules, archived_rules, agents_md, log, manifest, report, attachment
   mtime_ns     INTEGER NOT NULL,
   size         INTEGER NOT NULL,
@@ -29,11 +29,11 @@ CREATE TABLE files (
   parse_errors INTEGER NOT NULL DEFAULT 0
 );
 
--- Notes, hubs, and episodes (files in inbox/agents/ are stored as kind 'episode').
+-- Notes, topic pages, and episodes (files in inbox/agents/ are stored as kind 'episode').
 CREATE TABLE nodes (
   id           TEXT PRIMARY KEY,    -- ULID from frontmatter, or 'path:' || path
   path         TEXT NOT NULL UNIQUE,
-  kind         TEXT NOT NULL,       -- note, hub, episode, archived_episode
+  kind         TEXT NOT NULL,       -- note, topic (a topic page), episode, archived_episode
   topic        TEXT,                -- slug of the nearest enclosing topic, NULL outside topics
   title        TEXT NOT NULL,
   type         TEXT NOT NULL DEFAULT 'note',
@@ -150,8 +150,9 @@ How files become rows:
   while the file does not move, so an imported vault is searchable before
   anyone runs `lint --fix`. A note whose id is already taken by another
   indexed file gets a `path:` id too.
-- `type` defaults to `hub`, `episode`, or `note` by kind. A note with
-  `type: hub` is indexed as a hub.
+- A file is kind `topic` only when it is a topic page by its path
+  ([[brain-format-8-topic-pages|brain format §8]]), whatever its
+  `type`. `type` defaults to `topic`, `episode`, or `note` by kind.
 - A `status` outside the three values is indexed as `active`, and the
   value goes to `stage` when the note has no `bw-stage`.
 - `props` holds every frontmatter key except the standard ones (`id`,

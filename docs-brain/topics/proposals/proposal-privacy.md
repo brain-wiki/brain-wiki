@@ -89,7 +89,7 @@ editor.
 
 ### 4.2 Declaring
 
-- A topic declares its level in its hub's frontmatter: `bw-privacy: private`
+- A topic declares its level in its topic page's frontmatter: `bw-privacy: private`
   in `index.md`. The level covers the folder, its plain subfolders, and its
   sub-topics. The strictest level along the tree wins.
 - Notes carry no level of their own. One private note in an open topic moves

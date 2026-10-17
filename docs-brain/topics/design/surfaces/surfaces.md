@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00MDXTG5K17S4BSXMX
-type: hub
+type: topic
 title: "Interfaces and integrations"
 source: "docs/"
 ---

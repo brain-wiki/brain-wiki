@@ -1,6 +1,6 @@
 ---
 id: 01M3250V0063BRPN6QRVP4C1GQ
-type: hub
+type: topic
 title: "Agent integrations"
 source: "docs/design/agent-integrations.md"
 ---

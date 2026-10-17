@@ -33,7 +33,7 @@ def brain_path(engine: Engine, raw: str) -> str:
 
 
 def protected_reason(engine: Engine, rel: str) -> str | None:
-    """Why `rel` is never edited directly, or None for notes and hubs."""
+    """Why `rel` is never edited directly, or None for notes and topic pages."""
     layout = engine.manifest.layout
     if rel in _PROTECTED_FILES:
         return f"{rel} is never edited directly"

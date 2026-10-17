@@ -24,8 +24,8 @@ def brief_stats(engine: Engine) -> dict[str, Any]:
 
     A pass over 10k notes costs about 10 ms even from a covering index, so the topic table,
     the totals, the type counts, and where people and meetings live share this one query.
-    Counts are of notes: a topic's hub is its index, not one of its notes, so it only dates
-    the topic.
+    Counts are of notes: a topic's page describes the topic and is not one of its notes, so it
+    only dates the topic.
     """
     week_ago = (datetime.now(UTC) - timedelta(days=7)).strftime("%Y-%m-%d")
     by_topic: dict[str, dict[str, Any]] = {}
@@ -34,7 +34,7 @@ def brief_stats(engine: Engine) -> dict[str, Any]:
     notes, last = 0, ""
     for row in engine.db.execute(
         """SELECT kind, topic, type, COUNT(*) AS c, MAX(updated) AS l
-            FROM nodes n WHERE kind IN ('note', 'hub')
+            FROM nodes n WHERE kind IN ('note', 'topic')
             GROUP BY kind, topic, type"""
     ):
         latest = (row["l"] or "")[:10]
@@ -53,7 +53,7 @@ def brief_stats(engine: Engine) -> dict[str, Any]:
     # The oldest date and the last week's count read nodes_updated in order, not every note.
     oldest = engine.db.execute(
         """SELECT updated FROM nodes n INDEXED BY nodes_updated
-            WHERE updated IS NOT NULL AND kind IN ('note', 'hub')
+            WHERE updated IS NOT NULL AND kind IN ('note', 'topic')
             ORDER BY updated LIMIT 1"""
     ).fetchone()
     first = (oldest["updated"] or "")[:10] if oldest else ""
@@ -91,28 +91,27 @@ def topic_rows(engine: Engine, stats: dict[str, Any] | None = None) -> list[dict
     tree = engine.topics
     stats = stats or brief_stats(engine)
     by_topic = stats["by_topic"]
-    hubs: dict[str, Any] = {}
-    for r in conn.execute(
-        "SELECT topic, title, path, props FROM nodes WHERE kind='hub' ORDER BY path"
-    ):
-        hubs.setdefault(r["topic"], r)
+    pages = {
+        r["topic"]: r
+        for r in conn.execute("SELECT topic, title, path, props FROM nodes WHERE kind='topic'")
+    }
     rows = []
     for slug, path in sorted(tree.paths.items()):
         declared = engine.manifest.topics.get(slug)
         stat = by_topic.get(slug, {"notes": 0, "updated": ""})
-        hub = hubs.get(slug)
+        page = pages.get(slug)
         title = (declared.title if declared and declared.title else None) or (
-            hub["title"] if hub else slug
+            page["title"] if page else slug
         )
         description = declared.description if declared and declared.description else ""
-        if not description and hub is not None:
-            description = str(json.loads(hub["props"] or "{}").get("description") or "")
+        if not description and page is not None:
+            description = str(json.loads(page["props"] or "{}").get("description") or "")
         rows.append(
             {
                 "slug": slug,
                 "title": title,
                 "path": path,
-                "hub": hub["path"] if hub else None,
+                "page": page["path"] if page else None,
                 "description": description,
                 "notes": stat["notes"],
                 "updated": stat["updated"],
@@ -187,9 +186,9 @@ def _query_examples(info: dict[str, Any], topics: list[dict[str, Any]]) -> list[
         lines.append(
             f'- `brain_search("", type=["{latest}"], sort="recent", limit=3)`: the latest {latest} notes.'
         )
-    hub = next((t["hub"] for t in by_size if t["title"] == other and t["hub"]), None)
-    if hub:
-        lines.append(f'- `brain_neighbors("{hub}")`: what a note links to, and what links to it.')
+    page = next((t["page"] for t in by_size if t["title"] == other and t["page"]), None)
+    if page:
+        lines.append(f'- `brain_neighbors("{page}")`: what a note links to, and what links to it.')
     return lines
 
 
@@ -203,8 +202,8 @@ def _writing_lines(engine: Engine, topics: list[dict[str, Any]]) -> list[str]:
     return [
         "## Writing notes",
         f"- Edit or create Markdown files at `{layout.topics_dir}/<topic>/<slug>.md` (topics: "
-        f"{known}); a new topic is a folder with an "
-        f"`{layout.hub_filename.replace('{folder}', '<folder>')}` hub.",
+        f"{known}); a new topic is a folder with a topic page, "
+        f"`{layout.topic_page.replace('{folder}', '<folder>')}`.",
         "- Frontmatter is metadata only: `type` (note, decision, howto, person, …), `title`, "
         f'`status` ({" | ".join(STATUSES)}), `bw-superseded_by: "[[newer note]]"` with '
         '`status: superseded`, `bw-sources: ["[[archive/episodes/…]]", "https://…"]`, '
@@ -404,14 +403,14 @@ def agents_block(
         table = [
             (
                 r["slug"],
-                r["hub"] or r["path"],
+                r["page"] or r["path"],
                 (r["description"] or r["title"])
                 + (f" ({len(r['sub_topics'])} sub-topics)" if r.get("sub_topics") else ""),
             )
             for r in sorted(selected, key=lambda r: r["slug"])
         ]
         if hidden:
-            table.append((f"… {hidden} more", "see the hubs under topics/", ""))
+            table.append((f"… {hidden} more", "see the topic pages under topics/", ""))
         return default_agents_block(name, table, edit=can_edit)
 
     try:

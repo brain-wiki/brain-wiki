@@ -98,7 +98,7 @@ def retrieval(work: Path, size: int, seed: int = 0) -> SuiteResult:
             primary = [r["id"] for r in results][:8]
             ranking.setdefault(query.family, []).append(_rank_scores(primary, query.expected))
             for r in results:
-                if r["kind"] not in ("note", "hub") or r["id"] in checked:
+                if r["kind"] not in ("note", "topic") or r["id"] in checked:
                     continue
                 checked.add(r["id"])
                 want = truth.expected_guards(r["id"])
@@ -165,7 +165,7 @@ _QC = "topics/alpha/queue-choice.md"
 _BP = "topics/alpha/broker-policy.md"
 _IL = "topics/alpha/ingest-limits.md"
 _VC = "topics/vault/vault-costs.md"
-_HUB = "topics/alpha/index.md"
+_ALPHA_PAGE = "topics/alpha/index.md"
 _BASE_EXTRA = """
 [git]
 mode = "off"
@@ -190,10 +190,10 @@ def _note(title: str, body: str, facts: list[str], extra: str = "") -> str:
     return "\n".join([*lines, f"# {title}", "", body, *tail]) + "\n"
 
 
-def _hub(title: str, about: str, listed: list[str]) -> str:
+def _topic_page(title: str, about: str, listed: list[str]) -> str:
     from brainwiki.ids import new_ulid
 
-    head = ["---", f"id: {new_ulid()}", "type: hub", f"title: {title}", "---", f"# {title}", ""]
+    head = ["---", f"id: {new_ulid()}", "type: topic", f"title: {title}", "---", f"# {title}", ""]
     return "\n".join([*head, about, "", "## Notes", *[f"- [[{s}]]" for s in listed]]) + "\n"
 
 
@@ -209,7 +209,9 @@ def _base_brain(root: Path) -> Path:
         (root / "brain.toml").read_text(encoding="utf-8") + _BASE_EXTRA, encoding="utf-8"
     )
     files = {
-        _HUB: _hub("Alpha", "Core services.", ["queue-choice", "broker-policy", "ingest-limits"]),
+        _ALPHA_PAGE: _topic_page(
+            "Alpha", "Core services.", ["queue-choice", "broker-policy", "ingest-limits"]
+        ),
         _QC: _note(
             "Use a message queue for ingestion",
             "Kestrel ingests events through a queue so bursts do not overload writers.\n"
@@ -226,7 +228,7 @@ def _base_brain(root: Path) -> Path:
             "Producers are throttled at the gateway when the queue backs up.",
             ["The gateway throttles producers above 2000 events per second."],
         ),
-        "topics/vault/index.md": _hub("Vault", "Costs and contracts.", ["vault-costs"]),
+        "topics/vault/index.md": _topic_page("Vault", "Costs and contracts.", ["vault-costs"]),
         _VC: _note(
             "Broker hosting costs",
             "The hosted broker costs more than running it ourselves; see [[broker-policy]].",

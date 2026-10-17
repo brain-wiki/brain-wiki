@@ -19,7 +19,7 @@ The commands, in the order `brain --help` lists them:
 | `brain setup [--guide]` | Set up step by step |
 | `brain orient` | Print the briefing agents get |
 | `brain search [QUERY] [options]` | Search, or browse with an empty query |
-| `brain read TARGET [--mode outline\|full\|section\|raw] [--section H]` | Read a note, hub, or episode |
+| `brain read TARGET [--mode outline\|full\|section\|raw] [--section H]` | Read a note, topic page, or episode |
 | `brain neighbors TARGET [--direction out\|in\|both] [--depth N] [--limit N] [--paths]` | Follow a note's links and backlinks |
 | `brain topics [TOPIC]` | The topic tree with note counts |
 | `brain links TARGET` | What a note links to |
@@ -81,7 +81,7 @@ The commands, in the order `brain --help` lists them:
   `brain search "" --since 7d` lists recent notes. An unknown `--topic` is
   not found (exit 3).
 - `brain read --mode outline` shows the summary, headings, links, and
-  backlinks. It is the default for hubs. `--mode raw` prints the file byte
+  backlinks. It is the default for topic pages. `--mode raw` prints the file byte
   for byte. `--section H` alone implies `--mode section`.
 - `brain neighbors` puts a superseded note's replacement first. `--depth`
   is 1 to 3, `--limit` 1 to 100.
@@ -184,7 +184,7 @@ may.
 | `brain_list` | The brains this agent may use, and what each holds | — |
 | `brain_orient` | The briefing: rules, topics, recent changes, inbox | — |
 | `brain_search` | Search, or browse with an empty query and filters | — |
-| `brain_read` | Read a note, hub, or episode | — |
+| `brain_read` | Read a note, topic page, or episode | — |
 | `brain_neighbors` | Follow a note's links and backlinks | — |
 | `brain_validate` | Check the frontmatter of notes the agent changed | — |
 | `brain_log_episode` | Record a learning in the inbox | — |

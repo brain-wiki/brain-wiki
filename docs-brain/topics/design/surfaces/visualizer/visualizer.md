@@ -1,6 +1,6 @@
 ---
 id: 01M3250V007QR7WZC6TV7SP627
-type: hub
+type: topic
 title: "Visualizer"
 source: "docs/design/visualizer.md"
 ---

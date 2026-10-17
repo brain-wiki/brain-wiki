@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00A5VXJMD41DBF42CJ
-type: hub
+type: topic
 title: "Scenarios"
 source: "docs/design/overview.md#6-users-and-scenarios"
 ---

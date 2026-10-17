@@ -1,6 +1,6 @@
 ---
 id: 01M3250V00WKG90X12XFDS4FA0
-type: hub
+type: topic
 title: "User experience"
 source: "docs/"
 ---

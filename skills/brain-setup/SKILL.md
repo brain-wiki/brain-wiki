@@ -85,7 +85,7 @@ makes a first commit, so a clone is a working brain.
    a `brain.toml`, an inbox), and anything it could not read.
 3. After a yes, run `brain import PATH --overlay --apply`. This adds files
    and never moves, renames, or deletes the user's notes.
-4. Mention that later import steps (ids and status, topic hubs) exist and
+4. Mention that later import steps (ids and status, topic pages) exist and
    can be done later; do not apply them now.
 
 **Commit job** (only when the brain uses git). Explain: agents' direct

@@ -19,12 +19,12 @@ name = "personal"                           # display name (optional)
 description = "Personal notes and projects" # one line shown by brain_list (optional)
 
 [layout]                                    # all optional; defaults shown
-topics_dir   = "topics"
-inbox_dir    = "inbox"
-archive_dir  = "archive"
-reports_dir  = "reports"
-hub_filename = "index.md"                   # or "{folder}.md" for folder-note style
-ignore       = []                           # extra glob patterns, relative to the brain root
+topics_dir  = "topics"
+inbox_dir   = "inbox"
+archive_dir = "archive"
+reports_dir = "reports"
+topic_page  = "index.md"                    # or "{folder}.md" for folder-note style
+ignore      = []                            # extra glob patterns, relative to the brain root
 
 [budgets]
 rules_max_lines     = 100
@@ -41,7 +41,7 @@ stale_inbox_days = 14
 freshness_ms       = 1000
 max_guards_per_hit = 10
 status_factor      = { active = 1.0, superseded = 0.35, archived = 0.2 }
-kind_factor        = { hub = 1.15, note = 1.0, episode = 0.7, archived_episode = 0.5 }
+kind_factor        = { topic = 1.15, note = 1.0, episode = 0.7, archived_episode = 0.5 }
 recency_half_life_days = 180
 
 [consolidate]
@@ -75,9 +75,12 @@ Rules:
   SHOULD produce a lint warning (BW109).
 - Inline tables (`status_factor = { … }`) are TOML, not frontmatter. The
   flat-values rule of §4 applies to note frontmatter only.
-- An undeclared topic still works. Its title comes from its hub, and its
-  description from the hub's `description` property. A declaration sets
+- An undeclared topic still works. Its title comes from its topic page,
+  and its description from the page's `description` property. A declaration sets
   the title, the description, or a path (for imported vaults).
+- Older `brain.toml` files may use the names from when topic pages were
+  called hubs. `layout.hub_filename` is read as `layout.topic_page`, and a
+  `hub` key in `search.kind_factor` as `topic`.
 - Declared topic slugs MUST match `^[a-z0-9][a-z0-9-]{0,63}$` (BW409).
 - `[budgets]` limits are hard. Rule writes refuse to exceed theirs, lint
   reports `rules.md` (BW402) and `AGENTS.md` (BW403), and orientation is
