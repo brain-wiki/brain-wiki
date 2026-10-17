@@ -3,7 +3,7 @@
   "name": "io.github.brain-wiki/brain-wiki",
   "title": "brain-wiki",
   "description": "Local-first Markdown second brain shared by your AI agents",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "websiteUrl": "https://github.com/brain-wiki/brain-wiki",
   "repository": {
     "url": "https://github.com/brain-wiki/brain-wiki",
@@ -14,7 +14,7 @@
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "brain-wiki",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"

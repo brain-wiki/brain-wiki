@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.1 (unreleased)
+## 0.3.1 (2026-10-16)
 
 - **Scheduled jobs reach keyring credentials.** A crontab job now carries
   `DBUS_SESSION_BUS_ADDRESS`, so git credential helpers that keep the token
