@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.2 (unreleased)
+
+- **Clicking a connection in `brain viz` opens it.** A click on a link, or
+  on the links between two topics or groups, used to fly to one end. It now
+  shows the connection in the Details panel and keeps it lit: both notes,
+  how they link, the passages that hold the link, and, between topics, each
+  link one by one.
+- **docs-brain notes follow page size.** A document up to 10 KB is one
+  note, and longer ones split by `##` section.
+
 ## 0.3.1 (2026-10-16)
 
 - **Scheduled jobs reach keyring credentials.** A crontab job now carries
