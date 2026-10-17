@@ -27,6 +27,7 @@ bw-captured: mcp                 # mcp | harvest | cli | import | file
 created: 2026-10-10T19:22:11Z
 bw-topics: [search]              # hints only
 bw-dedupe: claude-code:5f2c9a1e-…:12-48   # idempotency key, if the writer gave one
+bw-pattern: file                 # the agent's consolidation hint, if it gave one
 ---
 Switched the search path to FTS5 after ripgrep was too slow on 10k notes.
 
@@ -47,8 +48,8 @@ Rules:
   records each episode's first hash, and lint reports a change (BW501).
 - An episode MUST have `id`, `bw-origin`, and `bw-inputs` (BW503).
 - `bw-origin`, `bw-inputs`, `bw-captured`, and `bw-agent` are set by the
-  code path that writes the episode (MCP server, harvest, CLI, import),
-  never taken from model-written text. The index trusts them only for
+  code path that writes the episode (the MCP server or harvest), never
+  taken from model-written text. The index trusts them only for
   episodes this device wrote. See
   [[write-path-3-provenance-and-inputs|write path §3]] and
   [[index-and-search-3-schema|index and search §3]].
@@ -62,8 +63,12 @@ Rules:
   delete old transcripts and transcripts stay on their device.
 - `bw-dedupe` holds the writer's idempotency key
   ([[write-path-21-ways-an-episode-is-written|write path §2.1]]).
-  Episodes imported from documents carry `bw-source`, the original file
-  and heading ([[import-6-to-episodes-and-from-agents|import §6]]).
+  Episodes imported from documents by earlier versions carry `bw-source`,
+  the original file and heading.
+- `bw-pattern` is the capturing agent's guess at how the episode should be
+  consolidated: `record`, `playbook`, `file`, or `distill`
+  ([[write-path-21-ways-an-episode-is-written|write path §2.1]]). It is a
+  hint, not provenance.
 - The body is free Markdown. `## Claims`, `## Negative findings` (what was
   tried and failed, so later agents do not repeat it), and
   `## Open questions` are optional sections the consolidation guidance

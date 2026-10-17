@@ -902,7 +902,7 @@ def manifest(brain: Brain) -> str:
     lines += [
         "",
         "[agents.default]",
-        'write = ["episodes"]',
+        "write = []",
     ]
     return "\n".join(lines) + "\n"
 

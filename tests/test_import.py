@@ -8,7 +8,6 @@ import pytest
 from tests.conftest import write
 
 from brainwiki.cli._main import main
-from brainwiki.importer._episodes import _split_document
 
 
 @pytest.fixture
@@ -48,7 +47,6 @@ def test_dry_run_wins_over_apply(brain_dir: Path, tmp_path: Path):
     source = notes(tmp_path)
     before = snapshot(brain_dir)
     assert main(["import", str(source), "--into", "test", "--apply", "--dry-run"]) == 0
-    assert main(["import", str(source), "--to-episodes", "--apply", "--dry-run"]) == 0
     assert snapshot(brain_dir) == before
     assert main(["import", str(source), "--overlay", "--apply", "--dry-run"]) == 0
     assert not (source / "brain.toml").exists()
@@ -67,26 +65,23 @@ def test_overlay_phases_run_after_adopt_in_git(git_env: None, tmp_path: Path):
     assert re.search(r"^id: \S+$", text, re.M) and "related: ['[[Sync]]']" in text  # theirs
 
 
-def test_to_episodes_skips_frontmatter(brain_dir: Path, tmp_path: Path):
-    text = "---\ntags: [lumen]\ntitle: Sync\n---\n# Sync\n\nCRDTs merge offline edits.\n"
-    assert _split_document(text) == [("Sync", "# Sync\n\nCRDTs merge offline edits.")]
-    doc = write(tmp_path, "sync.md", text)
-    assert main(["import", str(doc), "--to-episodes", "--apply"]) == 0
-    episodes = [p.read_text() for p in (brain_dir / "inbox/episodes").rglob("*.md")]
-    assert len(episodes) == 1 and "tags: [lumen]" not in episodes[0]
-
-
-def test_from_unknown_host_is_usage_error(brain_dir: Path, capsys: pytest.CaptureFixture[str]):
-    assert main(["import", "--from", "nosuch"]) == 2
-    err = capsys.readouterr().err
-    assert "--path" not in err and "as PATH" in err and "claude-code" in err
+def test_episode_modes_are_gone(
+    brain_dir: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    source = notes(tmp_path)
+    for flag in (["--to-episodes"], ["--from", "claude-code"]):
+        assert main(["import", str(source), *flag]) == 2
+    capsys.readouterr()
+    assert main(["import", str(source)]) == 2
+    assert "ask an agent to file them into notes" in capsys.readouterr().err
+    assert not (brain_dir / "inbox/episodes").exists() or not any(
+        (brain_dir / "inbox/episodes").rglob("*.md")
+    )
 
 
 @pytest.mark.parametrize(
     ("extra", "message"),
     [
-        (["--into", "test", "--agent", "codex"], "--agent works only with --to-episodes"),
-        (["--overlay", "--untrusted"], "--untrusted works only with --to-episodes"),
         (["--into", "test", "--phase", "2"], "--phase works only with --overlay"),
         (["--into", "test", "--phase", "0"], "--phase works only with --overlay"),
         (["--overlay", "--into", "test"], "--overlay and --into cannot be combined"),
@@ -104,7 +99,6 @@ def test_ignored_flags_are_usage_errors(
     source = notes(tmp_path)
     assert main(["import", str(source), *extra]) == 2
     assert message in capsys.readouterr().err
-    assert main(["import", "--from", "codex", "--agent", "x"]) == 2
 
 
 @pytest.mark.parametrize(
@@ -113,8 +107,6 @@ def test_ignored_flags_are_usage_errors(
         ["--overlay"],
         ["--overlay", "--apply"],
         ["--into", "test"],
-        ["--to-episodes"],
-        ["--from", "claude-code"],
     ],
 )
 def test_missing_source_is_not_found(
@@ -132,23 +124,6 @@ def test_readopting_names_the_registration(tmp_path: Path, capsys: pytest.Captur
         assert main(["import", str(root), *argv]) == 4
         err = capsys.readouterr().err
         assert "already a brain, registered as 'lumen'" in err and "brains add" not in err
-
-
-def test_from_host_apply_reports_written_and_skipped(
-    brain_dir: Path,
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-):
-    claude = tmp_path / "claude"
-    write(claude, "projects/-x/memory/prefs.md", "# Editor\n\nTabs.\n\n# Theme\n\nDark.\n")
-    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(claude))
-    assert main(["import", "--from", "claude-code"]) == 0
-    assert "Would write 2 episodes" in capsys.readouterr().out
-    assert main(["import", "--from", "claude-code", "--apply"]) == 0
-    assert "Wrote 2 episodes from 1 files." in capsys.readouterr().out
-    assert main(["import", "--from", "claude-code", "--apply"]) == 0
-    assert "Wrote 0 episodes from 1 files; skipped 2 already imported." in capsys.readouterr().out
 
 
 def test_overlay_phase1_dry_run_shows_the_applied_ids(

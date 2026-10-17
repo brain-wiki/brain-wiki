@@ -6,31 +6,27 @@ from pathlib import Path
 from typing import Any
 
 from brainwiki.cli._output import emit
-from brainwiki.errors import Conflict, NotFound, UnsupportedHost, UsageError
+from brainwiki.errors import Conflict, NotFound, UsageError
 
+# Documents and agents' memory files are imported by an agent, which files them into notes
+# directly; there is no command that turns them into episodes (import.md §6).
 _MODES = (
     ("--overlay", "overlay"),
     ("--into", "into"),
-    ("--to-episodes", "to_episodes"),
-    ("--from", "from_host"),
 )
 
 
 def import_(args: Any) -> int:
     mode = _check_flags(args)
     args.apply = args.apply and not args.dry_run  # --dry-run wins, as in harvest and consolidate
-    if mode == "--from":
-        return _from_host(args)
     source = Path(args.path).expanduser()
     if not source.exists():
         raise NotFound(f"no such file or folder: {source}")
-    if mode in ("--overlay", "--into") and not source.is_dir():
+    if not source.is_dir():
         raise UsageError(f"{mode} needs a folder; {source} is a file")
     if mode == "--overlay":
         return _overlay(args, source)
-    if mode == "--into":
-        return _into(args, source)
-    return _to_episodes(args, source)
+    return _into(args, source)
 
 
 def _check_flags(args: Any) -> str:
@@ -39,15 +35,13 @@ def _check_flags(args: Any) -> str:
     if len(modes) > 1:
         raise UsageError(f"choose one mode; {' and '.join(modes)} cannot be combined")
     if not modes:
-        raise UsageError("choose a mode: --overlay, --into BRAIN, --to-episodes, or --from HOST")
+        raise UsageError(
+            "choose a mode: --overlay or --into BRAIN. To bring in documents or an agent's "
+            "memory files, ask an agent to file them into notes"
+        )
     mode = modes[0]
-    if not args.path and mode != "--from":
-        raise UsageError(f"give a folder or file to import with {mode}")
-    if mode != "--to-episodes":
-        for flag, given in (("--agent", args.agent), ("--untrusted", args.untrusted)):
-            if given:
-                hint = "; --from records the host itself" if mode == "--from" else ""
-                raise UsageError(f"{flag} works only with --to-episodes{hint}")
+    if not args.path:
+        raise UsageError(f"give a folder to import with {mode}")
     if mode != "--overlay" and args.phase is not None:
         raise UsageError("--phase works only with --overlay")
     if args.phase is None:
@@ -134,72 +128,3 @@ def _into(args: Any, source: Path) -> int:
         text += f" Then added hubs and refreshed AGENTS.md ({', '.join(tidy)}); undo all to revert."
     emit(args, record.to_json() | summary | {"tidy_runs": tidy}, text)
     return 0
-
-
-def _to_episodes(args: Any, source: Path) -> int:
-    from brainwiki.engine import open_engine
-    from brainwiki.importer import import_documents
-
-    paths = sorted(source.rglob("*.md")) if source.is_dir() else [source]
-    with open_engine(args.brain, host=getattr(args, "as_host", None)) as engine:
-        results = import_documents(
-            engine,
-            paths,
-            base=source if source.is_dir() else source.parent,
-            origin="import",
-            inputs="external" if args.untrusted else "local",
-            agent=args.agent,
-            topic=args.topic,
-            dry_run=not args.apply,
-        )
-    text, failed = _episodes_summary(results, len(paths), apply=args.apply)
-    emit(args, results, text)
-    return 1 if failed else 0
-
-
-def _episodes_summary(
-    results: list[dict[str, Any]], files: int, *, apply: bool
-) -> tuple[str, list[str]]:
-    """What was written and what was skipped as already imported, or what a dry run would do."""
-    failed = [r["file"] for r in results if r.get("error")]
-    chunks = [r for r in results if not r.get("error")]
-    read = files - len(failed)
-    if apply:
-        new = sum(1 for r in chunks if not r["deduped"])
-        text = f"Wrote {new} episodes from {read} files"
-        skipped = len(chunks) - new
-        text += f"; skipped {skipped} already imported." if skipped else "."
-    else:
-        text = f"Would write {len(chunks)} episodes from {read} files (already imported ones are skipped)."
-    if failed:
-        text += f" Could not read {len(failed)}: " + ", ".join(failed)
-    if not apply:
-        text += " Nothing changed. Run with --apply."
-    return text, failed
-
-
-def _from_host(args: Any) -> int:
-    from brainwiki.engine import open_engine
-    from brainwiki.importer import import_documents, memory_files
-
-    override = Path(args.path).expanduser() if args.path else None
-    try:
-        files = memory_files(args.from_host, override)
-    except UnsupportedHost as exc:  # the user named a host we have no locations for
-        raise UsageError(exc.message) from exc
-    with open_engine(args.brain) as engine:
-        results = import_documents(
-            engine,
-            files,
-            base=Path.home(),
-            origin="agent",
-            inputs="unknown",
-            agent=args.from_host,
-            topic=args.topic,
-            dry_run=not args.apply,
-        )
-    text, failed = _episodes_summary(results, len(files), apply=args.apply)
-    lines = [f"{args.from_host}: {len(files)} memory files"]
-    lines += [f"  {f}" for f in files]
-    emit(args, results, "\n".join([*lines, text]))
-    return 1 if failed else 0

@@ -203,4 +203,4 @@ path = "topics/proposals/proposal-scheduled-maintenance"
 description = "Scheduled harvest and consolidation through host and OS schedulers"
 
 [agents.default]
-write = ["episodes"]
+write = []

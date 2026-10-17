@@ -45,7 +45,7 @@ The steps of the `brain-setup` skill:
 5. **Permissions.** Explain that every connected agent can read all of a
    brain, and that separate parts of life (work and personal) belong in
    separate brains, limited with `brain brains limit APP BRAIN...`.
-   Logging and editing are on by default; offer `propose_rules` per app
+   Editing is on by default, and every app may log episodes; offer `propose_rules` per app
    with `brain agents grant APP propose_rules --dry-run` first.
 6. **Harvest.** Explain what is read and which model may see it. Run
    `brain harvest --from HOST --since 30d` (writes nothing) and show the
@@ -53,10 +53,11 @@ The steps of the `brain-setup` skill:
    brain offer `brain harvest route "~/**" NAME`. Then ask per app: harvest
    on or off (`brain harvest enable APP`, plus
    `brain agents grant APP harvest`), and backfill now, later, or never.
-7. **Verify.** Log a test episode, search for it, and show the
-   orientation, with the MCP tools or with `brain log`, `brain search`, and
-   `brain orient`. The test episode stays in the inbox, and consolidation
-   skips it as holding nothing durable.
+7. **Verify.** Log a test episode with `brain_log_episode`, search for
+   it, and show the orientation. Without the MCP tools yet (a new
+   install), check with `brain search` and `brain orient`, and log the test
+   episode in the next session. The test episode stays in the inbox, and
+   consolidation skips it as holding nothing durable.
 8. **Summary.** List what was set up, where it lives, and how to undo
    each part.
 

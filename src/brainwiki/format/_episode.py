@@ -24,10 +24,13 @@ _FIELD_ORDER = (
     "topics",
     "dedupe",
     "source",
+    "pattern",
 )
 ORIGINS = ("owner", "agent", "import", "system")
 INPUTS = ("local", "external", "unknown")
 CAPTURED = ("mcp", "harvest", "cli", "import", "file")
+# How the capturing agent guesses the episode should be consolidated (a hint only).
+PATTERNS = ("record", "playbook", "file", "distill")
 
 
 @dataclass

@@ -20,24 +20,32 @@ brain can read all of it. Privacy inside a brain is a
 
 ```toml
 [agents.default]                 # any host without its own table
-write = ["episodes", "edit"]
+write = ["edit"]
 
 [agents.claude-code]
-write = ["episodes", "edit", "propose_rules", "harvest"]
+write = ["edit", "propose_rules", "harvest"]
 read_origin = true
 ```
 
 | Field | Meaning | Default |
 |---|---|---|
-| `write` | The capabilities below | `["episodes", "edit"]` |
+| `write` | The capabilities below | `["edit"]` |
 | `read_origin` | May read the conversation behind an episode ([write path §4.6](write-path.md#46-origin-context)) | `false` |
 
 | Capability | Allows |
 |---|---|
-| `episodes` | Logging episodes |
 | `edit` | Editing notes directly ([write path §2.3](write-path.md#23-direct-edits)), and the writers that change notes or the inbox: `mv`, `lint --fix`, `consolidate --done`, and `commit` under `--as` |
 | `propose_rules` | Proposing rules for the user to confirm |
 | `harvest` | The in-agent harvest (`brain_harvest_prepare`) |
+
+Capturing an episode needs no capability: every connected host may log
+one. An older `brain.toml` that lists `episodes` still loads, and the
+entry is ignored.
+
+Profiles are not a security boundary. An agent with file tools can edit
+`brain.toml` itself; git history and lint are the backstop. Profiles say
+what a host is expected to do, decide what orientation teaches it, and
+limit brain-wiki's own commands.
 
 `read_origin` is off by default because a transcript holds much more than
 the episodes kept from it. The owner profile has every capability and
@@ -69,7 +77,6 @@ is refused:
 
 | Command | Under `--as HOST` |
 |---|---|
-| `log` | Needs `episodes`. Recorded as `origin: agent` with the host as agent and `inputs: unknown` (or `external`). `--inputs local` and a different `--agent` are usage errors. |
 | `rules add` | Needs `propose_rules`. Saved as a proposal for `brain rules accept` (or `brain review accept`). |
 | `mv`, `lint --fix`, `consolidate --done` | Need `edit`. Their `--dry-run` previews need nothing. |
 | `commit` | Needs `edit`, also with `--dry-run`. The commit trailer names the host. `--push` is refused. |
@@ -125,7 +132,6 @@ brain validate [PATH]...                               # check the frontmatter o
 brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run]
 brain schedule [list] | add commit [--every 15m] [--push] [--dry-run] | remove commit [--dry-run]
 
-brain log [TEXT | -] [--topic T]... [--claim C]... [--agent HOST] [--inputs local|external|unknown]
 brain rules add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE.json]
@@ -146,8 +152,6 @@ brain mv SRC DST [--dry-run]                           # a note, or a topic fold
 
 brain import PATH --overlay [--phase 0|1|2] [--dry-run | --apply]
 brain import PATH --into BRAIN [--topic SLUG] [--dry-run | --apply]
-brain import PATH --to-episodes [--untrusted] [--agent HOST] [--topic SLUG] [--dry-run | --apply]
-brain import [PATH] --from HOST [--topic SLUG] [--dry-run | --apply]
 
 brain connect HOST [--scope user|project] [--print] [--force] [--dry-run] [--uninstall]
 brain mcp [--host HOST]                                # stdio MCP server; --host defaults to auto
@@ -162,7 +166,7 @@ brain bench --compare A.json B.json
 
 Global options are `--brain NAME|PATH`, `--as HOST`, and `--json`. They
 are accepted before the command and after it, and the one nearest the
-command wins (`brain --brain a log --brain b` uses `b`). `brain --version`
+command wins (`brain --brain a search x --brain b` uses `b`). `brain --version`
 prints `brain-wiki X`. Every command and subcommand has its own `--help`
 (`-h`).
 
@@ -218,8 +222,6 @@ Where each command is specified:
   ([config and storage §5](config-and-storage.md#5-brain-lifecycle)).
 - `--topic T`, and the MCP `topic` filter, include T's sub-topics
   ([brain format §2](brain-format.md#2-directory-layout)).
-- `brain log -` reads the episode body from stdin, so other tools can pipe
-  into the inbox.
 - `brain mcp` writes only protocol messages to stdout. Diagnostics go to
   stderr and to `<state>/logs/brain-wiki.log`.
 
@@ -268,7 +270,7 @@ Handler modules are imported only for the command that runs:
 - Only `brain mcp` imports the MCP SDK.
 - Only `brain viz` and `brain bench` load the visualizer and the bench.
 - Help imports none of them. A test checks that `brain --help`,
-  `brain log --help`, and `brain rules add --help` import neither the
+  `brain validate --help`, and `brain rules add --help` import neither the
   engine, the MCP SDK, the visualizer, the bench, nor rich.
 
 Typer costs startup time for importing it (it vendors Click) and building
@@ -278,7 +280,6 @@ the command tree from annotations. Measured on a Linux workstation, Python
 | Command | argparse | Typer |
 |---|---|---|
 | `brain --help` | 52 ms | 103 ms |
-| `brain log --help` | 52 ms | 105 ms |
 | `brain search x` | 124 ms | 166 ms |
 
 The cost is accepted. No command runs on every agent turn, since there are
@@ -371,7 +372,6 @@ Capabilities each tool needs:
 
 | Tool | Needs |
 |---|---|
-| `brain_log_episode` | `episodes` |
 | `brain_propose_rule` | `propose_rules` |
 | `brain_consolidate_done` | `edit` |
 | `brain_read_origin` | `read_origin` |
@@ -441,6 +441,8 @@ Input schemas (JSON Schema 2020-12; output shapes are in
       "session":        {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,200}$",
                          "description": "Host session id this episode summarizes, if known (recorded as a hint)."},
       "origin_turns":   {"type": "string", "pattern": "^[0-9]+-[0-9]+$"},
+      "pattern":        {"enum": ["record", "playbook", "file", "distill"],
+                         "description": "The agent's guess at how to consolidate it (a hint)."},
       "brain":          {"type": "string"}}},
 
   "brain_propose_rule": {"type": "object", "additionalProperties": false, "required": ["text", "user_quote"],
@@ -506,7 +508,8 @@ Notes:
   nothing parses later. The server sets the provenance fields
   (`bw-origin: agent`, `bw-captured: mcp`, `bw-inputs: unknown`, the host as
   agent), never the arguments
-  ([write path §3](write-path.md#3-provenance-and-inputs)).
+  ([write path §3](write-path.md#3-provenance-and-inputs)). `pattern` is
+  stored as `bw-pattern`.
 - `session` and `origin_turns` on `brain_log_episode` are hints from the
   model, used by the fallback harvest recipe. The episode records them.
   In `brain_harvest_apply`, by contrast, every provenance field comes from

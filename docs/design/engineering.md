@@ -62,7 +62,7 @@ src/brainwiki/
 ├── consolidate/    --prepare (_prepare.py) and --done (_done.py)
 ├── schedule/       `brain commit`, crontab and LaunchAgent jobs, doctor checks for jobs
 ├── runs/           run transactions, records, pre-images, undo, locks, git integration
-├── importer/       overlay, into, to-episodes, from-host
+├── importer/       overlay and into
 ├── mcp/            MCP server, the only package that imports the SDK
 ├── hosts/          per-host knowledge: session readers, detection, connect writers, instruction blocks
 ├── viz/            graph export, level-of-detail API, local server; app/ is the built front end (committed)

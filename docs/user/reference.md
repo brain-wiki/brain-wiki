@@ -29,7 +29,6 @@ The commands, in the order `brain --help` lists them:
 | `brain orphans` | Notes nothing links to |
 | `brain unresolved` | Links that resolve to no note |
 | `brain index [--rebuild \| --status]` | Show index counts, or rebuild it |
-| `brain log [TEXT \| -] [--topic T] [--claim C] [--agent HOST] [--inputs local\|external\|unknown]` | Write an episode to the inbox |
 | `brain rules add TEXT [--quote Q] [--replaces ID] \| list \| accept ID \| reject ID` | Manage standing rules |
 | `brain mv SRC DST [--dry-run]` | Move a note or topic folder, rewriting links |
 | `brain validate [PATH…]` | Check the frontmatter of notes you created or edited |
@@ -45,7 +44,7 @@ The commands, in the order `brain --help` lists them:
 | `brain origin EPISODE [--turns A-B]` | Show the conversation an episode came from |
 | `brain connect HOST [--scope user\|project] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent app |
 | `brain mcp [--host HOST]` | The stdio MCP server, started by agent apps |
-| `brain import PATH --overlay [--phase 0\|1\|2]`, `--into BRAIN`, `--to-episodes`, or `brain import --from HOST [PATH]` | Adopt or import existing Markdown |
+| `brain import PATH --overlay [--phase 0\|1\|2]` or `brain import PATH --into BRAIN` | Adopt or copy existing Markdown |
 | `brain viz [BRAIN] [--topic T] [--port P] [--host ADDRESS] [--no-open] [--export FILE]` | Open the 3D brain map |
 | `brain obsidian [BRAIN]` | Open the brain's folder as a vault in Obsidian |
 | `brain bench [SUITE…] [--sizes 1k,10k] [--backends …] [--out DIR] [--compare A B] [-q]` | Run the evaluation bench |
@@ -62,8 +61,9 @@ The commands, in the order `brain --help` lists them:
   the brain's commit job. A host whose limit listed only this brain keeps an
   empty list, so it sees no brain. `--purge-state` also deletes the brain's
   index and run history on this machine.
-- `brain agents grant` and `revoke` take `episodes`, `edit`,
-  `propose_rules`, `harvest`, or `read_origin`, for a host id or `default`.
+- `brain agents grant` and `revoke` take `edit`, `propose_rules`,
+  `harvest`, or `read_origin`, for a host id or `default`. Logging episodes
+  needs no capability.
   Each change is an undoable run. An unknown host id gets a warning.
 
 ### Search and read
@@ -92,9 +92,8 @@ The commands, in the order `brain --help` lists them:
 
 ### Writing
 
-- `brain log` warns when a `--topic` does not exist yet and keeps it as a
-  hint. `--claim` adds a bullet under `## Claims` in the episode. `--inputs`
-  defaults to `local`, or `unknown` with `--agent`.
+- Episodes come from agents (`brain_log_episode`). To record something
+  yourself, edit a note or tell an agent "remember that …".
 - `brain rules add` with `--as HOST` saves a proposal instead of a rule.
 - `brain mv` on a topic folder also updates the topic's `brain.toml` entry
   and the `AGENTS.md` topic table.
@@ -142,8 +141,8 @@ The commands, in the order `brain --help` lists them:
   `cursor`, or `generic`. `--scope project` works for `claude-code` and
   `cursor`; each scope is connected and uninstalled on its own.
 - `brain import` is a dry run without `--apply`, and `--dry-run` wins over
-  `--apply`. `--agent HOST` and `--untrusted` go with `--to-episodes`, and
-  `--topic T` puts what is imported under one topic. See
+  `--apply`. With `--into`, `--topic T` puts what is imported under one
+  topic. Documents and memory files are imported by asking an agent. See
   [Import](import.md).
 - `brain viz` and `brain obsidian` open BRAIN, the only brain, or the one
   you pick. `brain viz --host 0.0.0.0` lets other machines open the map.
@@ -182,7 +181,7 @@ may.
 | `brain_read` | Read a note, hub, or episode | — |
 | `brain_neighbors` | Follow a note's links and backlinks | — |
 | `brain_validate` | Check the frontmatter of notes the agent changed | — |
-| `brain_log_episode` | Record a learning in the inbox | `episodes` |
+| `brain_log_episode` | Record a learning in the inbox | — |
 | `brain_propose_rule` | Propose a standing rule for you to confirm | `propose_rules` |
 | `brain_consolidate_prepare` | Pending episodes with candidate notes and guidance | — |
 | `brain_consolidate_done` | Archive the episodes folded into notes | `edit` |

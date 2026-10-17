@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 
 import pytest
-from tests.conftest import write
+from tests.conftest import capture, write
 
 from brainwiki.cli._main import main
 from brainwiki.config._resolve import open_brain
@@ -163,21 +163,13 @@ def test_dedupe_and_validation(brain_dir: Path):
         assert len((brain_dir / big.path).read_bytes()) <= _MAX_EPISODE_BYTES + 100
 
 
-def test_cli_log_provenance(brain_dir: Path, capsys):
-    assert main(["log", "--brain", str(brain_dir), "Decided to use tabs.", "--json"]) == 0
-    assert (
-        main(["log", "--brain", str(brain_dir), "From a script.", "--agent", "cron", "--json"]) == 0
-    )
-    with eng(brain_dir) as e:
-        e.scan(force=True)
-        rows = {
-            r["agent"]: (r["origin"], r["inputs"], r["captured"])
-            for r in e.db.execute(
-                "SELECT agent, origin, inputs, captured FROM nodes WHERE kind='episode'"
-            )
-        }
-    assert rows[None] == ("owner", "local", "cli")
-    assert rows["cron"] == ("agent", "unknown", "cli")
+def test_capture_records_the_pattern_hint_and_brain_log_is_gone(brain_dir: Path, capsys):
+    path = capture(brain_dir, "Release steps for Lumen 0.5.", pattern="playbook")
+    text = (brain_dir / path).read_text()
+    assert "bw-pattern: playbook" in text and "bw-agent: claude-code" in text
+    with pytest.raises(UsageError, match="pattern must be one of"):
+        capture(brain_dir, "x", pattern="howto")
+    assert main(["log", "--brain", str(brain_dir), "Decided to use tabs."]) == 2
 
 
 def test_rules_add_replace_budget_and_undo(brain_dir: Path):
@@ -265,21 +257,6 @@ def _registered(example: Path, extra: str = "") -> Path:
     toml.write_text(toml.read_text() + "\n[agents.codex]\nwrite = []\n" + extra)
     register_brain("example", example, make_default=True)
     return example
-
-
-def test_as_host_log_needs_episodes_and_records_the_agent(example: Path, capsys):
-    root = _registered(example)
-    assert main(["--as", "codex", "log", "x"]) == 5
-    assert "brain agents grant codex episodes" in capsys.readouterr().err
-    assert main(["--as", "trusted", "log", "From trusted.", "--topic", "nosuch"]) == 0
-    assert "no topic 'nosuch'" in capsys.readouterr().err
-    assert main(["--as", "trusted", "log", "x", "--inputs", "local"]) == 2
-    with eng(root) as e:
-        e.scan(force=True)
-        row = e.db.execute(
-            "SELECT agent, origin, inputs FROM nodes WHERE kind='episode' AND agent='trusted'"
-        ).fetchone()
-    assert tuple(row) == ("trusted", "agent", "unknown")
 
 
 def test_as_host_rules_become_proposals_and_decisions_stay_the_users(example: Path, capsys):
@@ -400,6 +377,6 @@ def test_agents_warn_on_unknown_host_and_grant_read_origin(example: Path, capsys
     assert main(["agents", "grant", "claude-code", "read_origin", "edit"]) == 0
     assert "not a known host" not in capsys.readouterr().err
     profile = open_brain(root).manifest.profile("claude-code")
-    assert profile.read_origin and profile.write == ["episodes", "edit"]
+    assert profile.read_origin and profile.write == ["edit"]
     assert main(["agents", "revoke", "claude-code", "read_origin"]) == 0
     assert not open_brain(root).manifest.profile("claude-code").read_origin

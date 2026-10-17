@@ -43,7 +43,7 @@ def _manifest_text(found: Survey, name: str) -> str:
         'profile = "migrate"',
         "",
         "[agents.default]",
-        'write = ["episodes", "edit"]',
+        'write = ["edit"]',
     ]
     for slug, folder in found.topics.items():
         lines += ["", f"[topics.{slug}]", f"path = {_toml_string(folder)}"]

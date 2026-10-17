@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from tests.conftest import write
+from tests.conftest import capture, write
 
 from brainwiki.cli._main import main
 from brainwiki.config._resolve import open_brain
@@ -84,12 +84,12 @@ def test_agents_md_follows_the_default_profile(brain_dir: Path):
     with eng(brain_dir) as e:
         assert "BW408" not in {p.code for p in lint(e).problems}
     manifest = brain_dir / "brain.toml"
-    manifest.write_text(manifest.read_text().replace('["episodes", "edit"]', '["episodes"]', 1))
+    manifest.write_text(manifest.read_text().replace('write       = ["edit"]', "write = []", 1))
     with eng(brain_dir) as e:
         assert "BW408" in {p.code for p in lint(e).problems}
         fix(e, select=["BW408"])
     text = agents.read_text()
-    assert "Never edit `topics/`" in text and "brain validate" not in text
+    assert "Do not change files here" in text and "brain validate" not in text
 
 
 def test_file_rules(brain_dir: Path):
@@ -350,7 +350,7 @@ def test_validate_checks_changed_notes_and_refuses_protected_files(
         subprocess.run(["git", "-C", str(example), *argv], check=True)
     assert main(["validate", "--brain", str(example)]) == 0
     assert "Nothing to validate" in capsys.readouterr().out
-    assert main(["log", "--brain", str(example), "Prefix queries take 4 ms."]) == 0
+    capture(example, "Prefix queries take 4 ms.")
     assert main(["report", "--brain", str(example)]) == 0
     capsys.readouterr()
     assert main(["validate", "--brain", str(example)]) == 0  # a new episode, rewritten reports

@@ -120,7 +120,7 @@ to `## Facts`, relations to `## Related`, and claim sources to `bw-sources`.
 ## Episodes
 
 Episodes are the inbox, at `inbox/episodes/<YYYY>/<MM>/<ULID>.md`. Write
-them with `brain_log_episode` or `brain log`, which set the frontmatter.
+them with `brain_log_episode`, which sets the frontmatter.
 Episodes are never edited after they are written.
 
 ```markdown

@@ -15,9 +15,9 @@
 | direct edit | A change that a person, or an agent whose profile has `edit`, makes to a note with their own tools. `brain validate` checks it and `brain commit` records it in git. |
 | consolidation | An optional step in which an agent folds pending episodes into notes by editing the notes directly. `brain consolidate --prepare` gathers the work, and `brain consolidate --done` archives the episodes. |
 | run | A change brain-wiki itself makes, such as `brain mv`, `brain lint --fix`, `brain import`, a new rule, or `brain consolidate --done`. Each run has an id, a record, and an undo point for `brain undo`. |
-| origin | Who produced an episode: `owner` (the user), `agent`, `import`, or `system`. |
+| origin | Who produced an episode: `agent`, `system` (brain-wiki's own setup check), or for episodes written by earlier versions `owner` (the user) or `import`. |
 | inputs | Whether the writer had read content from outside the user's control, such as web pages, email, or third-party tools, before writing an episode: `local`, `external`, or `unknown`. |
-| agent profile | Per-brain settings for one host, such as `claude-code`, in `brain.toml`. Its capabilities say what the host may write (`episodes`, `edit`, `propose_rules`, `harvest`), and `read_origin` lets it read the conversation behind an episode. Every host that may use a brain reads all of it. |
+| agent profile | Per-brain settings for one host, such as `claude-code`, in `brain.toml`. Its capabilities say what the host may do beyond capturing episodes (`edit`, `propose_rules`, `harvest`), and `read_origin` lets it read the conversation behind an episode. Every host that may use a brain reads all of it. |
 | host | An agent application that uses brain-wiki: Claude Code, Codex, Antigravity, OpenClaw, Cursor, or another MCP client. |
 | index | The SQLite database built from a brain, stored in the user cache directory and never inside the brain. `brain index --rebuild` recreates it. |
 | orientation | The short briefing an agent gets from `brain_orient`: rules, what the brain holds, topics, the inbox, recent changes, and how to query, within a fixed size budget. |

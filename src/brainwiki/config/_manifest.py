@@ -14,9 +14,11 @@ from brainwiki.errors import FormatError, UsageError
 
 MANIFEST = "brain.toml"
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
-_WRITE_CAPABILITIES = ("episodes", "edit", "propose_rules", "harvest")
-# What an agent without its own profile may do: log episodes and edit notes.
-_DEFAULT_WRITE = ("episodes", "edit")
+_WRITE_CAPABILITIES = ("edit", "propose_rules", "harvest")
+# What an agent without its own profile may do: edit notes. Capturing episodes needs no capability.
+_DEFAULT_WRITE = ("edit",)
+# Capabilities brain-wiki no longer has; older brain.toml files still list them.
+_REMOVED_CAPABILITIES = frozenset({"episodes"})
 
 
 @dataclass
@@ -158,7 +160,9 @@ class Manifest:
         raw = self.agents.get(host) or self.agents.get("default") or {}
         return Profile(
             name=host if host in self.agents else "default",
-            write=[str(w) for w in raw.get("write", _DEFAULT_WRITE)],
+            write=[
+                str(w) for w in raw.get("write", _DEFAULT_WRITE) if w not in _REMOVED_CAPABILITIES
+            ],
             read_origin=bool(raw.get("read_origin", False)),
         )
 

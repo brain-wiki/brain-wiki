@@ -6,16 +6,17 @@ source: "docs/user/import.md"
 ---
 # Import
 
-`brain import` has four modes. Choose one per command:
+`brain import` has two modes. Choose one per command:
 
 
 - Every mode is a dry run until you add `--apply`. `--dry-run` wins over
   `--apply`.
 - A flag the mode does not use is an error, not ignored. For example,
-  `--agent` needs `--to-episodes`, and `--phase` needs `--overlay`.
+  `--phase` needs `--overlay`.
+- Documents and your agents' memory files are imported by an agent, not
+  by a command. See [[user-import-documents-and-memory-files|Documents and memory files]].
 
 ## Sections
 - [[user-import-adopt-an-obsidian-vault-or-markdown-folder]]: Adopt an Obsidian vault or Markdown folder
 - [[user-import-copy-notes-into-an-existing-brain]]: Copy notes into an existing brain
-- [[user-import-documents-as-episodes]]: Documents as episodes
-- [[user-import-your-agents-memory-files]]: Your agents' memory files
+- [[user-import-documents-and-memory-files]]: Documents and memory files (Import)

@@ -22,7 +22,7 @@ Handler modules are imported only for the command that runs:
 - Only `brain mcp` imports the MCP SDK.
 - Only `brain viz` and `brain bench` load the visualizer and the bench.
 - Help imports none of them. A test checks that `brain --help`,
-  `brain log --help`, and `brain rules add --help` import neither the
+  `brain validate --help`, and `brain rules add --help` import neither the
   engine, the MCP SDK, the visualizer, the bench, nor rich.
 
 Typer costs startup time for importing it (it vendors Click) and building
@@ -32,7 +32,6 @@ the command tree from annotations. Measured on a Linux workstation, Python
 | Command | argparse | Typer |
 |---|---|---|
 | `brain --help` | 52 ms | 103 ms |
-| `brain log --help` | 52 ms | 105 ms |
 | `brain search x` | 124 ms | 166 ms |
 
 The cost is accepted. No command runs on every agent turn, since there are

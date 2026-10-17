@@ -20,7 +20,7 @@ may.
 | `brain_read` | Read a note, hub, or episode | — |
 | `brain_neighbors` | Follow a note's links and backlinks | — |
 | `brain_validate` | Check the frontmatter of notes the agent changed | — |
-| `brain_log_episode` | Record a learning in the inbox | `episodes` |
+| `brain_log_episode` | Record a learning in the inbox | — |
 | `brain_propose_rule` | Propose a standing rule for you to confirm | `propose_rules` |
 | `brain_consolidate_prepare` | Pending episodes with candidate notes and guidance | — |
 | `brain_consolidate_done` | Archive the episodes folded into notes | `edit` |

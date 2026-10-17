@@ -16,7 +16,6 @@ from brainwiki.engine import Engine
 from brainwiki.hosts import _connect as cn
 from brainwiki.hosts._instructions import Access, server_instructions
 from brainwiki.importer import _overlay as overlay
-from brainwiki.importer._episodes import _split_document, memory_files
 from brainwiki.importer._survey import survey
 from brainwiki.lint import lint
 from brainwiki.runs._undo import undo
@@ -232,25 +231,6 @@ def test_import_into_rewrites_path_links(brain_dir: Path, tmp_path: Path):
         )
 
 
-def test_to_episodes_and_from_host(
-    brain_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
-    doc = tmp_path / "meeting.md"
-    doc.write_text("# Decisions\n\nUse FTS5.\n\n# Follow-ups\n\nMeasure CJK.\n")
-    assert [h for h, _ in _split_document(doc.read_text())] == ["Decisions", "Follow-ups"]
-    assert main(["import", str(doc), "--to-episodes", "--apply"]) == 0
-    assert main(["import", str(doc), "--to-episodes", "--apply"]) == 0  # deduped on rerun
-    episodes = list((brain_dir / "inbox/episodes").rglob("*.md"))
-    assert len(episodes) == 2 and all("captured: import" in e.read_text() for e in episodes)
-    claude = tmp_path / "claude"
-    write(claude, "projects/-x/memory/prefs.md", "The user prefers tabs.\n")
-    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(claude))
-    assert memory_files("claude-code") == [claude / "projects/-x/memory/prefs.md"]
-    assert main(["import", "--from", "claude-code", "--apply"]) == 0
-    texts = [e.read_text() for e in (brain_dir / "inbox/episodes").rglob("*.md")]
-    assert any("agent: claude-code" in t and "inputs: unknown" in t for t in texts)
-
-
 def test_setup_wizard_offers_a_commit_job_for_a_git_brain(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
@@ -404,7 +384,7 @@ def test_setup_wizard_grants_permissions_and_harvest_through_the_shared_commands
     assert user.harvest_enabled("claude-code")
     assert user.harvest["routes"] == {"~/**": "test"}
     profile = open_brain(brain_dir).manifest.profile("claude-code")
-    assert profile.write == ["episodes", "edit", "propose_rules", "harvest"]
+    assert profile.write == ["edit", "propose_rules", "harvest"]
     assert any('ask claude-code "Consolidate my brain."' in line for line in output)
 
 
@@ -415,11 +395,8 @@ def test_agents_grant_and_revoke_are_undoable_runs(brain_dir: Path, capsys):
     assert (brain_dir / "brain.toml").read_text() == before
     assert main(["agents", "grant", "claude-code", "propose_rules"]) == 0
     assert main(["agents", "revoke", "claude-code", "edit"]) == 0
-    assert open_brain(brain_dir).manifest.profile("claude-code").write == [
-        "episodes",
-        "propose_rules",
-    ]
-    assert open_brain(brain_dir).manifest.profile("codex").write == ["episodes", "edit"]
+    assert open_brain(brain_dir).manifest.profile("claude-code").write == ["propose_rules"]
+    assert open_brain(brain_dir).manifest.profile("codex").write == ["edit"]
     assert main(["undo"]) == 0
     assert "edit" in open_brain(brain_dir).manifest.profile("claude-code").write
     assert main(["agents", "grant", "claude-code", "fly"]) == 2

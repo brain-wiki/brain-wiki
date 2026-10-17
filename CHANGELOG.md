@@ -2,6 +2,24 @@
 
 ## 0.2.1 (unreleased)
 
+Episodes are captured by agents and consolidated by the agent that captured
+them ([write path](docs/design/write-path.md)).
+
+- **Capture is agents only, through MCP.** `brain log` is removed. People
+  record knowledge by editing a note or by asking an agent to remember it.
+  The MCP server records the calling host as the episode's `bw-agent`.
+- **No capability for capturing.** The `episodes` capability is removed;
+  every connected host may log episodes. A `brain.toml` that still lists it
+  loads, and the entry is ignored. The default profile is now
+  `write = ["edit"]`.
+- **A consolidation hint.** `brain_log_episode` takes an optional `pattern`
+  (`record`, `playbook`, `file`, `distill`), stored as `bw-pattern` and shown
+  in the consolidation packet.
+- **Importing documents is agent work.** `brain import --to-episodes` and
+  `brain import --from HOST` are removed. Ask an agent to file documents or
+  its memory files into notes; the `brain` skill says how. `--overlay` and
+  `--into` are unchanged.
+
 ## 0.2.0 (2026-10-15)
 
 Format 3: a note is an ordinary Markdown page. This release changes the file

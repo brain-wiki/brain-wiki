@@ -339,7 +339,7 @@ def _next_steps(hosts: list[str]) -> list[str]:
         return [
             "Connect an agent app: `brain connect claude-code` (or codex, antigravity, openclaw, "
             "cursor), or ask any agent to run `brain setup --guide`.",
-            'From this terminal: `brain log "…"`, `brain search …`, `brain viz`.',
+            "From this terminal: `brain search …`, `brain orient`, `brain viz`.",
         ]
     manifest = resolve_brain(None, user=load_user_config()).manifest
     editors = [h for h in hosts if manifest.profile(h).can("edit")]
@@ -349,5 +349,5 @@ def _next_steps(hosts: list[str]) -> list[str]:
         f'When the inbox fills up, ask {editors[0]} "Consolidate my brain."'
         if editors
         else "To fold the inbox into notes, let an app edit notes: run `brain setup` again.",
-        'From this terminal: `brain log "…"`, `brain search …`, `brain viz`.',
+        "From this terminal: `brain search …`, `brain orient`, `brain viz`.",
     ]

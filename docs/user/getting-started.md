@@ -91,14 +91,15 @@ conflicts.
 ## First steps
 
 ```sh
-brain log "Lumen stores attachments next to notes; Obsidian expects relative paths."
 brain search "attachments"
 brain orient
 brain rules add "Prefer pytest for new tests." --quote "from now on use pytest"
 ```
 
-- `brain log` writes an episode to the inbox. An **episode** is an
-  observation nobody has organized yet. Episodes are never edited afterwards.
+- Your agents record what they learn as **episodes** in the inbox, with the
+  MCP tool `brain_log_episode`. An episode is an observation nobody has
+  organized yet, and it is never edited afterwards. To have something
+  remembered, tell an agent "remember that …".
 - **Notes** hold the knowledge. You and your agents write them directly.
   **Consolidation** folds the inbox into notes when you ask. See
   [Maintenance](maintenance.md#consolidate).

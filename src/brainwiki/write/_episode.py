@@ -14,6 +14,7 @@ from brainwiki.format import (
     CAPTURED,
     INPUTS,
     ORIGINS,
+    PATTERNS,
     EpisodeContent,
     episode_path,
     now_iso,
@@ -126,10 +127,13 @@ def write_episode(
     topics: list[str] | None = None,
     dedupe: str | None = None,
     source: str | None = None,
+    pattern: str | None = None,
 ) -> EpisodeResult:
     """Write one immutable episode. Provenance comes from the caller's code path, never from text."""
     if origin not in ORIGINS or inputs not in INPUTS or captured not in CAPTURED:
         raise UsageError("invalid provenance values")
+    if pattern is not None and pattern not in PATTERNS:
+        raise UsageError(f"pattern must be one of {', '.join(PATTERNS)}")
     for name, value in (
         ("agent", agent),
         ("device", device),
@@ -177,6 +181,7 @@ def write_episode(
         "topics": hints,
         "dedupe": dedupe,
         "source": source,
+        "pattern": pattern,
     }
     rendered = render_episode(fields, scrubbed)
     head, sep, body = rendered.partition("\n---\n")

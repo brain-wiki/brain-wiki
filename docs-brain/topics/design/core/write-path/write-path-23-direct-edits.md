@@ -15,8 +15,8 @@ the same path. Orientation's "Writing notes" section tells an agent with
 ([[index-and-search-8-orientation-the-briefing|index and search §8]]).
 
 The `edit` capability ([[cli-and-mcp-1-agent-profiles|CLI and MCP §1]])
-is on by default: the default profile's `write` list is `episodes` and
-`edit`, and a host profile that lists `write` without `edit` turns it off.
+is on by default: the default profile's `write` list is `edit`, and a host
+profile that lists `write` without `edit` turns it off.
 Orientation and the `AGENTS.md` block tell the agent whether it has it.
 `edit` also gates brain-wiki's own writers that change notes: `brain mv`,
 `brain lint --fix`, and `brain consolidate --done`.

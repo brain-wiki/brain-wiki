@@ -11,7 +11,6 @@ source: "docs/design/write-path.md#32-how-inputs-are-determined"
 |---|---|
 | Harvest | `external` when any tool call in the session matches the host's untrusted-tool list, else `local` |
 | MCP | `unknown` |
-| Owner's CLI | `local`, unless `--inputs` says otherwise |
 
 The untrusted-tool list covers web fetch and search, browser tools, MCP
 servers other than brain-wiki, and shell commands that reach the network

@@ -60,10 +60,10 @@ title       = "Search"
 description = "How local search works and why."
 
 [agents.default]                            # profile for hosts without their own
-write       = ["episodes", "edit"]
+write       = ["edit"]
 
 [agents.claude-code]                        # profile for one host id
-write       = ["episodes", "edit", "propose_rules", "harvest"]
+write       = ["edit", "propose_rules", "harvest"]
 read_origin = false
 ```
 
@@ -85,11 +85,11 @@ Rules:
 - `git.mode = "on"` behaves like `auto`.
 - Agent profile names are host ids
   ([[agent-integrations-2-host-ids|agent integrations §2]]). The write
-  capabilities are `episodes`, `edit`, `propose_rules`, and `harvest`, and
+  capabilities are `edit`, `propose_rules`, and `harvest`, and
   `read_origin` lets a host read the conversation behind an episode
   ([[cli-and-mcp-1-agent-profiles|CLI and MCP §1]]).
 - Settings that 0.1 had and format 3 dropped (`[consolidate]` `review`,
   `review_external`, `max_supersede_ratio`, and topic `review` and
   `agent_edits`) are unknown keys, so they are preserved, reported
-  (BW109), and ignored. The old capability names `consolidate` and
-  `review` grant nothing.
+  (BW109), and ignored. The old capability names `consolidate`, `review`,
+  and `episodes` grant nothing; capturing an episode needs no capability.

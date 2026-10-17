@@ -222,7 +222,7 @@ def test_busy_lock_skips_the_round(repo: Path, capsys: pytest.CaptureFixture[str
 
 def test_as_host_needs_edit_and_may_not_push(repo: Path, capsys: pytest.CaptureFixture[str]):
     with (repo / "brain.toml").open("a", encoding="utf-8") as f:
-        f.write('\n[agents.reader]\nwrite = ["episodes"]\n')
+        f.write("\n[agents.reader]\nwrite = []\n")
     _note(repo, "topics/lumen/a.md")
     assert main(["commit", "--no-fetch", "--as", "reader"]) == 5
     assert "edit" in capsys.readouterr().err

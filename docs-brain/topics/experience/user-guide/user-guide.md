@@ -28,8 +28,7 @@ Generated from `docs/user/`.
 - [[user-import]]: Import
   - [[user-import-adopt-an-obsidian-vault-or-markdown-folder]]: Adopt an Obsidian vault or Markdown folder
   - [[user-import-copy-notes-into-an-existing-brain]]: Copy notes into an existing brain
-  - [[user-import-documents-as-episodes]]: Documents as episodes
-  - [[user-import-your-agents-memory-files]]: Your agents' memory files
+  - [[user-import-documents-and-memory-files]]: Documents and memory files (Import)
 - [[user-maintenance]]: Maintenance
   - [[user-maintenance-commit-direct-edits]]: Commit direct edits
   - [[user-maintenance-share-a-brain-between-machines]]: Share a brain between machines

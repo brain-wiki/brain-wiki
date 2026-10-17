@@ -39,9 +39,7 @@ def example(tmp_path: Path) -> Path:
     root = tmp_path / "example"
     shutil.copytree(FIXTURE, root)
     toml = root / "brain.toml"
-    toml.write_text(
-        toml.read_text() + '\n[agents.claude-code]\nwrite = ["episodes", "propose_rules"]\n'
-    )
+    toml.write_text(toml.read_text() + '\n[agents.claude-code]\nwrite = ["propose_rules"]\n')
     register_brain("ex", root, make_default=True)
     return root
 
@@ -117,6 +115,7 @@ async def test_log_episode_provenance_and_dedupe(example: Path):
             "dedupe_key": "k1",
             "session": "s1",
             "origin_turns": "1-4",
+            "pattern": "file",
         }
         first = await client.call_tool("brain_log_episode", args)
         again = await client.call_tool("brain_log_episode", args)
@@ -128,8 +127,15 @@ async def test_log_episode_provenance_and_dedupe(example: Path):
         "captured: mcp",
         "agent: claude-code",
         "session: s1",
+        "pattern: file",
     ):
         assert line in text
+    async with Client(build_server("codex")) as client:  # no capability needed to capture
+        codex = await client.call_tool("brain_log_episode", {"summary": "From codex."})
+    assert (
+        not codex.is_error
+        and "bw-agent: codex" in (example / codex.structured_content["path"]).read_text()
+    )
 
 
 @pytest.mark.anyio
@@ -168,7 +174,7 @@ async def test_propose_rule_paths(example: Path):
 @pytest.mark.anyio
 async def test_consolidate_over_mcp(example: Path):
     toml = example / "brain.toml"
-    toml.write_text(toml.read_text() + '\n[agents.codex]\nwrite = ["episodes", "edit"]\n')
+    toml.write_text(toml.read_text() + '\n[agents.codex]\nwrite = ["edit"]\n')
     async with Client(build_server("codex")) as client:
         prepared = await client.call_tool("brain_consolidate_prepare", {})
         assert prepared.structured_content["episodes"] == 1

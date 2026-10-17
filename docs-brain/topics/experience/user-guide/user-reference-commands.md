@@ -33,7 +33,6 @@ The commands, in the order `brain --help` lists them:
 | `brain orphans` | Notes nothing links to |
 | `brain unresolved` | Links that resolve to no note |
 | `brain index [--rebuild \| --status]` | Show index counts, or rebuild it |
-| `brain log [TEXT \| -] [--topic T] [--claim C] [--agent HOST] [--inputs local\|external\|unknown]` | Write an episode to the inbox |
 | `brain rules add TEXT [--quote Q] [--replaces ID] \| list \| accept ID \| reject ID` | Manage standing rules |
 | `brain mv SRC DST [--dry-run]` | Move a note or topic folder, rewriting links |
 | `brain validate [PATH…]` | Check the frontmatter of notes you created or edited |
@@ -49,7 +48,7 @@ The commands, in the order `brain --help` lists them:
 | `brain origin EPISODE [--turns A-B]` | Show the conversation an episode came from |
 | `brain connect HOST [--scope user\|project] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent app |
 | `brain mcp [--host HOST]` | The stdio MCP server, started by agent apps |
-| `brain import PATH --overlay [--phase 0\|1\|2]`, `--into BRAIN`, `--to-episodes`, or `brain import --from HOST [PATH]` | Adopt or import existing Markdown |
+| `brain import PATH --overlay [--phase 0\|1\|2]` or `brain import PATH --into BRAIN` | Adopt or copy existing Markdown |
 | `brain viz [BRAIN] [--topic T] [--port P] [--host ADDRESS] [--no-open] [--export FILE]` | Open the 3D brain map |
 | `brain obsidian [BRAIN]` | Open the brain's folder as a vault in Obsidian |
 | `brain bench [SUITE…] [--sizes 1k,10k] [--backends …] [--out DIR] [--compare A B] [-q]` | Run the evaluation bench |

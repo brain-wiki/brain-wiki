@@ -16,6 +16,7 @@ source: "docs/user/reference.md#brains-and-agents"
   the brain's commit job. A host whose limit listed only this brain keeps an
   empty list, so it sees no brain. `--purge-state` also deletes the brain's
   index and run history on this machine.
-- `brain agents grant` and `revoke` take `episodes`, `edit`,
-  `propose_rules`, `harvest`, or `read_origin`, for a host id or `default`.
+- `brain agents grant` and `revoke` take `edit`, `propose_rules`,
+  `harvest`, or `read_origin`, for a host id or `default`. Logging episodes
+  needs no capability.
   Each change is an undoable run. An unknown host id gets a warning.

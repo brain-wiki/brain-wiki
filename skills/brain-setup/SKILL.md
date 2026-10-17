@@ -186,8 +186,9 @@ later, or never.
 4. Leave the test episode in the inbox; consolidation skips it as holding
    nothing durable.
 
-If the MCP tools are not available yet (new install), use `brain log`,
-`brain search`, and `brain orient` instead.
+If the MCP tools are not available yet (new install), check with
+`brain search` and `brain orient`, and log the test episode in the next
+session, once the tools load.
 
 ### 8. Summary
 

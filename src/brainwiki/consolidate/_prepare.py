@@ -234,6 +234,9 @@ def prepare(
             "origin_available": origin_available(engine, row),
             "text": body,
         }
+        hint = doc.frontmatter.data.get("pattern")
+        if isinstance(hint, str) and hint:
+            episode["pattern"] = hint  # the capturing agent's guess; consolidation may ignore it
         if (row["inputs"] or "unknown") != "local":
             episode["untrusted"] = True
         episodes.append(episode)

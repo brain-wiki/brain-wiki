@@ -39,7 +39,6 @@ Capabilities each tool needs:
 
 | Tool | Needs |
 |---|---|
-| `brain_log_episode` | `episodes` |
 | `brain_propose_rule` | `propose_rules` |
 | `brain_consolidate_done` | `edit` |
 | `brain_read_origin` | `read_origin` |
@@ -109,6 +108,8 @@ Input schemas (JSON Schema 2020-12; output shapes are in
       "session":        {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,200}$",
                          "description": "Host session id this episode summarizes, if known (recorded as a hint)."},
       "origin_turns":   {"type": "string", "pattern": "^[0-9]+-[0-9]+$"},
+      "pattern":        {"enum": ["record", "playbook", "file", "distill"],
+                         "description": "The agent's guess at how to consolidate it (a hint)."},
       "brain":          {"type": "string"}}},
 
   "brain_propose_rule": {"type": "object", "additionalProperties": false, "required": ["text", "user_quote"],
@@ -174,7 +175,8 @@ Notes:
   nothing parses later. The server sets the provenance fields
   (`bw-origin: agent`, `bw-captured: mcp`, `bw-inputs: unknown`, the host as
   agent), never the arguments
-  ([[write-path-3-provenance-and-inputs|write path §3]]).
+  ([[write-path-3-provenance-and-inputs|write path §3]]). `pattern` is
+  stored as `bw-pattern`.
 - `session` and `origin_turns` on `brain_log_episode` are hints from the
   model, used by the fallback harvest recipe. The episode records them.
   In `brain_harvest_apply`, by contrast, every provenance field comes from

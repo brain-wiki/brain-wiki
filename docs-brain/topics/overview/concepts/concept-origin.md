@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Origin
 
-Who produced an episode: `owner` (the user), `agent`, `import`, or `system`.
+Who produced an episode: `agent`, `system` (brain-wiki's own setup check), or for episodes written by earlier versions `owner` (the user) or `import`.

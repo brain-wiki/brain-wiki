@@ -113,7 +113,8 @@ the suggested body shape.
 ## Which agent may do what
 
 Each agent acts with a **profile** in `brain.toml`. Every agent reads the
-whole brain. By default it may log episodes and edit notes. Grant more per
+whole brain. Every agent may log episodes, and by default it may edit
+notes. Grant more per
 agent app:
 
 ```sh

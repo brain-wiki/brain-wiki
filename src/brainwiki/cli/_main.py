@@ -32,7 +32,6 @@ _HANDLERS: dict[str, str] = {
     "orphans": "brainwiki.cli._cmd_browse:orphans",
     "unresolved": "brainwiki.cli._cmd_browse:unresolved",
     "index": "brainwiki.cli._cmd_read:index",
-    "log": "brainwiki.cli._cmd_write:log",
     "rules": "brainwiki.cli._cmd_write:rules",
     "mv": "brainwiki.cli._cmd_write:mv",
     "validate": "brainwiki.cli._cmd_lint:validate",
@@ -597,43 +596,6 @@ def _index(
 
 
 # -- write ---------------------------------------------------------------------
-
-
-@_app.command("log", help="write an episode to the inbox")
-def _log(
-    ctx: typer.Context,
-    text: Annotated[str | None, typer.Argument(help="episode text, or - for stdin")] = None,
-    topic: Annotated[
-        list[str] | None,
-        typer.Option("--topic", help="topic hint for consolidation (repeatable)"),
-    ] = None,
-    claim: Annotated[
-        list[str] | None, typer.Option("--claim", help="add a claim (repeatable)")
-    ] = None,
-    agent: Annotated[
-        str | None, typer.Option("--agent", help="record as written by this host (scripts)")
-    ] = None,
-    inputs: Annotated[
-        Literal["local", "external", "unknown"] | None,
-        typer.Option(
-            "--inputs",
-            help="whether the text came from outside your control: external for web or tool "
-            "output (default: local; unknown with --agent)",
-        ),
-    ] = None,
-    brain: _Brain = None,
-    as_host: _As = None,
-    json: _Json = False,
-) -> _Call:
-    return _call(
-        ctx,
-        "log",
-        text=text,
-        topic=list(topic or []),
-        claim=list(claim or []),
-        agent=agent,
-        inputs=inputs,
-    )
 
 
 _rules_app = _sub_app("manage standing rules")
@@ -1217,10 +1179,7 @@ def _mcp(
 @_app.command("import", help="adopt or import existing Markdown")
 def _import(
     ctx: typer.Context,
-    path: Annotated[
-        str | None,
-        typer.Argument(help="folder or file to import (with --from: memory location)"),
-    ] = None,
+    path: Annotated[str | None, typer.Argument(help="folder to import")] = None,
     overlay: Annotated[
         bool,
         typer.Option("--overlay", help="adopt the folder as a brain in place, by phases"),
@@ -1228,20 +1187,6 @@ def _import(
     into: Annotated[
         str | None, typer.Option("--into", help="copy the files into this brain's topics")
     ] = None,
-    to_episodes: Annotated[
-        bool, typer.Option("--to-episodes", help="turn each Markdown file into an episode")
-    ] = False,
-    from_host: Annotated[
-        str | None, typer.Option("--from", help="import this host's memory files as episodes")
-    ] = None,
-    agent: Annotated[
-        str | None,
-        typer.Option("--agent", help="with --to-episodes, record as written by this host"),
-    ] = None,
-    untrusted: Annotated[
-        bool,
-        typer.Option("--untrusted", help="with --to-episodes, mark the episodes untrusted"),
-    ] = False,
     phase: Annotated[
         int | None,
         typer.Option(
@@ -1258,7 +1203,7 @@ def _import(
     ] = False,
     topic: Annotated[
         str | None,
-        typer.Option("--topic", help="put the imported files or episodes under this topic"),
+        typer.Option("--topic", help="with --into, put the imported files under this topic"),
     ] = None,
     brain: _Brain = None,
     as_host: _As = None,
@@ -1270,10 +1215,6 @@ def _import(
         path=path,
         overlay=overlay,
         into=into,
-        to_episodes=to_episodes,
-        from_host=from_host,
-        agent=agent,
-        untrusted=untrusted,
         phase=phase,
         apply=apply,
         dry_run=dry_run,

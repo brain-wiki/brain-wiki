@@ -1,6 +1,6 @@
 # Episodes: quick capture, per-agent consolidation
 
-Status: decided 2026-10-16 (§9), not built.
+Status: decided 2026-10-16 (§9). Phase 1 (capture) is built; phases 2 to 4 are not.
 
 An episode has two moments with different needs. An agent captures it in
 the middle of a task, so capture must be fast and raw. Later, off the busy

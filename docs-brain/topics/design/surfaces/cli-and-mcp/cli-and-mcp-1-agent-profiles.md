@@ -15,24 +15,32 @@ brain can read all of it. Privacy inside a brain is a
 
 ```toml
 [agents.default]                 # any host without its own table
-write = ["episodes", "edit"]
+write = ["edit"]
 
 [agents.claude-code]
-write = ["episodes", "edit", "propose_rules", "harvest"]
+write = ["edit", "propose_rules", "harvest"]
 read_origin = true
 ```
 
 | Field | Meaning | Default |
 |---|---|---|
-| `write` | The capabilities below | `["episodes", "edit"]` |
+| `write` | The capabilities below | `["edit"]` |
 | `read_origin` | May read the conversation behind an episode ([[write-path-46-origin-context\|write path §4.6]]) | `false` |
 
 | Capability | Allows |
 |---|---|
-| `episodes` | Logging episodes |
 | `edit` | Editing notes directly ([[write-path-23-direct-edits\|write path §2.3]]), and the writers that change notes or the inbox: `mv`, `lint --fix`, `consolidate --done`, and `commit` under `--as` |
 | `propose_rules` | Proposing rules for the user to confirm |
 | `harvest` | The in-agent harvest (`brain_harvest_prepare`) |
+
+Capturing an episode needs no capability: every connected host may log
+one. An older `brain.toml` that lists `episodes` still loads, and the
+entry is ignored.
+
+Profiles are not a security boundary. An agent with file tools can edit
+`brain.toml` itself; git history and lint are the backstop. Profiles say
+what a host is expected to do, decide what orientation teaches it, and
+limit brain-wiki's own commands.
 
 `read_origin` is off by default because a transcript holds much more than
 the episodes kept from it. The owner profile has every capability and
@@ -64,7 +72,6 @@ is refused:
 
 | Command | Under `--as HOST` |
 |---|---|
-| `log` | Needs `episodes`. Recorded as `origin: agent` with the host as agent and `inputs: unknown` (or `external`). `--inputs local` and a different `--agent` are usage errors. |
 | `rules add` | Needs `propose_rules`. Saved as a proposal for `brain rules accept` (or `brain review accept`). |
 | `mv`, `lint --fix`, `consolidate --done` | Need `edit`. Their `--dry-run` previews need nothing. |
 | `commit` | Needs `edit`, also with `--dry-run`. The commit trailer names the host. `--push` is refused. |

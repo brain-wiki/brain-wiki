@@ -21,7 +21,7 @@ There are three ways to write, plus rules, which have their own path.
 
 ```
                      PATH 1: inbox (append-only, any agent)
-  agent / CLI ───────► inbox/episodes/YYYY/MM/<ulid>.md     never edited again
+  agent (MCP) ───────► inbox/episodes/YYYY/MM/<ulid>.md     never edited again
   host session stores ─► (brain harvest: read, filter, distill) ─► inbox/episodes/…
   host memory feature ─► inbox/agents/<agent>/…               treated as episodes
 
@@ -48,19 +48,26 @@ edit any file.
 
 ### 2.1 Ways an episode is written
 
+Agents capture episodes; people record knowledge by editing a note or by
+asking an agent. Capturing needs no capability.
+
 | Writer | `origin` | `inputs` | `captured` |
 |---|---|---|---|
-| `brain log` | `owner` | `local` unless `--inputs` | `cli` |
-| `brain log --agent <id>` (scripts) | `agent` | `unknown` unless `--inputs` | `cli` |
-| `brain log --as <host>` | `agent` | `unknown`; `--inputs local` is refused | `cli` |
 | MCP `brain_log_episode` | `agent` | `unknown` (§3.2) | `mcp` |
 | `brain harvest` (§2.2) | `agent` | computed from the session's tool calls | `harvest` |
 | File created directly under `inbox/episodes/` | as written, but `owner` becomes `agent` | `unknown` | `file` |
 | File in `inbox/agents/<agent>/` | `agent` | `unknown` | `file` |
-| `brain import --to-episodes` | `import` | `local`, or `external` with `--untrusted` | `import` |
-| `brain import --from <host>` | `agent` | `unknown` | `import` |
 
-`brain log --as <host>` needs the `episodes` capability.
+- The MCP server sets `agent` to the calling host, so an agent cannot write
+  an episode as another agent.
+- `brain_log_episode` takes an optional `pattern` hint (`record`,
+  `playbook`, `file`, `distill`), stored as `bw-pattern`: the agent's guess
+  at how consolidation should use the episode. The consolidation packet
+  shows it; consolidation may ignore it.
+- Episodes written earlier by `brain log` (`captured: cli`) or
+  `brain import` (`captured: import`) stay valid. Documents and agents'
+  memory files are now imported by an agent filing them into notes
+  ([import §6](import.md#6-documents-and-memory-files)).
 
 Episodes from an agent session also record `agent` (host id), `session`
 (host session id), `origin_turns` (the turn range they cover), and
@@ -220,8 +227,8 @@ the same path. Orientation's "Writing notes" section tells an agent with
 ([index and search §8](index-and-search.md#8-orientation-the-briefing)).
 
 The `edit` capability ([CLI and MCP §1](cli-and-mcp.md#1-agent-profiles))
-is on by default: the default profile's `write` list is `episodes` and
-`edit`, and a host profile that lists `write` without `edit` turns it off.
+is on by default: the default profile's `write` list is `edit`, and a host
+profile that lists `write` without `edit` turns it off.
 Orientation and the `AGENTS.md` block tell the agent whether it has it.
 `edit` also gates brain-wiki's own writers that change notes: `brain mv`,
 `brain lint --fix`, and `brain consolidate --done`.
@@ -301,7 +308,6 @@ git records when each line changed.
 |---|---|
 | Harvest | `external` when any tool call in the session matches the host's untrusted-tool list, else `local` |
 | MCP | `unknown` |
-| Owner's CLI | `local`, unless `--inputs` says otherwise |
 
 The untrusted-tool list covers web fetch and search, browser tools, MCP
 servers other than brain-wiki, and shell commands that reach the network

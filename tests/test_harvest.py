@@ -50,8 +50,7 @@ def setup(brain_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> P
     set_value("harvest.hosts", ["claude-code"])
     toml = brain_dir / "brain.toml"
     toml.write_text(
-        toml.read_text()
-        + '\n[agents.claude-code]\nwrite = ["episodes", "harvest"]\nread_origin = true\n'
+        toml.read_text() + '\n[agents.claude-code]\nwrite = ["harvest"]\nread_origin = true\n'
     )
     project = tmp_path / "code" / "lumen"
     project.mkdir(parents=True)

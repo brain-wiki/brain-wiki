@@ -12,7 +12,7 @@ desktop app. The mechanics shared by all hosts are in
 | Skills | `brain`, `brain-setup`, `brain-maintain` from the plugin |
 | Rule confirmation | Elicitation when Codex offers it (not tested, T-8); otherwise a proposal |
 | Harvest | `rollout-*.jsonl` files under `$CODEX_HOME/sessions/` and `archived_sessions/` (default `~/.codex/`) |
-| Memory import | `$CODEX_HOME/memories/**/*.md` and `$CODEX_HOME/AGENTS.md` ([import §6](../import.md#6-to-episodes-and-from-agents)) |
+| Memory files | `$CODEX_HOME/memories/**/*.md` and `$CODEX_HOME/AGENTS.md`, which the agent files into notes when asked to import them ([import §6](../import.md#6-documents-and-memory-files)) |
 | Headless preset | `codex exec - --json --ephemeral --skip-git-repo-check --sandbox read-only -o <file>` ([agent integrations §7](../agent-integrations.md#7-headless-presets)) |
 
 ## 1. Instructions come from the MCP server

@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Agent profile
 
-Per-brain settings for one host, such as `claude-code`, in `brain.toml`. Its capabilities say what the host may write (`episodes`, `edit`, `propose_rules`, `harvest`), and `read_origin` lets it read the conversation behind an episode. Every host that may use a brain reads all of it.
+Per-brain settings for one host, such as `claude-code`, in `brain.toml`. Its capabilities say what the host may do beyond capturing episodes (`edit`, `propose_rules`, `harvest`), and `read_origin` lets it read the conversation behind an episode. Every host that may use a brain reads all of it.

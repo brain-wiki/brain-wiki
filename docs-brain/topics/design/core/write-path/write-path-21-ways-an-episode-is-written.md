@@ -7,19 +7,26 @@ source: "docs/design/write-path.md#21-ways-an-episode-is-written"
 ---
 # Ways an episode is written
 
+Agents capture episodes; people record knowledge by editing a note or by
+asking an agent. Capturing needs no capability.
+
 | Writer | `origin` | `inputs` | `captured` |
 |---|---|---|---|
-| `brain log` | `owner` | `local` unless `--inputs` | `cli` |
-| `brain log --agent <id>` (scripts) | `agent` | `unknown` unless `--inputs` | `cli` |
-| `brain log --as <host>` | `agent` | `unknown`; `--inputs local` is refused | `cli` |
 | MCP `brain_log_episode` | `agent` | `unknown` (§3.2) | `mcp` |
 | `brain harvest` (§2.2) | `agent` | computed from the session's tool calls | `harvest` |
 | File created directly under `inbox/episodes/` | as written, but `owner` becomes `agent` | `unknown` | `file` |
 | File in `inbox/agents/<agent>/` | `agent` | `unknown` | `file` |
-| `brain import --to-episodes` | `import` | `local`, or `external` with `--untrusted` | `import` |
-| `brain import --from <host>` | `agent` | `unknown` | `import` |
 
-`brain log --as <host>` needs the `episodes` capability.
+- The MCP server sets `agent` to the calling host, so an agent cannot write
+  an episode as another agent.
+- `brain_log_episode` takes an optional `pattern` hint (`record`,
+  `playbook`, `file`, `distill`), stored as `bw-pattern`: the agent's guess
+  at how consolidation should use the episode. The consolidation packet
+  shows it; consolidation may ignore it.
+- Episodes written earlier by `brain log` (`captured: cli`) or
+  `brain import` (`captured: import`) stay valid. Documents and agents'
+  memory files are now imported by an agent filing them into notes
+  ([[import-6-documents-and-memory-files|import §6]]).
 
 Episodes from an agent session also record `agent` (host id), `session`
 (host session id), `origin_turns` (the turn range they cover), and

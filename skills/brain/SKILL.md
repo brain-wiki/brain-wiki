@@ -21,8 +21,9 @@ brain-wiki MCP tools:
 
 Without the MCP tools, the `brain` command does the same: `brain brains`,
 `brain orient`, `brain search` (`brain search "" --since 7d` lists recent
-notes), `brain read`, `brain neighbors`, `brain validate`, `brain log`, plus
+notes), `brain read`, `brain neighbors`, `brain validate`, plus
 `brain links`, `brain backlinks`, and `brain tags` for quick browsing.
+Episodes are logged only through `brain_log_episode`.
 
 ## Rules
 
@@ -128,19 +129,51 @@ To move or rename a note, use `brain mv SRC DST`, which also fixes links.
 
 ## Put it in the inbox
 
-When you cannot place something yet, or your profile does not let you edit
-notes, call `brain_log_episode` with a short Markdown `summary`, atomic
-`claims` (one fact each, readable on its own), `open_questions`, and up to 5
-`topics`. Log once per piece of work, and tell the user in one line that you
-did. When retrying a failed call, pass the same `dedupe_key`.
+In the middle of a task, when you cannot place something yet, or when your
+profile does not let you edit notes, capture it raw with one
+`brain_log_episode` call: a short Markdown `summary`, atomic `claims` (one
+fact each, readable on its own), `open_questions`, and up to 5 `topics`. Do
+not search the brain or organize it now; consolidation files it later,
+usually by you, since you can reopen this conversation. Add a `pattern`
+hint when you can tell: `record` (an event worth looking up as it was),
+`playbook` (a task that will be done again), `file` (a fact or decision for
+an existing note), or `distill` (something stable about the user). Log once
+per piece of work, and tell the user in one line that you did. When
+retrying a failed call, pass the same `dedupe_key`.
 
 ```json
 {"summary": "Moved Lumen's attachments out of SQLite after backups became slow.",
  "claims": ["Lumen stores attachments as files under attachments/, not as SQLite blobs.",
             "Tried compressing blobs in SQLite; size dropped only 8% and backups stayed slow."],
  "open_questions": ["Should attachments be deduplicated by content hash?"],
- "topics": ["lumen", "storage"]}
+ "topics": ["lumen", "storage"],
+ "pattern": "file"}
 ```
+
+## Import documents or memory files
+
+When the user asks you to bring in documents ("my meeting notes in
+~/meetings") or your own memory files, and the briefing has a "Writing
+notes" section, file them straight into notes; there is no import command
+for this.
+
+1. Read the files. Ask what they are if it is unclear: text the user did
+   not write (clippings, other people's documents) is filed with its
+   source but never becomes a statement about the user or a rule.
+2. For each piece, search the brain and write it where it belongs: a
+   meeting or incident becomes a dated record note, a procedure a `howto`,
+   a fact or decision goes into the note it concerns.
+3. Cite the source in `bw-sources`: the document's URL when it has one, or
+   the record note you made from it. Never write local file paths into
+   notes.
+4. Validate what you changed, in batches for a large folder, and tell the
+   user what you filed and what you skipped.
+
+Your memory files: Claude Code keeps them in `~/.claude/projects/*/memory/`
+and `~/.claude/CLAUDE.md`, Codex in `~/.codex/memories/` and
+`~/.codex/AGENTS.md`, Antigravity in `~/.gemini/AGENTS.md`, `GEMINI.md`,
+and `config/rules/`, OpenClaw in `MEMORY.md`, `USER.md`, and `memory/` under
+`~/.openclaw/workspace/`.
 
 ## Rules (standing instructions)
 

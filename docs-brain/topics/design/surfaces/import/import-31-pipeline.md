@@ -51,5 +51,5 @@ The report prints in the terminal on a dry run and is saved as
 
 The generated `brain.toml` sets `layout.topics_dir = "."`, the hub style,
 the ignored folders, `lint.profile = "migrate"`,
-`[agents.default] write = ["episodes", "edit"]`, and one `[topics.<slug>]`
+`[agents.default] write = ["edit"]`, and one `[topics.<slug>]`
 table per topic.

@@ -1,18 +1,18 @@
 # Import
 
-`brain import` has four modes. Choose one per command:
+`brain import` has two modes. Choose one per command:
 
 | Mode | Does |
 |---|---|
 | `--overlay` | Adopt a folder as a brain in place |
 | `--into BRAIN` | Copy notes into an existing brain |
-| `--to-episodes` | Turn documents into episodes |
-| `--from HOST` | Turn an agent's memory files into episodes |
 
 - Every mode is a dry run until you add `--apply`. `--dry-run` wins over
   `--apply`.
 - A flag the mode does not use is an error, not ignored. For example,
-  `--agent` needs `--to-episodes`, and `--phase` needs `--overlay`.
+  `--phase` needs `--overlay`.
+- Documents and your agents' memory files are imported by an agent, not
+  by a command. See [Documents and memory files](#documents-and-memory-files).
 
 ## Adopt an Obsidian vault or Markdown folder
 
@@ -66,28 +66,27 @@ brain import ~/old-notes --into personal --topic archive --apply
   separate runs. Undo all of them to revert.
 - The source folder is left untouched.
 
-## Documents as episodes
+## Documents and memory files
 
-```sh
-brain import meeting-notes/ --to-episodes --apply
-brain import clippings/ --to-episodes --untrusted --apply
-```
+Ask an agent that can edit notes:
 
-- Documents are split on headings into episodes, for an agent to fold into
-  notes when consolidating. Frontmatter is left out.
-- Use `--untrusted` for text you did not write.
-- Running the same import again skips what was already imported. The
-  output says how many episodes were written and how many skipped.
+- "Bring in my meeting notes from ~/meetings."
+- "Import your memory files into my brain."
 
-## Your agents' memory files
+The agent reads the files, searches the brain, and files each piece where
+it belongs: a meeting becomes a dated record, a decision goes into the
+project's notes, a procedure becomes a howto. Every note it changes cites
+its source in `bw-sources`. Review the result with `git diff`, and undo
+with git.
 
-```sh
-brain import --from claude-code          # a dry run
-brain import --from codex --apply
-```
+- Say what the files are. Text you did not write, such as clippings or
+  other people's documents, is filed with its source but never becomes a
+  statement about you.
+- Asking again changes nothing already filed: the agent searches first.
+- A large folder costs agent time in proportion to its size. To copy notes
+  as they are, use `--into` instead.
 
-Memory files become episodes attributed to the agent. brain-wiki knows
-where these apps keep them:
+Where the apps keep their memory files:
 
 | App | Files |
 |---|---|
@@ -96,9 +95,6 @@ where these apps keep them:
 | `antigravity` | `~/.gemini/AGENTS.md`, `~/.gemini/GEMINI.md`, and `~/.gemini/config/rules/` |
 | `openclaw` | `MEMORY.md`, `USER.md`, and `memory/` in `~/.openclaw/workspace/` |
 
-- `CLAUDE_CONFIG_DIR` and `CODEX_HOME` move the Claude Code and Codex
-  folders.
-- For other agents, or files kept elsewhere, give the location:
-  `brain import ~/agent-notes --from myagent`.
-- Conversation history is imported by `brain harvest` instead. See
-  [Agents](agents.md#harvest).
+`CLAUDE_CONFIG_DIR` and `CODEX_HOME` move the Claude Code and Codex
+folders. Conversation history is harvested instead. See
+[Agents](agents.md#harvest).

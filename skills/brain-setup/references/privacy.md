@@ -52,16 +52,16 @@ The result in `brain.toml`:
 
 ```toml
 [agents.default]
-write       = ["episodes", "edit"]
+write       = ["edit"]
 
 [agents.claude-code]
-write       = ["episodes", "edit", "propose_rules", "harvest"]
+write       = ["edit", "propose_rules", "harvest"]
 read_origin = false
 ```
 
 | Setting | Meaning | Default |
 |---|---|---|
-| `write` | What it may do: `episodes` (record in the inbox), `edit` (create and edit notes directly, then `brain validate` them; also `brain mv`, `brain lint --fix`, and archiving consolidated episodes), `propose_rules` (suggest rules, always confirmed by the user), `harvest` (summarize its own past sessions). Older names (`consolidate`, `review`) are ignored. | `["episodes", "edit"]` |
+| `write` | What it may do besides logging episodes, which every agent may: `edit` (create and edit notes directly, then `brain validate` them; also `brain mv`, `brain lint --fix`, and archiving consolidated episodes), `propose_rules` (suggest rules, always confirmed by the user), `harvest` (summarize its own past sessions). Older names (`consolidate`, `review`, `episodes`) are ignored. | `["edit"]` |
 | `read_origin` | May reread the original conversation behind an episode. Conversations hold far more than the episode kept, so this is off unless needed. | `false` |
 
 Profiles prevent accidents and limit what a confused or misled agent can

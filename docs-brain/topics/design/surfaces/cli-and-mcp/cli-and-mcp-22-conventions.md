@@ -32,7 +32,5 @@ source: "docs/design/cli-and-mcp.md#22-conventions"
   ([[config-and-storage-5-brain-lifecycle|config and storage §5]]).
 - `--topic T`, and the MCP `topic` filter, include T's sub-topics
   ([[brain-format-2-directory-layout|brain format §2]]).
-- `brain log -` reads the episode body from stdin, so other tools can pipe
-  into the inbox.
 - `brain mcp` writes only protocol messages to stdout. Diagnostics go to
   stderr and to `<state>/logs/brain-wiki.log`.

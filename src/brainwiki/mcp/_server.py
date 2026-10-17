@@ -420,8 +420,9 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             open_world_hint=False,
         ),
         description="Record durable learnings from this session (facts, decisions, outcomes, what "
-        "failed) as one episode in the user's inbox. Not for chit-chat. Pass dedupe_key to make "
-        "retries safe.",
+        "failed) as one raw episode in the user's inbox, in your own words. Do not search the "
+        "brain or organize now; consolidation files it later. Not for chit-chat. Pass dedupe_key "
+        "to make retries safe.",
     )
     @guard
     def brain_log_episode(
@@ -466,6 +467,14 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
                 description="Turn range of that session it covers, e.g. 12-40 (recorded as a hint).",
             ),
         ] = None,
+        pattern: Annotated[
+            Literal["record", "playbook", "file", "distill"] | None,
+            Field(
+                description="Your guess at how to consolidate it: record (an event worth looking "
+                "up as it was), playbook (a task that will be done again), file (a fact or "
+                "decision for an existing note), distill (something stable about the user)."
+            ),
+        ] = None,
         brain: _Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -473,7 +482,6 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         from brainwiki.write import write_episode
 
         engine = state.engine(brain)
-        need(engine, "episodes")
         result = write_episode(
             engine,
             EpisodeContent(
@@ -487,6 +495,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             origin_turns=origin_turns,
             topics=list(topics),
             dedupe=dedupe_key,
+            pattern=pattern,
         )
         text = f"{'Already recorded' if result.deduped else 'Recorded'} {result.path}."
         if result.redacted:

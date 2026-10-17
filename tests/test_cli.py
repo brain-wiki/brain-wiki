@@ -19,7 +19,7 @@ from brainwiki.cli._main import main
 _HEAVY = ("brainwiki.engine", "mcp", "brainwiki.viz", "brainwiki.bench", "rich")
 
 
-@pytest.mark.parametrize("argv", [["--help"], ["log", "--help"], ["rules", "add", "--help"]])
+@pytest.mark.parametrize("argv", [["--help"], ["validate", "--help"], ["rules", "add", "--help"]])
 def test_help_does_not_import_the_engine(argv: list[str]):
     script = (
         "import contextlib, io, sys\n"

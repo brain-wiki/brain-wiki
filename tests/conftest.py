@@ -45,3 +45,22 @@ def write(root: Path, rel: str, text: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
     return path
+
+
+def capture(root: Path, summary: str, agent: str = "claude-code", **fields: object) -> str:
+    """Write an episode the way MCP `brain_log_episode` does; returns its path."""
+    from brainwiki.config._resolve import open_brain
+    from brainwiki.engine import Engine
+    from brainwiki.format import EpisodeContent
+    from brainwiki.write import write_episode
+
+    with Engine(open_brain(root), host=agent) as engine:
+        return write_episode(
+            engine,
+            EpisodeContent(summary=summary),
+            origin="agent",
+            inputs="unknown",
+            captured="mcp",
+            agent=agent,
+            **fields,  # type: ignore[arg-type]
+        ).path

@@ -22,7 +22,7 @@ FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
 INBOX = "inbox/episodes/2026/10/01M4KT3JPSB7BP2SNSCAVC2SFB.md"
 PROFILES = """
 [agents.reader]
-write = ["episodes"]
+write = []
 """
 
 

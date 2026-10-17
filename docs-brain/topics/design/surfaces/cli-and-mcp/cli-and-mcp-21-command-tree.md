@@ -33,7 +33,6 @@ brain validate [PATH]...                               # check the frontmatter o
 brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run]
 brain schedule [list] | add commit [--every 15m] [--push] [--dry-run] | remove commit [--dry-run]
 
-brain log [TEXT | -] [--topic T]... [--claim C]... [--agent HOST] [--inputs local|external|unknown]
 brain rules add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE.json]
@@ -54,8 +53,6 @@ brain mv SRC DST [--dry-run]                           # a note, or a topic fold
 
 brain import PATH --overlay [--phase 0|1|2] [--dry-run | --apply]
 brain import PATH --into BRAIN [--topic SLUG] [--dry-run | --apply]
-brain import PATH --to-episodes [--untrusted] [--agent HOST] [--topic SLUG] [--dry-run | --apply]
-brain import [PATH] --from HOST [--topic SLUG] [--dry-run | --apply]
 
 brain connect HOST [--scope user|project] [--print] [--force] [--dry-run] [--uninstall]
 brain mcp [--host HOST]                                # stdio MCP server; --host defaults to auto
@@ -70,7 +67,7 @@ brain bench --compare A.json B.json
 
 Global options are `--brain NAME|PATH`, `--as HOST`, and `--json`. They
 are accepted before the command and after it, and the one nearest the
-command wins (`brain --brain a log --brain b` uses `b`). `brain --version`
+command wins (`brain --brain a search x --brain b` uses `b`). `brain --version`
 prints `brain-wiki X`. Every command and subcommand has its own `--help`
 (`-h`).
 

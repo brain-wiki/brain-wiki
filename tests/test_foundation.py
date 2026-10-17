@@ -68,7 +68,9 @@ def test_manifest_defaults_and_unknown_keys():
         "topics.search.privacy",
         "agents.codex.max_privacy",
     }
-    assert m.profile("unknown-host").write == ["episodes", "edit"]
+    assert m.profile("unknown-host").write == ["edit"]
+    legacy = parse_manifest('format = 3\nid = "x"\n[agents.default]\nwrite = ["episodes"]\n')
+    assert legacy.profile("codex").write == []  # a removed capability is ignored
     assert m.profile(None).can("harvest") and not m.profile(None).can("consolidate")
 
 

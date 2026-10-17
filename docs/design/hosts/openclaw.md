@@ -10,7 +10,7 @@ all hosts are in [agent integrations](../agent-integrations.md).
 | Instructions | A managed block in the workspace `AGENTS.md` ([agent integrations §3.2](../agent-integrations.md#32-the-static-instruction-block)) |
 | Skills | `brain`, `brain-setup`, `brain-maintain` from the bundle |
 | Harvest | None: no session reader |
-| Memory import | `~/.openclaw/workspace/MEMORY.md`, `USER.md`, and `memory/*.md` ([import §6](../import.md#6-to-episodes-and-from-agents)) |
+| Memory files | `~/.openclaw/workspace/MEMORY.md`, `USER.md`, and `memory/*.md`, which the agent files into notes when asked to import them ([import §6](../import.md#6-documents-and-memory-files)) |
 
 ## Notes
 

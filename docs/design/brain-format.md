@@ -161,10 +161,10 @@ title       = "Search"
 description = "How local search works and why."
 
 [agents.default]                            # profile for hosts without their own
-write       = ["episodes", "edit"]
+write       = ["edit"]
 
 [agents.claude-code]                        # profile for one host id
-write       = ["episodes", "edit", "propose_rules", "harvest"]
+write       = ["edit", "propose_rules", "harvest"]
 read_origin = false
 ```
 
@@ -186,14 +186,14 @@ Rules:
 - `git.mode = "on"` behaves like `auto`.
 - Agent profile names are host ids
   ([agent integrations §2](agent-integrations.md#2-host-ids)). The write
-  capabilities are `episodes`, `edit`, `propose_rules`, and `harvest`, and
+  capabilities are `edit`, `propose_rules`, and `harvest`, and
   `read_origin` lets a host read the conversation behind an episode
   ([CLI and MCP §1](cli-and-mcp.md#1-agent-profiles)).
 - Settings that 0.1 had and format 3 dropped (`[consolidate]` `review`,
   `review_external`, `max_supersede_ratio`, and topic `review` and
   `agent_edits`) are unknown keys, so they are preserved, reported
-  (BW109), and ignored. The old capability names `consolidate` and
-  `review` grant nothing.
+  (BW109), and ignored. The old capability names `consolidate`, `review`,
+  and `episodes` grant nothing; capturing an episode needs no capability.
 
 ## 4. Common file conventions
 
@@ -502,6 +502,7 @@ bw-captured: mcp                 # mcp | harvest | cli | import | file
 created: 2026-10-10T19:22:11Z
 bw-topics: [search]              # hints only
 bw-dedupe: claude-code:5f2c9a1e-…:12-48   # idempotency key, if the writer gave one
+bw-pattern: file                 # the agent's consolidation hint, if it gave one
 ---
 Switched the search path to FTS5 after ripgrep was too slow on 10k notes.
 
@@ -522,8 +523,8 @@ Rules:
   records each episode's first hash, and lint reports a change (BW501).
 - An episode MUST have `id`, `bw-origin`, and `bw-inputs` (BW503).
 - `bw-origin`, `bw-inputs`, `bw-captured`, and `bw-agent` are set by the
-  code path that writes the episode (MCP server, harvest, CLI, import),
-  never taken from model-written text. The index trusts them only for
+  code path that writes the episode (the MCP server or harvest), never
+  taken from model-written text. The index trusts them only for
   episodes this device wrote. See
   [write path §3](write-path.md#3-provenance-and-inputs) and
   [index and search §3](index-and-search.md#3-schema).
@@ -537,8 +538,12 @@ Rules:
   delete old transcripts and transcripts stay on their device.
 - `bw-dedupe` holds the writer's idempotency key
   ([write path §2.1](write-path.md#21-ways-an-episode-is-written)).
-  Episodes imported from documents carry `bw-source`, the original file
-  and heading ([import §6](import.md#6-to-episodes-and-from-agents)).
+  Episodes imported from documents by earlier versions carry `bw-source`,
+  the original file and heading.
+- `bw-pattern` is the capturing agent's guess at how the episode should be
+  consolidated: `record`, `playbook`, `file`, or `distill`
+  ([write path §2.1](write-path.md#21-ways-an-episode-is-written)). It is a
+  hint, not provenance.
 - The body is free Markdown. `## Claims`, `## Negative findings` (what was
   tried and failed, so later agents do not repeat it), and
   `## Open questions` are optional sections the consolidation guidance

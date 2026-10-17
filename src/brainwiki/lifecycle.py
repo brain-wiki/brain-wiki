@@ -25,11 +25,11 @@ name = "{name}"
 # description = "What this brain is for, in one line (shown by `brain brains`)"
 
 [agents.default]           # what agents without their own profile may write
-write       = ["episodes", "edit"]
+write       = ["edit"]
 
 # Example of a profile for one agent:
 # [agents.claude-code]
-# write       = ["episodes", "edit", "propose_rules", "harvest"]
+# write       = ["edit", "propose_rules", "harvest"]
 """
 
 LOG_HEADER = "# Log\n\nChanges made by brain-wiki, newest at the bottom.\n"
@@ -48,14 +48,13 @@ def default_agents_block(
         [
             "- To add or correct knowledge, edit or create a note, then run",
             "  `brain validate <path>` (MCP: `brain_validate`) and fix what it reports. Something",
-            "  not organized yet goes in `inbox/episodes/YYYY/MM/<ULID>.md` (or the MCP tool",
-            "  `brain_log_episode`). Never edit `rules.md`, episodes, or `log.md`.",
+            "  not organized yet goes to the inbox through the MCP tool `brain_log_episode`.",
+            "  Never edit `rules.md`, episodes, or `log.md`.",
         ]
         if edit
         else [
-            "- To record something, add a new file under `inbox/episodes/YYYY/MM/<ULID>.md`",
-            "  (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or",
-            "  `rules.md` directly.",
+            "- Do not change files here. To record something, call the brain-wiki MCP tool",
+            "  `brain_log_episode`.",
         ]
     )
     return "\n".join(

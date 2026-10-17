@@ -328,8 +328,7 @@ def test_instructions_follow_the_host_profile(example: Path):
     )
 
     (example / "brain.toml").write_text(
-        (example / "brain.toml").read_text()
-        + '\n[agents.claude-code]\nwrite = ["episodes", "edit"]\n'
+        (example / "brain.toml").read_text() + '\n[agents.claude-code]\nwrite = ["edit"]\n'
     )
     assert host_access("codex") == Access(edit=False)
     assert host_access("claude-code") == Access(edit=True)

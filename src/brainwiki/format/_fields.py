@@ -32,6 +32,7 @@ FIELDS = {
     "topics": "bw-topics",
     "dedupe": "bw-dedupe",
     "source": "bw-source",
+    "pattern": "bw-pattern",
 }
 _META_KEYS = {"id", "src", "origin", "inputs", "at", "status", "by", "reason", "quote", "via"}
 _META_TAIL = re.compile(r"\s*\{(?P<body>[^{}]*)\}\s*$")

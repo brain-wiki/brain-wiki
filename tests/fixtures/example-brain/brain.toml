@@ -15,7 +15,7 @@ title = "Budget"
 description = "Spending decisions."
 
 [agents.default]
-write = ["episodes"]
+write = []
 
 [agents.trusted]
-write = ["episodes", "edit", "propose_rules", "harvest"]
+write = ["edit", "propose_rules", "harvest"]

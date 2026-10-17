@@ -1,59 +1,13 @@
-"""log, rules, check, restore, mv."""
+"""rules, mv."""
 
 from __future__ import annotations
 
-import sys
 from typing import Any
 
 from brainwiki.cli._cmd_runs import warn_git
-from brainwiki.cli._output import emit, warn
+from brainwiki.cli._output import emit
 from brainwiki.engine import open_engine
 from brainwiki.errors import Forbidden, UsageError
-
-
-def log(args: Any) -> int:
-    from brainwiki.format import EpisodeContent
-    from brainwiki.write import write_episode
-
-    text = args.text
-    if text in (None, "-"):
-        if sys.stdin.isatty() and text is None:
-            raise UsageError("give the episode text, or - to read it from stdin")
-        text = sys.stdin.read()
-    if not text.strip() and not args.claim:
-        raise UsageError("the episode is empty")
-    host = getattr(args, "as_host", None)
-    with open_engine(args.brain, host=host) as engine:
-        if engine.profile.name != "owner":  # what the host could write (brain_log_episode)
-            if not engine.profile.can("episodes"):
-                raise Forbidden(engine.profile.refusal(host, "episodes", "log episodes"))
-            if args.agent and args.agent != host:
-                raise UsageError(f"--agent {args.agent} contradicts --as {host}")
-            if args.inputs == "local":
-                raise UsageError("an agent cannot vouch for its inputs: drop --inputs local")
-            origin, inputs, agent = "agent", args.inputs or "unknown", host
-        elif args.agent:
-            origin, inputs, agent = "agent", args.inputs or "unknown", args.agent
-        else:
-            origin, inputs, agent = "owner", args.inputs or "local", None
-        known = engine.topics.paths
-        for topic in args.topic:
-            if topic.strip() and topic.strip() not in known:
-                warn(f"note: there is no topic {topic.strip()!r} yet; kept as a hint")
-        result = write_episode(
-            engine,
-            EpisodeContent(summary=text.strip(), claims=args.claim),
-            origin=origin,
-            inputs=inputs,
-            captured="cli",
-            agent=agent,
-            topics=args.topic,
-        )
-    message = f"{'Already logged' if result.deduped else 'Logged'} {result.path}"
-    if result.redacted:
-        message += f" (redacted: {', '.join(result.redacted)})"
-    emit(args, result.to_json(), message)
-    return 0
 
 
 def rules(args: Any) -> int:

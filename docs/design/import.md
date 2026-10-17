@@ -1,8 +1,8 @@
 # Import
 
 How existing Markdown becomes part of a brain: a folder adopted in place,
-notes copied into a brain, documents turned into episodes, and agents' own
-memory files brought in.
+notes copied into a brain, and documents or agents' own memory files filed
+into notes by an agent.
 
 ## 1. Goals
 
@@ -12,7 +12,7 @@ memory files brought in.
 | I2 | Nothing changes before the user has seen what will change. |
 | I3 | Every change to existing files is a run: undoable, logged, and committed when git is on. Adopting a folder (phase 0) only adds files. |
 | I4 | Normalization is optional and step by step. The brain works before any of it. |
-| I5 | The user's own files, and agents' memory files, can be fed to consolidation as episodes. |
+| I5 | The user's documents, and agents' memory files, end up in the right notes, citing where they came from. |
 
 ## 2. Modes
 
@@ -20,8 +20,7 @@ memory files brought in.
 |---|---|---|
 | Overlay | `brain import <folder> --overlay` | The folder becomes a brain; notes stay where they are |
 | Into | `brain import <folder> --into <brain>` | Notes are copied into an existing brain as topics |
-| To episodes | `brain import <path> --to-episodes` | Documents become episodes in the inbox |
-| From an agent | `brain import [PATH] --from <host>` | The host's memory files become episodes (§6) |
+| Documents and memory files | Ask an agent | The agent files them into notes (§6) |
 
 Rules shared by every mode:
 
@@ -29,14 +28,11 @@ Rules shared by every mode:
 - Every mode is a dry run unless `--apply` is given. `--dry-run` wins when
   both are given.
 - A flag the chosen mode does not use is a usage error (exit 2), never
-  dropped: `--agent` and `--untrusted` need `--to-episodes`, `--phase`
-  needs `--overlay`, and `--topic` does not work with `--overlay`, whose
-  top-level folders become the topics.
-- `--overlay` and `--into` need a folder. A source path that does not
-  exist is `not_found` (exit 3).
-- `--to-episodes` and `--from` write into the brain chosen by the global
-  `--brain`.
-  For phase 0, `--brain NAME` sets the new brain's name; the default is
+  dropped: `--phase` needs `--overlay`, and `--topic` does not work with
+  `--overlay`, whose top-level folders become the topics.
+- Both modes need a folder. A source path that does not exist is
+  `not_found` (exit 3).
+- For phase 0, `--brain NAME` sets the new brain's name; the default is
   the folder name.
 
 ## 3. Overlay
@@ -87,7 +83,7 @@ The report prints in the terminal on a dry run and is saved as
 
 The generated `brain.toml` sets `layout.topics_dir = "."`, the hub style,
 the ignored folders, `lint.profile = "migrate"`,
-`[agents.default] write = ["episodes", "edit"]`, and one `[topics.<slug>]`
+`[agents.default] write = ["edit"]`, and one `[topics.<slug>]`
 table per topic.
 
 ### 3.2 Phases
@@ -192,53 +188,55 @@ source stays untouched.
 Only Markdown notes are copied. Attachments stay in the source, and links
 to them are left as written.
 
-## 6. To episodes, and from agents
+## 6. Documents and memory files
 
-`--to-episodes` turns documents into raw input for consolidation instead
-of curated notes. It suits note dumps, exported chats, meeting
-transcripts, and clippings. A folder imports every `.md` file under it.
+Documents and an agent's memory files go straight into notes. No command
+turns them into episodes; the user asks an agent instead: "bring in my
+meeting notes from ~/meetings", "import your memory files". The agent
+reads the files, searches the brain, and applies the consolidation
+patterns ([write path §4](write-path.md#4-consolidation)) directly.
 
-- Frontmatter is metadata, not content. It is dropped, and only the body
-  is split.
-- Documents are split on headings into chunks of at most 8 KiB. Each chunk
-  becomes one episode with `bw-captured: import`, `bw-origin: import`, and
-  `bw-source` naming the file and heading.
-- `bw-inputs` is `local` for the user's own files, or `external` with
-  `--untrusted` (clippings, documents written by others).
-- `--agent HOST` records the episodes as written by that host. `--topic`
-  adds a topic hint.
-- The original files are not modified or moved.
-- Each chunk carries a dedupe key from its source and text, so a rerun
-  skips what was already imported. The output counts episodes written and
-  skipped, and names files it could not read; any unreadable file makes
-  the exit code 1.
+- Each note it creates or changes cites its source in `bw-sources`: the
+  document's URL when it has one, or the record note the agent made from
+  a local file. Local file paths are not written into notes, because a
+  brain moves between machines.
+- An agent's memory files are its own earlier notes. It files their
+  content like an episode it captured.
+- Text the user did not write (clippings, other people's documents) can be
+  recorded or filed with its source, but never becomes a statement about
+  the user or a rule. The user says what the files are when asking.
+- A second import finds the notes already there, because the agent
+  searches before it writes.
+- Cost grows with the amount of text, since an agent reads all of it.
+  Copying a folder of notes as they are is `--into`, and adopting a vault
+  is `--overlay`; both are deterministic and need no agent.
 
-`--from <host>` imports the host's own memory files the same way, as
-episodes attributed to the host (`bw-origin: agent`, `bw-inputs: unknown`):
+Where hosts keep their memory files, as guidance for the agent (each
+host's design doc lists its own):
 
-| Host | Files (a `PATH` argument replaces them) |
+| Host | Files |
 |---|---|
 | Claude Code | `projects/*/memory/*.md` and `CLAUDE.md` under `CLAUDE_CONFIG_DIR` (default `~/.claude`) |
 | Codex | `memories/**/*.md` and `AGENTS.md` under `CODEX_HOME` (default `~/.codex`) |
 | Antigravity | `~/.gemini/AGENTS.md`, `~/.gemini/GEMINI.md`, and `~/.gemini/config/rules/*.md` |
 | OpenClaw | `MEMORY.md`, `USER.md`, and `memory/*.md` in `~/.openclaw/workspace/` |
 
-`--from` brings in a host's memory files. A host's conversation history is
-read by `brain harvest` instead
-([write path §2.2](write-path.md#22-harvesting-sessions)), which is also
-the way to backfill a new brain from past sessions.
+Instructions in these files are natural candidates for rules, but only the
+user can add a rule ([write path §6](write-path.md#6-rules)). A host's
+conversation history is harvested instead
+([write path §2.2](write-path.md#22-harvesting-sessions)).
 
-The locations come from each host's documentation and change between host
-versions, so they live in code (`importer/_episodes.py`). Instructions in
-these files are natural candidates for rules, but only the user can add a
-rule ([write path §6](write-path.md#6-rules)).
+Earlier versions had `brain import --to-episodes` and `brain import --from
+HOST`, which split files into episodes for later consolidation. They were
+removed because an agent doing the import can file each piece where it
+belongs at once, and the episode step added a second pass without adding
+provenance.
 
 ## 7. Failure modes
 
 | Failure | Behavior |
 |---|---|
 | The folder already has `brain.toml` | Phase 0 (dry run or apply) refuses with `conflict`; it names the registration and points to phases 1 and 2, or suggests `brain brains add` |
-| `--from` names a host with no known locations and no `PATH` | Usage error listing the known hosts; with a `PATH`, the files are imported under that host name |
 | Two folders give the same slug | The second gets a numeric suffix; the report shows the mapping, and `brain.toml` can be edited after phase 0 |
 | Thousands of unresolved links | Reported as a total with the top targets; phase 0 still proceeds, since links are not changed |
 | Huge files (exports, logs) | Not parsed by the scan above 2 MiB; listed as `oversized` in `--json` |

@@ -3,9 +3,8 @@
 
 - Read `rules.md` first: standing directives from the user.
 - Knowledge lives in `topics/<topic>/`; each topic has a hub (`index.md`).
-- To record something, add a new file under `inbox/episodes/YYYY/MM/<ULID>.md`
-  (or call the brain-wiki MCP tool `brain_log_episode`). Never edit `topics/` or
-  `rules.md` directly.
+- Do not change files here. To record something, call the brain-wiki MCP tool
+  `brain_log_episode`.
 - A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note
   with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
 
