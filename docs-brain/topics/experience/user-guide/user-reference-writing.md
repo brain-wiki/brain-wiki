@@ -13,5 +13,8 @@ source: "docs/user/reference.md#writing"
   and the `AGENTS.md` topic table.
 - `brain validate` checks the Markdown files git sees as changed, or every
   note in a brain without git. It exits 1 on problems.
-- `brain consolidate --done` archives the episodes as one undoable run.
-  Agents use `brain_consolidate_prepare` and `brain_consolidate_done`.
+- `brain consolidate --done` takes `EPISODE:PATTERN:NOTE` (pattern
+  `record`, `playbook`, `file`, or `distill`) or `"EPISODE:skip:REASON"`,
+  repeated for each outcome, checks that each note cites its episode in
+  `bw-sources`, and archives the episodes as one undoable run. Agents use
+  `brain_consolidate_prepare` and `brain_consolidate_done`.

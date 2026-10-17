@@ -279,7 +279,9 @@ bw-sources:
 | `created`, `updated` | no | ISO 8601 date or date-time | — |
 
 - Suggested `type` values: `note`, `hub`, `concept`, `decision`, `howto`,
-  `reference`, `person`, `project`, `source`, `meeting`.
+  `reference`, `person`, `project`, `source`, `meeting`, `record` (a dated
+  account of something that happened, which consolidation writes under
+  `topics/<topic>/records/`).
 - `bw-stage` is a free workflow state (`draft`, `shipped`, `abandoned`).
   Importers and the BW106 fix move non-standard `status` values here.
 - Agents SHOULD set `updated` when they change a note. brain-wiki's own

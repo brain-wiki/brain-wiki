@@ -571,10 +571,13 @@ Sections, in output order:
    topics that do not fit.
 5. Recent changes: the last 5 `log.md` entries, newest first, and the
    number of notes updated in the last 7 days.
-6. Inbox: pending episode count, the oldest pending age, rule proposals
-   awaiting `brain rules accept`, and a hint to consolidate
-   (`brain_consolidate_prepare`) when 20 or more episodes are pending or
-   the oldest is more than 7 days old.
+6. Inbox: pending episode count, the oldest pending age, the pending
+   episodes per owner with the oldest one's date (the caller marked
+   "(you)"), each agent's last consolidation from `log.md` with its summary
+   ([write path §4.7](write-path.md#47-who-the-inbox-is-waiting-on)), rule
+   proposals awaiting `brain rules accept`, and a hint to consolidate
+   (`brain_consolidate_prepare`) when the caller's own pending episodes
+   reach 20 or the oldest is more than 7 days old.
 7. How to query: up to three example calls built from this brain's own
    topics and types (a keyword search, a typed "latest" lookup, and
    `brain_neighbors` on a hub).
@@ -594,7 +597,8 @@ room left, and the whole text is cut at the budget.
 
 The structured result has `brain`, `text`, `rules`, `topics` (every topic
 of the tree with its counts and parent), `contents`, `pending_episodes`,
-`open_proposals`, and `notes`.
+`pending_by_agent` (owner to `{count, oldest}`), `open_proposals`, and
+`notes`.
 
 The managed block of `AGENTS.md` is built from the same topic rows
 ([brain format §11](brain-format.md#11-agentsmd)).

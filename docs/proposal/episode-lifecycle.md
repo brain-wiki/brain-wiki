@@ -1,6 +1,6 @@
 # Episodes: quick capture, per-agent consolidation
 
-Status: decided 2026-10-16 (§9). Phase 1 (capture) is built; phases 2 to 4 are not.
+Status: decided 2026-10-16 (§9). Phase 1 (capture) and the consolidation part of phase 2 are built; harvest (§2.2) and phases 3 and 4 are not.
 
 An episode has two moments with different needs. An agent captures it in
 the middle of a task, so capture must be fast and raw. Later, off the busy
@@ -49,9 +49,12 @@ The agent does not search the brain or decide where the knowledge goes.
 - People do not write episodes. A person records knowledge by editing a
   note, in Obsidian or any editor, or by telling an agent "remember this".
   `brain log` goes away.
-- An episode file an agent writes by hand into `inbox/episodes/` is still
-  accepted, but its `bw-agent` is self-declared, so it counts as unowned.
-  The brain's `AGENTS.md` block stops suggesting it.
+- An episode file written by hand into `inbox/episodes/` is still
+  accepted. Its owner is the `bw-agent` it names, or none. brain-wiki
+  cannot tell a hand-written file from one written on another machine, and
+  permissions are not a security boundary (§6), so ownership is what the
+  file says. The brain's `AGENTS.md` block stops suggesting hand-written
+  episodes.
 - The writer always sets `bw-agent` to the calling host. An agent cannot
   write an episode as another agent. `bw-session`, `bw-turns`, and
   `bw-device` stay as today, so the owner can reopen the conversation.
@@ -67,7 +70,7 @@ Every episode has an owner, or none:
 | Written by | Owner |
 |---|---|
 | MCP `brain_log_episode` | The calling host |
-| A file written by hand into `inbox/episodes/` | None, whatever its `bw-agent` says |
+| A file written by hand into `inbox/episodes/` | The `bw-agent` it names, or none |
 | An episode harvested before this change (`bw-captured: harvest`) | The host in its `bw-agent` |
 | An episode imported before this change (`bw-captured: import`) | None |
 
@@ -373,7 +376,7 @@ Settled with the maintainer on 2026-10-16:
 
 | Phase | Content |
 |---|---|
-| 1 | Capture: agents only, through MCP; `brain log`, the `episodes` capability, `brain import --to-episodes`, and `brain import --from` removed; `bw-agent` always the caller; hand-written episode files unowned; the `pattern` hint; import guidance in the skill |
+| 1 | Capture: agents only, through MCP; `brain log`, the `episodes` capability, `brain import --to-episodes`, and `brain import --from` removed; `bw-agent` always the caller; the `pattern` hint; import guidance in the skill |
 | 2 | Scope and patterns: `--prepare` by owner, with `agents`, `unowned`, and `all` for when the user asks; outcomes and the `bw-sources` check in `--done`; the guidance rewrite, `reports/consolidation.md`, pending episodes per agent in orientation and doctor; harvest files sessions directly (session URLs, `brain_harvest_done`, session URLs in `brain origin`; `brain harvest --apply`, `--raw`, and `--distill` removed) |
 | 3 | Scheduled consolidation for Claude Code: unattended mode, `brain schedule add consolidate`, checks before starting, failure reporting in orientation and doctor |
 | 4 | Other hosts as their unattended modes are verified |

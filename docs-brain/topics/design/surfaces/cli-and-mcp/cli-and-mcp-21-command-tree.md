@@ -35,8 +35,8 @@ brain schedule [list] | add commit [--every 15m] [--push] [--dry-run] | remove c
 
 brain rules add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
-brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE.json]
-brain consolidate --done EPISODE...
+brain consolidate --prepare [--topic T] [--max-episodes N] [--agent HOST]... [--unowned] [--all] [--out FILE.json]
+brain consolidate --done EPISODE[:PATTERN:NOTE | :skip:REASON]...
 brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--apply [--dry-run]]
 brain harvest --status                                 # per host: on or off, sessions left
 brain harvest enable HOST... | disable HOST... | route PATTERN BRAIN
@@ -84,7 +84,7 @@ Where each command is specified:
 | `init`, `brains` | [[config-and-storage\|config and storage]] |
 | `agents` | §1 |
 | `search`, `read`, `neighbors`, `orient`, `topics`, links and tags | [[index-and-search\|index and search]] |
-| `validate`, `log`, `harvest`, `origin`, `consolidate`, `rules`, `review`, `mv`, `runs`, `undo` | [[write-path\|write path]] |
+| `validate`, `harvest`, `origin`, `consolidate`, `rules`, `review`, `mv`, `runs`, `undo` | [[write-path\|write path]] |
 | `commit`, `schedule` | [[write-path-5-committing-direct-edits\|write path §5]] |
 | `lint`, `report` | [[lint-and-reports\|lint and reports]] |
 | `import` | [[import\|import]] |
@@ -94,4 +94,5 @@ Where each command is specified:
 `search` does not follow links, and `neighbors` has no relation filter.
 `consolidate` needs exactly one of `--prepare` and `--done`; with
 `--prepare`, `--json` prints the packet and `--out` writes
-`{guidance, packet}`.
+`{guidance, packet}`. `--agent`, `--unowned`, `--all`, and `--out` go only
+with `--prepare`.

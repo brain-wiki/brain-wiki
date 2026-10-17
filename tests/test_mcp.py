@@ -175,18 +175,32 @@ async def test_propose_rule_paths(example: Path):
 async def test_consolidate_over_mcp(example: Path):
     toml = example / "brain.toml"
     toml.write_text(toml.read_text() + '\n[agents.codex]\nwrite = ["edit"]\n')
+    inbox = "inbox/episodes/2026/10/01M4KT3JPSB7BP2SNSCAVC2SFB.md"
     async with Client(build_server("codex")) as client:
-        prepared = await client.call_tool("brain_consolidate_prepare", {})
+        mine = await client.call_tool("brain_consolidate_prepare", {})
+        assert mine.structured_content["episodes"] == 0  # the episode is claude-code's
+        assert "Pending: claude-code 1" in mine.content[0].text
+        prepared = await client.call_tool("brain_consolidate_prepare", {"all": True})
         assert prepared.structured_content["episodes"] == 1
         assert '"archive_to"' in prepared.content[0].text
         bad = await client.call_tool("brain_consolidate_done", {"episodes": ["inbox/nope.md"]})
         assert bad.is_error and "not_found:" in bad.content[0].text
+        uncited = await client.call_tool(
+            "brain_consolidate_done",
+            {
+                "episodes": [
+                    {"episode": inbox, "pattern": "file", "notes": ["topics/search/fts5.md"]}
+                ]
+            },
+        )
+        assert uncited.is_error and "does not cite" in uncited.content[0].text
         good = await client.call_tool(
             "brain_consolidate_done",
-            {"episodes": ["inbox/episodes/2026/10/01M4KT3JPSB7BP2SNSCAVC2SFB.md"]},
+            {"episodes": [{"episode": inbox, "pattern": "skip", "reason": "already in fts5"}]},
         )
-        empty = await client.call_tool("brain_consolidate_prepare", {})
+        empty = await client.call_tool("brain_consolidate_prepare", {"all": True})
     assert not good.is_error and good.structured_content["run"].startswith("run-")
+    assert "1 skip" in good.content[0].text
     assert empty.structured_content["episodes"] == 0
 
 

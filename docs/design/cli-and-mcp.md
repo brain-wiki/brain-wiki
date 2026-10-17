@@ -134,8 +134,8 @@ brain schedule [list] | add commit [--every 15m] [--push] [--dry-run] | remove c
 
 brain rules add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject ID
 
-brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE.json]
-brain consolidate --done EPISODE...
+brain consolidate --prepare [--topic T] [--max-episodes N] [--agent HOST]... [--unowned] [--all] [--out FILE.json]
+brain consolidate --done EPISODE[:PATTERN:NOTE | :skip:REASON]...
 brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--apply [--dry-run]]
 brain harvest --status                                 # per host: on or off, sessions left
 brain harvest enable HOST... | disable HOST... | route PATTERN BRAIN
@@ -183,7 +183,7 @@ Where each command is specified:
 | `init`, `brains` | [config and storage](config-and-storage.md) |
 | `agents` | §1 |
 | `search`, `read`, `neighbors`, `orient`, `topics`, links and tags | [index and search](index-and-search.md) |
-| `validate`, `log`, `harvest`, `origin`, `consolidate`, `rules`, `review`, `mv`, `runs`, `undo` | [write path](write-path.md) |
+| `validate`, `harvest`, `origin`, `consolidate`, `rules`, `review`, `mv`, `runs`, `undo` | [write path](write-path.md) |
 | `commit`, `schedule` | [write path §5](write-path.md#5-committing-direct-edits) |
 | `lint`, `report` | [lint and reports](lint-and-reports.md) |
 | `import` | [import](import.md) |
@@ -193,7 +193,8 @@ Where each command is specified:
 `search` does not follow links, and `neighbors` has no relation filter.
 `consolidate` needs exactly one of `--prepare` and `--done`; with
 `--prepare`, `--json` prints the packet and `--out` writes
-`{guidance, packet}`.
+`{guidance, packet}`. `--agent`, `--unowned`, `--all`, and `--out` go only
+with `--prepare`.
 
 ### 2.2 Conventions
 
@@ -457,12 +458,24 @@ Input schemas (JSON Schema 2020-12; output shapes are in
     "properties": {
       "topic":        {"type": "string"},
       "max_episodes": {"type": "integer", "minimum": 1, "maximum": 100},
+      "agents":       {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 64},
+                       "description": "Also take these agents' episodes, only when the user asked."},
+      "unowned":      {"type": "boolean"},
+      "all":          {"type": "boolean"},
       "brain":        {"type": "string"}}},
 
   "brain_consolidate_done": {"type": "object", "additionalProperties": false, "required": ["episodes"],
     "properties": {
-      "episodes": {"type": "array", "minItems": 1, "maxItems": 200, "items": {"type": "string"},
-                   "description": "Episode paths (inbox/...) or ids, as brain_consolidate_prepare listed them."},
+      "episodes": {"type": "array", "minItems": 1, "maxItems": 200,
+                   "items": {"anyOf": [
+                     {"type": "object", "required": ["episode", "pattern"],
+                      "properties": {
+                        "episode": {"type": "string"},
+                        "pattern": {"enum": ["record", "playbook", "file", "distill", "skip"]},
+                        "notes":   {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
+                        "reason":  {"type": "string", "maxLength": 200}}},
+                     {"type": "string"}]},
+                   "description": "One outcome per episode; a plain path or id records no outcome."},
       "brain":    {"type": "string"}}},
 
   "brain_read_origin": {"type": "object", "additionalProperties": false, "required": ["episode"],
@@ -526,8 +539,12 @@ Notes:
   structured content: `{episodes, pending, notes}` for consolidation,
   `{run, sessions, remaining}` for harvest. No MCP tool writes a note; the
   agent edits notes with its own file tools.
-- `brain_consolidate_done` returns `{run, archived}`. `brain undo RUN` puts
-  the episodes back.
+- `brain_consolidate_done` returns `{run, archived}`, and its text gives
+  the run's summary ("archived 3 episodes: 1 file, 1 playbook, 1 skip").
+  A note that does not cite its episode fails the call with `usage` and
+  archives nothing. `brain undo RUN` puts the episodes back.
+- With nothing of the caller's pending, `brain_consolidate_prepare` returns
+  `{episodes: 0}` and names whose episodes are waiting.
 - `brain_harvest_apply` writes what validates and lists the problems for
   the rest. It fails with `invalid_ops` only when nothing was written or
   skipped.
@@ -540,7 +557,7 @@ host's naming:
 
 | Prompt | Asks the agent to |
 |---|---|
-| `consolidate` | Call `brain_consolidate_prepare`, edit or create notes, run `brain_validate`, call `brain_consolidate_done`, repeat while episodes remain, and report what changed |
+| `consolidate` | Call `brain_consolidate_prepare`, edit or create notes by pattern, run `brain_validate`, call `brain_consolidate_done` with the outcomes, repeat while the agent's episodes remain, and report what changed |
 | `capture` | Summarize the session's durable learnings and log them with one `brain_log_episode` call |
 | `harvest` | Run prepare, distill, and apply, at most 3 rounds; on `unsupported_host`, ask the user before reading its own session history |
 

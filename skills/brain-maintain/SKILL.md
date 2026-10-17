@@ -42,25 +42,33 @@ Full instructions, including the fallback: [references/harvest.md](references/ha
 ## 2. Consolidate
 
 1. Call `brain_consolidate_prepare` (optional: `topic`, `max_episodes`).
-   It returns guidance and a packet of pending episodes, each with candidate
-   notes. If it reports nothing pending, say so and stop.
-2. For each episode, add its durable knowledge to a candidate note, create a
-   note, or skip it as holding nothing durable. Edit the Markdown files
-   directly, following the guidance
-   ([references/consolidate.md](references/consolidate.md)): prefer existing
-   notes, one fact per bullet, the episode's `archive/` path in
-   `bw-sources`.
+   It returns guidance and a packet of your own pending episodes, those
+   whose conversation you can reopen here first, each with candidate
+   notes. If it reports nothing of yours, tell the user whose episodes are
+   waiting and stop. Pass `agents` (for example `["cursor"]`), `unowned`,
+   or `all` only when the user asks you to take others' episodes.
+2. Give each episode a pattern: `record` (a dated record note), `playbook`
+   (a new or updated howto), `file` (into the note it belongs to),
+   `distill` (a preference, person, or project note, only from episodes
+   whose `inputs` or `session_inputs` is `local`), or `skip` with a
+   reason. Edit the Markdown files directly, following the guidance
+   ([references/consolidate.md](references/consolidate.md)), and add each
+   episode's `archive_to` path to the `bw-sources` of every note it
+   changed.
 3. If an episode is marked `origin_available: true` and its meaning is
    unclear without the conversation, call `brain_read_origin` with its
    handle. `not_available` or `forbidden` is normal; continue from the
    episode alone.
 4. Call `brain_validate` with the files you changed; fix what it reports.
-5. Call `brain_consolidate_done` with every episode you handled, skipped
-   ones included. It archives them as one run (`brain undo` returns them to
-   the inbox). Report notes created and changed, and episodes archived.
+5. Call `brain_consolidate_done` with one outcome per episode, skipped ones
+   included: `{"episode", "pattern", "notes"}` or `{"episode", "pattern":
+   "skip", "reason"}`. It checks that each note cites its episode, then
+   archives them as one run (`brain undo` returns them to the inbox).
+   Report notes created and changed, and episodes archived by pattern.
 
 | Result | What to do |
 |---|---|
+| `usage` naming a note that "does not cite" an episode | Add the link the error gives to that note's `bw-sources`, validate, and call `brain_consolidate_done` again; nothing was archived. |
 | `forbidden` (on done) | This agent may not edit this brain. The error names the command that allows it for this agent alone (`brain agents grant APP edit`). Offer to run it: show the `--dry-run` diff, and run it after the user says yes. |
 | `busy` | Another write is running. Try again once in a minute. |
 

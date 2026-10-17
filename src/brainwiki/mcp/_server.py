@@ -90,6 +90,22 @@ class HarvestEntry(BaseModel):
     ] = []  # noqa: RUF012
 
 
+class ConsolidateOutcome(BaseModel):
+    episode: Annotated[str, Field(description="Episode path (inbox/...) or id from the packet.")]
+    pattern: Annotated[
+        Literal["record", "playbook", "file", "distill", "skip"],
+        Field(description="How it was consolidated, or skip."),
+    ]
+    notes: Annotated[
+        list[Annotated[str, Field(max_length=500)]],
+        Field(
+            max_length=20,
+            description="Notes created or changed for it; each must cite it in bw-sources.",
+        ),
+    ] = []  # noqa: RUF012
+    reason: Annotated[str | None, Field(max_length=200, description="Why it was skipped.")] = None
+
+
 class _State:
     """Per-process state: the host, and one engine per brain, opened lazily."""
 
@@ -572,9 +588,10 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         title="Gather the inbox to consolidate",
         annotations=_READ,
         meta={"anthropic/maxResultSizeChars": _PACKET_CHARS},
-        description="Gather pending inbox episodes with the notes they may belong to, and how to "
-        "fold them in. Edit notes directly, run brain_validate, then call "
-        "brain_consolidate_done with the episodes you handled.",
+        description="Gather your own pending inbox episodes with the notes they may belong to, "
+        "and how to consolidate them. Edit notes directly, run brain_validate, then call "
+        "brain_consolidate_done with what came of each episode. Pass agents, unowned, or all "
+        "only when the user asked you to take other agents' episodes.",
     )
     @guard
     def brain_consolidate_prepare(
@@ -585,15 +602,36 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             int | None,
             Field(ge=1, le=100, description="Most episodes to gather; default: brain.toml."),
         ] = None,
+        agents: Annotated[
+            list[Annotated[str, Field(max_length=64)]],
+            Field(
+                max_length=20,
+                description="Also take these agents' episodes, only when the user asked.",
+            ),
+        ] = [],  # noqa: B006
+        unowned: Annotated[
+            bool,
+            Field(description="Also take episodes no agent owns, only when the user asked."),
+        ] = False,
+        all: Annotated[  # noqa: A002 - the argument's public name
+            bool, Field(description="Take every pending episode, only when the user asked.")
+        ] = False,
         brain: _Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
-        from brainwiki.consolidate import packet_text, prepare
+        from brainwiki.consolidate import nothing_message, packet_text, prepare
 
         engine = state.engine(brain)
-        packet = prepare(engine, topic=topic, max_episodes=max_episodes)
+        packet = prepare(
+            engine,
+            topic=topic,
+            max_episodes=max_episodes,
+            agents=list(agents),
+            unowned=unowned,
+            all=all,
+        )
         if packet is None:
-            return _result("Nothing to consolidate: no pending episodes.", {"episodes": 0})
+            return _result(nothing_message(engine), {"episodes": 0})
         summary = {
             "episodes": len(packet["episodes"]),
             "pending": packet["pending"],
@@ -610,29 +648,34 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             idempotent_hint=False,
             open_world_hint=False,
         ),
-        description="Move the episodes you folded into notes (or found nothing durable in) from "
-        "the inbox to the archive, as one run the user can undo.",
+        description="Archive the episodes you consolidated, with what came of each: the pattern "
+        "and the notes it changed (each must cite the episode in bw-sources), or skip with a "
+        "reason. One run the user can undo.",
     )
     @guard
     def brain_consolidate_done(
         episodes: Annotated[
-            list[str],
+            list[ConsolidateOutcome | str],
             Field(
                 min_length=1,
                 max_length=200,
-                description="Episode paths (inbox/...) or ids, as brain_consolidate_prepare "
-                "listed them.",
+                description="One outcome per episode ({episode, pattern, notes} or {episode, "
+                "pattern: skip, reason}); a plain path or id records no outcome.",
             ),
         ],
         brain: _Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
-        from brainwiki.consolidate import done
+        from brainwiki.consolidate import Outcome, done
 
         engine = state.engine(brain)
-        record = done(engine, list(episodes), agent=state.host)
+        outcomes: list[Outcome | str] = [
+            e if isinstance(e, str) else Outcome(e.episode, e.pattern, list(e.notes), e.reason)
+            for e in episodes
+        ]
+        record = done(engine, outcomes, agent=state.host)
         archived = [c.final_path for c in record.files if c.moved_to]
-        text = f"{record.run}: archived {len(archived)} episode(s) (undo: brain undo {record.run})"
+        text = f"{record.run}: {record.summary} (undo: brain undo {record.run})"
         return _result(text, {"run": record.run, "archived": archived})
 
     # -- origin and harvest ---------------------------------------------
@@ -791,14 +834,16 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
     @mcp.prompt(
         name="consolidate",
         title="Consolidate the brain's inbox",
-        description="Fold the pending episodes into notes by editing them directly.",
+        description="Consolidate your pending episodes into notes by editing them directly.",
     )
     def consolidate_prompt() -> str:
         return (
-            "Consolidate my brain's inbox. Call brain_consolidate_prepare and follow its guidance: edit "
-            "or create notes, run brain_validate on the files you changed, then call "
-            "brain_consolidate_done with the episodes you handled. Repeat while episodes remain pending, "
-            "then tell me in a few lines what changed (notes created or updated, episodes skipped)."
+            "Consolidate my brain's inbox. Call brain_consolidate_prepare and follow its guidance: "
+            "give each of your episodes a pattern, edit or create notes that cite it, run "
+            "brain_validate on the files you changed, then call brain_consolidate_done with what came "
+            "of each episode. Repeat while your episodes remain pending, then tell me in a few lines "
+            "what changed (notes created or updated, episodes skipped) and whose episodes are still "
+            "waiting."
         )
 
     @mcp.prompt(

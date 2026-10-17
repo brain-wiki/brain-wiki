@@ -9,7 +9,7 @@ source: "docs/proposal/episode-lifecycle.md#10-plan"
 
 | Phase | Content |
 |---|---|
-| 1 | Capture: agents only, through MCP; `brain log`, the `episodes` capability, `brain import --to-episodes`, and `brain import --from` removed; `bw-agent` always the caller; hand-written episode files unowned; the `pattern` hint; import guidance in the skill |
+| 1 | Capture: agents only, through MCP; `brain log`, the `episodes` capability, `brain import --to-episodes`, and `brain import --from` removed; `bw-agent` always the caller; the `pattern` hint; import guidance in the skill |
 | 2 | Scope and patterns: `--prepare` by owner, with `agents`, `unowned`, and `all` for when the user asks; outcomes and the `bw-sources` check in `--done`; the guidance rewrite, `reports/consolidation.md`, pending episodes per agent in orientation and doctor; harvest files sessions directly (session URLs, `brain_harvest_done`, session URLs in `brain origin`; `brain harvest --apply`, `--raw`, and `--distill` removed) |
 | 3 | Scheduled consolidation for Claude Code: unattended mode, `brain schedule add consolidate`, checks before starting, failure reporting in orientation and doctor |
 | 4 | Other hosts as their unattended modes are verified |

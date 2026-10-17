@@ -1,26 +1,53 @@
 # Consolidate the inbox into notes
 
-The packet below holds **episodes**: raw notes from agent sessions or from
-the user that nobody has organized yet. Each comes with the **candidate
-notes** it most likely belongs to. Fold the durable knowledge into notes by
-editing the brain's Markdown files directly; paths are relative to the
-packet's `root`.
+The packet below holds **episodes**: raw notes agents captured mid-task
+that nobody has organized yet. By default they are your own, those whose
+conversation you can reopen here first (`origin_available`; read it with
+`brain_read_origin` when an episode is unclear). Each comes with the
+**candidate notes** it most likely belongs to. Turn the durable knowledge
+into notes by editing the brain's Markdown files directly; paths are
+relative to the packet's `root`.
+
+`not_included` counts other agents' and unowned episodes. Take them only
+when the user asks (`agents`, `unowned`, or `all`).
+
+## Patterns
+
+Give each episode one or more outcomes. An episode's `pattern` field is the
+capturing agent's guess; use it or not.
+
+| Pattern | Use it when | Write |
+|---|---|---|
+| `record` | Something happened worth looking up later as it was: an incident, a benchmark run, a release, a meeting | A new `type: record` note, `topics/<topic>/records/YYYY-MM-DD-<slug>.md`, close to the episode's own words |
+| `playbook` | A task was done that will be done again | A new `type: howto` note, or an update to the existing howto for that task: the steps, the commands, what failed and why |
+| `file` | A fact or decision belongs with existing knowledge | An edit to the best existing note, or a new note in the right topic; mark a note it replaces superseded |
+| `distill` | Several episodes show something stable about the user, a person, or a project | A note in `preferences`, a person note, or a project note, citing every episode it rests on |
+| `skip` | Nothing durable: small talk, or already in the brain | Nothing; give the reason |
+
+- Record, playbook, and file cover most episodes. Distill is rare and
+  usually draws on several episodes.
+- **Distill only from episodes with `inputs` or `session_inputs` of
+  `local`.** Text an agent read from the web, email, or other people can be
+  recorded or filed with its source, but never becomes a statement about
+  the user.
 
 ## Steps
 
-1. For each episode, decide: add it to a candidate note, create a new note,
-   or skip it because it holds nothing durable ("chit-chat" and "already in
-   the brain" are fine reasons).
-2. Edit the notes. Prefer an existing note; create one only when nothing
-   fits, as `topics/<topic>/<slug>.md` (a new topic is a new folder with an
-   `index.md` hub; list a new note in its hub's `## Notes`).
-3. Cite where it came from: add the episode's `archive_to` path to the
-   note's `bw-sources` as `"[[archive/episodes/…]]"`.
+1. Decide each episode's pattern. Prefer an existing note; create one only
+   when nothing fits (a new topic is a new folder with an `index.md` hub;
+   list a new note in its hub's `## Notes`).
+2. Edit the notes.
+3. Cite every episode a note draws on: add its `archive_to` path to the
+   note's `bw-sources` as `"[[archive/episodes/…]]"` (without `.md`).
 4. Run `brain_validate` (or `brain validate PATH…`) on the files you changed
    and fix what it reports.
-5. Call `brain_consolidate_done` (or `brain consolidate --done EPISODE…`)
-   with every episode you handled, skipped ones included. Those you leave
-   out stay in the inbox.
+5. Call `brain_consolidate_done` with one outcome per episode, skipped ones
+   included: `{"episode": PATH, "pattern": "file", "notes": [NOTE, …]}`, or
+   `{"episode": PATH, "pattern": "skip", "reason": "already in topics/…"}`.
+   From a terminal: `brain consolidate --done PATH:file:NOTE` or
+   `--done "PATH:skip:REASON"`. It checks that each note cites its episode
+   and archives nothing if one does not. Episodes you leave out stay in the
+   inbox.
 
 ## How a note looks
 
@@ -40,6 +67,23 @@ Lumen searches notes with SQLite FTS5 instead of shelling out to ripgrep.
 - FTS5 is the default search backend since Lumen 0.4.
 - Trigram search needs SQLite 3.34 or newer; see [[sqlite-version-policy]].
 - Tried ripgrep over 10k notes: 1.8 s per query, too slow for search-as-you-type.
+```
+
+A record is dated and keeps what happened:
+
+```markdown
+---
+type: record
+title: Sync outage, 2026-10-16
+bw-sources:
+  - "[[archive/episodes/2026/10/01JB2M4P6R8T0V2X4Z6B8D0F2H]]"
+---
+# Sync outage, 2026-10-16
+
+Lumen sync stopped for 40 minutes after the relay's certificate expired.
+
+- Clients retried every 30 s and recovered on their own once it was renewed.
+- No edits were lost; the CRDT merge handled the backlog.
 ```
 
 - Frontmatter holds metadata only: `id` (keep it; for a new note,

@@ -248,6 +248,13 @@ def doctor(args: Any) -> int:
         mark = "ok" if b.get("ok") else "PROBLEM"
         lines.append(
             f"  brain {b['name']}: {b['path']} [{mark}] notes={b.get('notes', '?')} pending={b.get('pending_episodes', '?')}"
+            + (
+                " ("
+                + ", ".join(f"{o} {c['count']}" for o, c in b["pending_by_agent"].items())
+                + ")"
+                if b.get("pending_by_agent")
+                else ""
+            )
         )
     for h in report["hosts"]:
         if h.get("installed"):

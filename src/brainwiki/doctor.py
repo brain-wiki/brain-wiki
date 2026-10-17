@@ -106,16 +106,47 @@ def _index_summary(brain: Any) -> dict[str, Any]:
     """Roll back interrupted runs, then count notes from the index the way `brain brains` and
     the briefing do: a topic's hub is its index, not one of its notes (index-and-search.md §8)."""
     from brainwiki.engine import Engine
+    from brainwiki.index import pending_by_agent
     from brainwiki.runs import list_records, recover
 
     with Engine(brain) as engine:
         recovered = recover(engine)
         engine.scan()
         notes = engine.db.execute("SELECT COUNT(*) FROM nodes WHERE kind = 'note'").fetchone()[0]
+        waiting = pending_by_agent(engine)
+        stale_days = engine.manifest.lint.stale_inbox_days
     uncommitted = [
         {"run": r.run, "error": r.git_error} for r in list_records(brain.key) if r.git_error
     ][:10]
-    return {"notes": notes, "recovered_runs": recovered, "uncommitted_runs": uncommitted}
+    return {
+        "notes": notes,
+        "recovered_runs": recovered,
+        "uncommitted_runs": uncommitted,
+        "pending_by_agent": waiting,
+        "stale_inbox_days": stale_days,
+    }
+
+
+def _waiting_problems(name: str, summary: dict[str, Any]) -> list[dict[str, Any]]:
+    """An agent whose oldest pending episode is older than `[lint] stale_inbox_days`: it may
+    never consolidate, and another agent takes its episodes only when the user asks."""
+    from datetime import UTC, datetime, timedelta
+
+    days = summary.get("stale_inbox_days", 14)
+    cutoff = (datetime.now(UTC) - timedelta(days=days)).date().isoformat()
+    return [
+        {
+            "code": "stale_episodes",
+            "severity": "info",
+            "message": f"brain {name!r}: {owner} has {c['count']} pending episode"
+            f"{'s' if c['count'] != 1 else ''}, the oldest from {c['oldest']}",
+            "fix": f'ask an agent to consolidate them ("take {owner}\'s episodes")'
+            if owner != "unowned"
+            else 'ask an agent to consolidate them ("fold in the unowned episodes")',
+        }
+        for owner, c in (summary.get("pending_by_agent") or {}).items()
+        if c["oldest"] and c["oldest"] < cutoff
+    ]
 
 
 def _stale_references(user: UserConfig) -> list[dict[str, Any]]:
@@ -171,6 +202,7 @@ def run_doctor() -> dict[str, Any]:
                     + (f"; left alone: {', '.join(item['left'])}" if item.get("left") else ""),
                 }
             )
+        report["problems"] += _waiting_problems(name, summary)
         for item in summary.get("uncommitted_runs", []):
             report["problems"].append(
                 {

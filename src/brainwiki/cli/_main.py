@@ -62,7 +62,7 @@ class _Call:
 
 def _call(ctx: typer.Context, command: str, **values: Any) -> _Call:
     """The handler's namespace: `values`, plus the global options from every level of the
-    command line, the one nearest the command winning (`brain --brain a log --brain b`)."""
+    command line, the one nearest the command winning (`brain --brain a search x --brain b`)."""
     chain = []
     level: Any = ctx
     while level is not None:
@@ -715,12 +715,27 @@ def _consolidate(
         str | None,
         typer.Option("--out", help="with --prepare, write {guidance, packet} as JSON to this file"),
     ] = None,
+    agent: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--agent",
+            metavar="HOST",
+            help="with --prepare, take this agent's episodes (repeatable)",
+        ),
+    ] = None,
+    unowned: Annotated[
+        bool, typer.Option("--unowned", help="with --prepare, take episodes no agent owns")
+    ] = False,
+    all_: Annotated[
+        bool, typer.Option("--all", help="with --prepare, take every pending episode")
+    ] = False,
     done: Annotated[
         list[str] | None,
         typer.Option(
             "--done",
-            metavar="EPISODE",
-            help="archive this consolidated episode (path or id; repeatable)",
+            metavar="EPISODE[:PATTERN:NOTE]",
+            help="archive this episode; PATTERN is record, playbook, file, or distill with the "
+            "note it changed, or skip:REASON (repeatable)",
         ),
     ] = None,
     brain: _Brain = None,
@@ -734,6 +749,9 @@ def _consolidate(
         max_episodes=max_episodes,
         prepare=prepare,
         out=out,
+        agent=list(agent or []),
+        unowned=unowned,
+        all=all_,
         done=list(done or []),
     )
 

@@ -37,6 +37,7 @@ Generated from `docs/design/write-path.md`.
   - [[write-path-44-archiving-handled-episodes]]: Archiving handled episodes
   - [[write-path-45-guidance]]: Guidance
   - [[write-path-46-origin-context]]: Origin context
+  - [[write-path-47-who-the-inbox-is-waiting-on]]: Who the inbox is waiting on
 - [[write-path-5-committing-direct-edits]]: Committing direct edits
   - [[write-path-51-brain-commit]]: `brain commit`
   - [[write-path-52-brain-schedule]]: `brain schedule`

@@ -15,6 +15,23 @@ them ([write path](docs/design/write-path.md)).
 - **A consolidation hint.** `brain_log_episode` takes an optional `pattern`
   (`record`, `playbook`, `file`, `distill`), stored as `bw-pattern` and shown
   in the consolidation packet.
+- **Each agent consolidates its own episodes.** `brain consolidate
+  --prepare` (MCP `brain_consolidate_prepare`) gives a host its own
+  episodes, those whose conversation is on this machine first. Other
+  agents' episodes, or unowned ones, come only when the user asks:
+  `--agent HOST`, `--unowned`, `--all` (MCP `agents`, `unowned`, `all`).
+  The packet adds `scope`, `not_included`, each episode's `pattern` hint,
+  and `session_inputs`, brain-wiki's own reading of the transcript.
+- **Consolidation patterns.** The guidance is built around record,
+  playbook, file, distill, and skip. `brain consolidate --done` takes
+  `EPISODE:PATTERN:NOTE` or `EPISODE:skip:REASON` (MCP: `{episode, pattern,
+  notes}` or `{episode, pattern: "skip", reason}`), checks that each note
+  cites its episode in `bw-sources`, and archives nothing otherwise. The
+  `log.md` entry lists each episode's outcome.
+- **Who the inbox is waiting on.** Orientation shows pending episodes per
+  agent and each agent's last consolidation; `brain doctor` reports them,
+  and an owner whose oldest episode is past `[lint] stale_inbox_days` as
+  `stale_episodes`. New report: `reports/consolidation.md`.
 - **Importing documents is agent work.** `brain import --to-episodes` and
   `brain import --from HOST` are removed. Ask an agent to file documents or
   its memory files into notes; the `brain` skill says how. `--overlay` and

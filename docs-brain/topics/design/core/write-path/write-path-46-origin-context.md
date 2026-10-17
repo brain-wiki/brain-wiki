@@ -17,8 +17,8 @@ this device, the original conversation can be read:
 | CLI | `brain origin <episode> [--turns A-B]` prints the same window. |
 
 - Origin is available when the episode records `session` and
-  `origin_turns`, brain-wiki has a session reader for its `agent`, and its
-  `device` is this one.
+  `origin_turns`, brain-wiki has a session reader for its `agent`, its
+  `device` is this one or unset, and the reader finds the transcript.
 - The default window is the episode's turn range, widened to about 20
   turns. A window never exceeds 60 turns.
 - The window is normalized as harvest normalizes turns. Tool output bodies

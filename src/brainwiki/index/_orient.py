@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from brainwiki.format import parse_rules
 from brainwiki.ids import is_ulid, ulid_datetime
+from brainwiki.index._inbox import last_consolidations, pending_by_agent
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
@@ -264,9 +265,39 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
             f"{count} rule{'s' if count != 1 else ''} awaiting the user's confirmation: "
             + ", ".join(f"`brain rules accept {r}`" for r in inbox["rule_proposals"][:3])
         )
-    if inbox["pending"] >= 20 or inbox["oldest_days"] > 7:
+    waiting = pending_by_agent(engine) if inbox["pending"] else {}
+    me = engine.host if engine.host not in (None, "owner") else None
+    if waiting:
         inbox_lines.append(
-            "Consider consolidating (brain_consolidate_prepare) when the user agrees."
+            "By agent: "
+            + ", ".join(
+                f"{owner}{' (you)' if owner == me else ''} {c['count']}"
+                + (f" (oldest {c['oldest']})" if c["oldest"] else "")
+                for owner, c in waiting.items()
+            )
+        )
+    last = last_consolidations(engine)
+    if last:
+        inbox_lines.append(
+            "Last consolidated: "
+            + "; ".join(
+                f"{agent} {run['at'][:10]} ({run['summary']})"
+                for agent, run in sorted(last.items(), key=lambda kv: kv[1]["at"], reverse=True)[:3]
+            )
+        )
+    mine = waiting.get(me) if me else {"count": inbox["pending"], "oldest": None}
+    if mine and (
+        mine["count"] >= 20
+        or (me is None and inbox["oldest_days"] > 7)
+        or (
+            mine["oldest"]
+            and mine["oldest"] < (datetime.now(UTC) - timedelta(days=7)).strftime("%Y-%m-%d")
+        )
+    ):
+        inbox_lines.append(
+            "Consider consolidating "
+            + ("your episodes " if me else "")
+            + "(brain_consolidate_prepare) when the user agrees."
         )
     inbox_lines += extra_lines or []
     howto = ["## How to query", *_query_examples(info, topics)]
@@ -340,6 +371,7 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         "contents": {k: v for k, v in info.items() if k != "span"}
         | {"span": list(info["span"]) if info["span"] else None},
         "pending_episodes": inbox["pending"],
+        "pending_by_agent": waiting,
         "open_proposals": len(inbox["rule_proposals"]),
         "notes": info["notes"],
     }

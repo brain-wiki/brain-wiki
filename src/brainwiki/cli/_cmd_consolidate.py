@@ -13,30 +13,44 @@ from brainwiki.errors import UsageError
 
 def consolidate(args: Any) -> int:
     """`--prepare` gathers pending episodes for the agent; `--done` archives the ones it handled."""
-    from brainwiki.consolidate import done, guidance, packet_text, prepare
+    from brainwiki.consolidate import (
+        done,
+        guidance,
+        nothing_message,
+        packet_text,
+        parse_outcome,
+        prepare,
+    )
 
     if args.prepare == bool(args.done):
         raise UsageError("give --prepare, or --done EPISODE (repeatable)")
-    if args.out and not args.prepare:
-        raise UsageError("--out goes with --prepare")
+    if not args.prepare and (args.out or args.agent or args.unowned or args.all):
+        raise UsageError("--out, --agent, --unowned, and --all go with --prepare")
     with open_engine(args.brain, host=getattr(args, "as_host", None)) as engine:
         if args.done:
             from brainwiki.cli._cmd_runs import warn_git
 
-            record = done(engine, args.done)
+            record = done(engine, [parse_outcome(d) for d in args.done])
             warn_git(record)
             archived = [c.final_path for c in record.files if c.moved_to]
             emit(
                 args,
                 {"run": record.run, "archived": archived},
-                f"Archived {len(archived)} episode(s) in {record.run} "
+                f"{record.summary[:1].upper()}{record.summary[1:]} in {record.run} "
                 f"(undo: brain undo {record.run})",
             )
             return 0
-        packet = prepare(engine, topic=args.topic, max_episodes=args.max_episodes)
-    if packet is None:
-        emit(args, {"episodes": []}, "Nothing to consolidate: no pending episodes.")
-        return 0
+        packet = prepare(
+            engine,
+            topic=args.topic,
+            max_episodes=args.max_episodes,
+            agents=args.agent,
+            unowned=args.unowned,
+            all=args.all,
+        )
+        if packet is None:
+            emit(args, {"episodes": []}, nothing_message(engine))
+            return 0
     if args.out:
         document = {"guidance": guidance(), "packet": packet}
         Path(args.out).write_text(json.dumps(document, ensure_ascii=False, indent=1) + "\n")

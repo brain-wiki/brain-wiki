@@ -16,7 +16,8 @@ into prompts.
 |---|---|
 | `reports/index.md` | Counts, last consolidation, lint totals, links to the other reports |
 | `reports/stale.md` | Active notes that link to superseded or archived notes |
-| `reports/inbox.md` | Pending episodes by agent and age, and open proposals |
+| `reports/inbox.md` | Pending episodes by owner and age, and open proposals |
+| `reports/consolidation.md` | The last 20 consolidation runs from `log.md`, newest first: agent, summary, and each episode's pattern and notes |
 | `reports/orphans.md` | Notes no other note links to |
 | `reports/lint.md` | The latest lint results |
 

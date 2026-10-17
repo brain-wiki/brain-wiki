@@ -32,7 +32,7 @@ The commands, in the order `brain --help` lists them:
 | `brain rules add TEXT [--quote Q] [--replaces ID] \| list \| accept ID \| reject ID` | Manage standing rules |
 | `brain mv SRC DST [--dry-run]` | Move a note or topic folder, rewriting links |
 | `brain validate [PATH…]` | Check the frontmatter of notes you created or edited |
-| `brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE]`, `brain consolidate --done EPISODE…` | Gather pending episodes, then archive the ones handled |
+| `brain consolidate --prepare [--topic T] [--max-episodes N] [--agent HOST] [--unowned] [--all] [--out FILE]`, `brain consolidate --done EPISODE[:PATTERN:NOTE]…` | Gather pending episodes, then archive the ones handled with what came of each |
 | `brain review list \| show ID \| accept ID \| reject ID` | Agents' rule proposals waiting for you |
 | `brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run]` | Commit direct edits to git and sync with origin |
 | `brain schedule [list] \| add commit [--every 15m] [--push] [--dry-run] \| remove commit [--dry-run]` | OS jobs that run `brain commit` |
@@ -99,8 +99,11 @@ The commands, in the order `brain --help` lists them:
   and the `AGENTS.md` topic table.
 - `brain validate` checks the Markdown files git sees as changed, or every
   note in a brain without git. It exits 1 on problems.
-- `brain consolidate --done` archives the episodes as one undoable run.
-  Agents use `brain_consolidate_prepare` and `brain_consolidate_done`.
+- `brain consolidate --done` takes `EPISODE:PATTERN:NOTE` (pattern
+  `record`, `playbook`, `file`, or `distill`) or `"EPISODE:skip:REASON"`,
+  repeated for each outcome, checks that each note cites its episode in
+  `bw-sources`, and archives the episodes as one undoable run. Agents use
+  `brain_consolidate_prepare` and `brain_consolidate_done`.
 
 ### Commits and schedules
 
@@ -183,8 +186,8 @@ may.
 | `brain_validate` | Check the frontmatter of notes the agent changed | — |
 | `brain_log_episode` | Record a learning in the inbox | — |
 | `brain_propose_rule` | Propose a standing rule for you to confirm | `propose_rules` |
-| `brain_consolidate_prepare` | Pending episodes with candidate notes and guidance | — |
-| `brain_consolidate_done` | Archive the episodes folded into notes | `edit` |
+| `brain_consolidate_prepare` | The agent's own pending episodes (others' only when you ask) with candidate notes and guidance | — |
+| `brain_consolidate_done` | Archive the consolidated episodes with what came of each | `edit` |
 | `brain_read_origin` | Read the conversation behind an episode | `read_origin = true` |
 | `brain_harvest_prepare`, `brain_harvest_apply` | Turn this agent's past sessions into episodes | `harvest` |
 

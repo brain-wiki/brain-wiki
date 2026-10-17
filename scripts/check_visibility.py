@@ -37,6 +37,7 @@ ALLOWED = {
     ("brainwiki.mcp._server", "RuleConfirmation"),
     ("brainwiki.mcp._server", "HarvestClaim"),
     ("brainwiki.mcp._server", "HarvestEntry"),
+    ("brainwiki.mcp._server", "ConsolidateOutcome"),
 }
 CONVENTIONAL = {"log", "logger"}
 

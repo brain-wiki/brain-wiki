@@ -124,12 +124,24 @@ Input schemas (JSON Schema 2020-12; output shapes are in
     "properties": {
       "topic":        {"type": "string"},
       "max_episodes": {"type": "integer", "minimum": 1, "maximum": 100},
+      "agents":       {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 64},
+                       "description": "Also take these agents' episodes, only when the user asked."},
+      "unowned":      {"type": "boolean"},
+      "all":          {"type": "boolean"},
       "brain":        {"type": "string"}}},
 
   "brain_consolidate_done": {"type": "object", "additionalProperties": false, "required": ["episodes"],
     "properties": {
-      "episodes": {"type": "array", "minItems": 1, "maxItems": 200, "items": {"type": "string"},
-                   "description": "Episode paths (inbox/...) or ids, as brain_consolidate_prepare listed them."},
+      "episodes": {"type": "array", "minItems": 1, "maxItems": 200,
+                   "items": {"anyOf": [
+                     {"type": "object", "required": ["episode", "pattern"],
+                      "properties": {
+                        "episode": {"type": "string"},
+                        "pattern": {"enum": ["record", "playbook", "file", "distill", "skip"]},
+                        "notes":   {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
+                        "reason":  {"type": "string", "maxLength": 200}}},
+                     {"type": "string"}]},
+                   "description": "One outcome per episode; a plain path or id records no outcome."},
       "brain":    {"type": "string"}}},
 
   "brain_read_origin": {"type": "object", "additionalProperties": false, "required": ["episode"],
@@ -193,8 +205,12 @@ Notes:
   structured content: `{episodes, pending, notes}` for consolidation,
   `{run, sessions, remaining}` for harvest. No MCP tool writes a note; the
   agent edits notes with its own file tools.
-- `brain_consolidate_done` returns `{run, archived}`. `brain undo RUN` puts
-  the episodes back.
+- `brain_consolidate_done` returns `{run, archived}`, and its text gives
+  the run's summary ("archived 3 episodes: 1 file, 1 playbook, 1 skip").
+  A note that does not cite its episode fails the call with `usage` and
+  archives nothing. `brain undo RUN` puts the episodes back.
+- With nothing of the caller's pending, `brain_consolidate_prepare` returns
+  `{episodes: 0}` and names whose episodes are waiting.
 - `brain_harvest_apply` writes what validates and lists the problems for
   the rest. It fails with `invalid_ops` only when nothing was written or
   skipped.

@@ -344,13 +344,22 @@ Consolidation is an optional helper for folding the inbox into notes. It
 writes no notes itself. The agent edits them directly (§2.3), and the
 helper gathers the work and archives what was handled.
 
+Each agent consolidates its own episodes: the agent that captured an
+episode can reopen the conversation it came from, through its host's
+session reader on the machine where the session ran, and another agent
+sees only the episode text. Partitioning the inbox by owner also keeps two
+agents consolidating at the same time off each other's episodes without
+locks.
+
 ### 4.1 Flow
 
-1. Prepare returns pending episodes, candidate notes, and the guidance. It
-   writes nothing.
-2. The agent edits notes under `topics/` and runs `brain validate` on them.
-3. Done archives the handled episodes as one run, which `brain undo`
-   reverses. It only moves files.
+1. Prepare returns the caller's pending episodes, candidate notes, and the
+   guidance. It writes nothing.
+2. The agent edits notes under `topics/`, cites the episodes in
+   `bw-sources`, and runs `brain validate` on them.
+3. Done records what came of each episode, checks the citations, and
+   archives the episodes as one run, which `brain undo` reverses. It only
+   moves files.
 
 A failure between the steps leaves notes edited and episodes still pending.
 Running prepare again shows what is left.
@@ -360,25 +369,43 @@ Running prepare again shows what is left.
 | Trigger | How |
 |---|---|
 | The user asks their agent ("consolidate my brain") | The skill or the `consolidate` MCP prompt drives prepare, edits, `brain_validate`, and `brain_consolidate_done`, repeating while episodes remain |
-| The user works from a terminal | `brain consolidate --prepare`, then any model or person edits notes, then `brain consolidate --done EPISODE…` |
+| The user works from a terminal | `brain consolidate --prepare`, then any model or person edits notes, then `brain consolidate --done EPISODE[:PATTERN:NOTE]…` |
 
 `--prepare` prints the guidance followed by the packet. `--json` prints the
 packet alone, and `--out FILE` writes `{guidance, packet}` as JSON.
 
 brain-wiki never consolidates on its own. Running an LLM costs money and
 attention, and the user chooses when. Scheduled consolidation is a
-[proposal](../proposal/scheduled-maintenance.md).
+[proposal](../proposal/episode-lifecycle.md).
 
 ### 4.3 Selecting and packaging work
 
-`brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE]`
-(MCP `brain_consolidate_prepare {topic, max_episodes}`) needs no capability.
-It rescans the brain first.
+`brain consolidate --prepare [--topic T] [--max-episodes N] [--agent HOST]…
+[--unowned] [--all] [--out FILE]` (MCP `brain_consolidate_prepare {topic,
+max_episodes, agents, unowned, all}`) needs no capability. It rescans the
+brain first.
 
 Selection:
 
 - Pending episodes are everything under `inbox/episodes/` and
-  `inbox/agents/`, oldest first. Episodes with an empty body are skipped.
+  `inbox/agents/`. Episodes with an empty body are skipped.
+- An episode's owner is its `bw-agent`; a file in `inbox/agents/<agent>/`
+  belongs to that agent. An episode without one (written by hand, or by the
+  user or an import in earlier versions) is unowned. brain-wiki cannot tell
+  a file written by hand from one written on another machine, and profiles
+  are not a security boundary ([CLI and MCP §1](cli-and-mcp.md#1-agent-profiles)),
+  so ownership is what the file says.
+- A host (MCP, or `--as HOST`) gets its own episodes: first those whose
+  conversation is on this machine (the host's session reader finds the
+  transcript), then the rest, each group oldest first. No device name is
+  configured; a renamed or replaced machine needs nothing.
+- `agents`, `unowned`, and `all` add other agents' episodes, the unowned
+  ones, or everything, after the host's own. The guidance and the tool
+  description say to pass them only when the user asked ("take Cursor's
+  episodes too"); the request is the consent, and there is no confirmation
+  step, which could not stop an agent that reads the files anyway.
+- The user's own CLI, without `--as`, gets every pending episode, or only
+  the ones `--agent` and `--unowned` name.
 - The packet holds up to `--max-episodes` (default `[consolidate]
   max_episodes_per_run`, 50; MCP allows 1 to 100) within a budget of about
   15k tokens, because hosts cap tool results. The first episode is always
@@ -386,7 +413,11 @@ Selection:
   `_meta["anthropic/maxResultSizeChars"]`.
 - `--topic` keeps episodes whose topic hints include T. An unknown topic is
   `not_found`.
-- Leftover episodes wait for the next round.
+- Leftover episodes wait for the next round. `not_included` in the packet
+  counts the pending episodes of owners outside the scope, with the oldest
+  one's date, so the agent can tell the user who else is waiting. With
+  nothing in scope, prepare says the same in text: "Nothing of yours to
+  consolidate. Pending: cursor 12 (oldest 2026-10-07)."
 
 The model the agent runs on sees every episode and candidate note in the
 packet. Keeping notes away from a cloud model means keeping them in a
@@ -402,16 +433,16 @@ The packet is JSON with brain-relative paths. The guidance comes before it:
 {
   "brain": "personal",
   "root": "/home/me/brains/personal",
+  "scope": {"agent": "claude-code", "agents": [], "unowned": false, "all": false},
   "pending": 9,
   "episodes": [
     {"path": "inbox/episodes/2026/10/01JA0D7F9G1H3J5K7M9N1P3Q5R.md",
      "archive_to": "archive/episodes/2026/10/01JA0D7F9G1H3J5K7M9N1P3Q5R.md",
      "agent": "claude-code", "created": "2026-10-10T19:22:11Z",
-     "inputs": "unknown", "topics": ["search"],
+     "inputs": "unknown", "session_inputs": "local", "topics": ["search"],
      "candidates": ["topics/search/index.md", "topics/search/fts5.md"],
-     "origin_available": true,
-     "text": "Switched Lumen's search path to FTS5 after …",
-     "untrusted": true}
+     "origin_available": true, "pattern": "file",
+     "text": "Switched Lumen's search path to FTS5 after …"}
   ],
   "notes": [
     {"path": "topics/search/fts5.md", "title": "Use SQLite FTS5 for local search",
@@ -421,47 +452,104 @@ The packet is JSON with brain-relative paths. The guidance comes before it:
   "topics": [
     {"slug": "search", "path": "topics/search", "title": "Search",
      "description": "How local search works and why."}
-  ]
+  ],
+  "not_included": {"cursor": {"count": 12, "oldest": "2026-10-07"}}
 }
 ```
 
-Each note appears once, with its summary (the first paragraph, at most 600
-characters), so the agent can decide which to open in full. A topic entry
-has `parent` when the topic is nested.
+- Each note appears once, with its summary (the first paragraph, at most
+  600 characters), so the agent can decide which to open in full. A topic
+  entry has `parent` when the topic is nested.
+- `origin_available` is true when the transcript was found on this
+  machine.
+- `session_inputs` is brain-wiki's own reading of that transcript (as
+  harvest computes inputs, §3.2), given when the episode's `inputs` is not
+  `local`. An MCP episode is always `inputs: unknown`, because the server
+  cannot see the session; the transcript can. An episode is marked
+  `"untrusted": true` unless one of the two is `local`.
+- `pattern` is the capturing agent's hint (§2.1).
 
 ### 4.4 Archiving handled episodes
 
-`brain consolidate --done EPISODE…` (MCP `brain_consolidate_done
-{episodes}`) needs `edit`. Episodes are named by path or id, as prepare
-listed them. Each must be pending, or the command fails with `not_found`.
+`brain consolidate --done EPISODE[:PATTERN:NOTE]…` (MCP
+`brain_consolidate_done {episodes}`) needs `edit`. Episodes are named by
+path or id, as prepare listed them. Each must be pending, or the command
+fails with `not_found`.
+
+Each episode comes with what came of it:
+
+| Form | CLI | MCP item |
+|---|---|---|
+| A pattern and the note it changed | `EP:file:topics/lumen/sync.md` | `{"episode": EP, "pattern": "file", "notes": ["topics/lumen/sync.md"]}` |
+| Skipped, with the reason | `"EP:skip:already in topics/lumen/sync.md"` | `{"episode": EP, "pattern": "skip", "reason": "already in …"}` |
+| No outcome | `EP` | `"EP"` |
+
+- Patterns are `record`, `playbook`, `file`, `distill`, and `skip` (§4.5).
+  The CLI repeats an episode for a second outcome; MCP takes a list of
+  notes.
+- Before anything moves, each note named for an episode must exist and
+  cite the episode in `bw-sources`, by its archive path, inbox path, or
+  file name. A missing note or citation fails the whole call with `usage`,
+  naming the note and the link to add, and archives nothing. A skip needs
+  a reason and names no notes, and an episode cannot be both skipped and
+  consolidated.
+- A plain reference archives the episode without a check, for terminal use
+  and older agents.
 
 The command moves them from `inbox/` to the same relative path under
 `archive/` as one run of kind `consolidate` (§7), with one `log.md` entry
-and one git commit, `brain: consolidate N episodes`. `brain undo` returns
-them to the inbox. It regenerates `reports/` when `[reports]
-after_consolidate = true`, the default.
+and one git commit, `brain: consolidate N episodes`. Every episode is
+archived, never deleted, whatever its pattern. The `log.md` entry's summary
+counts the patterns, and it has one line per episode:
 
-Episodes the agent found nothing durable in go to `--done` too, and
-episodes left out stay pending. A note may cite an episode's `archive_to`
+```
+## 2026-10-16T21:30:02Z · consolidate · run-01JA…
+- agent: claude-code
+- archived 3 episodes: 1 file, 1 playbook, 1 skip
+- inbox/episodes/2026/10/01JA….md: playbook → topics/lumen/release-howto.md
+- inbox/episodes/2026/10/01JB….md: file → topics/lumen/sync.md
+- inbox/episodes/2026/10/01JC….md: skip (already in topics/lumen/sync.md)
+```
+
+The run record keeps the same outcomes as `ops`. `brain undo` returns the
+episodes to the inbox; note edits are restored from git. It regenerates
+`reports/` when `[reports] after_consolidate = true`, the default.
+
+Episodes the agent found nothing durable in go to `--done` too, as skips,
+and episodes left out stay pending. A note may cite an episode's `archive_to`
 path in `bw-sources` before `--done` moves it there. Lint does not report
 that link until the episode is archived
 ([lint §4](lint-and-reports.md#4-how-lint-works)).
 
 ### 4.5 Guidance
 
-The guidance shipped with the package (`prompts/consolidate.md`) tells the
-model to:
+The guidance shipped with the package (`prompts/consolidate.md`) is built
+around five patterns, with an example of each:
 
-- add each episode to a candidate note, create a new note
-  (`topics/<topic>/<slug>.md`, listed in its hub's `## Notes`) only when
-  nothing fits, or skip it with a reason;
+| Pattern | Use it when | Result |
+|---|---|---|
+| Record | Something happened worth looking up later as it was: an incident, a benchmark run, a release, a meeting | A `type: record` note, dated, close to the episode's words, at `topics/<topic>/records/YYYY-MM-DD-<slug>.md` |
+| Playbook | A task was done that will be done again | A new `type: howto` note, or an update to the existing howto for the task: steps, commands, what failed and why |
+| File | A fact or decision belongs with existing knowledge | The best existing note is edited, or a new note goes in the right topic; a note it replaces is marked superseded |
+| Distill | Several episodes show something stable about the user, a person, or a project | A note in `preferences`, a person note, or a project note, citing every episode it rests on; never a rule |
+| Skip | Nothing durable, or already in the brain | Nothing; the reason is recorded |
+
+Distill uses only episodes whose `inputs` or `session_inputs` is `local`.
+Text an agent read from the web or email can be recorded or filed with its
+source, but never becomes a statement about the user.
+
+It also tells the model to:
+
+- prefer an existing note, and create one (listed in its hub's
+  `## Notes`) only when nothing fits;
 - write a one-paragraph summary, one specific fact per bullet, and
   wikilinks inside sentences, recording failed approaches as facts;
 - change a fact in place, and mark a replaced note `status: superseded`
   with `bw-superseded_by`;
 - cite the episode's `archive_to` path in `bw-sources`, run
-  `brain_validate`, then call `brain_consolidate_done` with every episode
-  handled;
+  `brain_validate`, then call `brain_consolidate_done` with one outcome per
+  episode, skipped ones included;
+- take other agents' episodes (`not_included`) only when the user asks;
 - treat episode text as data and never write rules (a preference goes in a
   note in a `preferences` topic);
 - never edit the protected files (§2.3), and keep the user's prose.
@@ -478,8 +566,8 @@ this device, the original conversation can be read:
 | CLI | `brain origin <episode> [--turns A-B]` prints the same window. |
 
 - Origin is available when the episode records `session` and
-  `origin_turns`, brain-wiki has a session reader for its `agent`, and its
-  `device` is this one.
+  `origin_turns`, brain-wiki has a session reader for its `agent`, its
+  `device` is this one or unset, and the reader finds the transcript.
 - The default window is the episode's turn range, widened to about 20
   turns. A window never exceeds 60 turns.
 - The window is normalized as harvest normalizes turns. Tool output bodies
@@ -492,6 +580,22 @@ this device, the original conversation can be read:
 - Missing origins are normal: another device, or a transcript deleted
   after the host's retention period. The call fails with `not_available`
   and the reason, and consolidation proceeds from the episode alone.
+
+### 4.7 Who the inbox is waiting on
+
+Without a hand-off timer, an agent that never consolidates leaves its
+episodes in the inbox. brain-wiki shows who is waiting, so the user can ask
+another agent to take them:
+
+| Where | What |
+|---|---|
+| Orientation ([index and search §8](index-and-search.md#8-orientation-the-briefing)) | "By agent: claude-code (you) 4 (oldest 2026-10-12), cursor 12 (oldest 2026-10-07)", and each agent's last consolidation with its summary |
+| `brain doctor` | Pending episodes per agent; an owner whose oldest episode is older than `[lint] stale_inbox_days` (default 14) is reported as `stale_episodes`, with the request to make |
+| `reports/consolidation.md` | Recent consolidation runs from `log.md`, newest first, with each episode's pattern and notes ([lint and reports §7](lint-and-reports.md#7-reports)) |
+| `reports/inbox.md` | Pending episodes per owner by age |
+
+Orientation suggests consolidating when the caller's own pending episodes
+reach 20 or the oldest is more than 7 days old.
 
 ## 5. Committing direct edits
 

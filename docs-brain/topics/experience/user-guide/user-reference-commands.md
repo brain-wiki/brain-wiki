@@ -36,7 +36,7 @@ The commands, in the order `brain --help` lists them:
 | `brain rules add TEXT [--quote Q] [--replaces ID] \| list \| accept ID \| reject ID` | Manage standing rules |
 | `brain mv SRC DST [--dry-run]` | Move a note or topic folder, rewriting links |
 | `brain validate [PATH…]` | Check the frontmatter of notes you created or edited |
-| `brain consolidate --prepare [--topic T] [--max-episodes N] [--out FILE]`, `brain consolidate --done EPISODE…` | Gather pending episodes, then archive the ones handled |
+| `brain consolidate --prepare [--topic T] [--max-episodes N] [--agent HOST] [--unowned] [--all] [--out FILE]`, `brain consolidate --done EPISODE[:PATTERN:NOTE]…` | Gather pending episodes, then archive the ones handled with what came of each |
 | `brain review list \| show ID \| accept ID \| reject ID` | Agents' rule proposals waiting for you |
 | `brain commit [--settle 2m] [--no-fetch] [--push] [--dry-run]` | Commit direct edits to git and sync with origin |
 | `brain schedule [list] \| add commit [--every 15m] [--push] [--dry-run] \| remove commit [--dry-run]` | OS jobs that run `brain commit` |
