@@ -35,6 +35,9 @@ _ENV_VARS = (
     "BRAIN_WIKI_STATE_DIR",
     "BRAIN_WIKI_CACHE_DIR",
     "BRAIN_WIKI_DATA_DIR",
+    # cron starts without the session bus, and git credential helpers that keep the token in
+    # the desktop keyring (gh, libsecret) need it to fetch from and push to a private origin.
+    "DBUS_SESSION_BUS_ADDRESS",
 )
 
 

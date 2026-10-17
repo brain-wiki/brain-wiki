@@ -669,3 +669,15 @@ def test_consolidate_jobs_follow_a_renamed_or_removed_brain(
     assert cron.text.count("--brain renamed") == 2
     assert _jobs.remove_job(open_brain(repo).id)
     assert "brain-wiki" not in cron.text
+
+
+def test_jobs_carry_the_session_bus_for_keyring_credentials(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/1000/bus")
+    job = _jobs.make_job("b-123", "work", "15m", True)
+    assert job.env["DBUS_SESSION_BUS_ADDRESS"] == "unix:path=/run/user/1000/bus"
+    line = _jobs._cron_line(job.cron, job.argv, job.env, Path("/tmp/s.log"))
+    assert _jobs._parse_cron_line(line)[2]["DBUS_SESSION_BUS_ADDRESS"] == (
+        "unix:path=/run/user/1000/bus"
+    )
+    monkeypatch.delenv("DBUS_SESSION_BUS_ADDRESS")
+    assert "DBUS_SESSION_BUS_ADDRESS" not in _jobs.make_job("b-123", "work", "15m", True).env

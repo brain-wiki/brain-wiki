@@ -40,7 +40,12 @@ the job and a rename does not orphan it.
 - The job calls `brain` by the absolute path resolved at install time, and
   carries the `BRAIN_WIKI_CONFIG`, `_STATE_DIR`, `_CACHE_DIR`, and
   `_DATA_DIR` values set then, because cron and launchd start with a
-  minimal environment.
+  minimal environment. It also carries `DBUS_SESSION_BUS_ADDRESS` when set:
+  git credential helpers that keep the token in the desktop keyring (`gh`,
+  libsecret) need the session bus to fetch from or push to a private
+  origin. That works while the user's session runs (systemd lingering keeps
+  it up after logout, and the keyring must be unlocked); a fetch or push
+  that fails is reported by `brain doctor` after a day.
 - `--every` (default `15m`) takes minutes that divide an hour or hours that
   divide a day (`5m`, `10m`, `15m`, `20m`, `30m`, `1h`, `2h`, `3h`, `4h`,
   `6h`, `8h`, `12h`, `24h`), so cron and launchd agree.

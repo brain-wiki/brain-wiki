@@ -22,7 +22,7 @@ _BRAIN_TOML_TEMPLATE = """\
 format = {format}
 id = "{id}"
 name = "{name}"
-# description = "What this brain is for, in one line (shown by `brain brains`)"
+# description = "What this brain is for, in one line (shown to agents by brain_list)"
 
 [agents.default]           # what agents without their own profile may write
 write       = ["edit"]

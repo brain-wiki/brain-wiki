@@ -72,7 +72,7 @@ def brains(args: Any) -> int:
 
         host = getattr(args, "as_host", None)
         result = list_brains(host, explicit=args.brain)
-        emit(args, result, format_brain_list(result, owner=host is None))
+        emit(args, result, format_brain_list(result, owner=host is None, descriptions=False))
         return 0
     if action == "add":
         if len(rest) != 2:

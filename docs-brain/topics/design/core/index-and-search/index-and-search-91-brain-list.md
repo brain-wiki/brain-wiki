@@ -25,3 +25,6 @@ each for?" for the calling host.
   not listed.
 - For the owner, each entry also has `default`, whether it is the user's
   default brain.
+- The text of `brain_list` gives each brain's description, so an agent can
+  pick the right one. `brain brains` in a terminal leaves it out, so the
+  counts and path fit on one line; `--json` has every field.

@@ -88,7 +88,11 @@ def list_brains(
     return {"brains": entries}
 
 
-def format_brain_list(result: dict[str, Any], *, owner: bool = False) -> str:
+def format_brain_list(
+    result: dict[str, Any], *, owner: bool = False, descriptions: bool = True
+) -> str:
+    """One line per brain. Agents get each brain's description, to pick the right one; a
+    person at a terminal knows their brains, and the column only pushes the path off-screen."""
     rows = result["brains"]
     if not rows:
         return (
@@ -98,7 +102,7 @@ def format_brain_list(result: dict[str, Any], *, owner: bool = False) -> str:
             f"{AGENT_SETUP_HINT}."
         )
     width = max(len(r["name"]) for r in rows)
-    desc_width = min(max(len(r.get("description") or "") for r in rows), 48)
+    desc_width = min(max(len(r.get("description") or "") for r in rows), 48) if descriptions else 0
     lines = []
     for r in rows:
         mark = "*" if r.get("default_here") else " "

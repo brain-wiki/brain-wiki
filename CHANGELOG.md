@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.1 (unreleased)
+
+- **Scheduled jobs reach keyring credentials.** A crontab job now carries
+  `DBUS_SESSION_BUS_ADDRESS`, so git credential helpers that keep the token
+  in the desktop keyring (`gh`, libsecret) can fetch from and push to a
+  private origin. Add the job again to pick it up.
+- **`brain brains` fits on one line.** The terminal listing leaves out each
+  brain's description, which pushed the counts and path off-screen; agents
+  still get it from `brain_list`, and `--json` has every field.
+
 ## 0.3.0 (2026-10-16)
 
 Episodes are captured by agents and consolidated by the agent that captured
