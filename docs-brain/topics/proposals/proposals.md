@@ -17,6 +17,7 @@ changes, in the same change as the code, and the proposal is deleted.
 Generated from `docs/proposal/README.md`.
 
 ## Notes
+- [[proposal-episode-lifecycle]]: Episodes: quick capture, per-agent consolidation (sub-topic)
 - [[proposal-hooks]]: Host hooks: briefing, capture, and recall (sub-topic)
 - [[proposal-privacy]]: Privacy (sub-topic)
 - [[proposal-public-benchmarks]]: Public memory benchmarks (sub-topic)

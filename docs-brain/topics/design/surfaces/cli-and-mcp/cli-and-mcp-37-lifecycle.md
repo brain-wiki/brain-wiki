@@ -1,11 +1,11 @@
 ---
 id: 01M3250V00H6WRKH7AA89VRBSJ
 type: design
-title: "Lifecycle"
+title: "Lifecycle (CLI and MCP)"
 aliases: ["CLI and MCP §3.7"]
 source: "docs/design/cli-and-mcp.md#37-lifecycle"
 ---
-# Lifecycle
+# Lifecycle (CLI and MCP)
 
 - One process serves one host connection over stdio.
 - On start, the server detects the host (§3.3) and builds its

@@ -1,8 +1,10 @@
 # Scheduled maintenance
 
-Status: built during development and removed before 0.1. Not scheduled; the
-design needs rethinking first (§3). Today `brain schedule` runs one kind of
-job, `brain commit`, from crontab or a LaunchAgent
+Status: built during development and removed before 0.1. Its harvest and
+consolidation parts are replaced by [Episodes: quick capture, per-agent
+consolidation](episode-lifecycle.md), which answers §2 and §3. Today
+`brain schedule` runs one kind of job, `brain commit`, from crontab or a
+LaunchAgent
 ([write path §5.2](../design/write-path.md#52-brain-schedule)). Scheduled
 harvest and consolidation are not built.
 
