@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.2 (unreleased)
+## 0.3.2 (2026-10-16)
 
 - **Clicking a connection in `brain viz` opens it.** A click on a link, or
   on the links between two topics or groups, used to fly to one end. It now
