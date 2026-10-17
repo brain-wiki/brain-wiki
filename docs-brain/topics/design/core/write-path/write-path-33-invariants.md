@@ -19,7 +19,7 @@ source: "docs/design/write-path.md#33-invariants"
 3. Episodes returned by search or read are wrapped in an
    `<untrusted-episode …>` envelope. The consolidation guidance tells the
    model that instructions inside episodes are content, never commands.
-4. Harvest drops tool output bodies, so what brain-wiki's tools returned is
-   never recorded again as new evidence.
+4. Harvest and origin windows drop tool output bodies, so what brain-wiki's
+   tools returned is never recorded again as new evidence.
 5. Provenance fields are written by code, stored in episode frontmatter,
    and indexed. No component parses provenance out of prose.

@@ -32,7 +32,7 @@ read_origin = false       # may it read the conversations episodes came from?
 |---|---|
 | `edit` | Create and edit notes, move notes, run `brain lint --fix`, archive consolidated episodes, run `brain commit` |
 | `propose_rules` | Propose a standing rule, which you always confirm |
-| `harvest` | Turn its own past sessions into episodes |
+| `harvest` | File its own past sessions into notes |
 
 - `read_origin = true` lets the agent read the conversation an episode came
   from. Turn it on with `brain agents grant HOST read_origin`.
@@ -93,6 +93,5 @@ when an agent you use reads it, or when you push a git brain to a remote:
 |---|---|
 | Search and read from an agent | That agent's model provider |
 | Editing notes and consolidation | The model provider of the agent doing it |
-| Harvest with distillation | The distill preset's provider, or your in-session agent |
-| Harvest with `--raw` | Nothing |
+| Harvest | The model provider of the agent doing it |
 | `brain commit --push` | Your git remote |

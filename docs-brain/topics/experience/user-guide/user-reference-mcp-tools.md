@@ -25,4 +25,4 @@ may.
 | `brain_consolidate_prepare` | The agent's own pending episodes (others' only when you ask) with candidate notes and guidance | — |
 | `brain_consolidate_done` | Archive the consolidated episodes with what came of each | `edit` |
 | `brain_read_origin` | Read the conversation behind an episode | `read_origin = true` |
-| `brain_harvest_prepare`, `brain_harvest_apply` | Turn this agent's past sessions into episodes | `harvest` |
+| `brain_harvest_prepare`, `brain_harvest_done` | File this agent's past sessions into notes | `harvest`; done also `edit` |

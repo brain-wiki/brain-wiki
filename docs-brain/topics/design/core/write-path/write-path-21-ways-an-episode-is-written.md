@@ -13,7 +13,6 @@ asking an agent. Capturing needs no capability.
 | Writer | `origin` | `inputs` | `captured` |
 |---|---|---|---|
 | MCP `brain_log_episode` | `agent` | `unknown` (§3.2) | `mcp` |
-| `brain harvest` (§2.2) | `agent` | computed from the session's tool calls | `harvest` |
 | File created directly under `inbox/episodes/` | as written, but `owner` becomes `agent` | `unknown` | `file` |
 | File in `inbox/agents/<agent>/` | `agent` | `unknown` | `file` |
 
@@ -23,8 +22,8 @@ asking an agent. Capturing needs no capability.
   `playbook`, `file`, `distill`), stored as `bw-pattern`: the agent's guess
   at how consolidation should use the episode. The consolidation packet
   shows it; consolidation may ignore it.
-- Episodes written earlier by `brain log` (`captured: cli`) or
-  `brain import` (`captured: import`) stay valid. Documents and agents'
+- Episodes written earlier by `brain log` (`captured: cli`), `brain import`
+  (`captured: import`), or harvest (`captured: harvest`) stay valid. Documents and agents'
   memory files are now imported by an agent filing them into notes
   ([[import-6-documents-and-memory-files|import §6]]).
 

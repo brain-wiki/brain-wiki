@@ -80,7 +80,7 @@ the hosts and presets the user runs:
 |---|---|---|
 | Agent tool calls (orient, search, read) | Results, to the host | The host's model provider, as part of the conversation |
 | Consolidation in the agent | The packet, and the notes the agent reads | The host's model provider |
-| Harvest with distillation | Condensed turns of the selected sessions, without tool output and with secrets scrubbed | The preset's provider (CLI) or the host's model provider (in-agent recipe); `--raw` sends nothing |
+| Harvest | Condensed turns of the selected sessions, without tool output and with secrets scrubbed, and the notes the agent reads | The host's model provider |
 | `brain commit` | Brain files fetched from origin, and pushed with `--push` | The user's git remote |
 
 ## 6. Secret scanning

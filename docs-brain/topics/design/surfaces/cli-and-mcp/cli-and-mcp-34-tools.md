@@ -7,9 +7,9 @@ source: "docs/design/cli-and-mcp.md#34-tools"
 ---
 # Tools
 
-Every tool except `brain_list` and `brain_harvest_apply` takes an optional
-`brain` argument: a brain this host may use, or its default when omitted.
-`brain_harvest_apply` gets its brain from the run. Unknown top-level
+Every tool except `brain_list` takes an optional `brain` argument: a brain
+this host may use, or its default when omitted. `brain_harvest_done`
+refuses a run prepared for another brain. Unknown top-level
 arguments are rejected with an error that names them. Every tool returns
 structured content and a text rendering.
 
@@ -30,7 +30,7 @@ destructive, and idempotent.
 | `brain_consolidate_done` | writes, not idempotent | Archive the handled episodes as one run ([[write-path-44-archiving-handled-episodes\|write path §4.4]]) |
 | `brain_read_origin` | read-only | A bounded window of the conversation an episode came from ([[write-path-46-origin-context\|write path §4.6]]) |
 | `brain_harvest_prepare` | writes, not idempotent | Start a harvest of the calling host's sessions ([[write-path-22-harvesting-sessions\|write path §2.2]]) |
-| `brain_harvest_apply` | writes, idempotent per run | Validate the agent's per-session results and write episodes |
+| `brain_harvest_done` | writes, idempotent per run | Check each session's outcome and advance the watermarks of those whose notes cite them |
 
 "Writes" means not read-only and not destructive. `brain_propose_rule`
 carries `_meta["anthropic/requiresUserInteraction"] = true`.
@@ -43,7 +43,7 @@ Capabilities each tool needs:
 | `brain_consolidate_done` | `edit` |
 | `brain_read_origin` | `read_origin` |
 | `brain_harvest_prepare` | `harvest`, and harvest turned on for the host in the user config |
-| `brain_harvest_apply` | Harvest still turned on for the host |
+| `brain_harvest_done` | `edit`, and harvest still turned on for the host |
 | Others | Nothing |
 
 Input schemas (JSON Schema 2020-12; output shapes are in
@@ -158,30 +158,24 @@ Input schemas (JSON Schema 2020-12; output shapes are in
       "project":      {"type": "string", "description": "Only sessions whose working directory is under this path."},
       "brain":        {"type": "string"}}},
 
-  "brain_harvest_apply": {"type": "object", "additionalProperties": false, "required": ["run", "sessions"],
+  "brain_harvest_done": {"type": "object", "additionalProperties": false, "required": ["run", "sessions"],
     "properties": {
       "run":      {"type": "string", "pattern": "^run-[0-9A-HJKMNP-TV-Z]{26}$"},
       "sessions": {"type": "array", "maxItems": 50, "items": {
-        "type": "object", "required": ["session"],
+        "type": "object", "required": ["session", "pattern"],
         "properties": {
-          "session":           {"type": "string", "pattern": "^S[0-9]+$", "description": "Handle from the packet."},
-          "skip":              {"type": "boolean", "default": false},
-          "reason":            {"type": "string", "maxLength": 200},
-          "summary":           {"type": "string", "maxLength": 20000},
-          "claims":            {"type": "array", "maxItems": 50, "items": {
-                                  "type": "object", "required": ["text", "turns"],
-                                  "properties": {"text":  {"type": "string", "maxLength": 500},
-                                                 "turns": {"type": "string", "pattern": "^[0-9]+-[0-9]+$"}}}},
-          "negative_findings": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
-          "open_questions":    {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
-          "topics":            {"type": "array", "maxItems": 5, "items": {"type": "string", "maxLength": 100}}}}}}}
+          "session": {"type": "string", "pattern": "^S[0-9]+$", "description": "Handle from the packet."},
+          "pattern": {"enum": ["record", "playbook", "file", "distill", "skip"]},
+          "notes":   {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
+          "reason":  {"type": "string", "maxLength": 200}}}},
+      "brain":    {"type": "string"}}}
 }
 ```
 
 Notes:
 
-- Unknown fields inside a `brain_harvest_apply` session entry or claim are
-  dropped, not rejected. Only top-level arguments are checked.
+- Unknown fields inside a `brain_harvest_done` or `brain_consolidate_done`
+  item are dropped, not rejected. Only top-level arguments are checked.
 - `brain_log_episode` builds the episode body from `summary`, `claims`,
   and `open_questions`. Claims become a `## Claims` list, plain text that
   nothing parses later. The server sets the provenance fields
@@ -190,9 +184,9 @@ Notes:
   ([[write-path-3-provenance-and-inputs|write path §3]]). `pattern` is
   stored as `bw-pattern`.
 - `session` and `origin_turns` on `brain_log_episode` are hints from the
-  model, used by the fallback harvest recipe. The episode records them.
-  In `brain_harvest_apply`, by contrast, every provenance field comes from
-  the server's own parse of the session.
+  model. The episode records them. In a harvest packet, by contrast, the
+  session URL, turn range, and inputs come from the server's own parse of
+  the session.
 - `brain_propose_rule` asks the user through elicitation when the client
   offers it. A confirmed rule is added as a run, and a declined one writes
   nothing. Without a way to ask (including Antigravity, which declines
@@ -211,6 +205,6 @@ Notes:
   archives nothing. `brain undo RUN` puts the episodes back.
 - With nothing of the caller's pending, `brain_consolidate_prepare` returns
   `{episodes: 0}` and names whose episodes are waiting.
-- `brain_harvest_apply` writes what validates and lists the problems for
-  the rest. It fails with `invalid_ops` only when nothing was written or
-  skipped.
+- `brain_harvest_done` records the sessions that pass and lists the
+  problems for the rest, which stay unharvested. It fails with `usage` only
+  when nothing was recorded.

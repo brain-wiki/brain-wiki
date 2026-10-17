@@ -9,7 +9,7 @@ source: "docs/design/write-path.md#32-how-inputs-are-determined"
 
 | Path | Value |
 |---|---|
-| Harvest | `external` when any tool call in the session matches the host's untrusted-tool list, else `local` |
+| A session's transcript (harvest packets, `session_inputs` in consolidation packets) | `external` when any tool call in the session matches the host's untrusted-tool list, else `local` |
 | MCP | `unknown` |
 
 The untrusted-tool list covers web fetch and search, browser tools, MCP

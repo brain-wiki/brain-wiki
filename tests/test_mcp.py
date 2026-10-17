@@ -25,7 +25,7 @@ TOOLS = [
     "brain_consolidate_done",
     "brain_read_origin",
     "brain_harvest_prepare",
-    "brain_harvest_apply",
+    "brain_harvest_done",
 ]
 
 

@@ -149,15 +149,13 @@ Show every config change as a diff before writing it.
 ### 6. Harvest
 
 Explain it before asking anything: brain-wiki reads the agent app's saved
-session history on this machine, removes tool output and secrets, and has a
-model summarize each session into an episode. The model is either the agent
-you are talking to or one you configure for the command line, so the
-condensed text goes to that model's provider. Harvest works for Claude
-Code, Codex, and Antigravity.
+session history on this machine and removes tool output and secrets, and
+that agent files what each session holds into notes, citing the session.
+The condensed text goes to that agent's model provider. Harvest works for
+Claude Code, Codex, and Antigravity.
 
 For harvest, first run `brain harvest --from HOST --since 30d` (it writes
-nothing without `--apply`) and show how many past sessions it found and the
-estimated tokens.
+nothing) and show how many past sessions it found and the estimated tokens.
 
 Each session goes to the brain of the folder it ran in: a project with a
 `.brain-wiki.toml` (`brain = "NAME"`), or a folder pattern routed with
@@ -170,12 +168,12 @@ the home folder to it:
 Then ask, per agent app: harvest on or off, and backfill past sessions now,
 later, or never.
 
-- Harvest on: `brain harvest enable APP`. So the app can also harvest its
-  own sessions in a conversation, run `brain agents grant APP harvest`
+- Harvest on: `brain harvest enable APP`, and so the app can harvest its
+  own sessions in a conversation, `brain agents grant APP harvest`
   (`--dry-run` first).
-- Backfill now: run the harvest recipe in the `brain-maintain` skill in this
-  session if you have it, or `brain harvest --from HOST --apply` (also for
-  large backfills).
+- Backfill now: if this session is that app, run the harvest recipe in the
+  `brain-maintain` skill; otherwise tell the user to ask that app to
+  "harvest my sessions". A large backfill takes several rounds.
 
 ### 7. Verify
 

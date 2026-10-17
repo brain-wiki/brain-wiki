@@ -14,7 +14,6 @@ from brainwiki.config._resolve import open_brain
 from brainwiki.config._user import load_user_config, set_value
 from brainwiki.engine import Engine
 from brainwiki.errors import Forbidden
-from brainwiki.format._frontmatter import split
 from brainwiki.mcp._server import build_server
 from brainwiki.origin import origin_window
 
@@ -50,7 +49,8 @@ def setup(brain_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> P
     set_value("harvest.hosts", ["claude-code"])
     toml = brain_dir / "brain.toml"
     toml.write_text(
-        toml.read_text() + '\n[agents.claude-code]\nwrite = ["harvest"]\nread_origin = true\n'
+        toml.read_text()
+        + '\n[agents.claude-code]\nwrite = ["edit", "harvest"]\nread_origin = true\n'
     )
     project = tmp_path / "code" / "lumen"
     project.mkdir(parents=True)
@@ -75,78 +75,78 @@ def test_discover_filters_and_routes(setup: Path, brain_dir: Path):
     assert found["s-sub"].skip == "subagent session"
 
 
-def test_cli_raw_harvest_writes_once(setup: Path, brain_dir: Path, capsys):
+SOURCE = "session://claude-code/s-good#turns=1-6"
+NOTE = "topics/lumen/search.md"
+
+
+def note(root: Path, *sources: str) -> None:
+    cited = "".join(f'  - "{src}"\n' for src in sources)
+    path = root / NOTE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "---\nid: 01M4KT3JPRY4W6766VT18CQS91\ntitle: Search\n"
+        + (f"bw-sources:\n{cited}" if cited else "")
+        + "---\n# Search\n\n- FTS5 p95 is 4 ms on 10k notes.\n"
+    )
+
+
+def test_cli_lists_sessions_and_writes_nothing(setup: Path, brain_dir: Path, capsys):
     assert main(["harvest", "--from", "claude-code"]) == 0
-    assert "1 sessions to harvest" in capsys.readouterr().out
-    assert main(["harvest", "--from", "claude-code", "--raw", "--apply"]) == 0
-    episodes = list((brain_dir / "inbox" / "episodes").rglob("*.md"))
-    assert len(episodes) == 1
-    fm = split(episodes[0].read_text()).data
-    assert (fm["captured"], fm["session"], fm["origin_turns"], fm["inputs"]) == (
-        "harvest",
-        "s-good",
-        "1-6",
-        "local",
+    out = capsys.readouterr().out
+    assert "1 sessions to harvest" in out and "harvest my sessions" in out
+    for gone in (["--apply"], ["--raw"], ["--distill", "claude-code"]):
+        assert main(["harvest", "--from", "claude-code", *gone]) == 2
+    assert not (brain_dir / "inbox" / "episodes").exists() or not any(
+        (brain_dir / "inbox" / "episodes").rglob("*.md")
     )
-    assert main(["harvest", "--from", "claude-code", "--raw", "--apply"]) == 0
-    assert len(list((brain_dir / "inbox" / "episodes").rglob("*.md"))) == 1
-
-
-def test_distilled_harvest_and_validation(
-    setup: Path, brain_dir: Path, monkeypatch: pytest.MonkeyPatch
-):
-    from brainwiki.cli import _cmd_harvest as cmd_harvest
-
-    reply = {
-        "summary": "Search moved to FTS5.",
-        "claims": [{"text": "FTS5 p95 is 4 ms on 10k notes.", "turns": "3-4"}],
-        "negative_findings": ["Pure-Python BM25 was too slow above 2k notes."],
-    }
-    monkeypatch.setattr("brainwiki.presets.run_command", lambda *a, **k: json.dumps(reply))
-    (candidate,) = [c for c in hv.discover(load_user_config(), ["claude-code"]) if not c.skip]
-    out = cmd_harvest._harvest_one(hv, candidate, "claude-code", dry_run=False)
-    text = (brain_dir / out["episodes"][0]).read_text()
-    assert "FTS5 p95 is 4 ms on 10k notes. (turns 3-4)" in text and "## Negative findings" in text
-    bad, errors = hv.parse_distilled(
-        {"summary": "x", "claims": [{"text": "y", "turns": "9-99"}]}, 1, 6
-    )
-    assert bad is None and "within 1-6" in errors[0]
 
 
 @pytest.mark.anyio
-async def test_mcp_harvest_recipe(setup: Path, brain_dir: Path):
+async def test_mcp_harvest_files_sessions_into_notes(setup: Path, brain_dir: Path):
     async with Client(build_server("claude-code")) as client:
         prepared = await client.call_tool("brain_harvest_prepare", {"since": "7d"})
         assert not prepared.is_error, prepared.content[0].text
         run = prepared.structured_content["run"]
-        assert '"handle": "S1"' in prepared.content[0].text
-        bad = await client.call_tool(
-            "brain_harvest_apply",
-            {
-                "run": run,
-                "sessions": [
-                    {"session": "S1", "summary": "x", "claims": [{"text": "y", "turns": "1-99"}]}
-                ],
-            },
+        text = prepared.content[0].text
+        assert '"handle": "S1"' in text and f'"source": "{SOURCE}"' in text
+        assert '"inputs": "local"' in text
+        note(brain_dir)
+        uncited = await client.call_tool(
+            "brain_harvest_done",
+            {"run": run, "sessions": [{"session": "S1", "pattern": "file", "notes": [NOTE]}]},
         )
-        assert bad.is_error and "invalid_ops" in bad.content[0].text
+        assert uncited.is_error and "does not cite the session" in uncited.content[0].text
+        assert SOURCE in uncited.content[0].text
+        note(brain_dir, SOURCE)
         good = await client.call_tool(
-            "brain_harvest_apply",
-            {
-                "run": run,
-                "sessions": [
-                    {
-                        "session": "S1",
-                        "summary": "Moved search to FTS5.",
-                        "claims": [{"text": "FTS5 p95 is 4 ms.", "turns": "4-4"}],
-                    }
-                ],
-            },
+            "brain_harvest_done",
+            {"run": run, "sessions": [{"session": "S1", "pattern": "file", "notes": [NOTE]}]},
         )
-    assert len(good.structured_content["written"]) == 1
-    episode = brain_dir / good.structured_content["written"][0]["episode"]
-    fm = split(episode.read_text()).data
-    assert (fm["captured"], fm["agent"], fm["session"]) == ("harvest", "claude-code", "s-good")
+        assert not good.is_error and "Recorded 1 sessions: 1 file." in good.content[0].text
+        again = await client.call_tool("brain_harvest_prepare", {"since": "7d"})
+    assert good.structured_content["done"][0]["source"] == SOURCE
+    assert again.structured_content["run"] is None  # the watermark moved past the session
+    assert not (brain_dir / "inbox" / "episodes").exists() or not any(
+        (brain_dir / "inbox" / "episodes").rglob("*.md")
+    )
+
+
+def test_harvest_done_checks_each_outcome(setup: Path, brain_dir: Path):
+    with Engine(open_brain(brain_dir), host="claude-code") as engine:
+        info = {"session": "s-good", "first": 1, "last": 6, "inputs": "external"}
+        check = hv._outcome_problems
+        assert (
+            "cannot be distilled"
+            in check(engine, "claude-code", "S1", info, {"pattern": "distill", "notes": [NOTE]})[0]
+        )
+        assert "needs a reason" in check(engine, "claude-code", "S1", info, {"pattern": "skip"})[0]
+        assert (
+            "needs the notes" in check(engine, "claude-code", "S1", info, {"pattern": "record"})[0]
+        )
+        assert (
+            "no such note"
+            in check(engine, "claude-code", "S1", info, {"pattern": "file", "notes": [NOTE]})[0]
+        )
 
 
 def test_harvest_requires_opt_in(setup: Path):
@@ -161,25 +161,13 @@ def test_harvest_requires_opt_in(setup: Path):
     assert "forbidden: harvest is off" in anyio.run(call)
 
 
-def test_origin_window(setup: Path, brain_dir: Path):
-    main(["harvest", "--from", "claude-code", "--raw", "--apply"])
-    (episode,) = list((brain_dir / "inbox" / "episodes").rglob("*.md"))
-    rel = episode.relative_to(brain_dir).as_posix()
+def test_origin_window_reads_a_session_url(setup: Path, brain_dir: Path):
     with Engine(open_brain(brain_dir), host="claude-code") as engine:
-        result = origin_window(engine, rel, turns="3-4")
+        result = origin_window(engine, SOURCE, turns="3-4")
     assert [t["turn"] for t in result["window"]] == [3, 4]
     assert "p95 is 4 ms" in result["window"][1]["text"]
     with Engine(open_brain(brain_dir), host="codex") as engine, pytest.raises(Forbidden):
-        origin_window(engine, rel)
-
-
-def test_raw_dry_run_lists_chunks_and_writes_nothing(setup: Path, brain_dir: Path, capsys):
-    args = ["harvest", "--from", "claude-code", "--raw", "--apply", "--dry-run"]
-    assert main(args) == 0
-    out = capsys.readouterr().out
-    assert "claude-code s-good: would write turns 1-6" in out
-    assert "nothing was written" in out and "Wrote" not in out
-    assert not list((brain_dir / "inbox" / "episodes").rglob("*.md"))
+        origin_window(engine, SOURCE)
 
 
 def test_harvest_refuses_hosts_it_cannot_read_and_points_to_commands(
@@ -199,10 +187,12 @@ def test_harvest_refuses_hosts_it_cannot_read_and_points_to_commands(
 
 
 def test_origin_validates_turns_and_takes_absolute_paths(setup: Path, brain_dir: Path):
+    from tests.conftest import capture
+
     from brainwiki.errors import UsageError
 
-    main(["harvest", "--from", "claude-code", "--raw", "--apply"])
-    (episode,) = list((brain_dir / "inbox" / "episodes").rglob("*.md"))
+    rel = capture(brain_dir, "Moved search to FTS5.", session="s-good", origin_turns="1-6")
+    episode = brain_dir / rel
     with Engine(open_brain(brain_dir), host="claude-code") as engine:
         assert origin_window(engine, str(episode))["turns"] == "1-6"  # not past the last turn
         assert [t["turn"] for t in origin_window(engine, str(episode), turns="2-3")["window"]] == [
@@ -212,6 +202,8 @@ def test_origin_validates_turns_and_takes_absolute_paths(setup: Path, brain_dir:
         for bad in ("4-2", "9-12", "0-3", "5-7"):
             with pytest.raises(UsageError):
                 origin_window(engine, str(episode), turns=bad)
+        whole = origin_window(engine, "session://claude-code/s-good")
+    assert whole["turns"] == "1-6"
 
 
 def test_harvest_is_configured_with_commands(brain_dir: Path):

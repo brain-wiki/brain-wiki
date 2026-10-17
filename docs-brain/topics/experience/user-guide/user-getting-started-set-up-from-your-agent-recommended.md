@@ -31,7 +31,7 @@ plugin is already installed from your agent's marketplace, ask the agent:
 | Commit job | With git: runs `brain commit` every 15 minutes |
 | Other agents | Which agent apps on this machine to connect |
 | What agents may do | Log and edit by default; rules and harvest when you allow them |
-| Harvest | Whether to turn past sessions into episodes, and into which brain |
+| Harvest | Whether your agents may file their past sessions into notes, and into which brain |
 
 - You can also adopt an existing Obsidian vault in place. See
   [[user-import|Import]].

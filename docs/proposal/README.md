@@ -8,7 +8,7 @@ changes, in the same change as the code, and the proposal is deleted.
 
 | Proposal | Status | Changes |
 |---|---|---|
-| [Episodes: quick capture, per-agent consolidation](episode-lifecycle.md) | Decided 2026-10-16; phase 1 and consolidation built | Capture is one MCP call recorded under the calling agent; each agent consolidates its own episodes, in a session or on a schedule, through five named patterns; another agent's episodes only when the user asks; harvest and import file straight into notes; `brain log`, the `episodes` capability, `import --to-episodes`, `import --from`, and `harvest --apply` removed |
+| [Episodes: quick capture, per-agent consolidation](episode-lifecycle.md) | Decided 2026-10-16; phases 1 and 2 built | Capture is one MCP call recorded under the calling agent; each agent consolidates its own episodes, in a session or on a schedule, through five named patterns; another agent's episodes only when the user asks; harvest and import file straight into notes; `brain log`, the `episodes` capability, `import --to-episodes`, `import --from`, and `harvest --apply` removed |
 | [Privacy](privacy.md) | Draft; open questions PQ1 to PQ6 | Levels defined by where content may go (model, tools, outputs, exports), declared in a topic's `index.md` |
 | [Remote sync and object storage](remote-sync.md) | Designed, not scheduled; `brain commit` already syncs a git brain with origin | `brain sync` with conflict copies, then GCS and S3, then a server that reads a brain from a bucket |
 | [Remote MCP for chat apps](remote-mcp.md) | Designed, not scheduled; waits on privacy | HTTP transport and OAuth for ChatGPT, claude.ai, and the Gemini app |

@@ -80,7 +80,7 @@ server in each new session on a slow network. With the command installed
 | `brain_log_episode` | Record a learning in the inbox when no note fits yet |
 | `brain_propose_rule` | Propose a rule; you confirm before anything is written |
 | `brain_consolidate_prepare`, `brain_consolidate_done` | Gather episodes, then archive them once the notes are edited |
-| `brain_harvest_prepare`, `brain_harvest_apply` | Turn past sessions into episodes |
+| `brain_harvest_prepare`, `brain_harvest_done` | File the agent's past sessions into notes |
 | `brain_read_origin` | Show the conversation an episode came from |
 
 - Search filters by type, tag, property, and date. A superseded hit comes
@@ -134,26 +134,26 @@ The capabilities, and how to limit which brains an agent may use, are in
 
 ## Harvest
 
-Harvest reads your agents' own session history and turns finished sessions
-into episodes. It is off until you turn it on, and it is the way to give a
-new brain real history.
+Harvest reads your agents' own session history, and the agent files what
+finished sessions hold into notes, each citing the session it came from. It
+is off until you turn it on, and it is the way to give a new brain real
+history.
 
 ```sh
 brain harvest enable claude-code codex   # or disable; also: antigravity
+brain agents grant claude-code harvest   # let the agent harvest in a conversation
 brain harvest --status           # per app: on or off, sessions not yet harvested
-brain harvest                    # dry run: sessions, target brain, token estimate
-brain harvest --apply            # distill with the configured preset
-brain harvest --apply --raw      # no model: excerpts to distill when consolidating
+brain harvest                    # sessions waiting, target brain, token estimate
 ```
 
 - Harvest reads Claude Code, Codex, and Antigravity sessions.
-- Inside an agent, "harvest my recent sessions" runs the same steps with the
-  agent itself distilling. Run `brain agents grant claude-code harvest`
-  first.
-- On the command line, the model is `distill` in `[harvest]` of the user
-  config, `~/.config/brain-wiki/config.toml`: `claude-code` (the default),
-  `codex`, `antigravity`, `cursor`, `ollama`, or `raw`. `--distill PRESET`
-  overrides it.
+- In the agent, say "harvest my recent sessions". It reads up to 10
+  sessions at a time, files them into notes, and marks them harvested. A
+  note cites a session as `session://claude-code/<session id>#turns=12-48`;
+  `brain origin` with that URL shows the turns, on the machine that has the
+  transcript.
+- A large backfill takes several rounds. The agent says how many sessions
+  remain.
 
 Each session goes to the brain of the folder it ran in. brain-wiki checks,
 in order:

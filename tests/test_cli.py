@@ -57,7 +57,7 @@ def test_version_prints_only_the_version(capsys: pytest.CaptureFixture[str]):
         (["search", "--bogus"], "No such option: --bogus"),
         (["search", "--limit", "0"], "--limit"),
         (["read"], "Missing argument 'TARGET'"),
-        (["harvest", "--apply", "enable", "codex"], "no listing flags"),
+        (["harvest", "--status", "enable", "codex"], "no listing flags"),
     ],
 )
 def test_usage_errors_exit_2(argv: list[str], message: str, capsys: pytest.CaptureFixture[str]):

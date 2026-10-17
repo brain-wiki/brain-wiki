@@ -8,7 +8,7 @@ source: "docs/proposal/episode-lifecycle.md"
 
 Capture is one MCP call recorded under the calling agent; each agent consolidates its own episodes, in a session or on a schedule, through five named patterns; another agent's episodes only when the user asks; harvest and import file straight into notes; `brain log`, the `episodes` capability, `import --to-episodes`, `import --from`, and `harvest --apply` removed
 
-Status: decided 2026-10-16 (§9). Phase 1 (capture) and the consolidation part of phase 2 are built; harvest (§2.2) and phases 3 and 4 are not.
+Status: decided 2026-10-16 (§9). Phases 1 and 2 are built; phases 3 and 4 (scheduled consolidation) are not.
 
 An episode has two moments with different needs. An agent captures it in
 the middle of a task, so capture must be fast and raw. Later, off the busy

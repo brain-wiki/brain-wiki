@@ -24,7 +24,7 @@ read_origin = false       # may it read the conversations episodes came from?
 |---|---|
 | `edit` | Create and edit notes, move notes, run `brain lint --fix`, archive consolidated episodes, run `brain commit` |
 | `propose_rules` | Propose a standing rule, which you always confirm |
-| `harvest` | Turn its own past sessions into episodes |
+| `harvest` | File its own past sessions into notes |
 
 - `read_origin = true` lets the agent read the conversation an episode came
   from. Turn it on with `brain agents grant HOST read_origin`.

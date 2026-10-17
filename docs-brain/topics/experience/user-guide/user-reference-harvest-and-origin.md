@@ -7,11 +7,10 @@ source: "docs/user/reference.md#harvest-and-origin"
 # Harvest and origin
 
 - `brain harvest` options: `--from HOST` (repeatable), `--since 30d`,
-  `--project P`, `--raw` or `--distill PRESET`, `--apply`, `--dry-run`, and
-  `--status`.
-- Without `--apply` it lists sessions and token estimates. With
-  `--apply --dry-run` it lists the turn ranges it would write.
+  `--project P`, and `--status`. It lists sessions and token estimates and
+  writes nothing; the agent does the harvest.
 - `brain harvest route` sends sessions run in folders matching a pattern to
   a brain.
-- `brain origin` takes an episode id or path (in the brain, or absolute).
-  `--turns A-B` must lie within the session.
+- `brain origin` takes an episode id or path (in the brain, or absolute),
+  or a session URL from a note's `bw-sources`. `--turns A-B` must lie
+  within the session.

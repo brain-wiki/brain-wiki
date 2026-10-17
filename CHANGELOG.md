@@ -32,6 +32,14 @@ them ([write path](docs/design/write-path.md)).
   agent and each agent's last consolidation; `brain doctor` reports them,
   and an owner whose oldest episode is past `[lint] stale_inbox_days` as
   `stale_episodes`. New report: `reports/consolidation.md`.
+- **Harvest files sessions into notes.** `brain_harvest_prepare` gives each
+  session a `source` URL (`session://<host>/<session id>#turns=A-B`) and its
+  `inputs`; the agent files the session into notes citing that URL, and
+  `brain_harvest_done` (replacing `brain_harvest_apply`) checks the
+  citations before it marks the session harvested. Harvest writes no
+  episodes. `brain harvest --apply`, `--raw`, `--distill`, and the
+  `[harvest] distill` setting are removed; `brain harvest` lists sessions.
+  `brain origin` and `brain_read_origin` accept session URLs.
 - **Importing documents is agent work.** `brain import --to-episodes` and
   `brain import --from HOST` are removed. Ask an agent to file documents or
   its memory files into notes; the `brain` skill says how. `--overlay` and

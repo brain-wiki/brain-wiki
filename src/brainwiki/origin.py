@@ -1,5 +1,8 @@
-"""Origin context: a bounded window of the conversation an episode came from
+"""Origin context: a bounded window of the conversation an episode or a session URL points to
 (write-path.md §4.6).
+
+A note that came from a harvested session cites it in `bw-sources` as a session URL,
+`session://<host>/<session id>#turns=A-B`, which holds no file path (write-path.md §2.2).
 """
 
 from __future__ import annotations
@@ -9,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from brainwiki.errors import Forbidden, NotAvailable, NotFound, UsageError
+from brainwiki.format import parse_session_url, session_url
 from brainwiki.hosts import reader_for
 from brainwiki.write import scrub
 
@@ -21,6 +25,17 @@ _RANGE = re.compile(r"^(\d+)-(\d+)$")
 
 
 def _episode(engine: Engine, target: str) -> Any:
+    url = parse_session_url(target)
+    if url is not None:
+        host, session, turns = url
+        return {
+            "path": session_url(host, session, turns),
+            "fm_id": None,
+            "agent": host,
+            "session": session,
+            "origin_turns": turns,
+            "device": None,
+        }
     if Path(target).expanduser().is_absolute():
         try:
             target = engine.store.rel(Path(target).expanduser())
@@ -53,7 +68,7 @@ def origin_window(engine: Engine, target: str, *, turns: str | None = None) -> d
             "in its brain.toml profile"
         )
     row = _episode(engine, target)
-    if not row["session"] or not row["origin_turns"]:
+    if not row["session"]:
         raise NotAvailable("this episode does not record the conversation it came from")
     if row["device"] and row["device"] != engine.user.device_name:
         raise NotAvailable(f"the conversation is on another device ({row['device']})")
@@ -65,8 +80,9 @@ def origin_window(engine: Engine, target: str, *, turns: str | None = None) -> d
     if info is None:
         raise NotAvailable("the transcript is gone (deleted by the host, or never on this device)")
     transcript = reader.read(info)
-    start, end = (int(x) for x in _RANGE.match(str(row["origin_turns"])).groups())  # type: ignore[union-attr]
     last = max((t.index for t in transcript.turns), default=0)
+    recorded = _RANGE.match(str(row["origin_turns"] or ""))
+    start, end = (int(x) for x in recorded.groups()) if recorded else (1, max(last, 1))
     if turns:
         match = _RANGE.match(turns)
         if not match:

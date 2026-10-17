@@ -183,7 +183,7 @@ def test_skills_shipped():
 
 @pytest.mark.parametrize(
     ("name", "trailer"),
-    [("consolidate.md", "## Packet"), ("harvest.md", "## Packet"), ("distill.md", "## Session")],
+    [("consolidate.md", "## Packet"), ("harvest.md", "## Packet")],
 )
 def test_prompts_end_with_payload_heading(name, trailer):
     text = (ROOT / "src/brainwiki/assets/prompts" / name).read_text(encoding="utf-8")

@@ -36,6 +36,7 @@ from brainwiki.format._links import mask_code
 from brainwiki.format._meta import split_meta, strip_meta_comments
 from brainwiki.format._normalize import STATUSES, map_status
 from brainwiki.format._rules import RULES_HEADER, format_rule, parse_rules
+from brainwiki.format._session import parse_session_url, session_url
 
 __all__ = [
     "CAPTURED",
@@ -66,9 +67,11 @@ __all__ = [
     "now_iso",
     "parse_document",
     "parse_rules",
+    "parse_session_url",
     "quote",
     "render_episode",
     "replace_block",
+    "session_url",
     "set_fields",
     "split",
     "split_meta",

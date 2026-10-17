@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import json
-from importlib import resources
 from typing import Any
 
-from brainwiki.cli._output import emit, warn
+from brainwiki.cli._output import emit
 from brainwiki.errors import NotFound, UsageError
 
 _READABLE = ("claude-code", "codex", "antigravity")
@@ -68,49 +66,30 @@ def harvest(args: Any) -> int:
             text += f"\nTo turn harvest on, run: brain harvest enable {' '.join(off)}"
         emit(args, rows, text)
         return 0
-    if not args.apply:
-        data = [c.to_json() for c in candidates]
-        lines = [
-            f"{c.info.host} {c.info.id}  {_folder(c.info.cwd)}  "
-            f"→ {c.brain.display_name if c.brain else '-'}  "
-            + (
-                f"skip: {c.skip}"
-                if c.skip
-                else f"turns {c.to_json()['turns']}, ~{c.to_json()['estimated_tokens']} tokens"
-            )
-            for c in candidates
-        ]
-        total = sum(c.to_json()["estimated_tokens"] for c in eligible)
-        if any(c.skip == "routes to no brain" for c in candidates):
-            lines.append(
-                "Sessions route to the brain of their working directory: put a .brain-wiki.toml "
-                'with `brain = "NAME"` in the project, or map folders in [harvest.routes] in '
-                f"{user.path}."
-            )
-        lines.append(
-            f"{len(eligible)} sessions to harvest, ~{total} tokens to distill."
-            + (" Run with --apply." if eligible else "")
+    data = [c.to_json() for c in candidates]
+    lines = [
+        f"{c.info.host} {c.info.id}  {_folder(c.info.cwd)}  "
+        f"→ {c.brain.display_name if c.brain else '-'}  "
+        + (
+            f"skip: {c.skip}"
+            if c.skip
+            else f"turns {c.to_json()['turns']}, ~{c.to_json()['estimated_tokens']} tokens"
         )
-        emit(args, data, "\n".join(lines))
-        return 0
-    preset = None if args.raw else (args.distill or user.harvest.get("distill") or "claude-code")
-    if preset == "raw":
-        preset = None
-    results = [_harvest_one(hv, c, preset, dry_run=args.dry_run) for c in eligible]
-    if args.dry_run:
-        lines = [
-            f"{r['host']} {r['session']}: would write turns {', '.join(r['chunks'])}"
-            for r in results
-        ]
-        count = sum(len(r["chunks"]) for r in results)
+        for c in candidates
+    ]
+    total = sum(c.to_json()["estimated_tokens"] for c in eligible)
+    if any(c.skip == "routes to no brain" for c in candidates):
         lines.append(
-            f"Dry run: nothing was written; up to {count} episodes from {len(eligible)} sessions."
+            "Sessions route to the brain of their working directory: put a .brain-wiki.toml "
+            'with `brain = "NAME"` in the project, or map folders in [harvest.routes] in '
+            f"{user.path}."
         )
-        emit(args, results, "\n".join(lines))
-        return 0
-    written = [p for r in results for p in r["episodes"]]
-    emit(args, results, f"Wrote {len(written)} episodes from {len(eligible)} sessions.")
-    return 0 if all(not r.get("error") for r in results) else 1
+    lines.append(
+        f"{len(eligible)} sessions to harvest, ~{total} tokens for an agent to read."
+        + (' Ask the agent to "harvest my sessions".' if eligible else "")
+    )
+    emit(args, data, "\n".join(lines))
+    return 0
 
 
 def _configure(args: Any) -> int:
@@ -158,59 +137,6 @@ def _configure(args: Any) -> int:
         )
     emit(args, {"hosts": hosts}, text)
     return 0
-
-
-def _harvest_one(hv: Any, candidate: Any, preset: str | None, *, dry_run: bool) -> dict[str, Any]:
-    from brainwiki.presets import run_command
-
-    out: dict[str, Any] = {
-        "session": candidate.info.id,
-        "host": candidate.info.host,
-        "episodes": [],
-    }
-    prompt_head = (resources.files("brainwiki") / "assets" / "prompts" / "distill.md").read_text(
-        encoding="utf-8"
-    )
-    if dry_run:
-        out["chunks"] = [f"{g[0].index}-{g[-1].index}" for g in hv.chunks(candidate.new_turns)]
-        return out
-    for group in hv.chunks(candidate.new_turns):
-        first, last = group[0].index, group[-1].index
-        if preset is None:
-            out["episodes"].append(
-                hv.write_episode_for(candidate, first, last, None, raw_turns=group)
-            )
-            hv.advance(candidate.info.host, candidate.info.id, last)
-            continue
-        turns, truncated = hv.condense(group, hv.CHUNK_CHARS)
-        payload = json.dumps(hv.session_payload(candidate, turns, truncated), ensure_ascii=False)
-        try:
-            reply = run_command(preset, prompt_head + "\n" + payload + "\n")
-        except Exception as exc:  # noqa: BLE001 - report per session and continue
-            out["error"] = str(exc)
-            warn(f"{candidate.info.id}: {exc}")
-            return out
-        data = _first_json(reply)
-        distilled, problems = hv.parse_distilled(data, first, last)
-        if problems:
-            out["error"] = "; ".join(problems)
-            return out
-        if distilled is not None and not distilled.skip:
-            out["episodes"].append(hv.write_episode_for(candidate, first, last, distilled))
-        hv.advance(candidate.info.host, candidate.info.id, last)
-    return out
-
-
-def _first_json(text: str) -> Any:
-    decoder = json.JSONDecoder()
-    for start in [i for i, ch in enumerate(text) if ch == "{"]:
-        try:
-            value, _ = decoder.raw_decode(text[start:])
-        except ValueError:
-            continue
-        if isinstance(value, dict):
-            return value
-    raise UsageError("the distill reply contained no JSON object")
 
 
 def origin(args: Any) -> int:

@@ -15,4 +15,4 @@ host's naming:
 |---|---|
 | `consolidate` | Call `brain_consolidate_prepare`, edit or create notes by pattern, run `brain_validate`, call `brain_consolidate_done` with the outcomes, repeat while the agent's episodes remain, and report what changed |
 | `capture` | Summarize the session's durable learnings and log them with one `brain_log_episode` call |
-| `harvest` | Run prepare, distill, and apply, at most 3 rounds; on `unsupported_host`, ask the user before reading its own session history |
+| `harvest` | Run prepare, file the sessions into notes, and done, at most 3 rounds; on `unsupported_host`, ask the user before reading its own session history |

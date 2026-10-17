@@ -44,8 +44,8 @@ The commands, in the order `brain --help` lists them:
 | `brain undo [RUN] [--force]` | Undo a run |
 | `brain lint [PATH…] [options]` | Check the brain against the format |
 | `brain report` | Regenerate `reports/` |
-| `brain harvest [options]`, `brain harvest enable HOST… \| disable HOST… \| route PATTERN BRAIN` | Turn agent sessions into episodes |
-| `brain origin EPISODE [--turns A-B]` | Show the conversation an episode came from |
+| `brain harvest [options]`, `brain harvest enable HOST… \| disable HOST… \| route PATTERN BRAIN` | List agent sessions waiting to be harvested, and configure harvest |
+| `brain origin EPISODE\|SESSION-URL [--turns A-B]` | Show the conversation an episode or session URL points to |
 | `brain connect HOST [--scope user\|project] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent app |
 | `brain mcp [--host HOST]` | The stdio MCP server, started by agent apps |
 | `brain import PATH --overlay [--phase 0\|1\|2]` or `brain import PATH --into BRAIN` | Adopt or copy existing Markdown |

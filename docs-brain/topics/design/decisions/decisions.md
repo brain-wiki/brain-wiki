@@ -48,3 +48,4 @@ Generated from `docs/decision/README.md`.
 - [[d33-no-meaning-extraction]]: D33: brain-wiki does not extract meaning
 - [[d34-direct-edits]]: D34: Agents edit notes directly
 - [[d35-git-history]]: D35: Git is the history of direct edits
+- [[d36-harvest-into-notes]]: D36: Harvest and import file into notes, not episodes

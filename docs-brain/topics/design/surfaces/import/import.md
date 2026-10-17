@@ -21,7 +21,7 @@ Generated from `docs/design/import.md`.
   - [[i3]]: I3: Every change to existing files is a run
   - [[i4]]: I4: Normalization is optional and step by step
   - [[i5]]: I5: The user's documents, and agents' memory files, end up in the right…
-- [[import-2-modes]]: Modes (Import)
+- [[import-2-modes]]: Modes
 - [[import-3-overlay]]: Overlay
   - [[import-31-pipeline]]: Pipeline
   - [[import-32-phases]]: Phases

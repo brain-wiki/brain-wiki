@@ -10,7 +10,7 @@
 | supersession guard | The retrieval rule that a hit on a superseded note comes with the note named in its `bw-superseded_by`, followed to the newest, and a hit on a newer note lists the notes it replaced. |
 | sources | A note's `bw-sources` list: links to the episodes and notes, or URLs, that its content came from. |
 | episode | A file of raw observations in `inbox/episodes/`, written by an agent, a person, an import, or harvest. Its text never changes, and consolidation moves it to `archive/episodes/`. It may record the session and turns it came from. |
-| harvest | Reading finished sessions from a host's own transcript store and turning them into episodes. |
+| harvest | Reading finished sessions from a host's own transcript store so the agent whose sessions they are files them into notes, each citing a session URL. |
 | rule | A standing directive in `rules.md`, shown at the top of every orientation. A rule is added only from the user's own words. |
 | direct edit | A change that a person, or an agent whose profile has `edit`, makes to a note with their own tools. `brain validate` checks it and `brain commit` records it in git. |
 | consolidation | An optional step in which an agent folds pending episodes into notes by editing the notes directly. `brain consolidate --prepare` gathers the work, and `brain consolidate --done` archives the episodes. |

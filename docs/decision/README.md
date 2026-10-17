@@ -39,3 +39,4 @@ One file per decision. Each says what was decided and why, what was rejected, an
 | [D33: brain-wiki does not extract meaning](d33-no-meaning-extraction.md) | Accepted |
 | [D34: Agents edit notes directly](d34-direct-edits.md) | Accepted |
 | [D35: Git is the history of direct edits](d35-git-history.md) | Accepted |
+| [D36: Harvest and import file into notes, not episodes](d36-harvest-into-notes.md) | Accepted |

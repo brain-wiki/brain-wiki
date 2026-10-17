@@ -214,9 +214,11 @@ afterwards ([D25](../decision/d25-static-instructions.md),
 
 ## 6. Harvest
 
-Harvest turns finished sessions into episodes by reading the host's own
-session store ([write path §2.2](write-path.md#22-harvesting-sessions),
-[D20](../decision/d20-harvest-host-sessions.md)). It is off by default and
+Harvest reads finished sessions from the host's own session store, and the
+agent whose sessions they are files them into notes
+([write path §2.2](write-path.md#22-harvesting-sessions),
+[D20](../decision/d20-harvest-host-sessions.md),
+[D36](../decision/d36-harvest-into-notes.md)). It is off by default and
 turned on per host (`brain harvest enable HOST`).
 
 ```toml
@@ -228,7 +230,6 @@ since   = "30d"                      # how far back to look (default 30d)
 min_idle_minutes = 60                # skip sessions still in progress (default 60)
 min_user_turns   = 3                 # default 3
 include_headless = false             # also harvest non-interactive sessions
-distill = "claude-code"              # preset for CLI harvest (default claude-code)
 [harvest.routes]                     # optional: working-directory patterns to brains
 "~/work/**" = "work"
 ```
@@ -245,7 +246,7 @@ Harvest looks only at sessions modified within `since`, and skips:
 - subagent sessions, where the host marks them;
 - non-interactive (headless) sessions, unless `include_headless = true`;
 - sessions whose working directory is under brain-wiki's state directory,
-  where headless harvest runs;
+  where brain-wiki's own runs happen;
 - sessions modified less than `min_idle_minutes` ago;
 - sessions outside `--project`, when given;
 - sessions whose working directory routes to no brain, or to a brain other
@@ -254,20 +255,18 @@ Harvest looks only at sessions modified within `since`, and skips:
 - sessions with fewer than `min_user_turns` new user turns since the last
   harvest.
 
-### 6.2 Modes
+### 6.2 How it runs
 
-| Mode | How | Cost |
-|---|---|---|
-| In the agent | The `brain-maintain` skill drives `brain_harvest_prepare` and `brain_harvest_apply`; the agent distills | The session's context |
-| Headless | `brain harvest --apply` runs a model preset (§7) once per chunk of about 30k tokens | One CLI model call per chunk |
-| Raw | `brain harvest --apply --raw` writes one episode per chunk without a model | None; consolidation distills later |
-
-Raw episodes keep user and assistant text and tool names with a short
-argument summary, but no tool output. The readers strip text the host
-injected (reminders, command echoes), and secrets are scrubbed before turns
-go to a model or into an episode. A per-session
-watermark in brain-wiki's state records the last harvested turn, and
-episode `dedupe` keys make retries harmless.
+The `brain-maintain` skill, or the `harvest` MCP prompt, drives
+`brain_harvest_prepare`, the agent's note edits, and `brain_harvest_done`,
+in the host agent. A scheduled run can include it
+([proposal](../proposal/episode-lifecycle.md)). The packet keeps user and
+assistant text and tool names with a short argument summary, but no tool
+output. The readers strip text the host injected (reminders, command
+echoes), and secrets are scrubbed before turns reach the agent. A
+per-session watermark in brain-wiki's state records the last handled turn,
+and `brain_harvest_done` advances it only for sessions whose notes cite
+them.
 
 ### 6.3 Detecting external inputs
 
@@ -277,9 +276,11 @@ A session has external inputs once it runs an untrusted tool:
 - MCP tools from servers other than brain-wiki;
 - shell commands that mention `curl`, `wget`, `http`, `https`, or a URL.
 
-Harvest scans the transcript. Episodes from such sessions get
-`bw-inputs: external`, others `local`. Episodes written over MCP get
-`unknown`, because the server cannot see the rest of the session.
+Harvest scans the transcript and marks each session in the packet
+`inputs: external` or `local`; consolidation packets give the same reading
+as `session_inputs` for an episode whose transcript is on this machine.
+Episodes written over MCP are `unknown`, because the server cannot see the
+rest of the session.
 
 | Host | Untrusted tools |
 |---|---|
@@ -309,56 +310,12 @@ One reader per host lists sessions and yields normalized turns with
 
 ## 7. Headless presets
 
-Headless harvest (`brain harvest --apply`,
-[write path §2.2](write-path.md#22-harvesting-sessions)) runs a host CLI
-once per session chunk:
-
-- The prompt goes on stdin and starts with a preamble saying the run is
-  headless and must not call tools, load skills, or read files.
-- The run happens in an empty temporary directory,
-  `<state>/headless/run-*`. Harvest skips sessions under the state
-  directory, so it never distills its own runs, even when a host does not
-  mark them headless.
-- A run times out after 600 seconds. A missing binary, a timeout, or a
-  non-zero exit is `not_available`, and the message names the other
-  presets and `--raw`.
-
-The bench's `agent` suite would also use the presets, but it is not built
-([eval bench §3.5](eval-bench.md#35-agent)).
-
-| Preset | Command (sketch) | Final text |
-|---|---|---|
-| `claude-code` | `claude --bare -p --output-format json [--json-schema S] [--model M]` | `structured_output` when a schema was passed, else `result` |
-| `codex` | `codex exec - --json --ephemeral --skip-git-repo-check --sandbox read-only -o <file> [-m M]` | The file `-o` writes, else the last `agent_message` event |
-| `antigravity` | `agy --input-format stream-json --output-format stream-json --effort medium [--model M]` | `response` of the last `result` event |
-| `cursor` | `agent -p --output-format json [--model M]` | `result` |
-| `ollama` | `ollama run <model>` (default `llama3.1`) | stdout |
-| custom | Any argv | stdout |
-
-How each preset keeps the run isolated:
-
-- `claude-code`: `--bare` skips hooks, plugins, MCP servers, auto memory,
-  and instruction files, and no tools are pre-approved.
-- `codex`: a read-only sandbox, nothing persisted, and a directory that is
-  not a git repository (hence `--skip-git-repo-check`).
-- `antigravity`: the prompt goes on stdin as one `user` message. Headless
-  runs deny tools that need approval, a denied call ends the turn with no
-  output, and custom agents cannot drop tools (T-5). The preamble is the
-  only guard.
-- `cursor`: never `--force`, so file changes are only proposed.
-- `ollama`: no tools at all.
-- custom: the user's responsibility.
-
-Harvest takes the first JSON object in the final text as the distilled
-episode and passes no output schema. Presets that can constrain output to a
-JSON Schema accept one when a caller supplies it. The `antigravity` preset
-never passes one: `agy --json-schema` drops every field the schema does not
-declare and forces an extra turn. Its default (high) effort spent 48k
-thinking tokens and five minutes on a one-episode packet in 0.1. Medium
-took 47 seconds and low 4.
-
-Exact flags live in `brainwiki/presets.py`, tested against recorded
-outputs, because CLIs change faster than this document.
+`brainwiki/presets.py` runs a host CLI once with tools off. Harvest used it
+to distill sessions into episodes until harvest began filing notes
+([D36](../decision/d36-harvest-into-notes.md)); no command uses it now.
+Scheduled consolidation needs the opposite, an agent with tools on that
+edits the brain, and is designed in the
+[episode lifecycle proposal](../proposal/episode-lifecycle.md#7-unattended-agent-mode-per-host).
 
 ## 8. `brain connect`
 

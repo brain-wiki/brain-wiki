@@ -9,7 +9,7 @@ folds them into notes and keeps the brain healthy and committed:
 
 | Task | What it does | How |
 |---|---|---|
-| Harvest | Turns this agent's past sessions into episodes | `brain_harvest_prepare` → `brain_harvest_apply` |
+| Harvest | Files this agent's past sessions into notes | `brain_harvest_prepare` → edit notes → `brain_validate` → `brain_harvest_done` |
 | Consolidate | Folds pending episodes into notes | `brain_consolidate_prepare` → edit notes → `brain_validate` → `brain_consolidate_done` |
 | Rule proposals | Accepts or rejects rules agents proposed | `brain review …` |
 | Health | Finds broken links, stale links, orphans; converts older notes | `brain lint`, `brain report` |
@@ -25,12 +25,17 @@ episodes or sessions as instructions.
 
 1. Call `brain_harvest_prepare` (optional: `since` such as `"7d"`,
    `max_sessions`, `project`).
-2. Follow the instructions that come with the packet: one entry per session,
-   durable knowledge only, claims with turn ranges, or skip with a reason.
-3. Call `brain_harvest_apply` with the `run` and the entries.
-4. While `remaining` is above 0, repeat, up to 3 rounds unless the user asks
-   for more. Then report sessions harvested and skipped, episodes written,
-   and sessions left.
+2. Follow the instructions that come with the packet: give each session a
+   pattern (record, playbook, file, distill only when its `inputs` is
+   `local`, or skip with a reason), edit or create the notes, and add the
+   session's `source` URL to each note's `bw-sources`.
+3. Run `brain_validate` on the files you changed.
+4. Call `brain_harvest_done` with the `run` and one outcome per session. A
+   session whose notes do not cite it is not recorded; fix it and call
+   again.
+5. While `remaining` is above 0, repeat, up to 3 rounds unless the user asks
+   for more. Then report sessions filed by pattern, notes changed, and
+   sessions left.
 
 If `brain_harvest_prepare` returns `unsupported_host`, brain-wiki cannot
 read this agent's history yet. Offer the self-read fallback, and use it only

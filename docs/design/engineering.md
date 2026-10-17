@@ -72,7 +72,7 @@ src/brainwiki/
                     setup_wizard, obsidian, ids, errors, logs
 ```
 
-`presets.py` runs headless host CLIs for harvest distillation. The wheel
+`presets.py` runs headless host CLIs ([agent integrations §7](agent-integrations.md#7-headless-presets)). The wheel
 also carries the root plugin files under `brainwiki/assets/plugin/` (§4).
 
 Dependency direction (an arrow means "may import"):

@@ -292,14 +292,15 @@ It differs from the skill:
 
 `brain-maintain`:
 
-1. Harvest: `brain_harvest_prepare`, distill, `brain_harvest_apply`, up to
+1. Harvest: `brain_harvest_prepare`, file the sessions into notes, `brain_validate`, `brain_harvest_done`, up to
    3 rounds ([write path §2.2](write-path.md#22-harvesting-sessions)). On
    `unsupported_host`, the self-read fallback, only with the user's
    agreement. On `forbidden`, point to `brain-setup`.
-2. Consolidate: `brain_consolidate_prepare`, edit notes following its
+2. Consolidate: `brain_consolidate_prepare` (the agent's own episodes;
+   others' only when the user asks), edit notes by pattern following its
    guidance, `brain_read_origin` when an episode is unclear and its origin
-   is available, `brain_validate`, then `brain_consolidate_done` for every
-   episode handled, skipped ones included.
+   is available, `brain_validate`, then `brain_consolidate_done` with an
+   outcome for every episode handled, skipped ones included.
 3. Rule proposals: `brain review list`, `show`, and `accept` or `reject`
    only on the user's decision.
 4. Health: `brain lint`, `brain lint --fix --dry-run` before fixing, the

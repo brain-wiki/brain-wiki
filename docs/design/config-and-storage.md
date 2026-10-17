@@ -47,7 +47,6 @@ brains = ["personal"]
 [harvest]                            # reading host session stores (write path §2.2)
 enabled = true
 hosts   = ["claude-code"]
-distill = "claude-code"              # headless preset for `brain harvest --apply`
 
 [harvest.routes]                     # session folder pattern -> brain, longest first
 "~/work/**" = "work"

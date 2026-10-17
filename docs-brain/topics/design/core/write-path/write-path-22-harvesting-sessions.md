@@ -7,31 +7,34 @@ source: "docs/design/write-path.md#22-harvesting-sessions"
 ---
 # Harvesting sessions
 
-`brain harvest` reads finished sessions from the hosts' own transcript
-stores and turns them into episodes ([[d20-harvest-host-sessions|D20]]).
-This gives:
+Harvest is consolidation whose input is a past session instead of an
+episode. brain-wiki reads finished sessions from the hosts' own transcript
+stores ([[d20-harvest-host-sessions|D20]]), and the agent
+whose sessions they are files what they hold straight into notes
+([[d36-harvest-into-notes|D36]]). Harvest writes no episodes.
+It gives:
 
-- episodes for sessions from before brain-wiki was installed, the fastest
-  way to give a new brain real history;
-- episodes for sessions in which the agent logged nothing;
+- knowledge from sessions before brain-wiki was installed, the fastest way
+  to give a new brain real history;
+- knowledge from sessions in which the agent logged nothing;
 - exact inputs, because every tool call of the session is visible.
 
 ```
-discover ─► filter ─► route ─► extract ─► distill (or raw) ─► write episodes ─► advance watermark
+discover ─► filter ─► route ─► extract ─► (the agent files notes) ─► done ─► advance watermark
 ```
 
-A per-host session reader lists sessions modified within `--since`
-(default `[harvest] since`, else `30d`)
+A per-host session reader lists sessions modified within `since` (default
+`[harvest] since`, else `30d`)
 ([[agent-integrations-64-session-readers|agent integrations §6.4]]).
 The filter skips:
 
 - subagent sessions, and headless sessions unless `[harvest]
   include_headless = true`;
-- brain-wiki's own headless runs, whose working directory is in the state
+- brain-wiki's own runs, whose working directory is in the state
   directory;
 - sessions modified less than `[harvest] min_idle_minutes` ago (default
   60), which may still be running;
-- sessions outside `--project`, when given;
+- sessions outside `project`, when given;
 - transcripts where half or more of the lines failed to parse;
 - sessions with fewer than `[harvest] min_user_turns` new user turns
   (default 3).
@@ -54,60 +57,67 @@ Extraction keeps user text, assistant text, and tool calls by name with a
 short argument summary. It drops tool output bodies and text the host
 injected (reminders, command echoes), and scrubs secrets.
 
-Distillation sends chunks of about 30k tokens, with `prompts/distill.md`,
-to a model that returns
-`{skip, reason, summary, claims[{text, turns}], negative_findings, open_questions, topics}`.
-Each chunk becomes one episode, and each claim is written with its turn
-range as `<text> (turns A-B)`. With `--raw`, no model is called and the
-episode holds a condensed transcript excerpt for whoever consolidates it.
-After writing, harvest records the last harvested turn in
-`<state>/harvest/<host>/<hash of session id>.json`, so a long session is
-harvested in increments.
+The recipe, in the host agent:
 
-The distill step reaches an LLM in one of three ways:
-
-| Backend | How it runs | Best for |
-|---|---|---|
-| `agent` | Inside a host, through the in-agent recipe below | Regular use; no extra process or credentials |
-| `preset` | `brain harvest --apply` runs the headless preset `[harvest] distill` (default `claude-code`) or `--distill` once per chunk ([[agent-integrations-7-headless-presets\|agent integrations §7]]) | Large backfills that would fill a chat session's context |
-| `raw` | No model; `--raw` or `--distill raw` | No model available |
-
-The in-agent recipe:
-
-1. The user runs `/brain:harvest` (the `harvest` MCP prompt) in a host.
+1. The user asks ("harvest my sessions"), or runs `/brain:harvest` (the
+   `harvest` MCP prompt), or a scheduled run includes harvest
+   ([[proposal-episode-lifecycle|proposal]]).
 2. The agent calls `brain_harvest_prepare {since, max_sessions, project}`
    (defaults `7d`, 10). It returns that host's new sessions for the current
    brain as condensed, scrubbed turns, at most about 15k tokens, named
-   `S1`, `S2`, and so on, with a count of the sessions `remaining`.
-3. The agent distills each session and calls `brain_harvest_apply` within
-   one hour with the run id and one entry per session: episode content, or
-   `skip` with a reason.
-4. The server checks shapes, lengths, claim turn ranges, and that each
-   session still routes to the same brain. It sets every provenance field
-   itself, writes the episodes, and advances the watermarks.
+   `S1`, `S2`, and so on, with a count of the sessions `remaining`. Each
+   session carries its `source`, a session URL, and its `inputs`.
+3. The agent applies the consolidation patterns (§4.5) to each session:
+   it edits or creates notes, cites the session's `source` in each note's
+   `bw-sources`, and validates them.
+4. Within one hour it calls `brain_harvest_done {run, sessions}` with one
+   outcome per session: `{session, pattern, notes}`, or `{session,
+   pattern: "skip", reason}`.
+5. The server checks each outcome: each note exists and cites the
+   session's URL, a skip has a reason, distill is used only for a session
+   with `inputs: local`, and the session still routes to this brain. It
+   advances the watermark of each session that passes, so the next harvest
+   starts after its last handled turn. A session that fails stays where it
+   was and comes back in the next packet. With nothing recorded, the call
+   fails with `usage`.
 
-Both tools need the `harvest` capability and harvest turned on for the host
-in the user config (`[harvest] enabled` and `hosts`, both set by `brain
-harvest enable HOST`).
+A session URL is `session://<host>/<session id>#turns=A-B`
+([[brain-format-64-sources|brain format §6.4]]). It holds no file path,
+so it means the same on every machine. `brain origin` and
+`brain_read_origin` accept it and show those turns when the transcript is
+on this machine (§4.6). Provenance never comes from the model: the URL,
+the turn range, and the inputs are brain-wiki's own reading of the
+session, and `done` checks that the notes cite it.
+
+`brain_harvest_prepare` needs the `harvest` capability and harvest turned
+on for the host in the user config (`[harvest] enabled` and `hosts`, both
+set by `brain harvest enable HOST`). `brain_harvest_done` also needs `edit`,
+since the agent filed notes.
 
 For hosts without a session reader (Cursor, OpenClaw), prepare returns
 `unsupported_host`. The skill then lets the agent read its own history, at
-the user's request, and log one episode per session with
-`brain_log_episode`, passing `session` and `origin_turns` as hints. These
-are `captured: mcp` with `inputs: unknown`, so they never feed rules.
+the user's request, and file it the same way, citing
+`session://<host>/<session id>`. brain-wiki cannot check those citations
+and keeps no watermark for them, and the agent distills nothing about the
+user from them.
 
-Harvest runs only when the user asks. Scheduled harvest is a
-[[proposal-scheduled-maintenance|proposal]].
+A large backfill costs agent time in proportion to the sessions read. It
+runs over several rounds (`remaining` counts what is left), or night by
+night in a scheduled run.
 
 `brain harvest` in a terminal is the user's command and needs neither the
-capability nor the config switch.
+capability nor the config switch. It writes nothing:
 
-- Without `--apply` it writes nothing. It lists each session (host, full
-  session id, folder, target brain, turn range, estimated tokens) or why it
-  was skipped.
-- `--apply` writes episodes. `--apply --dry-run` lists the turn ranges it
-  would write per session.
+- Bare, it lists each session (host, full session id, folder, target
+  brain, turn range, estimated tokens) or why it was skipped.
 - `--status` shows, per host, whether harvest is on and how many sessions
   are left.
 - `--from` with an unknown host, or one without a session reader, is a
   usage error, as it is for `brain harvest enable`.
+- `enable`, `disable`, and `route` change the user config.
+
+Earlier versions wrote harvested sessions as episodes, distilled in the
+agent, by a headless model preset (`brain harvest --apply`), or raw
+(`--raw`). Those are removed: the agent that reads a session can file it
+where it belongs at once, and the episode step added a second pass without
+adding provenance.

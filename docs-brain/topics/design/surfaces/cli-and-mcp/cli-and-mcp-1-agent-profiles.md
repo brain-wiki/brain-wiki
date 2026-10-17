@@ -31,7 +31,7 @@ read_origin = true
 |---|---|
 | `edit` | Editing notes directly ([[write-path-23-direct-edits\|write path §2.3]]), and the writers that change notes or the inbox: `mv`, `lint --fix`, `consolidate --done`, and `commit` under `--as` |
 | `propose_rules` | Proposing rules for the user to confirm |
-| `harvest` | The in-agent harvest (`brain_harvest_prepare`) |
+| `harvest` | The in-agent harvest (`brain_harvest_prepare`; `brain_harvest_done` also needs `edit`) |
 
 Capturing an episode needs no capability: every connected host may log
 one. An older `brain.toml` that lists `episodes` still loads, and the
@@ -78,7 +78,7 @@ is refused:
 | `origin` | Needs `read_origin`. |
 | `validate`, `consolidate --prepare`, reads | Need nothing. |
 | `rules accept`/`reject`, `review accept`/`reject`, `agents grant`/`revoke`, `schedule add`/`remove`, `undo` | Refused. These are the user's decisions. |
-| `import`, `harvest` | Not checked: they run with the owner's rights. |
+| `import`, `harvest` | Not checked: they run with the owner's rights. `harvest` only lists sessions. |
 
 No capability lets an agent undo runs, because it could undo the user's
 own work.

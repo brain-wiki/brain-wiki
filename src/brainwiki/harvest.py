@@ -1,9 +1,10 @@
-"""Harvest: turn finished host sessions into episodes (write-path.md §2.2).
+"""Harvest: an agent files its own finished sessions into notes (write-path.md §2.2).
 
-discover ─► filter ─► route ─► extract ─► distill (or raw) ─► write episodes ─► advance watermark
+discover ─► filter ─► route ─► extract ─► (the agent files notes) ─► done ─► advance watermark
 
-Everything except distillation is deterministic and lives here. Provenance (agent, session,
-turn range, device, inputs) always comes from brain-wiki's own parse of the session.
+Everything except filing is deterministic and lives here. Provenance (host, session, turn
+range, inputs) always comes from brain-wiki's own parse of the session, never from the model:
+notes cite the session URL the packet gives, and `done` checks those citations.
 """
 
 from __future__ import annotations
@@ -12,22 +13,25 @@ import hashlib
 import json
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from importlib import resources
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from brainwiki.config import Brain, UserConfig, route_brain, state_dir
 from brainwiki.errors import Expired, NotFound, UsageError
-from brainwiki.format import EpisodeContent
+from brainwiki.format import SOURCES, parse_document, parse_session_url, session_url
 from brainwiki.hosts import SessionInfo, Transcript, Turn, reader_for
 from brainwiki.ids import run_id
-from brainwiki.write import scrub
+from brainwiki.write import brain_path, scrub
+
+if TYPE_CHECKING:
+    from brainwiki.engine import Engine
 
 _PACKET_CHARS = 60_000  # ~15k tokens for the in-agent recipe
-CHUNK_CHARS = 120_000  # ~30k tokens per headless distill call
 _TURN_CHARS = 2_000
+_PATTERNS = ("record", "playbook", "file", "distill", "skip")
 _RUN_TTL_SECONDS = 3600
 _SINCE = re.compile(r"^(\d+)([hdw])$")
 _TURNS = re.compile(r"^(\d+)-(\d+)$")
@@ -58,7 +62,7 @@ def _watermark(host: str, session: str) -> int:
         return 0
 
 
-def advance(host: str, session: str, last_turn: int) -> None:
+def _advance(host: str, session: str, last_turn: int) -> None:
     if last_turn <= _watermark(host, session):
         return
     path = _watermark_path(host, session)
@@ -152,7 +156,7 @@ def discover(
 
 
 # -- condensing ------------------------------------------------------------
-def condense(turns: list[Turn], budget: int) -> tuple[list[dict[str, Any]], bool]:
+def _condense(turns: list[Turn], budget: int) -> tuple[list[dict[str, Any]], bool]:
     """Scrubbed, shortened turns that fit `budget` characters; truncation keeps the start."""
     out: list[dict[str, Any]] = []
     used = 0
@@ -169,141 +173,20 @@ def condense(turns: list[Turn], budget: int) -> tuple[list[dict[str, Any]], bool
     return out, False
 
 
-def chunks(turns: list[Turn], budget: int = CHUNK_CHARS) -> list[list[Turn]]:
-    groups: list[list[Turn]] = [[]]
-    used = 0
-    for turn in turns:
-        cost = min(len(turn.text), _TURN_CHARS) + 100
-        if groups[-1] and used + cost > budget:
-            groups.append([])
-            used = 0
-        groups[-1].append(turn)
-        used += cost
-    return [g for g in groups if g]
-
-
-def session_payload(
-    candidate: Candidate, turns: list[dict[str, Any]], truncated: bool, handle: str | None = None
+def _session_payload(
+    candidate: Candidate, turns: list[dict[str, Any]], truncated: bool, handle: str
 ) -> dict[str, Any]:
-    out: dict[str, Any] = {}
-    if handle:
-        out["handle"] = handle
-    out.update(
-        started=candidate.info.started,
-        project=Path(candidate.info.cwd).name if candidate.info.cwd else None,
-        turn_range=f"{turns[0]['turn']}-{turns[-1]['turn']}" if turns else None,
-        truncated=truncated,
-        turns=turns,
-    )
-    return out
-
-
-# -- writing ---------------------------------------------------------------
-@dataclass
-class Distilled:
-    skip: bool = False
-    reason: str = ""
-    summary: str = ""
-    claims: list[tuple[str, str]] = field(default_factory=list)  # (text, "a-b")
-    negative_findings: list[str] = field(default_factory=list)
-    open_questions: list[str] = field(default_factory=list)
-    topics: list[str] = field(default_factory=list)
-
-
-def parse_distilled(data: Any, first: int, last: int) -> tuple[Distilled | None, list[str]]:
-    """Validate one session's result: shape, lengths, and turn ranges inside [first, last]."""
-    if not isinstance(data, dict):
-        return None, ["the result must be an object"]
-    errors: list[str] = []
-    if data.get("skip"):
-        return Distilled(skip=True, reason=str(data.get("reason") or "")[:200]), []
-
-    def strings(key: str, limit: int, count: int) -> list[str]:
-        values = data.get(key) or []
-        if not isinstance(values, list) or len(values) > count:
-            errors.append(f"{key} must be a list of at most {count} strings")
-            return []
-        return [" ".join(str(v).split())[:limit] for v in values if str(v).strip()]
-
-    summary = str(data.get("summary") or "").strip()
-    claims = []
-    for index, claim in enumerate(data.get("claims") or []):
-        if not isinstance(claim, dict) or not str(claim.get("text") or "").strip():
-            errors.append(f"claims[{index}] needs text")
-            continue
-        match = _TURNS.match(str(claim.get("turns") or ""))
-        if not match or not (first <= int(match.group(1)) <= int(match.group(2)) <= last):
-            errors.append(f"claims[{index}]: turns must be a range within {first}-{last}")
-            continue
-        claims.append(
-            (" ".join(str(claim["text"]).split())[:500], f"{match.group(1)}-{match.group(2)}")
-        )
-    result = Distilled(
-        summary=summary[:20000],
-        claims=claims[:50],
-        negative_findings=strings("negative_findings", 500, 20),
-        open_questions=strings("open_questions", 500, 20),
-        topics=strings("topics", 64, 5),
-    )
-    if not result.summary and not result.claims:
-        errors.append("give a summary or at least one claim, or skip the session")
-    return (result if not errors else None), errors
-
-
-def _render_turns(turns: list[Turn], per_turn: int = 1500) -> str:
-    lines = []
-    for turn in turns:
-        who = "User" if turn.role == "user" else "Assistant"
-        text = " ".join(turn.text.split())
-        if len(text) > per_turn:
-            text = text[: per_turn - 1] + "…"
-        tools = f" [tools: {'; '.join(turn.tools[:6])}]" if turn.tools else ""
-        lines.append(f"- **{who} (turn {turn.index})**: {text}{tools}")
-    return "\n".join(lines)
-
-
-def write_episode_for(
-    candidate: Candidate,
-    first: int,
-    last: int,
-    distilled: Distilled | None,
-    *,
-    raw_turns: list[Turn] | None = None,
-) -> str | None:
-    """Write one harvested episode into the session's brain. Returns its path."""
-    from brainwiki.engine import Engine
-    from brainwiki.write import write_episode
-
-    assert candidate.brain is not None and candidate.transcript is not None
-    host, session = candidate.info.host, candidate.info.id
-    if distilled is None:
-        content = EpisodeContent(
-            summary=f"Raw harvest of a {host} session (turns {first}-{last}); not yet distilled.\n\n"
-            + _render_turns(raw_turns or [])
-        )
-        topics: list[str] = []
-    else:
-        content = EpisodeContent(
-            summary=distilled.summary,
-            claims=[f"{text} (turns {turns})" for text, turns in distilled.claims],
-            negative_findings=distilled.negative_findings,
-            open_questions=distilled.open_questions,
-        )
-        topics = distilled.topics
-    with Engine(candidate.brain, host=host) as engine:
-        result = write_episode(
-            engine,
-            content,
-            origin="agent",
-            inputs=candidate.transcript.inputs,
-            captured="harvest",
-            agent=host,
-            session=session,
-            origin_turns=f"{first}-{last}",
-            topics=topics,
-            dedupe=f"{host}:{session}:{first}-{last}",
-        )
-    return result.path
+    turn_range = f"{turns[0]['turn']}-{turns[-1]['turn']}" if turns else None
+    return {
+        "handle": handle,
+        "source": session_url(candidate.info.host, candidate.info.id, turn_range),
+        "inputs": candidate.transcript.inputs if candidate.transcript else "unknown",
+        "started": candidate.info.started,
+        "project": Path(candidate.info.cwd).name if candidate.info.cwd else None,
+        "turn_range": turn_range,
+        "truncated": truncated,
+        "turns": turns,
+    }
 
 
 # -- the in-agent recipe (MCP) -----------------------------------------------
@@ -339,17 +222,17 @@ def prepare_packet(
         budget = max(4000, _PACKET_CHARS - used)
         if sessions and used >= _PACKET_CHARS:
             break
-        turns, truncated = condense(candidate.new_turns, budget)
+        turns, truncated = _condense(candidate.new_turns, budget)
         if not turns:
             continue
         handle = f"S{len(sessions) + 1}"
-        sessions.append(session_payload(candidate, turns, truncated, handle))
+        sessions.append(_session_payload(candidate, turns, truncated, handle))
         used += sum(len(json.dumps(t, ensure_ascii=False)) for t in turns)
         mapping[handle] = {
             "session": candidate.info.id,
-            "path": str(candidate.info.path),
             "first": turns[0]["turn"],
             "last": turns[-1]["turn"],
+            "inputs": candidate.transcript.inputs if candidate.transcript else "unknown",
         }
     packet = {
         "run": run,
@@ -369,9 +252,54 @@ def prepare_packet(
     return packet
 
 
-def apply_packet(
-    user: UserConfig, host: str, run: str, entries: list[dict[str, Any]]
+def _cites_session(engine: Engine, note: str, host: str, session: str) -> bool:
+    doc = parse_document(note, engine.store.read_bytes(note).decode("utf-8", "replace"))
+    value = doc.frontmatter.data.get(SOURCES)
+    for item in value if isinstance(value, list) else [value] if value else []:
+        url = parse_session_url(str(item))
+        if url is not None and url[:2] == (host, session):
+            return True
+    return False
+
+
+def _outcome_problems(
+    engine: Engine, host: str, handle: str, info: dict[str, Any], entry: dict[str, Any]
+) -> list[str]:
+    """Why one session's outcome cannot be recorded."""
+    pattern = entry.get("pattern")
+    notes = [str(n) for n in entry.get("notes") or []]
+    if pattern not in _PATTERNS:
+        return [f"{handle}: pattern must be one of {', '.join(_PATTERNS)}"]
+    if pattern == "skip":
+        if notes or not str(entry.get("reason") or "").strip():
+            return [f"{handle}: a skipped session needs a reason and no notes"]
+        return []
+    if not notes:
+        return [f"{handle}: {pattern} needs the notes it changed"]
+    if pattern == "distill" and info.get("inputs") != "local":
+        return [
+            f"{handle}: the session read content from outside (inputs {info.get('inputs')}), "
+            "so it cannot be distilled into statements about the user; record or file it"
+        ]
+    problems = []
+    url = session_url(host, info["session"], f"{info['first']}-{info['last']}")
+    for note in notes:
+        rel = brain_path(engine, note)
+        if not engine.store.exists(rel) or not rel.lower().endswith(".md"):
+            problems.append(f"{handle}: no such note {note}")
+        elif not _cites_session(engine, rel, host, info["session"]):
+            problems.append(
+                f'{handle}: {rel} does not cite the session; add "{url}" to its {SOURCES}'
+            )
+    return problems
+
+
+def done_packet(
+    engine: Engine, user: UserConfig, host: str, run: str, entries: list[dict[str, Any]]
 ) -> dict[str, Any]:
+    """Record what came of each session of a harvest run and advance its watermark. A session
+    whose outcome fails a check (a missing note or citation) keeps its watermark, so the next
+    harvest offers it again."""
     target = _run_file(run)
     if not target.is_file():
         raise NotFound(f"no harvest run {run}; call brain_harvest_prepare")
@@ -380,35 +308,34 @@ def apply_packet(
         raise Expired(f"{run} expired; call brain_harvest_prepare again")
     if state["host"] != host:
         raise NotFound(f"{run} belongs to another host")
-    reader = reader_for(host)
-    assert reader is not None
-    written, skipped, errors = [], [], []
+    if str(engine.brain.root) != state["brain_root"]:
+        raise UsageError(f"{run} was prepared for another brain")
+    engine.scan()
+    done, errors = [], []
     for entry in entries:
         handle = str(entry.get("session") or "")
         info = state["map"].get(handle)
         if info is None:
             errors.append(f"{handle or '?'}: not in this run")
             continue
-        first, last = int(info["first"]), int(info["last"])
-        distilled, problems = parse_distilled(entry, first, last)
+        problems = _outcome_problems(engine, host, handle, info, entry)
         if problems:
-            errors += [f"{handle}: {p}" for p in problems]
+            errors += problems
             continue
-        assert distilled is not None
-        if distilled.skip:
-            advance(host, info["session"], last)
-            skipped.append({"session": handle, "reason": distilled.reason})
-            continue
-        session = reader.find(info["session"])
-        if session is None:
-            errors.append(f"{handle}: the session is no longer on disk")
-            continue
-        brain = route_brain(session.cwd, host, user)
-        if brain is None or str(brain.root) != state["brain_root"]:
-            errors.append(f"{handle}: the session no longer routes to this brain")
-            continue
-        candidate = Candidate(session, brain, first, reader.read(session))
-        path = write_episode_for(candidate, first, last, distilled)
-        advance(host, info["session"], last)
-        written.append({"session": handle, "episode": path})
-    return {"run": run, "written": written, "skipped": skipped, "errors": errors}
+        session = reader_for(host)
+        if session is not None and entry.get("pattern") != "skip":
+            found = session.find(info["session"])
+            if found is None or route_brain(found.cwd, host, user) is None:
+                errors.append(f"{handle}: the session no longer routes to this brain")
+                continue
+        _advance(host, info["session"], int(info["last"]))
+        done.append(
+            {
+                "session": handle,
+                "source": session_url(host, info["session"], f"{info['first']}-{info['last']}"),
+                "pattern": entry.get("pattern"),
+                "notes": list(entry.get("notes") or []),
+                "reason": entry.get("reason"),
+            }
+        )
+    return {"run": run, "done": done, "errors": errors}

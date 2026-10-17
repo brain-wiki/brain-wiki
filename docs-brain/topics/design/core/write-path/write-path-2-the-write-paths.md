@@ -12,12 +12,12 @@ There are three ways to write, plus rules, which have their own path.
 ```
                      PATH 1: inbox (append-only, any agent)
   agent (MCP) ───────► inbox/episodes/YYYY/MM/<ulid>.md     never edited again
-  host session stores ─► (brain harvest: read, filter, distill) ─► inbox/episodes/…
   host memory feature ─► inbox/agents/<agent>/…               treated as episodes
 
                      PATH 2: direct edits (agents with `edit`, and people)
   agent edits topics/… ─► brain validate <paths> ─► fix what it reports
         ─► brain commit (by hand or from brain schedule) ─► git history (§5)
+  host session stores ─► (harvest: read, filter, scrub) ─► agent files notes (§2.2)
 
                      PATH 3: brain-wiki's own writers (runs)
   consolidate --done, lint --fix, mv, import, rules, agents grant, undo

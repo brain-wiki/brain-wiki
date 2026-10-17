@@ -12,7 +12,7 @@ Harvest looks only at sessions modified within `since`, and skips:
 - subagent sessions, where the host marks them;
 - non-interactive (headless) sessions, unless `include_headless = true`;
 - sessions whose working directory is under brain-wiki's state directory,
-  where headless harvest runs;
+  where brain-wiki's own runs happen;
 - sessions modified less than `min_idle_minutes` ago;
 - sessions outside `--project`, when given;
 - sessions whose working directory routes to no brain, or to a brain other

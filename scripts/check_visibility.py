@@ -35,8 +35,7 @@ ALLOWED = {
     ("brainwiki.bench._suites", "agent"),
     # MCP tool input models: their names become schema titles agents see.
     ("brainwiki.mcp._server", "RuleConfirmation"),
-    ("brainwiki.mcp._server", "HarvestClaim"),
-    ("brainwiki.mcp._server", "HarvestEntry"),
+    ("brainwiki.mcp._server", "HarvestOutcome"),
     ("brainwiki.mcp._server", "ConsolidateOutcome"),
 }
 CONVENTIONAL = {"log", "logger"}

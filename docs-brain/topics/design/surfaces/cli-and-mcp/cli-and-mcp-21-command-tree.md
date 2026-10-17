@@ -37,7 +37,7 @@ brain rules add TEXT [--quote Q] [--replaces RULE] | list | accept ID | reject I
 
 brain consolidate --prepare [--topic T] [--max-episodes N] [--agent HOST]... [--unowned] [--all] [--out FILE.json]
 brain consolidate --done EPISODE[:PATTERN:NOTE | :skip:REASON]...
-brain harvest [--from HOST]... [--since 30d] [--project PATH] [--raw | --distill PRESET] [--apply [--dry-run]]
+brain harvest [--from HOST]... [--since 30d] [--project PATH]      # list the sessions waiting
 brain harvest --status                                 # per host: on or off, sessions left
 brain harvest enable HOST... | disable HOST... | route PATTERN BRAIN
 brain origin EPISODE [--turns A-B]

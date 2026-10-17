@@ -17,7 +17,7 @@ source: "docs/user/agents.md#what-agents-get"
 | `brain_log_episode` | Record a learning in the inbox when no note fits yet |
 | `brain_propose_rule` | Propose a rule; you confirm before anything is written |
 | `brain_consolidate_prepare`, `brain_consolidate_done` | Gather episodes, then archive them once the notes are edited |
-| `brain_harvest_prepare`, `brain_harvest_apply` | Turn past sessions into episodes |
+| `brain_harvest_prepare`, `brain_harvest_done` | File the agent's past sessions into notes |
 | `brain_read_origin` | Show the conversation an episode came from |
 
 - Search filters by type, tag, property, and date. A superseded hit comes

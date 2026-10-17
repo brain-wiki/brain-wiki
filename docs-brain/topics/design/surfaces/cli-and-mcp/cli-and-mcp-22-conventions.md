@@ -11,12 +11,12 @@ source: "docs/design/cli-and-mcp.md#22-conventions"
   documented shape, the same as the MCP structured results.
 - Commands that change many files, or files outside the brain, take
   `--dry-run` and print what they would change: `lint --fix`, `mv`,
-  `agents grant|revoke`, `harvest --apply`, `import`, `connect`, `commit`,
-  and `schedule add|remove`. `import` defaults to a dry run and writes
-  only with `--apply`.
-- Single-step writes have no `--dry-run`: `log`, `rules`,
-  `consolidate --done`, `review accept|reject`, and `undo`. All of them
-  except `log` are runs that `brain undo` reverses.
+  `agents grant|revoke`, `import`, `connect`, `commit`, and
+  `schedule add|remove`. `import` defaults to a dry run and writes only
+  with `--apply`.
+- Single-step writes have no `--dry-run`: `rules`, `consolidate --done`,
+  `review accept|reject`, and `undo`. All of them are runs that
+  `brain undo` reverses.
 - Printed paths are brain-relative. `--json` also includes absolute paths.
 - Targets follow the Obsidian CLI convention. A title, alias, or file name
   resolves like a wikilink, and an exact path or id resolves exactly.

@@ -999,8 +999,8 @@ def _report(
 # -- harvest -------------------------------------------------------------------
 
 _harvest_app = _sub_app(
-    "turn host session transcripts into episodes "
-    "(bare: list sessions, or harvest them with --apply)"
+    "configure harvest, which agents use to file their past sessions into notes "
+    "(bare: list the sessions waiting)"
 )
 _app.add_typer(_harvest_app, name="harvest")
 
@@ -1010,7 +1010,7 @@ def _harvest_root(
     ctx: typer.Context,
     hosts: Annotated[
         list[str] | None,
-        typer.Option("--from", help="harvest this host's sessions (repeatable; default: config)"),
+        typer.Option("--from", help="list this host's sessions (repeatable; default: config)"),
     ] = None,
     since: Annotated[
         str | None,
@@ -1021,28 +1021,6 @@ def _harvest_root(
     project: Annotated[
         str | None, typer.Option("--project", help="only sessions run in this folder or below it")
     ] = None,
-    raw: Annotated[
-        bool, typer.Option("--raw", help="write the turns as they are, without a model")
-    ] = False,
-    distill: Annotated[
-        str | None,
-        typer.Option(
-            "--distill", metavar="PRESET", help="distill with this model preset (default: config)"
-        ),
-    ] = None,
-    apply: Annotated[
-        bool,
-        typer.Option(
-            "--apply", help="write episodes (without it, list sessions and token estimates)"
-        ),
-    ] = False,
-    dry_run: Annotated[
-        bool,
-        typer.Option(
-            "--dry-run",
-            help="with --apply, list the turn ranges it would write as episodes; writes nothing",
-        ),
-    ] = False,
     status: Annotated[
         bool, typer.Option("--status", help="per host: on or off, sessions left")
     ] = False,
@@ -1054,10 +1032,6 @@ def _harvest_root(
         "hosts": hosts or None,
         "since": since,
         "project": project,
-        "raw": raw,
-        "distill": distill,
-        "apply": apply,
-        "dry_run": dry_run,
         "status": status,
     }
     if ctx.invoked_subcommand is None:
@@ -1113,11 +1087,14 @@ def _harvest_route(
     return _configure(ctx, "route", [pattern, target])
 
 
-@_app.command("origin", help="show the conversation an episode came from")
+@_app.command("origin", help="show the conversation an episode or session URL points to")
 def _origin(
     ctx: typer.Context,
     episode: Annotated[
-        str, typer.Argument(help="episode id, or its path (in the brain, or absolute)")
+        str,
+        typer.Argument(
+            help="episode id, its path (in the brain, or absolute), or a session:// URL"
+        ),
     ],
     turns: Annotated[
         str | None,

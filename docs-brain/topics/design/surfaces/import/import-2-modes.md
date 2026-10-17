@@ -1,11 +1,11 @@
 ---
 id: 01M3250V00BKGT5CTTJGQ293G5
 type: design
-title: "Modes (Import)"
+title: "Modes"
 aliases: ["Import §2"]
 source: "docs/design/import.md#2-modes"
 ---
-# Modes (Import)
+# Modes
 
 | Mode | Command | Result |
 |---|---|---|
