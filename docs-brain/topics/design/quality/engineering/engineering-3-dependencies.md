@@ -13,7 +13,7 @@ source: "docs/design/engineering.md#3-dependencies"
 | `PyYAML` | `>=6.0` | Frontmatter parsing, with `CSafeLoader` when available. |
 | `tomlkit` | `>=0.12` | Editing `config.toml` and `brain.toml` without losing comments. Reading uses stdlib `tomllib`. |
 | `filelock` | `>=3.12` | Cross-platform advisory locks. |
-| `typer` | `>=0.26,<1` | The CLI parser ([[d31-typer-cli\|D31]], [[cli-and-mcp-24-parser-and-startup-cost\|CLI and MCP §2.4]]). |
+| `typer` | `>=0.26,<1` | The CLI parser ([[d31-typer-cli\|D31]], [[cli-and-mcp-2-cli\|CLI and MCP §2.4]]). |
 
 - `mcp` pulls in pydantic, starlette, uvicorn, httpx2, jsonschema, and
   others.

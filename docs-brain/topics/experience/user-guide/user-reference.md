@@ -11,6 +11,6 @@ source: "docs/user/reference.md"
 - [[user-reference-commands]]: Commands
 - [[user-reference-which-brain-a-command-uses]]: Which brain a command uses
 - [[user-reference-mcp-tools]]: MCP tools
-- [[user-reference-exit-codes]]: Exit codes (Reference)
+- [[user-reference-exit-codes]]: Exit codes
 - [[user-reference-files]]: Files
 - [[user-reference-troubleshooting]]: Troubleshooting

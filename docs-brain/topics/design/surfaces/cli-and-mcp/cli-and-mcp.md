@@ -15,12 +15,8 @@ top-level argument the schema does not declare.
 Generated from `docs/design/cli-and-mcp.md`.
 
 ## Notes
-- [[cli-and-mcp-1-agent-profiles]]: Agent profiles (CLI and MCP)
+- [[cli-and-mcp-1-agent-profiles]]: Agent profiles
 - [[cli-and-mcp-2-cli]]: CLI
-  - [[cli-and-mcp-21-command-tree]]: Command tree
-  - [[cli-and-mcp-22-conventions]]: Conventions
-  - [[cli-and-mcp-23-exit-codes]]: Exit codes (CLI and MCP)
-  - [[cli-and-mcp-24-parser-and-startup-cost]]: Parser and startup cost
 - [[cli-and-mcp-3-mcp-server]]: MCP server
   - [[cli-and-mcp-31-protocol-target]]: Protocol target
   - [[cli-and-mcp-32-naming-and-size-limits]]: Naming and size limits
@@ -29,5 +25,5 @@ Generated from `docs/design/cli-and-mcp.md`.
   - [[cli-and-mcp-35-prompts]]: Prompts
   - [[cli-and-mcp-36-errors]]: Errors
   - [[cli-and-mcp-37-lifecycle]]: Lifecycle
-  - [[cli-and-mcp-38-not-built]]: Not built (CLI and MCP)
+  - [[cli-and-mcp-38-not-built]]: Not built
 - [[cli-and-mcp-4-stability-promises]]: Stability promises

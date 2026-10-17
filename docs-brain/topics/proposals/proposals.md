@@ -17,8 +17,8 @@ changes, in the same change as the code, and the proposal is deleted.
 Generated from `docs/proposal/README.md`.
 
 ## Notes
-- [[proposal-hooks]]: Host hooks: briefing, capture, and recall (sub-topic)
-- [[proposal-privacy]]: Privacy (sub-topic)
-- [[proposal-public-benchmarks]]: Public memory benchmarks (sub-topic)
-- [[proposal-remote-mcp]]: Remote MCP for chat apps (sub-topic)
-- [[proposal-remote-sync]]: Remote sync and object storage (sub-topic)
+- [[proposal-hooks]]: Host hooks: briefing, capture, and recall
+- [[proposal-privacy]]: Privacy
+- [[proposal-public-benchmarks]]: Public memory benchmarks
+- [[proposal-remote-mcp]]: Remote MCP for chat apps
+- [[proposal-remote-sync]]: Remote sync and object storage

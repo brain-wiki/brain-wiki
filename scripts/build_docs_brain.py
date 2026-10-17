@@ -5,12 +5,17 @@ The topic tree (TREE) follows the kind of content: `overview` (goals, concepts, 
 surfaces, and quality, and the decisions); `roadmap` (milestones, open questions,
 verification items); `proposals`, one topic each; and `ideas`.
 
-Each `##` and `###` section becomes a note. Every row of an ID table (goals, scenarios,
-requirements, threats, milestones, questions, verification items), every glossary term, and
-every idea becomes a typed note of its own, filed in the topic for its kind. Each decision file
-is one decision note; one a later decision replaced is `status: superseded` with
-`bw-superseded_by`. Links between documents become wikilinks. The docs stay the source of
-truth, so the brain is regenerated, never edited by hand.
+A note is a page worth opening on its own, so notes follow size (NOTE_LIMIT). A document that
+fits is one note; a longer one is one note per `##` section, and a `###` subsection gets its own
+note only when its `##` section is still too long. A short document that would fill a topic of
+its own becomes a note in the parent topic, and one whose topic holds entities (terms,
+milestones, questions) puts its text in the topic's hub. Every row of an ID table people look
+up by id (goals, scenarios, milestones, questions, verification items), every glossary term,
+and every idea becomes a typed note of its own, filed in the topic for its kind; requirement
+and threat tables stay tables, since they are read together. Each decision file is one decision
+note; one a later decision replaced is `status: superseded` with `bw-superseded_by`. Links
+between documents become wikilinks. The docs stay the source of truth, so the brain is
+regenerated, never edited by hand.
 
     uv run scripts/build_docs_brain.py           # write docs-brain/
     uv run scripts/build_docs_brain.py --check   # change nothing; exit 1 if docs-brain/ is stale
@@ -48,6 +53,8 @@ GLOSSARY = f"{DESIGN}/glossary.md"
 DECISIONS = "docs/decision"
 PROPOSALS = "docs/proposal/README.md"
 IDEAS = "docs/roadmap/ideas.md"
+# Up to this many bytes, a document (or a `##` section of a longer one) is one note.
+NOTE_LIMIT = 10 * 1024
 
 # The topic tree, in the order hubs list it: (slug, parent, title, description). An empty title
 # or description comes from the document that fills the topic (its `#` heading, and its row in
@@ -162,22 +169,16 @@ SECTION_TOPICS = {
     (OVERVIEW, "3-goals"): "goals",
     (OVERVIEW, "6-users-and-scenarios"): "scenarios",
 }
-# ID tables: id prefix -> (note type, topic or None for the table's own, the document).
+# ID tables whose rows become notes: id prefix -> (note type, topic or None for the table's own,
+# the document). Requirement and threat tables (C, R, W, I, T, O, P) stay tables.
 ROW_FAMILIES = {
     "G": ("goal", "goals", OVERVIEW),
     "S": ("scenario", "scenarios", OVERVIEW),
-    "C": ("requirement", None, f"{DESIGN}/config-and-storage.md"),
-    "R": ("requirement", None, f"{DESIGN}/index-and-search.md"),
-    "W": ("requirement", None, f"{DESIGN}/write-path.md"),
-    "I": ("requirement", None, f"{DESIGN}/import.md"),
-    "T": ("threat", None, f"{DESIGN}/security-and-privacy.md"),
-    "O": ("requirement", None, f"{DESIGN}/skills-and-onboarding.md"),
     "M": ("milestone", None, "docs/roadmap/milestones.md"),
     "Q": ("question", None, "docs/roadmap/open-questions.md"),
     "T-": ("verification", None, "docs/roadmap/verification.md"),
-    "P": ("requirement", None, "docs/proposal/privacy.md"),
 }
-# Folders whose documents become one note each, with their sections below it:
+# Folders whose documents become one note each (with their sections below it when long):
 # folder -> (topic, note type, stem prefix).
 GROUPS = {
     "docs/user": ("user-guide", "guide", "user"),
@@ -239,6 +240,12 @@ class Section:
     note_title: str = ""
     topic: str = ""
     rows: list[Row] = field(default_factory=list)
+    inline: bool = False  # its text is in another note (its document's, or its parent section's)
+
+    @property
+    def size(self) -> int:
+        own = sum(len(line.encode("utf-8")) + 1 for line in self.lines)
+        return own + sum(c.size for c in self.children)
 
 
 @dataclass
@@ -266,8 +273,11 @@ class Doc:
     lead: Section | None = None  # the intro, for tables in it
     sections: list[Section] = field(default_factory=list)
     anchors: dict[str, Section] = field(default_factory=dict)
-    note: Section | None = None  # one note for the whole document (GROUPS, decisions)
-    whole: bool = False  # the note holds the sections too, instead of one note per section
+    note: Section | None = None  # the document's own note (GROUPS, decisions, short documents)
+    # decision: one decision note; note: one note holds the text; hub: the topic's hub holds it;
+    # split: one note per `##` section (under the document's note, or its topic's hub)
+    layout: str = "split"
+    size: int = 0
     note_type: str = "reference"
 
     @property
@@ -277,7 +287,7 @@ class Doc:
 
 def parse(path: Path, topic: str, key: str) -> Doc:
     text = (ROOT / path).read_text(encoding="utf-8")
-    doc = Doc(path, topic, "", key)
+    doc = Doc(path, topic, "", key, size=len(text.encode("utf-8")))
     fence = None
     current: Section | None = None
     top: Section | None = None
@@ -393,9 +403,9 @@ def _rows(section: Section, header: list[str], cells: list[str]) -> list[Row] | 
             topic or "",
             values,
             section,
-            stem=f"threat-{rid.lower()}" if kind == "threat" else rid.lower(),
+            stem=rid.lower(),
             title=f"{rid}: {short(first_cell)}",
-            aliases=[f"threat {rid}"] if kind == "threat" else [rid],
+            aliases=[rid],
         )
     ]
 
@@ -505,13 +515,15 @@ class Brain:
         other = self.docs.get(path)
         if other is None:
             return label
-        if anchor and anchor in other.anchors and not other.whole:
-            stem = other.anchors[anchor].stem
+        if anchor and anchor in other.anchors:
+            stem = other.anchors[anchor].stem  # the note that holds the section
         else:
             stem = other.note.stem if other.note else other.topic
         return f"[[{stem}|{label}]]"
 
-    def body(self, doc: Doc, lines: list[str]) -> list[str]:
+    def body(self, doc: Doc, lines: list[str], *, demote: bool = True) -> list[str]:
+        """Note text from document lines: links become wikilinks, and with `demote`,
+        sub-headings stay below the `##` sections the note adds (Items, Related)."""
         out, fence = [], None
         for line in lines:
             marker = re.match(r"^\s*(```+|~~~+)", line)
@@ -527,7 +539,7 @@ class Brain:
                 out.append(line)
                 continue
             heading = HEADING.match(line)
-            if heading:  # sub-headings stay below the note's own `##` sections
+            if heading and demote:
                 line = "#" * max(3, len(heading.group(1)) - 1) + " " + heading.group(2)
             parts = re.split(r"(`[^`]*`)", line)
             converted = "".join(
@@ -629,7 +641,7 @@ def load_docs(brain: Brain) -> list[Doc]:
     for path in sorted((ROOT / DECISIONS).glob("d[0-9]*.md")):
         doc = add(path, "decisions", path.stem, "decision")
         doc.note = Section(doc, 1, doc.title, None, doc.title, "", stem=doc.key)
-        doc.whole = True
+        doc.layout = "decision"
     add(ROOT / PROPOSALS, "proposals", "proposals", "reference")
     for path in sorted((ROOT / "docs/proposal").glob("*.md")):
         if path.name != "README.md":
@@ -653,6 +665,38 @@ def _reading_order() -> dict[str, str]:
     return out
 
 
+# Documents whose topic holds entity notes (terms, ideas, milestones, …); short ones put their
+# text in the topic's hub rather than in a note beside those entities.
+ENTITY_DOCS = {GLOSSARY, IDEAS, *(family[2] for family in ROW_FAMILIES.values())}
+
+
+def choose_layout(brain: Brain, doc: Doc) -> None:
+    """How the document becomes notes (Doc.layout), and which note holds each section."""
+    if doc.layout != "decision":
+        elsewhere = any(path == doc.posix for path, _ in SECTION_TOPICS)
+        if doc.size > NOTE_LIMIT or elsewhere:
+            doc.layout = "split"
+        elif doc.note is not None:  # a grouped document
+            doc.layout = "note"
+        elif (
+            doc.posix in ENTITY_DOCS
+            or doc.path.name == "README.md"
+            or any(t.parent == doc.topic for t in brain.topics.values())
+        ):
+            doc.layout = "hub"
+        else:  # a short document that would fill a topic alone: a note in the parent topic
+            parent = brain.topics.pop(doc.topic).parent
+            doc.note = Section(doc, 1, doc.title, None, doc.title, "", stem=doc.topic)
+            doc.topic = parent or ""
+            doc.layout = "note"
+    holder = doc.topic if doc.layout == "hub" else doc.note.stem if doc.note else None
+    for s in walk(doc.sections):
+        if doc.layout != "split":
+            s.stem, s.inline = holder or s.stem, True
+        elif s.parent is not None and s.parent.size <= NOTE_LIMIT:
+            s.stem, s.inline = s.parent.stem, True
+
+
 def build() -> dict[str, str]:
     brain = Brain()
     docs = load_docs(brain)
@@ -660,12 +704,15 @@ def build() -> dict[str, str]:
         brain.topics[slug] = Topic(slug, parent, title, description)
     statuses = _proposal_statuses()
     reading = _reading_order()
-    for doc in docs:  # a topic a whole document fills takes its title, intro, and source
-        if doc.note is not None:
-            continue
+    for doc in docs:
         if doc.topic.startswith("proposal-"):
             changes = statuses.get(doc.path.name, "")
             brain.topics[doc.topic] = Topic(doc.topic, "proposals", doc.title, changes)
+    for doc in docs:
+        choose_layout(brain, doc)
+    for doc in docs:  # a topic a whole document fills takes its title, intro, and source
+        if doc.note is not None:
+            continue
         if doc.topic not in brain.topics:
             raise SystemExit(f"build_docs_brain: {doc.posix} has no topic in TREE ({doc.topic})")
         topic = brain.topics[doc.topic]
@@ -687,16 +734,17 @@ def build() -> dict[str, str]:
     counts: dict[str, int] = {}
     for doc in docs:
         for s in walk(doc.sections):
-            counts[s.title.lower()] = counts.get(s.title.lower(), 0) + 1
+            if not s.inline:
+                counts[s.title.lower()] = counts.get(s.title.lower(), 0) + 1
     for doc in docs:
-        if doc.whole:
+        if doc.layout == "decision":
             rid = doc.title.split(":", 1)[0]
             brain.mentions[rid] = (doc.key, doc.title)
             continue
         for s in [doc.lead, *walk(doc.sections)]:
             if s is not doc.lead:
                 s.note_title = (
-                    s.title if counts[s.title.lower()] == 1 else f"{s.title} ({doc.title})"
+                    s.title if counts.get(s.title.lower(), 1) == 1 else f"{s.title} ({doc.title})"
                 )
                 inherited = s.parent.topic if s.parent else doc.topic
                 s.topic = SECTION_TOPICS.get((doc.posix, s.anchor), inherited)
@@ -704,8 +752,7 @@ def build() -> dict[str, str]:
             for row in s.rows:
                 row.topic = row.topic or s.topic
                 if ROW_ID.match(row.id):
-                    key = f"threat-{row.id}" if row.kind == "threat" else row.id
-                    brain.mentions[key] = (row.stem, row.title)
+                    brain.mentions[row.id] = (row.stem, row.title)
 
     for doc in docs:
         render_doc(brain, doc)
@@ -731,30 +778,66 @@ def _intro(brain: Brain, doc: Doc) -> list[str]:
     return brain.body(doc, [line for line in doc.intro if not line.startswith("|")])
 
 
+def _text(sections: list[Section]) -> list[str]:
+    """Sections as written, headings included: the text of a note or hub that holds them."""
+    lines: list[str] = []
+    for s in sections:
+        lines += ["", "#" * s.level + " " + s.heading, *s.lines, *_text(s.children)]
+    return lines
+
+
+def _rows_within(s: Section) -> list[Row]:
+    """The section's entity rows, with those of the subsections it holds."""
+    return [*s.rows, *(r for c in s.children if c.inline for r in _rows_within(c))]
+
+
 def render_doc(brain: Brain, doc: Doc) -> None:
-    if doc.whole:
+    if doc.layout == "decision":
         render_whole(brain, doc)
         return
-
-    def tree(sections: list[Section], depth: int, parent_topic: str) -> None:
-        for s in sections:  # every note is listed in its hub, nested under its parent there
-            here = depth if s.topic == parent_topic else 0
-            entries = brain.topics[s.topic].entries
-            entries.append((s.stem, s.note_title, here))
-            for row in sorted((r for r in s.rows if r.topic == s.topic), key=row_key):
-                entries.append((row.stem, row.title, here + 1))
-            tree(s.children, here + 1, s.topic)
-
     if doc.posix == IDEAS:
         render_ideas(brain, doc, doc.lead.rows)
     else:
         for row in sorted(doc.lead.rows, key=row_key):
             brain.topics[row.topic].entries.append((row.stem, row.title, 0))
             render_row(brain, doc, row)
-    if doc.note is not None:  # a grouped document: one note, its sections below it
+    inner = [r for s in walk(doc.sections) for r in s.rows]
+    if doc.layout in ("note", "hub"):
+        depth = 1 if doc.layout == "note" else 0
+        if doc.layout == "note":
+            brain.topics[doc.topic].entries.append((doc.note.stem, doc.title, 0))
+            brain.note(
+                doc.topic,
+                doc.note.stem,
+                key=f"note:{doc.path}",
+                kind=doc.note_type,
+                title=doc.title,
+                source=doc.posix,
+                body=brain.body(doc, [*doc.lead.lines, *_text(doc.sections)], demote=False),
+            )
+        else:
+            text = brain.body(doc, _text(doc.sections), demote=False)
+            brain.topics[doc.topic].intro += [*text, ""] if text else []
+        for row in sorted(inner, key=row_key):
+            brain.topics[row.topic].entries.append((row.stem, row.title, depth))
+            render_row(brain, doc, row)
+        return
+
+    def tree(sections: list[Section], depth: int, parent_topic: str) -> None:
+        for s in sections:  # every note is listed in its hub, nested under its parent there
+            if s.inline:
+                continue
+            here = depth if s.topic == parent_topic else 0
+            entries = brain.topics[s.topic].entries
+            entries.append((s.stem, s.note_title, here))
+            for row in sorted((r for r in _rows_within(s) if r.topic == s.topic), key=row_key):
+                entries.append((row.stem, row.title, here + 1))
+            tree(s.children, here + 1, s.topic)
+
+    if doc.note is not None:  # a grouped document: its note, then its sections below it
         brain.topics[doc.topic].entries.append((doc.note.stem, doc.title, 0))
         tree(doc.sections, 1, doc.topic)
-        body = _intro(brain, doc)
+        body = brain.body(doc, doc.lead.lines, demote=False)
         body += ["", "## Sections", *[f"- [[{s.stem}]]: {s.note_title}" for s in doc.sections]]
         brain.note(
             doc.topic,
@@ -768,12 +851,16 @@ def render_doc(brain: Brain, doc: Doc) -> None:
     else:
         tree(doc.sections, 0, doc.topic)
     for s in walk(doc.sections):
-        body = brain.body(doc, s.lines)
-        if s.children:
-            body += ["", "## Subsections", *[f"- [[{c.stem}]]: {c.note_title}" for c in s.children]]
-        if s.rows:
-            items = sorted(s.rows, key=row_key)
-            body += ["", "## Items", *[f"- [[{r.stem}]]: {r.title}" for r in items]]
+        if s.inline:
+            continue
+        held = [c for c in s.children if c.inline]
+        body = brain.body(doc, [*s.lines, *_text(held)])
+        notes = [c for c in s.children if not c.inline]
+        if notes:
+            body += ["", "## Subsections", *[f"- [[{c.stem}]]: {c.note_title}" for c in notes]]
+        rows = sorted(_rows_within(s), key=row_key)
+        if rows:
+            body += ["", "## Items", *[f"- [[{r.stem}]]: {r.title}" for r in rows]]
         aliases = [f"{doc.title} §{s.number}"] if s.number else None
         brain.note(
             s.topic,
@@ -785,8 +872,8 @@ def render_doc(brain: Brain, doc: Doc) -> None:
             body=body,
             aliases=aliases,
         )
-        for row in s.rows:
-            render_row(brain, doc, row)
+    for row in inner:
+        render_row(brain, doc, row)
 
 
 def render_whole(brain: Brain, doc: Doc) -> None:

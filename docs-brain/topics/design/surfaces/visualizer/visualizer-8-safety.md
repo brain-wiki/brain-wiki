@@ -1,11 +1,11 @@
 ---
 id: 01M3250V00VE2NVVA32RGP3VPY
 type: design
-title: "Safety (Visualizer)"
+title: "Safety"
 aliases: ["Visualizer §8"]
 source: "docs/design/visualizer.md#8-safety"
 ---
-# Safety (Visualizer)
+# Safety
 
 - Strings from notes are rendered as text, never as HTML. Preact escapes them, and labels use `textContent`.
 - The preview renders Markdown without HTML. The body is parsed into a syntax tree (CommonMark with GFM), which is turned directly into elements, so no HTML string is built or assigned. Raw HTML in a note shows as text, and HTML and `%%` comments are dropped. Links open only `http(s)` and `mailto` URLs, in a new tab with `noopener noreferrer`. Wikilinks open only targets the server resolved. Images show as their alt text, and the CSP blocks remote images anyway.

@@ -42,5 +42,5 @@ source: "docs/design/config-and-storage.md#5-brain-lifecycle"
   entries that name unregistered brains), each brain (format, note and
   pending-episode counts, open proposals), SQLite FTS5 and trigram support,
   host wiring, and commit jobs
-  ([[write-path-52-brain-schedule|write path §5.2]]). It rolls back runs a
+  ([[write-path-5-committing-direct-edits|write path §5.2]]). It rolls back runs a
   crash left half-applied and lists runs whose git commit failed.

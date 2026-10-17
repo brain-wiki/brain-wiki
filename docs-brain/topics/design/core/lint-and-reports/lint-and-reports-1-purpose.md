@@ -1,11 +1,11 @@
 ---
 id: 01M3250V00GFZJDJNJG2RAXMKG
 type: design
-title: "Purpose (Lint and reports)"
+title: "Purpose"
 aliases: ["Lint and reports §1"]
 source: "docs/design/lint-and-reports.md#1-purpose"
 ---
-# Purpose (Lint and reports)
+# Purpose
 
 Lint checks a brain against the [[brain-format|brain format]] without
 locking anyone out. People, Obsidian, sync tools, and agents all write to a
@@ -24,4 +24,4 @@ The lint gate runs inside `brain lint --fix`, `brain mv`, and
 `brain import`, after the change is made in memory. Only strict errors the
 change introduces block the run, so a note someone broke by hand does not
 stall every later run that touches it. See
-[[write-path-72-lint-gate|write path §7.2]].
+[[write-path-7-runs|write path §7.2]].

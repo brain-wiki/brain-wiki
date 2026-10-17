@@ -1,11 +1,11 @@
 ---
 id: 01M3250V004D9SFBFDSEPC2JXH
 type: design
-title: "Data (Visualizer)"
+title: "Data"
 aliases: ["Visualizer §6"]
 source: "docs/design/visualizer.md#6-data"
 ---
-# Data (Visualizer)
+# Data
 
 `/api/world`:
 

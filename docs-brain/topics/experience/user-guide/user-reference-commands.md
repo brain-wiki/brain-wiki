@@ -55,11 +55,115 @@ The commands, in the order `brain --help` lists them:
 | `brain obsidian [BRAIN]` | Open the brain's folder as a vault in Obsidian |
 | `brain bench [SUITE…] [--sizes 1k,10k] [--backends …] [--out DIR] [--compare A B] [-q]` | Run the evaluation bench |
 
-## Subsections
-- [[user-reference-brains-and-agents]]: Brains and agents
-- [[user-reference-search-and-read]]: Search and read
-- [[user-reference-writing]]: Writing
-- [[user-reference-commits-and-schedules]]: Commits and schedules
-- [[user-reference-lint-runs-and-undo]]: Lint, runs, and undo
-- [[user-reference-harvest-and-origin]]: Harvest and origin
-- [[user-reference-connect-import-viz-and-bench]]: Connect, import, viz, and bench
+
+### Brains and agents
+
+- Bare `brain brains` lists the brains you may use, or that `--as HOST` may
+  use, with what each holds.
+- Brain names use lowercase letters, digits, and hyphens.
+- `brain brains rename` also renames the brain in the default, in
+  `[hosts.*]`, in harvest routes, and in its commit job.
+- `brain brains remove` leaves the folder alone. It drops the name from the
+  default, host defaults, host brain limits, and harvest routes, and deletes
+  the brain's commit job. A host whose limit listed only this brain keeps an
+  empty list, so it sees no brain. `--purge-state` also deletes the brain's
+  index and run history on this machine.
+- `brain agents grant` and `revoke` take `edit`, `propose_rules`,
+  `harvest`, or `read_origin`, for a host id or `default`. Logging episodes
+  needs no capability.
+  Each change is an undoable run. An unknown host id gets a warning.
+
+
+### Search and read
+
+- `brain search` options: `--topic T` and `--type T` (repeatable, any
+  match), `--tag T` (repeatable, all must match), `--where KEY=VALUE` (any
+  frontmatter key; a list matches any item), `--since D` and `--until D`
+  (`YYYY-MM-DD`, or `7d`, `4w`, `3m`), `--sort relevance|recent|title`,
+  `--limit N` (1 to 50, default 8), `--cursor C`, `--include
+  archived,episodes,archived_episodes`, `--no-episodes`, `--count`,
+  `--facets`, and `--paths`.
+- With an empty query, `brain search` browses, newest first:
+  `brain search "" --since 7d` lists recent notes. An unknown `--topic` is
+  not found (exit 3).
+- `brain read --mode outline` shows the summary, headings, links, and
+  backlinks. It is the default for hubs. `--mode raw` prints the file byte
+  for byte. `--section H` alone implies `--mode section`.
+- `brain neighbors` puts a superseded note's replacement first. `--depth`
+  is 1 to 3, `--limit` 1 to 100.
+- `brain links` lists what a note links to as written in its file: body
+  links, `bw-superseded_by`, and `bw-sources`. `brain backlinks` lists what
+  links to it from other files.
+- `links`, `backlinks`, `tags`, `types`, `orphans`, and `unresolved` take
+  `--limit`, `--cursor`, `--count`, and `--paths`. For `tags` and `types`,
+  `--paths` prints one name per line.
+
+
+### Writing
+
+- Episodes come from agents (`brain_log_episode`). To record something
+  yourself, edit a note or tell an agent "remember that …".
+- `brain rules add` with `--as HOST` saves a proposal instead of a rule.
+- `brain mv` on a topic folder also updates the topic's `brain.toml` entry
+  and the `AGENTS.md` topic table.
+- `brain validate` checks the Markdown files git sees as changed, or every
+  note in a brain without git. It exits 1 on problems.
+- `brain consolidate --done` takes `EPISODE:PATTERN:NOTE` (pattern
+  `record`, `playbook`, `file`, or `distill`) or `"EPISODE:skip:REASON"`,
+  repeated for each outcome, checks that each note cites its episode in
+  `bw-sources`, and archives the episodes as one undoable run. Agents use
+  `brain_consolidate_prepare` and `brain_consolidate_done`.
+
+
+### Commits and schedules
+
+- `brain commit` exits 1 on a rebase conflict or a rejected push. An agent
+  (`--as HOST`) may run it only with `edit`, and never with `--push`.
+- `brain schedule` installs one commit job per brain and one consolidate
+  job per brain and host, and is refused with `--as`. `--every` values and
+  platforms are in [[user-maintenance|Maintenance]];
+  scheduled consolidation in
+  [[user-maintenance|Maintenance]].
+
+
+### Lint, runs, and undo
+
+- `brain lint` options: `--fix` (one undoable run; `--dry-run` shows the
+  diff), `--profile strict|migrate`, `--select C` and `--ignore C` (codes or
+  prefixes such as `BW3,BW405`), `--staged`, `--changed`, and
+  `--install-hook`.
+- `--fix` also converts format 1 and 2 notes to format 3.
+- An unknown code in `--select` or `--ignore` is a usage error, and so is
+  `--dry-run` without `--fix`.
+- `brain undo` without a run id undoes the latest run on this device.
+  `--force` undoes it even if files changed since, and saves their current
+  versions first.
+
+
+### Harvest and origin
+
+- `brain harvest` options: `--from HOST` (repeatable), `--since 30d`,
+  `--project P`, and `--status`. It lists sessions and token estimates and
+  writes nothing; the agent does the harvest.
+- `brain harvest route` sends sessions run in folders matching a pattern to
+  a brain.
+- `brain origin` takes an episode id or path (in the brain, or absolute),
+  or a session URL from a note's `bw-sources`. `--turns A-B` must lie
+  within the session.
+
+
+### Connect, import, viz, and bench
+
+- `brain connect` hosts: `claude-code`, `codex`, `antigravity`, `openclaw`,
+  `cursor`, or `generic`. `--scope project` works for `claude-code` and
+  `cursor`; each scope is connected and uninstalled on its own.
+- `brain import` is a dry run without `--apply`, and `--dry-run` wins over
+  `--apply`. With `--into`, `--topic T` puts what is imported under one
+  topic. Documents and memory files are imported by asking an agent. See
+  [[user-import|Import]].
+- `brain viz` and `brain obsidian` open BRAIN, the only brain, or the one
+  you pick. `brain viz --host 0.0.0.0` lets other machines open the map.
+  `--export` writes `.html`, `.json`, or `.graphml` and exits.
+- `brain bench` runs `retrieval`, `lint`, and `perf` by default. The
+  `agent` suite is reserved and reports as skipped. `-q` prints a summary,
+  failures, and regressions only.

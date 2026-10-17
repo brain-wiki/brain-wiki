@@ -25,6 +25,61 @@ A stale link is a body link from an active note (not a hub) to a
 superseded or archived note. A link from a note to the note it replaced is
 not stale.
 
-## Subsections
-- [[index-and-search-91-brain-list]]: Brain list
-- [[index-and-search-92-neighbors]]: Neighbors
+
+### 9.1 Brain list
+
+`brain_list` (CLI `brain brains`) answers "which brains exist, and what is
+each for?" for the calling host.
+
+| Field | Source |
+|---|---|
+| `name`, `description` | Registration, and the optional one-line `description` in `brain.toml` |
+| `default_here` | Brain resolution for the current project and host ([[config-and-storage-3-choosing-a-brain\|config and storage §3]]) |
+| `topics`, `notes`, `updated`, `pending` | The index |
+| `path` | The brain folder, so the host can read its files directly |
+| `ok`, `error` | Whether the brain opened, and why not |
+
+- A brain found from the working directory but not registered is listed
+  too.
+- Brains outside the host's allowed list
+  ([[config-and-storage-3-choosing-a-brain|config and storage §3]]) are
+  not listed.
+- For the owner, each entry also has `default`, whether it is the user's
+  default brain.
+- The text of `brain_list` gives each brain's description, so an agent can
+  pick the right one. `brain brains` in a terminal leaves it out, so the
+  counts and path fit on one line; `--json` has every field.
+
+
+### 9.2 Neighbors
+
+`neighbors(target, direction, depth, limit)` follows a node's resolved
+edges without reading bodies, and returns a small subgraph.
+
+- `direction` is `out` (what it links to), `in` (what links to it), or
+  `both` (default).
+- `depth` is 1 to 3 (default 1).
+- `limit` caps the nodes returned besides the root (default 30, at most
+  100). The engine clamps out-of-range values, and the CLI rejects values
+  below 1.
+- There is no filter by relation.
+
+```json
+{"brain": "personal", "root": "01J9…", "direction": "both", "depth": 1,
+ "nodes": [{"id": "01J9…", "path": "…", "title": "…", "type": "decision",
+            "topic": "search", "status": "active", "depth": 0},
+           {"id": "01J8…", "path": "…", "title": "…", "type": "decision",
+            "topic": "search", "status": "superseded", "depth": 1,
+            "via": {"from": "01J9…", "relation": "supersedes"}}],
+ "edges": [{"rel": "superseded_by", "src": "01J8…", "dst": "01J9…"}],
+ "truncated": false}
+```
+
+- The root comes first, at depth 0.
+- `via.relation` uses the labels in §3, read from the node it was reached
+  from. `edges` keep the stored direction.
+- Within a depth, supersession comes first, then body links, then
+  citations, each newest first, so `limit` keeps what matters.
+
+Typical uses: what a hub lists (`out`), what refers to a decision (`in`),
+and how a note evolved (`both`, depth 3).

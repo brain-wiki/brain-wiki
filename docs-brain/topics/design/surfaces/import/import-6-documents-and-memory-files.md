@@ -1,11 +1,11 @@
 ---
 id: 01M3250V00J0ZC4F0DRE3JQQSR
 type: design
-title: "Documents and memory files (Import)"
+title: "Documents and memory files"
 aliases: ["Import §6"]
 source: "docs/design/import.md#6-documents-and-memory-files"
 ---
-# Documents and memory files (Import)
+# Documents and memory files
 
 Documents and an agent's memory files go straight into notes. No command
 turns them into episodes; the user asks an agent instead: "bring in my

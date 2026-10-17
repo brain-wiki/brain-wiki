@@ -26,5 +26,5 @@ See also [[index-and-search-10-performance-budgets|index and search §10]].
   --sizes 10k` for performance work and before a release.
 - CLI start-up imports only the module of the command run, and `brain
   --help` imports none of them
-  ([[cli-and-mcp-24-parser-and-startup-cost|CLI and MCP §2.4]]). A test
+  ([[cli-and-mcp-2-cli|CLI and MCP §2.4]]). A test
   checks what `brain --help` imports. No check measures time.

@@ -1,10 +1,10 @@
 ---
 id: 01M3250V00EXAFVDTZTNPD6RKG
 type: guide
-title: "Exit codes (Reference)"
+title: "Exit codes"
 source: "docs/user/reference.md#exit-codes"
 ---
-# Exit codes (Reference)
+# Exit codes
 
 | Code | Meaning |
 |---|---|

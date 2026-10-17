@@ -1,11 +1,11 @@
 ---
 id: 01M3250V00JP0RTER7G19SADZE
 type: design
-title: "Output (Lint and reports)"
+title: "Output"
 aliases: ["Lint and reports §6"]
 source: "docs/design/lint-and-reports.md#6-output"
 ---
-# Output (Lint and reports)
+# Output
 
 Text output groups problems by file. A problem without a line shows `-`.
 
@@ -29,4 +29,4 @@ fixable}`. `--fix` adds `fixed` and `run`, and `--fix --dry-run` emits
 checked (null for the whole brain).
 
 Exit codes: `0` no errors, `1` errors found, `2` usage error. The rest are
-in [[cli-and-mcp-23-exit-codes|CLI and MCP §2.3]].
+in [[cli-and-mcp-2-cli|CLI and MCP §2.3]].

@@ -9,7 +9,7 @@ source: "docs/design/index-and-search.md#7-read"
 
 `read(target, mode)` returns one note, hub, or episode. The target is
 matched by node id, path, or frontmatter id, then by the link resolution
-order of [[brain-format-65-links|brain format §6.5]]. An ambiguous target
+order of [[brain-format-6-notes|brain format §6.5]]. An ambiguous target
 is an error that lists the candidates instead of guessing.
 
 | Mode | Returns |

@@ -1,11 +1,11 @@
 ---
 id: 01M3250V00TW9J1MGH3AH4NAQ9
 type: design
-title: "Agent profiles (CLI and MCP)"
+title: "Agent profiles"
 aliases: ["CLI and MCP §1"]
 source: "docs/design/cli-and-mcp.md#1-agent-profiles"
 ---
-# Agent profiles (CLI and MCP)
+# Agent profiles
 
 A profile decides what one host may do in one brain. Profiles live in
 `brain.toml`, so they travel with the brain

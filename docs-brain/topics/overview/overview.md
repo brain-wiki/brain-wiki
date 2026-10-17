@@ -13,9 +13,8 @@ Generated from `docs/design/overview.md`.
 ## Notes
 - [[goals]]: Goals (sub-topic)
 - [[concepts]]: Concepts (sub-topic)
-- [[prior-art]]: Prior art (sub-topic)
 - [[overview-1-problem]]: Problem
 - [[overview-2-what-brain-wiki-is]]: What brain-wiki is
-  - [[overview-21-two-uses]]: Two uses
 - [[overview-4-non-goals]]: Non-goals
 - [[overview-5-design-principles]]: Design principles
+- [[prior-art]]: Prior art

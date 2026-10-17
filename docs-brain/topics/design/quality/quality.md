@@ -12,5 +12,5 @@ Generated from `docs/`.
 
 ## Notes
 - [[security-and-privacy]]: Security and privacy (sub-topic)
-- [[eval-bench]]: Eval bench (sub-topic)
 - [[engineering]]: Engineering (sub-topic)
+- [[eval-bench]]: Eval bench

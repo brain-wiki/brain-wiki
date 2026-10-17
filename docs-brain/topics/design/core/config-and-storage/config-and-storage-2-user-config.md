@@ -59,7 +59,7 @@ hosts   = ["claude-code"]
   A host list that becomes empty stays empty, so removing a brain never
   widens a host's access.
 - No schedule settings live here. The OS scheduler holds the commit jobs
-  ([[write-path-52-brain-schedule|write path §5.2]]).
+  ([[write-path-5-committing-direct-edits|write path §5.2]]).
 
 Other `[harvest]` keys (`since`, `min_idle_minutes`, `min_user_turns`,
 `include_headless`) are described in

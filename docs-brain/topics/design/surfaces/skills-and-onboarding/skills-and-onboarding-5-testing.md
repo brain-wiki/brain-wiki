@@ -15,4 +15,4 @@ source: "docs/design/skills-and-onboarding.md#5-testing"
 | Doctor shape | Unit tests on `brain doctor --json` (problems, recovered runs, commit-job problems); no JSON Schema yet |
 
 Automated trigger and onboarding tests would belong to the bench's `agent`
-suite, which is not built ([[eval-bench-35-agent|eval bench §3.5]]).
+suite, which is not built ([[eval-bench|eval bench §3.5]]).

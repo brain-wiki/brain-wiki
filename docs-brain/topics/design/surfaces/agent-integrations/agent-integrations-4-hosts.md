@@ -18,4 +18,4 @@ the MCP server.
 | Antigravity (desktop, IDE, CLI) | `agy plugin install`, or `brain connect` | The plugin's always-on rule | yes | yes | [[host-antigravity\|antigravity.md]] |
 | OpenClaw | `openclaw plugins install`, or `brain connect` | Managed block in the workspace `AGENTS.md` | yes | no | [[host-openclaw\|openclaw.md]] |
 | Cursor | The bundle, or `brain connect` | Printed; `.cursor/rules/` with `--scope project` | bundle only | no | [[host-cursor\|cursor.md]] |
-| Other MCP clients | `brain connect generic` prints an entry | Printed | no | no | [[host-cursor-other-mcp-clients\|cursor.md]] |
+| Other MCP clients | `brain connect generic` prints an entry | Printed | no | no | [[host-cursor\|cursor.md]] |

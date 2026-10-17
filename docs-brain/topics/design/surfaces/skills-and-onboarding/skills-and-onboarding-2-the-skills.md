@@ -1,11 +1,11 @@
 ---
 id: 01M3250V0065XR26HNE1WHPDD3
 type: design
-title: "The skills (Skills and onboarding)"
+title: "The skills"
 aliases: ["Skills and onboarding §2"]
 source: "docs/design/skills-and-onboarding.md#2-the-skills"
 ---
-# The skills (Skills and onboarding)
+# The skills
 
 The plugin ships three skills under `skills/`
 ([[d22-three-skills|D22]]):

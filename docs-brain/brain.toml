@@ -22,11 +22,6 @@ title = "Concepts"
 path = "topics/overview/concepts"
 description = "The vocabulary, one note per term"
 
-[topics.prior-art]
-title = "Prior art"
-path = "topics/overview/prior-art"
-description = "What brain-wiki borrows from other projects, and the sources"
-
 [topics.experience]
 title = "User experience"
 path = "topics/experience"
@@ -122,11 +117,6 @@ title = "Security and privacy"
 path = "topics/design/quality/security-and-privacy"
 description = "Threats and how they are handled"
 
-[topics.eval-bench]
-title = "Eval bench"
-path = "topics/design/quality/eval-bench"
-description = "Retrieval, lint, and performance suites"
-
 [topics.engineering]
 title = "Engineering"
 path = "topics/design/quality/engineering"
@@ -166,31 +156,6 @@ description = "Ideas without a design yet, one note each, grouped by area"
 title = "Proposals"
 path = "topics/proposals"
 description = "Designs not built yet, one topic each"
-
-[topics.proposal-hooks]
-title = "Host hooks: briefing, capture, and recall"
-path = "topics/proposals/proposal-hooks"
-description = "brain hook: briefing at session start, capture at stop and compaction, input tracking, per-prompt recall"
-
-[topics.proposal-privacy]
-title = "Privacy"
-path = "topics/proposals/proposal-privacy"
-description = "Levels defined by where content may go (model, tools, outputs, exports), declared in a topic's index.md"
-
-[topics.proposal-public-benchmarks]
-title = "Public memory benchmarks"
-path = "topics/proposals/proposal-public-benchmarks"
-description = "Bench adapters for LongMemEval and similar, and probe coverage as a consolidation metric"
-
-[topics.proposal-remote-mcp]
-title = "Remote MCP for chat apps"
-path = "topics/proposals/proposal-remote-mcp"
-description = "HTTP transport and OAuth for ChatGPT, claude.ai, and the Gemini app"
-
-[topics.proposal-remote-sync]
-title = "Remote sync and object storage"
-path = "topics/proposals/proposal-remote-sync"
-description = "brain sync with conflict copies, then GCS and S3, then a server that reads a brain from a bucket"
 
 [agents.default]
 write = []

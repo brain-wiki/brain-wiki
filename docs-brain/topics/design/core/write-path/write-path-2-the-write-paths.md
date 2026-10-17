@@ -39,4 +39,4 @@ edit any file.
 ## Subsections
 - [[write-path-21-ways-an-episode-is-written]]: Ways an episode is written
 - [[write-path-22-harvesting-sessions]]: Harvesting sessions
-- [[write-path-23-direct-edits]]: Direct edits (Write path)
+- [[write-path-23-direct-edits]]: Direct edits

@@ -8,7 +8,7 @@ source: "docs/decision/d27-direct-file-reads.md"
 # D27: Agents may read the brain's files
 
 Status: accepted.
-Argued in: [[index-and-search-91-brain-list|index and search §9.1]], [[security-and-privacy|security]].
+Argued in: [[index-and-search-9-other-queries|index and search §9.1]], [[security-and-privacy|security]].
 
 Agents may read a brain's files directly, at the folder path `brain_list` gives. grep and glob over the files work for bulk scans, and the tools add link resolution and supersession warnings.
 

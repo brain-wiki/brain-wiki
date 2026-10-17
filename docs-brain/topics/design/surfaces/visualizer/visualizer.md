@@ -14,13 +14,11 @@ Generated from `docs/design/visualizer.md`.
 - [[visualizer-1-goals]]: Goals (Visualizer)
 - [[visualizer-2-levels-semantic-zoom]]: Levels (semantic zoom)
 - [[visualizer-3-rendering]]: Rendering
-  - [[visualizer-31-layout]]: Layout
-  - [[visualizer-32-words-and-lines]]: Words and lines
 - [[visualizer-4-hud-and-navigation]]: HUD and navigation
 - [[visualizer-5-architecture]]: Architecture
-- [[visualizer-6-data]]: Data (Visualizer)
+- [[visualizer-6-data]]: Data
 - [[visualizer-7-budgets]]: Budgets
-- [[visualizer-8-safety]]: Safety (Visualizer)
+- [[visualizer-8-safety]]: Safety
 - [[visualizer-9-testing]]: Testing (Visualizer)
 - [[visualizer-10-alternatives-considered]]: Alternatives considered (Visualizer)
 - [[visualizer-11-choosing-a-brain-and-opening-it-in-obsidian]]: Choosing a brain, and opening it in Obsidian

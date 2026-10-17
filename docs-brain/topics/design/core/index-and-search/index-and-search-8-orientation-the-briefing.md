@@ -10,7 +10,7 @@ source: "docs/design/index-and-search.md#8-orientation-the-briefing"
 `orient()` returns one brain's briefing. Agents fetch it with
 `brain_orient` when a task may depend on the user's knowledge, as the
 static instruction block tells them to
-([[agent-integrations-32-the-static-instruction-block|agent integrations §3.2]]).
+([[agent-integrations-3-the-plugin-bundle|agent integrations §3.2]]).
 It is cut to `budgets.orient_max_tokens` (default 1,500), estimated as
 characters divided by 4, so about 6,000 characters.
 
@@ -43,8 +43,8 @@ Sections, in output order:
 8. Writing notes, only when the calling profile has `edit`: where files go
    (`topics/<topic>/<slug>.md`, with the existing top-level topics), the
    frontmatter fields and `status` values
-   ([[brain-format-61-frontmatter|brain format §6.1]]), the body
-   conventions ([[brain-format-62-body|brain format §6.2]]), and "run
+   ([[brain-format-6-notes|brain format §6.1]]), the body
+   conventions ([[brain-format-6-notes|brain format §6.2]]), and "run
    `brain_validate` on the files you changed".
 
 Note counts never include hubs. A hub is the topic's index and only dates

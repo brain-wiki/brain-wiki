@@ -1,11 +1,11 @@
 ---
 id: 01M3250V008ETPVZQQX0408EAC
 type: design
-title: "Undo (Write path)"
+title: "Undo"
 aliases: ["Write path §8"]
 source: "docs/design/write-path.md#8-undo"
 ---
-# Undo (Write path)
+# Undo
 
 Every run writes a record to
 `<state>/brains/<brain-key>/runs/<run>/record.json`

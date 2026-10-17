@@ -18,16 +18,10 @@ Generated from `docs/design/brain-format.md`.
 ## Notes
 - [[brain-format-1-requirements-that-shaped-the-format]]: Requirements that shaped the format
 - [[brain-format-2-directory-layout]]: Directory layout
-  - [[brain-format-21-topics]]: Topics
 - [[brain-format-3-braintoml]]: `brain.toml`
 - [[brain-format-4-common-file-conventions]]: Common file conventions
 - [[brain-format-5-identifiers]]: Identifiers
-- [[brain-format-6-notes]]: Notes (Brain format)
-  - [[brain-format-61-frontmatter]]: Frontmatter
-  - [[brain-format-62-body]]: Body
-  - [[brain-format-63-status-and-supersession]]: Status and supersession
-  - [[brain-format-64-sources]]: Sources
-  - [[brain-format-65-links]]: Links (Brain format)
+- [[brain-format-6-notes]]: Notes
 - [[brain-format-7-supersession-guard]]: Supersession guard (Brain format)
 - [[brain-format-8-topic-hubs]]: Topic hubs
 - [[brain-format-9-episodes]]: Episodes

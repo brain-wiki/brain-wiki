@@ -36,7 +36,7 @@ bullet becomes "To record something, add a new file under
 `inbox/episodes/YYYY/MM/<ULID>.md` (or call the brain-wiki MCP tool
 `brain_log_episode`). Never edit `topics/` or `rules.md` directly." This
 matches the host instruction block
-([[agent-integrations-32-the-static-instruction-block|agent integrations §3.2]]).
+([[agent-integrations-3-the-plugin-bundle|agent integrations §3.2]]).
 
 - The topic table lists the top-level topics alphabetically, with the hub
   path and the description (or title) plus the number of sub-topics.

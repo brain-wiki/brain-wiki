@@ -19,15 +19,9 @@ Generated from `docs/design/agent-integrations.md`.
 - [[agent-integrations-1-how-agents-reach-brain-wiki]]: How agents reach brain-wiki
 - [[agent-integrations-2-host-ids]]: Host ids
 - [[agent-integrations-3-the-plugin-bundle]]: The plugin bundle
-  - [[agent-integrations-31-the-skills]]: The skills (Agent integrations)
-  - [[agent-integrations-32-the-static-instruction-block]]: The static instruction block
 - [[agent-integrations-4-hosts]]: Hosts
 - [[agent-integrations-5-hooks]]: Hooks
-- [[agent-integrations-6-harvest]]: Harvest (Agent integrations)
-  - [[agent-integrations-61-what-gets-skipped]]: What gets skipped
-  - [[agent-integrations-62-how-it-runs]]: How it runs
-  - [[agent-integrations-63-detecting-external-inputs]]: Detecting external inputs
-  - [[agent-integrations-64-session-readers]]: Session readers
+- [[agent-integrations-6-harvest]]: Harvest
 - [[agent-integrations-7-unattended-agent-mode]]: Unattended agent mode
 - [[agent-integrations-8-brain-connect]]: `brain connect`
 - [[agent-integrations-9-test-matrix]]: Test matrix

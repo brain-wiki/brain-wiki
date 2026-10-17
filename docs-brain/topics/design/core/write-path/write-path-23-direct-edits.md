@@ -1,11 +1,11 @@
 ---
 id: 01M3250V00SNYFEY4ZHMMF4MVK
 type: design
-title: "Direct edits (Write path)"
+title: "Direct edits"
 aliases: ["Write path §2.3"]
 source: "docs/design/write-path.md#23-direct-edits"
 ---
-# Direct edits (Write path)
+# Direct edits
 
 Agents whose profile has `edit` create and edit notes and hubs under
 `topics/` with their own file tools, then run `brain validate` (MCP

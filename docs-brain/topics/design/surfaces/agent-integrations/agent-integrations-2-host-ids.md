@@ -14,7 +14,7 @@ provenance, and `--host` flags: `claude-code`, `codex`, `antigravity`,
 `opencode` is also recognized, from the MCP client's self-reported name,
 so profiles and episode provenance can name it. It has no `brain connect`
 writer and no session reader; it is set up like other MCP clients
-([[host-cursor-other-mcp-clients|Cursor and other MCP clients]]).
+([[host-cursor|Cursor and other MCP clients]]).
 
 The MCP server finds its host in this order:
 

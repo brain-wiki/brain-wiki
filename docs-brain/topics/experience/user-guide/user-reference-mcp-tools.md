@@ -8,7 +8,7 @@ source: "docs/user/reference.md#mcp-tools"
 
 These are the tools a connected agent can call. A write tool needs the
 matching capability in the agent's profile. See
-[[user-privacy-agent-profiles|Privacy and safety]]. Agents edit notes with
+[[user-privacy|Privacy and safety]]. Agents edit notes with
 their own file tools, and `edit` decides whether orientation tells them they
 may.
 

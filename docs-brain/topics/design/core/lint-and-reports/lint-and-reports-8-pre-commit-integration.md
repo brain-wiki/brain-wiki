@@ -21,7 +21,7 @@ to the brain folder and runs `brain lint --staged --brain .`.
 - It never blocks a `brain commit` snapshot, because snapshots record
   broken states too, so they can be restored. `brain commit` sets
   `BRAIN_WIKI_SNAPSHOT=1`, and `brain lint --staged` exits 0 when it sees
-  it ([[write-path-51-brain-commit|write path §5.1]]).
+  it ([[write-path-5-committing-direct-edits|write path §5.1]]).
 
 The repository also ships `.pre-commit-hooks.yaml`, so users of the
 pre-commit framework can add the `brain-lint` hook to their config.
