@@ -1,9 +1,13 @@
 # Changelog
 
-## 0.2.1 (unreleased)
+## 0.3.0 (2026-10-16)
 
 Episodes are captured by agents and consolidated by the agent that captured
-them ([write path](docs/design/write-path.md)).
+them, and harvest and import file straight into notes
+([write path](docs/design/write-path.md)). This release removes commands:
+`brain log`, `brain import --to-episodes` and `--from`, `brain harvest
+--apply`, `--raw`, and `--distill`, the `episodes` capability, and the MCP
+tool `brain_harvest_apply` (now `brain_harvest_done`).
 
 - **Capture is agents only, through MCP.** `brain log` is removed. People
   record knowledge by editing a note or by asking an agent to remember it.
