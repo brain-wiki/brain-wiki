@@ -8,7 +8,7 @@ source: "docs/design/index-and-search.md#3-schema"
 # Schema
 
 `src/brainwiki/index/_schema.py` is authoritative. This copy matches
-`SCHEMA_VERSION` 14. Any schema change bumps the version, and an index with
+`SCHEMA_VERSION` 15. Any schema change bumps the version, and an index with
 another version is rebuilt (§2). Values in comments are what the code
 writes. The schema itself has no CHECK constraints.
 
@@ -93,6 +93,7 @@ CREATE TABLE edges (
 );
 CREATE INDEX edges_src      ON edges(src, rel);
 CREATE INDEX edges_dst      ON edges(dst, rel);
+CREATE INDEX edges_rel      ON edges(rel);
 CREATE INDEX edges_declared ON edges(declared_in);
 CREATE INDEX edges_other    ON edges(other);
 

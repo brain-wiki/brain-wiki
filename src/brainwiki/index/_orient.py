@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from brainwiki.format import parse_rules
 from brainwiki.ids import is_ulid, ulid_datetime
-from brainwiki.index._guards import open_conflicts, stale_dependents
+from brainwiki.index._guards import review_counts
 from brainwiki.index._inbox import last_consolidations, pending_by_agent, scheduled_runs
 
 if TYPE_CHECKING:
@@ -255,8 +255,8 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
                 f"- {label}: "
                 + ", ".join(f"topic {s} ({c} {kind} notes)" for s, c in info["homes"][kind])
             )
-    conflicts = len(open_conflicts(engine.db))
-    dependents = len({r["src"] for r in stale_dependents(engine.db)})
+    needs_review = review_counts(engine.db)
+    conflicts, dependents = needs_review["open_conflicts"], needs_review["stale_dependents"]
     review = [f"{conflicts} open conflict{'s' if conflicts != 1 else ''}"] if conflicts else []
     if dependents:
         review.append(
@@ -394,7 +394,7 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         "pending_episodes": inbox["pending"],
         "pending_by_agent": waiting,
         "open_proposals": len(inbox["rule_proposals"]),
-        "needs_review": {"open_conflicts": conflicts, "stale_dependents": dependents},
+        "needs_review": needs_review,
         "notes": info["notes"],
     }
 

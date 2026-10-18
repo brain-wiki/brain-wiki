@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 14
+SCHEMA_VERSION = 15
 
 DDL = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -81,6 +81,7 @@ CREATE TABLE edges (
 );
 CREATE INDEX edges_src ON edges(src, rel);
 CREATE INDEX edges_dst ON edges(dst, rel);
+CREATE INDEX edges_rel ON edges(rel);  -- the rare kinds, such as conflicts_with
 CREATE INDEX edges_declared ON edges(declared_in);
 CREATE INDEX edges_other ON edges(other);
 

@@ -36,17 +36,28 @@ def stale_links(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     ).fetchall()
 
 
+# Active notes and topic pages resting on outdated notes. CROSS JOIN pins the order: start from
+# the few superseded or archived notes, never scan every edge.
+_DEPENDENTS = """FROM nodes b CROSS JOIN edges e CROSS JOIN nodes a
+           WHERE b.kind IN ('note', 'topic') AND b.status IN ('superseded', 'archived')
+             AND e.dst = b.id AND e.rel = 'depends_on' AND a.id = e.src
+             AND a.status = 'active' AND a.kind IN ('note', 'topic')"""
+
+
 def stale_dependents(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     """Active notes and topic pages that rest (`bw-depends_on`) on superseded or archived notes,
     with the columns of `stale_links`. They need review; a plain link only mentions."""
     return conn.execute(
-        """SELECT DISTINCT a.id AS src, a.path AS src_path, a.title AS src_title,
-                  b.id AS dst, b.path AS dst_path, b.title AS dst_title, b.status AS dst_status
-           FROM edges e JOIN nodes a ON a.id = e.src JOIN nodes b ON b.id = e.dst
-           WHERE e.rel = 'depends_on' AND a.status = 'active' AND a.kind IN ('note', 'topic')
-             AND b.status IN ('superseded', 'archived')
-           ORDER BY a.path, b.path"""
+        f"""SELECT DISTINCT a.id AS src, a.path AS src_path, a.title AS src_title,
+                   b.id AS dst, b.path AS dst_path, b.title AS dst_title, b.status AS dst_status
+            {_DEPENDENTS} ORDER BY a.path, b.path"""  # noqa: S608 - constant SQL
     ).fetchall()
+
+
+def review_counts(conn: sqlite3.Connection) -> dict[str, int]:
+    """The briefing's counts: open conflicts, and notes resting on an outdated note."""
+    dependents = conn.execute(f"SELECT COUNT(DISTINCT a.id) {_DEPENDENTS}").fetchone()[0]  # noqa: S608
+    return {"open_conflicts": len(open_conflicts(conn)), "stale_dependents": dependents}
 
 
 def open_conflicts(conn: sqlite3.Connection) -> list[dict[str, Any]]:
