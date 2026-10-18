@@ -1,6 +1,6 @@
 # Writing relations in a note
 
-Status: settled by the maintainer, 2026-10-17 and 2026-10-18.
+Status: settled by the maintainer, 2026-10-17 and 2026-10-18; built in format 4 ([D39](../../decision/d39-relation-fields.md)).
 Study: [Typed relations](README.md).
 
 How a relation is written decides who can write it, what lint can check,

@@ -1,6 +1,6 @@
 # related_to: related, without a stronger claim
 
-Status: concluded.
+Status: rejected; dropped in favor of plain links.
 Study: [Typed relations](README.md).
 Verdict: drop; a plain link already says it.
 

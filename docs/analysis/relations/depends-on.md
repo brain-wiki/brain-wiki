@@ -1,6 +1,6 @@
 # depends_on: what a note rests on
 
-Status: concluded.
+Status: built in format 4, 2026-10-18 ([D39](../../decision/d39-relation-fields.md)).
 Study: [Typed relations](README.md).
 Verdict: revive as `bw-depends_on` on the dependent note, for requirements only.
 

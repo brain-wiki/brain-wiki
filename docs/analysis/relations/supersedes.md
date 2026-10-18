@@ -1,6 +1,6 @@
 # supersedes: replaced by a newer note
 
-Status: concluded.
+Status: built in format 4, 2026-10-18 ([D39](../../decision/d39-relation-fields.md)).
 Study: [Typed relations](README.md).
 Verdict: keep `bw-superseded_by` as it is, and give it the same field shape as the other relations.
 

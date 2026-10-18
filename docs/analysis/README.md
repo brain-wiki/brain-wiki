@@ -77,4 +77,4 @@ overlap all make brain-wiki harder to learn and use. So an analysis:
 
 | Study | Question | Status |
 |---|---|---|
-| [Typed relations](relations/README.md) | Which relation types should brain-wiki read again, and how should they be written? | Concluded 2026-10-18; next, a proposal |
+| [Typed relations](relations/README.md) | Which relation types should brain-wiki read again, and how should they be written? | Built 2026-10-18 in format 4 ([D39](../decision/d39-relation-fields.md)); the topic changes are still to do |

@@ -1,6 +1,6 @@
 # conflicts_with: read both before acting
 
-Status: concluded.
+Status: built in format 4, 2026-10-18 ([D39](../../decision/d39-relation-fields.md)).
 Study: [Typed relations](README.md).
 Verdict: revive as `bw-conflicts_with`, written once on either note, with a guard between active notes.
 

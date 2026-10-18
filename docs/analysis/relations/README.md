@@ -1,6 +1,6 @@
 # Typed relations
 
-Status: concluded; next, a proposal.
+Status: built 2026-10-18 in format 4 ([D39](../../decision/d39-relation-fields.md)), except the topic changes, which are still to do.
 Question: which relation types should brain-wiki read again, and how should they be written?
 
 The most used relation has no field: a note's folder says which topic it
@@ -22,12 +22,12 @@ mistakes.
 
 | Concept | Format 2 family | Today | Status | Verdict |
 |---|---|---|---|---|
-| [topic](topic.md) | Containment, by folder | Folders and topic pages | Concluded | Keep as the primary part_of; every folder is a topic, and its title lives on its page |
-| [part_of](part-of.md) | Containment | Folder membership only | Concluded | Revive as `bw-part_of` on each part, covering membership |
-| [depends_on](depends-on.md) | Dependency | A "Depends on" bullet nothing reads | Concluded | Revive as `bw-depends_on` on the dependent note, for requirements only |
-| [conflicts_with](conflicts-with.md) | Conflict, a guard | A sentence with a link | Concluded | Revive as `bw-conflicts_with`, written once on either note, with a guard between active notes |
-| [supersedes](supersedes.md) | Lineage, a guard | `bw-superseded_by` metadata | Concluded | Keep, with the same field shape as the other relations |
-| [related_to](related-to.md) | Peer | A plain link | Concluded | Drop; a plain link already says it |
+| [topic](topic.md) | Containment, by folder | Folders and topic pages | Concluded, not built | Keep as the primary part_of; every folder is a topic, and its title lives on its page |
+| [part_of](part-of.md) | Containment | Folder membership only | Built | Revive as `bw-part_of` on each part, covering membership |
+| [depends_on](depends-on.md) | Dependency | A "Depends on" bullet nothing reads | Built | Revive as `bw-depends_on` on the dependent note, for requirements only |
+| [conflicts_with](conflicts-with.md) | Conflict, a guard | A sentence with a link | Built | Revive as `bw-conflicts_with`, written once on either note, with a guard between active notes |
+| [supersedes](supersedes.md) | Lineage, a guard | `bw-superseded_by` metadata | Built | Keep, with the same field shape as the other relations |
+| [related_to](related-to.md) | Peer | A plain link | Rejected | Drop; a plain link already says it |
 
 The resulting set: one relation by folder and four fields.
 
@@ -88,10 +88,15 @@ Findings that hold for every relation, added as analyses conclude.
   notes follow a shared template; lists of notes sort by title, comparing
   numbers as numbers.
 
-## Path to a proposal
+## Path to the build
 
 1. Analyze each concept and record its verdict in the table above. Done:
    all six concluded on 2026-10-18.
 2. In each relation's analysis, name its one canonical direction. Done.
-3. Write one proposal for the relations that pass, with the new format,
-   its converter, and bench cases, and amend D33 by a new decision.
+3. Build the relations that pass, with the new format, its converter, and
+   bench cases, and amend D33 by a new decision. Done on 2026-10-18,
+   straight from these analyses without a separate proposal: format 4
+   ([brain format §6.6](../../design/brain-format.md#66-relations) and
+   [§7](../../design/brain-format.md#7-guards)) and [D39](../../decision/d39-relation-fields.md).
+4. The topic verdict (every folder is a topic, its title on its page) is
+   still to build.
