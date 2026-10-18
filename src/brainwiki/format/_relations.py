@@ -1,7 +1,7 @@
-"""Format 2 relation lines, read only to convert them (brain-format.md §13).
+"""Format 2 relation strings, read only to convert them (brain-format.md §13).
 
-A relation is `[[Target]] (qualifier) — note`, held in a `bw-<verb>` frontmatter list, or (format 1)
-a `- verb [[Target]] …` line under `## Relations`.
+A format 2 relation is `[[Target]] (qualifier) — note`, held in a `bw-<verb>` frontmatter list.
+Format 3 wrote the same relation as a `## Related` bullet, `- Verb [[Target]] …`.
 """
 
 from __future__ import annotations
@@ -84,7 +84,7 @@ class RelationError:
     message: str
 
 
-def _canonical_verb(word: str) -> tuple[str | None, bool]:
+def canonical_verb(word: str) -> tuple[str | None, bool]:
     lowered = word.lower().replace("-", "_")
     if lowered in CANONICAL:
         return lowered, False
@@ -144,7 +144,7 @@ def parse_relation_line(text: str, line: int) -> Relation | RelationError:
             "relation line does not parse: expected `- verb [[Target]] (qualifier) — note`",
         )
     written = match.group("verb")
-    verb, is_alias = _canonical_verb(written)
+    verb, is_alias = canonical_verb(written)
     if verb is None:
         return RelationError(line, "BW302", f"unknown relation verb {written!r}")
     target, label = _parse_target(match.group("target"))

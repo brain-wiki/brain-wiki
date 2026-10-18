@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from tests.conftest import capture, write
 
+from brainwiki import FORMAT_VERSION
 from brainwiki.cli._main import main
 from brainwiki.config._resolve import open_brain
 from brainwiki.engine import Engine
@@ -105,19 +106,20 @@ def test_a_hand_written_episode_cannot_claim_trusted_provenance(example: Path):
 
 def test_writing_raises_the_declared_format_one_way(example: Path):
     toml = example / "brain.toml"
-    toml.write_text(toml.read_text().replace("format = 3\n", "format = 1\n", 1))
+    toml.write_text(toml.read_text().replace(f"format = {FORMAT_VERSION}\n", "format = 1\n", 1))
     with eng(example) as e:
         episode = write_episode(
             e, EpisodeContent(summary="Noted."), origin="agent", inputs="local", captured="mcp"
         )
-    assert "format = 3\n" in toml.read_text()
+    assert f"format = {FORMAT_VERSION}\n" in toml.read_text()
     assert "bw-origin: agent" in (example / episode.path).read_text()
-    toml.write_text(toml.read_text().replace("format = 3\n", "format = 1\n", 1))
+    toml.write_text(toml.read_text().replace(f"format = {FORMAT_VERSION}\n", "format = 1\n", 1))
     with eng(example) as e:
         record = move_note(e, "topics/search/ripgrep.md", "topics/search/rg.md")
-        assert "format = 3\n" in toml.read_text()
+        assert f"format = {FORMAT_VERSION}\n" in toml.read_text()
         undo(e, record.run)
-    assert "format = 3\n" in toml.read_text()  # undo leaves it: other format 3 files may remain
+    # undo leaves it: other files in the newer format may remain
+    assert f"format = {FORMAT_VERSION}\n" in toml.read_text()
 
 
 def test_dedupe_and_validation(brain_dir: Path):

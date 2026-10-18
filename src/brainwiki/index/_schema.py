@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 13
+SCHEMA_VERSION = 14
 
 DDL = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -63,8 +63,10 @@ CREATE TABLE path_history (
 );
 
 -- Where links point (brain-format.md §6.5): body links (`links_to`), plus the note links held
--- in metadata, `bw-superseded_by` (`superseded_by`) and `bw-sources` (`source`). `src` is always the note
--- that holds the link (`declared_in`); `dst` is the note it resolves to (`other`), or NULL.
+-- in metadata fields: `bw-part_of` (`part_of`), `bw-depends_on` (`depends_on`),
+-- `bw-conflicts_with` (`conflicts_with`), `bw-superseded_by` (`superseded_by`), and `bw-sources`
+-- (`source`). `src` is always the note that holds the link (`declared_in`); `dst` is the note it
+-- resolves to (`other`), or NULL.
 CREATE TABLE edges (
   id          INTEGER PRIMARY KEY,
   src         TEXT,

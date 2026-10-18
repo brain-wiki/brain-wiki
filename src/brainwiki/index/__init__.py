@@ -5,6 +5,7 @@ from __future__ import annotations
 from brainwiki.index import _written as written
 from brainwiki.index._brains import format_brain_list, list_brains
 from brainwiki.index._db import open_index
+from brainwiki.index._edges import edge_label
 from brainwiki.index._guards import stale_links
 from brainwiki.index._inbox import (
     consolidation_runs,
@@ -33,6 +34,7 @@ __all__ = [
     "agents_block",
     "classify",
     "consolidation_runs",
+    "edge_label",
     "format_brain_list",
     "format_neighbors_text",
     "format_read_text",

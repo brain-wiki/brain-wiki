@@ -35,10 +35,11 @@ One file per decision. Each says what was decided and why, what was rejected, an
 | [D29: The bw- prefix and the format version](d29-bw-prefix.md) | Accepted |
 | [D30: Topics form a tree](d30-topic-tree.md) | Accepted |
 | [D31: The CLI is built on Typer](d31-typer-cli.md) | Accepted |
-| [D32: Format 3: notes are Markdown pages](d32-format-3.md) | Accepted |
-| [D33: brain-wiki does not extract meaning](d33-no-meaning-extraction.md) | Accepted |
+| [D32: Format 3: notes are Markdown pages](d32-format-3.md) | Accepted, amended by [D39](d39-relation-fields.md) |
+| [D33: brain-wiki does not extract meaning](d33-no-meaning-extraction.md) | Accepted, amended by [D39](d39-relation-fields.md) |
 | [D34: Agents edit notes directly](d34-direct-edits.md) | Accepted |
 | [D35: Git is the history of direct edits](d35-git-history.md) | Accepted |
 | [D36: Harvest and import file into notes, not episodes](d36-harvest-into-notes.md) | Accepted |
 | [D37: Each agent consolidates its own episodes, in a session or on a schedule](d37-per-agent-consolidation.md) | Accepted |
 | [D38: A topic is a folder and its page](d38-topic-pages.md) | Accepted |
+| [D39: Relations are link-only fields the author declares](d39-relation-fields.md) | Accepted |

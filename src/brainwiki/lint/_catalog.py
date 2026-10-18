@@ -28,7 +28,11 @@ _RULES = [
     _RuleInfo("BW114", "error", "error", False, "leftover merge conflict markers"),
     _RuleInfo("BW115", "warning", "warning", False, "database or lock file inside the brain"),
     _RuleInfo(
-        "BW117", "error", "warning", True, "format 1 or 2: claims or relations outside the body"
+        "BW117",
+        "error",
+        "warning",
+        True,
+        "older format: claims or relations not where format 4 keeps them",
     ),
     _RuleInfo("BW118", "error", "warning", False, "unknown bw- field in a note"),
     _RuleInfo(
@@ -41,8 +45,13 @@ _RULES = [
     _RuleInfo("BW120", "error", "warning", False, "bw-sources item is not a link or a URL"),
     _RuleInfo("BW121", "error", "error", False, "file is never edited directly"),
     _RuleInfo("BW122", "warning", "info", False, "bw-sources link does not resolve"),
+    _RuleInfo("BW123", "error", "warning", False, "relation field item is not one link"),
+    _RuleInfo("BW124", "warning", "info", False, "relation field link does not resolve"),
     _RuleInfo("BW307", "error", "error", False, "supersession cycle (bw-superseded_by)"),
     _RuleInfo("BW310", "warning", "info", True, "body link does not resolve"),
+    _RuleInfo("BW312", "error", "warning", False, "note names itself in a relation field"),
+    _RuleInfo("BW313", "info", "info", True, "bw-part_of names the note's own topic page"),
+    _RuleInfo("BW315", "error", "error", False, "part_of cycle (bw-part_of)"),
     _RuleInfo("BW402", "error", "error", False, "rules.md exceeds its budget"),
     _RuleInfo("BW403", "error", "warning", True, "AGENTS.md exceeds its budget"),
     _RuleInfo("BW404", "warning", "info", True, "topic folder has no topic page"),
@@ -76,7 +85,12 @@ SCHEMA_CODES = (
     "BW120",
     "BW121",
     "BW122",
+    "BW123",
+    "BW124",
     "BW307",
+    "BW312",
+    "BW313",
+    "BW315",
 )
 
 

@@ -8,7 +8,7 @@ source: "docs/design/index-and-search.md#3-schema"
 # Schema
 
 `src/brainwiki/index/_schema.py` is authoritative. This copy matches
-`SCHEMA_VERSION` 12. Any schema change bumps the version, and an index with
+`SCHEMA_VERSION` 14. Any schema change bumps the version, and an index with
 another version is rebuilt (§2). Values in comments are what the code
 writes. The schema itself has no CHECK constraints.
 
@@ -77,12 +77,13 @@ CREATE TABLE path_history (
   PRIMARY KEY (node_id, path)
 );
 
--- Where links point: body links, plus the links in bw-superseded_by and bw-sources.
+-- Where links point: body links, plus the links in the relation fields and bw-sources.
 CREATE TABLE edges (
   id          INTEGER PRIMARY KEY,
   src         TEXT,                 -- node id of the note that holds the link (= declared_in)
   dst         TEXT,                 -- node id the link resolves to (= other), NULL when unresolved
-  rel         TEXT NOT NULL,        -- links_to (body), superseded_by, source (bw-sources)
+  rel         TEXT NOT NULL,        -- links_to (body), a relation field's (part_of, depends_on,
+                                    -- conflicts_with, superseded_by), source (bw-sources)
   written     TEXT NOT NULL,        -- link form: wiki, md, embed; 'field' for metadata links
   declared_in TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
   other       TEXT,                 -- the resolved node at the far end, NULL when unresolved
@@ -174,9 +175,16 @@ rel='superseded_by'`. Each end reads an edge with its own label:
 
 | `rel` | Seen from `src` | Seen from `dst` |
 |---|---|---|
-| `links_to` | `links_to` | `linked_from` |
 | `superseded_by` | `superseded_by` | `supersedes` |
+| `conflicts_with` | `conflicts_with` | `conflicts_with` |
+| `depends_on` | `depends_on` | `depended_on_by` |
+| `part_of` | `part_of` | `has_part` |
+| `links_to` | `links_to` | `linked_from` |
 | `source` | `cites` | `cited_by` |
+
+The rows are in priority order: lists of links and neighbors put
+supersession first, then the other relations, then body links, then
+citations.
 
 Read, neighbors, `brain links`, and `brain backlinks` use these labels
 (§7, §9.2). Links in other frontmatter properties, such as `up:`, are not

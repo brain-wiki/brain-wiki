@@ -1,7 +1,28 @@
 # Changelog
 
-## 0.3.3 (unreleased)
+## 0.4.0 (unreleased)
 
+- **Typed relations, as link-only fields (format 4).** A note may name
+  the whole it is part of (`bw-part_of`), the notes it rests on
+  (`bw-depends_on`), and the notes it disagrees with
+  (`bw-conflicts_with`), beside `bw-superseded_by`, which now also takes
+  more than one link. Each field holds quoted wikilinks only, on one side;
+  the other note sees a backlink such as `has_part` or `depended_on_by`.
+  A `## Relations` section is free prose that brain-wiki does not parse
+  ([D39](docs/decision/d39-relation-fields.md)).
+- **Converting older notes.** `brain lint --fix` (BW117) now also turns
+  format 3's "Part of", "Depends on", and "Conflicts with" bullets into
+  fields, and moves format 2 relations to the side format 4 keeps them on.
+  Format 1 `## Relations` sections are no longer read as relations; their
+  links stay plain links. Any run that writes a note raises the brain to
+  format 4, which older versions refuse to open.
+- **New lint rules.** BW123 (a relation item is not one link), BW124 (a
+  relation link does not resolve), BW312 (a note names itself), BW313
+  (`bw-part_of` names the page of the note's own topic, fixable), and BW315
+  (a part_of cycle).
+- **Typed links come first.** `brain_read`, `brain_neighbors`,
+  `brain links`, and `brain backlinks` label relation edges and list them
+  before body links and citations.
 - **Hubs are now topic pages.** A topic is a folder, and its page is the
   file named `layout.topic_page` (`index.md` by default) at the folder's
   root ([D38](docs/decision/d38-topic-pages.md)). A note with `type: hub`

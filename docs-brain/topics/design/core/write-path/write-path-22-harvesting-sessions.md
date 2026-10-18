@@ -82,7 +82,7 @@ The recipe, in the host agent:
    fails with `usage`.
 
 A session URL is `session://<host>/<session id>#turns=A-B`
-([[brain-format-6-notes|brain format §6.4]]). It holds no file path,
+([[brain-format-64-sources|brain format §6.4]]). It holds no file path,
 so it means the same on every machine. `brain origin` and
 `brain_read_origin` accept it and show those turns when the transcript is
 on this machine (§4.6). Provenance never comes from the model: the URL,

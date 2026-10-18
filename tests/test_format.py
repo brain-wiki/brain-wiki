@@ -3,7 +3,14 @@ from __future__ import annotations
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from brainwiki.format._convert import legacy, mark_superseded, to_format3
+from brainwiki.format._convert import (
+    add_link,
+    legacy,
+    link_back,
+    mark_superseded,
+    remove_link,
+    upgrade,
+)
 from brainwiki.format._document import parse_document
 from brainwiki.format._edit import append_to_section
 from brainwiki.format._fields import list_values, quote
@@ -115,20 +122,37 @@ def test_superseded_by_is_a_meta_link():
     assert not legacy(doc.text)
 
 
-def test_format2_converts_to_body_markdown():
+def test_relation_fields_are_meta_links():
+    text = (
+        '---\nbw-part_of: "[[App v2 Launch]]"\nbw-depends_on:\n  - "[[SQLite Version Policy]]"\n'
+        '  - "[[Build Server Setup]]"\nbw-conflicts_with: ["[[Vector-Only Search Proposal]]"]\n'
+        "---\n# X\n\n## Relations\n\n- Rests on [[SQLite Version Policy]] for trigram search.\n"
+    )
+    doc = parse_document("x.md", text)
+    assert [(rel, link.target, link.line) for rel, link in doc.meta_links] == [
+        ("part_of", "App v2 Launch", 2),
+        ("depends_on", "SQLite Version Policy", 4),
+        ("depends_on", "Build Server Setup", 5),
+        ("conflicts_with", "Vector-Only Search Proposal", 6),
+    ]
+    assert [link.target for link in doc.links] == ["SQLite Version Policy"]  # prose stays prose
+    assert not legacy(text)
+    assert not legacy("---\nbw-superseded_by: plain text\n---\n# X\n")  # BW119, not format 2
+
+
+def test_format2_converts_to_fields_and_prose():
     found = legacy(NOTE_V2)
-    assert [k for k, _ in found.fields] == [
-        "bw-part_of",
+    assert [k for k, _ in found.fields] == [  # bw-part_of holds only a link: already format 4
         "bw-depends_on",
         "bw-unless",
         "bw-supersedes",
         "bw-claims",
         "bw-claims-superseded",
     ]
-    assert found.supersedes == ["Use ripgrep for search"]
+    assert found.inverse == [("bw-superseded_by", "Use ripgrep for search")]
     assert "default search backend" in parse_document("x.md", NOTE_V2).body_text
 
-    out = to_format3(NOTE_V2, page_names=frozenset({"topics/search/index", "search"}))
+    out = upgrade(NOTE_V2)
     assert not legacy(out)
     assert out.endswith(
         "Prose with a [[SQLite version policy]] link.\n\n"
@@ -137,33 +161,88 @@ def test_format2_converts_to_body_markdown():
         "- Trigram search needs SQLite 3.34 or newer.\n\n"
         "## History\n\n"
         "- ~~Search shells out to ripgrep.~~ (too slow)\n\n"
-        "## Related\n\n"
+        "## Relations\n\n"
         "- Depends on [[SQLite version policy]] — needs the trigram tokenizer\n"
         "- Unless [[Vector-only search proposal]] (unless: embeddings enabled)\n"
         "- Supersedes [[Use ripgrep for search]]\n"
     )
+    fm = split(out).raw
+    assert fm["bw-depends_on"] == "[[SQLite version policy]]"
+    assert fm["bw-conflicts_with"] == "[[Vector-only search proposal]]"  # `unless` is a conflict
+    assert fm["bw-part_of"] == "[[search]]"  # lint, not the converter, removes the folder's page
+    assert "bw-unless" not in fm and "bw-supersedes" not in fm and "bw-claims" not in out
     assert list_values(out, "bw-sources") == [
         "[[archive/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7]]",
         "https://sqlite.org/fts5.html",
     ]
-    assert (
-        "part_of" not in out and "bw-claims" not in out
-    )  # the topic page link is the folder's job
-    assert to_format3(out) == out
+    assert upgrade(out) == out
 
 
-def test_format1_converts_and_keeps_lines_it_cannot_read():
+def test_format2_inverse_and_prose_relations():
+    note = (
+        '---\nid: X\nbw-has_part: ["[[Section One]]"]\nbw-enables: "[[Release Checklist]]"\n'
+        'bw-causes: "[[Outage]]"\nbw-related_to: "[[Search Benchmarks]]"\n'
+        'bw-part_of: "[[Search]]"\n---\n# X\n'
+    )
+    found = legacy(note)
+    assert found.inverse == [("bw-part_of", "Section One"), ("bw-depends_on", "Release Checklist")]
+    out = upgrade(note, page_names=frozenset({"search"}))
+    fm = split(out).raw
+    assert "bw-has_part" not in fm and "bw-enables" not in fm and "bw-related_to" not in fm
+    assert fm["bw-part_of"] == "[[Search]]"  # untouched: already a format 4 field
+    assert out.endswith(
+        "## Relations\n\n- Has part [[Section One]]\n- Enables [[Release Checklist]]\n"
+        "- Causes [[Outage]]\n- Related to [[Search Benchmarks]]\n"
+    )
+
+
+def test_format1_relations_stay_as_prose():
     found = legacy(NOTE_V1)
-    assert [n for n, _ in found.sections] == ["claims", "relations"] and found.stage
-    out = to_format3(NOTE_V1)
+    assert [n for n, _ in found.sections] == ["claims"] and found.stage
+    out = upgrade(NOTE_V1)
     fm = split(out)
-    assert fm.data["status"] == "superseded" and fm.raw["bw-superseded_by"] == "[[Newer search]]"
+    assert "status" not in fm.raw  # nothing marks it superseded
+    assert "bw-superseded_by" not in fm.raw  # format 1 relation lines are no longer read
     assert fm.raw["bw-stage"] == "accepted" and "stage" not in fm.raw
-    assert '\nbw-superseded_by: "[[Newer search]]"\n' in out
     assert "## Claims" not in out and "<!--" not in out
-    assert "## Relations" not in out
-    assert out.endswith("## Related\n\n- Part of [[search]]\n- frobnicates [[Nothing]]\n")
+    assert "## Relations\n- part_of [[search]]\n- superseded_by [[Newer search]]\n" in out
     assert "```\n[[not a link]]\n```" in out and not legacy(out)
+
+
+def test_format3_bullets_become_fields_only_in_a_format3_brain():
+    note = (
+        "---\nid: X\n---\n# X\n\n## Related\n\n"
+        "- Depends on [[SQLite Version Policy]] — needs the trigram tokenizer\n"
+        "- Uses [[Build Server Setup]]\n- Enables [[Release Checklist]]\n"
+        "- Related to [[Search Benchmarks]]\n- See [[Other]] for more\n"
+        "\n```\n## Related\n- Depends on [[In Code]]\n```\n"
+    )
+    assert not legacy(note)  # a format 4 brain reads `## Related` as prose
+    found = legacy(note, brain_format=3)
+    assert [key for key, _ in found.bullets] == ["bw-depends_on"] * 2  # inverse ones apart
+    assert found.inverse == [("bw-depends_on", "Release Checklist")]
+    out = upgrade(note, brain_format=3)
+    assert list_values(out, "bw-depends_on") == [
+        "[[SQLite Version Policy]]",
+        "[[Build Server Setup]]",
+    ]
+    assert out.split("---\n", 2)[2] == note.split("---\n", 2)[2]  # the bullets stay as written
+    assert upgrade(out, brain_format=3) == out
+
+
+def test_link_fields_hold_one_value_or_a_list():
+    note = "---\nid: X\n---\n# X\n"
+    one = add_link(note, "bw-part_of", "App v2 Launch")
+    assert split(one).raw["bw-part_of"] == "[[App v2 Launch]]"
+    two = add_link(one, "bw-part_of", "Team Standup")
+    assert split(two).raw["bw-part_of"] == ["[[App v2 Launch]]", "[[Team Standup]]"]
+    assert add_link(two, "bw-part_of", "team standup") == two  # already there
+    assert split(remove_link(two, "bw-part_of", "App v2 Launch")).raw["bw-part_of"] == (
+        "[[Team Standup]]"
+    )
+    assert "bw-part_of" not in remove_link(one, "bw-part_of", "App v2 Launch")
+    replaced = link_back("bw-superseded_by")(note, "Newer")
+    assert split(replaced).raw["status"] == "superseded"
 
 
 def test_mark_superseded_sets_status_and_link():
@@ -258,7 +337,7 @@ def test_quote_is_valid_yaml(text):
 def test_converted_claims_keep_their_text(text, superseded):
     key = "bw-claims-superseded" if superseded else "bw-claims"
     note = f"---\nid: X\n{key}:\n  - {quote(text + ' {id: c-1}')}\n---\n# T\n"
-    out = to_format3(note)
+    out = upgrade(note)
     assert not legacy(out) and "bw-claims" not in out
     section = "## History" if superseded else "## Facts"
     assert section in out and "{id: c-1}" not in out

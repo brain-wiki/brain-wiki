@@ -92,6 +92,12 @@ def plan(engine: Engine, result: LintResult, *, include_info: bool) -> tuple[Run
     return run, applied
 
 
+def _declare_format(engine: Engine) -> bool:
+    from brainwiki.lifecycle import declare_format
+
+    return declare_format(engine)
+
+
 def fix(
     engine: Engine,
     *,
@@ -106,6 +112,11 @@ def fix(
     result = lint(engine, paths=paths, profile=profile, select=select, ignore=ignore, fixes=True)
     run, applied = plan(engine, result, include_info=bool(select))
     if not run.entries:
+        upgrades = any(p.code == "BW117" for p in result.problems)
+        if upgrades and not dry_run and _declare_format(engine):
+            # Every conversion was already in place (a field the other note held): the brain is
+            # in the current format, so say so, or BW117 would ask forever.
+            result = lint(engine, paths=paths, profile=profile, select=select, ignore=ignore)
         return FixOutcome([], None, "", result)
     if dry_run:
         return FixOutcome(applied, None, run.diff(), result)

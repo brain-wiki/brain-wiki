@@ -87,7 +87,9 @@ def test_read_banners_and_modes(example: Path):
         full = read(eng, "FTS5 decision")
         assert "<!--" not in full["content"] and "{id:" not in full["content"]
         assert "## Facts\n\n- SQLite FTS5 is the default" in full["content"]
-        assert '\nLinks:\n- cites "01M2Z44880248H248H248H248H"' in full["content"]
+        assert '\nLinks:\n- depends_on "SQLite version policy"' in full["content"]
+        assert '- conflicts_with "Vector-only search proposal"' in full["content"]
+        assert '- cites "01M2Z44880248H248H248H248H"' in full["content"]
         assert '- supersedes "Use ripgrep for search"' in full["content"]
         ep = read(eng, eng.db.execute("SELECT id FROM nodes WHERE kind='episode'").fetchone()["id"])
         assert ep["content"].startswith("<untrusted-episode")

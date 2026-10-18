@@ -485,7 +485,7 @@ def _topics(
     return _call(ctx, "topics", topic=topic)
 
 
-@_app.command("links", help="what a note links to: body links, bw-superseded_by, and bw-sources")
+@_app.command("links", help="what a note links to: body links, relation fields, and bw-sources")
 def _links(
     ctx: typer.Context,
     target: _Target,

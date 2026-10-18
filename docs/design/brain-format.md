@@ -1,6 +1,6 @@
 # Brain format
 
-This document defines format 3, what a brain looks like on disk. brain-wiki,
+This document defines format 4, what a brain looks like on disk. brain-wiki,
 every agent host, and the user's other tools rely on it, and it is
 normative. The key words MUST, MUST NOT, SHOULD, and MAY are used as in
 RFC 2119.
@@ -210,12 +210,13 @@ Rules:
   and lists of lists MUST NOT be used (BW102). Obsidian edits only flat
   properties, and LLMs often break nested YAML
   ([D3](../decision/d03-flat-frontmatter.md)).
-- Frontmatter holds metadata only. What a note knows (facts, reasons,
-  connections to other notes) MUST be written in the body (§6.2), since
-  Obsidian renders no Markdown in properties.
-- brain-wiki's own fields carry the reserved `bw-` prefix: on notes
-  `bw-superseded_by` (§6.3), `bw-sources` (§6.4), and `bw-stage`, and on
-  episodes the provenance fields (§9). Shared metadata stays unprefixed:
+- Frontmatter holds metadata: what a note is, and which notes it relates
+  to, as links (§6.6). What a note knows, its facts and reasons, MUST be
+  written in the body (§6.2), since Obsidian renders no Markdown in
+  properties.
+- brain-wiki's own fields carry the reserved `bw-` prefix: on notes the
+  relation fields (§6.6), `bw-superseded_by` (§6.3), `bw-sources` (§6.4),
+  and `bw-stage`, and on episodes the provenance fields (§9). Shared metadata stays unprefixed:
   `id`, `type`, `title`, `aliases`, `tags`, `status`, `created`,
   `updated`. The prefix marks what brain-wiki validates and cannot clash
   with other tools ([D29](../decision/d29-bw-prefix.md)). Lint reports an
@@ -243,8 +244,8 @@ Rules:
 - Ids MUST be unique within a brain. Lint reports duplicates (BW105),
   usually a copied file, and `--fix` mints a new id for each newer copy
   of a note or topic page.
-- Format 2 also gave each claim a `c-` id. The conversion to format 3
-  drops them (§13).
+- Format 2 also gave each claim a `c-` id. The conversion drops them
+  (§13).
 
 ## 6. Notes
 
@@ -262,6 +263,7 @@ aliases: [FTS5 decision]
 tags: [search, storage]
 created: 2026-10-07
 updated: 2026-10-09
+bw-depends_on: "[[SQLite Version Policy]]"
 bw-sources:
   - "[[archive/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7]]"
   - "https://sqlite.org/fts5.html"
@@ -276,7 +278,8 @@ bw-sources:
 | `aliases` | no | list of strings | As in Obsidian; used to resolve links |
 | `tags` | no | list of strings | Without `#` |
 | `status` | no (default `active`) | `active`, `superseded`, `archived` | Closed set (§6.3, BW106) |
-| `bw-superseded_by` | only with `status: superseded` | one link, `"[[note]]"` | §6.3 |
+| `bw-superseded_by` | only with `status: superseded` | one or more links, `"[[note]]"` | §6.3 |
+| `bw-part_of`, `bw-depends_on`, `bw-conflicts_with` | no | one or more links | §6.6 |
 | `bw-sources` | no | list of links or URLs | §6.4 |
 | `bw-stage` | no | string | Free workflow state |
 | `created`, `updated` | no | ISO 8601 date or date-time | — |
@@ -293,9 +296,10 @@ bw-sources:
   `url`, `author`). It is the user's: preserved, filterable with `--where`,
   never validated. The names `valid_from`, `valid_until`, and `confidence`
   are reserved for a later format.
-- Format 2 fields (`bw-claims`, `bw-claims-superseded`, `bw-<verb>`
-  relations, and `bw-superseded_by` written as a list) are BW117, and the
-  message names the command that converts them (§13).
+- Format 2 fields (`bw-claims`, `bw-claims-superseded`, inverse and alias
+  relation fields such as `bw-has_part` and `bw-requires`, and relation
+  items with text after the link) are BW117, and the message names the
+  command that converts them (§13).
 - `brain validate` checks these rules for the files an agent changed, and
   `brain lint` for the whole brain ([lint](lint-and-reports.md)).
 
@@ -349,8 +353,10 @@ status: superseded
 bw-superseded_by: "[[Use SQLite FTS5 for local search]]"
 ```
 
-- `bw-superseded_by` MUST be one quoted link, and MUST appear only with
-  `status: superseded` (BW119). `lint --fix` sets the status.
+- `bw-superseded_by` holds one or more quoted links, like every relation
+  field (§6.6): a note split in two names both replacements. It MUST
+  appear only with `status: superseded` (BW119). `lint --fix` sets the
+  status.
 - The target MUST resolve to a note and MUST NOT be the note itself
   (BW119). Notes MUST NOT form a supersession cycle (BW307).
 - Chains are allowed. If B replaces A and C replaces B, A and B each name
@@ -406,8 +412,9 @@ brain-wiki recognizes these body links:
 Links in code, links within the same note, and Markdown links to URLs,
 `mailto:`, or non-Markdown files are not note links.
 
-Body links are stored as `links_to` edges. `bw-superseded_by` and
-`bw-sources` add `superseded_by` and `source` edges
+Body links are stored as `links_to` edges. The relation fields (§6.6) and
+`bw-sources` add `part_of`, `depends_on`, `conflicts_with`,
+`superseded_by`, and `source` edges
 ([index and search §3](index-and-search.md#3-schema)). Edges feed
 backlinks, `brain_neighbors`, orphan detection, link repair, and the
 visualizer. Only `superseded_by` carries a retrieval rule (§7).
@@ -425,7 +432,7 @@ strings with `.md` optional:
 
 - Zero matches is an unresolved link. More than one match at the first
   step that matches is ambiguous. Lint reports both (BW310 for body
-  links, BW119 and BW122 for fields).
+  links; BW119, BW122, and BW124 for fields).
 - Steps 1 to 4 are how Obsidian resolves links. Steps 5 to 7 are
   leniencies for hand-written and model-written links.
 - Links brain-wiki writes use the file name, or the full path without
@@ -435,6 +442,50 @@ strings with `.md` optional:
 The index remembers each id's previous paths. When a file moves and links
 break, `brain lint --fix` rewrites them using the id. `brain mv` moves a
 file and rewrites links in one step.
+
+### 6.6 Relations
+
+A relation is a typed link from one note to another, held in a
+frontmatter field. The body may explain it, in a `## Relations` section or
+anywhere else, but brain-wiki reads only the field
+([D39](../decision/d39-relation-fields.md)).
+
+```yaml
+bw-part_of: "[[App v2 Launch]]"
+bw-depends_on:
+  - "[[SQLite Version Policy]]"
+  - "[[Build Server Setup]]"
+bw-conflicts_with: "[[Vector-Only Search Proposal]]"
+```
+
+| Field | On which note | Means | The other note sees |
+|---|---|---|---|
+| `bw-part_of` | The part | It belongs to a whole: a project, a document, a series, a team | `has_part` |
+| `bw-depends_on` | The dependent | It holds only while the target does; when the target is superseded or archived, it needs review | `depended_on_by` |
+| `bw-conflicts_with` | Either note, once | Reading one without the other misleads | `conflicts_with` |
+| `bw-superseded_by` | The old note | It was replaced by the target (§6.3) | `supersedes` |
+
+- A field holds one or more quoted links, written as one value or a
+  list. An item holds a link and nothing else (BW119 for
+  `bw-superseded_by`, BW123 for the others). The order of items means
+  nothing; where order matters, titles carry it.
+- Each relation has one field, on one side, and the other note sees the
+  relation as a backlink, so there are no inverse fields.
+  `bw-conflicts_with` is symmetric: written once on either note, it
+  applies to both.
+- There are no alias fields. `bw-requires` is an unknown field (BW118).
+- A target that does not resolve is BW124 (BW119 for
+  `bw-superseded_by`), and a note naming itself is BW312 (BW119).
+- A note's folder already says which topic it is part of (§2.1), so
+  `bw-part_of` does not name the page of the note's own topic (BW313,
+  fixed by removing the item). Naming another topic's page makes the note
+  part of that topic too, without changing its folder. part_of cycles are
+  BW315.
+- `## Relations` in the body is free prose. It may explain the fields, say
+  something else, or be absent. brain-wiki reads its links as ordinary
+  body links and checks nothing against the fields.
+- "Caused by" and "related to" have no field. A sentence with a plain link
+  says them.
 
 ## 7. Supersession guard
 
@@ -451,8 +502,8 @@ This holds regardless of search scores and result limits. The guard's
 notes come on top of the top-k results
 ([index and search §5](index-and-search.md#5-supersession-guard)).
 
-Format 3 has no conflict relation. A note that disagrees with another says
-so in a sentence with a link.
+`bw-conflicts_with` (§6.6) is indexed as an edge, which reads, backlinks,
+and `brain_neighbors` show; it adds nothing to search results yet.
 
 ## 8. Topic pages
 
@@ -672,13 +723,13 @@ makes:
 ## 13. Format versioning
 
 `format` in `brain.toml` is an integer, the newest file format the brain
-may contain. This document defines format 3.
+may contain. This document defines format 4.
 
 - A tool MUST refuse to open a brain with a higher format than it
   supports. A best-effort read is not safe. An older reader misreads
-  fields whose meaning changed (format 2 reads `bw-superseded_by` as a
-  relation list), and its writers would put old-format content into a
-  newer brain.
+  fields whose meaning changed (format 3 reads `bw-depends_on` as an
+  unknown field to remove), and its writers would put old-format content
+  into a newer brain.
 - A tool that writes files in a newer format MUST raise `format`. In
   brain-wiki, every run that writes a Markdown file other than `log.md`,
   and every episode write, raises it to the current version. The change is
@@ -687,7 +738,18 @@ may contain. This document defines format 3.
 - Readers accept every older format. A format change ships with a fix
   that converts files, has a dry run, and writes one undo point.
 
-**Format 2** kept claims and typed relations in frontmatter lists:
+**Format 3** had one relation field, `bw-superseded_by`. Its converter
+wrote every other format 2 relation as a `## Related` bullet that starts
+with the verb:
+
+```markdown
+## Related
+- Depends on [[SQLite version policy]] — needs the trigram tokenizer
+```
+
+**Format 2** kept claims and typed relations in frontmatter lists, with
+text after the link, inverse verbs (`bw-has_part`, `bw-enables`,
+`bw-supersedes`), and aliases (`bw-requires`, `bw-contradicts`, …):
 
 ```yaml
 bw-part_of: "[[search]]"
@@ -715,19 +777,21 @@ prefix:
 - depends_on [[SQLite version policy]] — needs the trigram tokenizer
 ```
 
-Lint reports a format 1 or 2 note as BW117, and `brain lint --fix`
-converts it to format 3:
+Lint reports a note in an older format as BW117, and `brain lint --fix`
+converts it to format 4:
 
-| Format 1 or 2 | Format 3 |
+| Older format | Format 4 |
 |---|---|
 | `bw-claims` items, or format 1 `## Claims` items | `## Facts` bullets, text only |
 | `bw-claims-superseded` items, or struck-through format 1 claims | `## History` bullets: `- ~~text~~ (reason)` |
 | Claim `src` | `bw-sources` items |
-| `bw-<verb>` relations, or format 1 `## Relations` items | `## Related` bullets |
-| `bw-part_of` naming the page of the note's own topic | Dropped, since membership is the folder (§2) |
-| `bw-superseded_by` relation | The `bw-superseded_by` field and `status: superseded` |
-| `bw-supersedes: X`, or a format 1 `supersedes` line | A `## Related` bullet, plus a fix on note X |
-| A relation item that does not parse | Moved unchanged to `## Related` |
+| A format 2 `bw-part_of`, `bw-depends_on`, `bw-conflicts_with`, or `bw-superseded_by` item with text after the link, or one of their aliases | The link in the canonical field, and the whole item as a `## Relations` bullet |
+| A format 2 `bw-has_part`, `bw-enables`, or `bw-supersedes` item on note A naming B | `bw-part_of`, `bw-depends_on`, or `bw-superseded_by` (with `status: superseded`) on B naming A, by a second BW117 fix; the item stays on A as a `## Relations` bullet |
+| A format 2 `bw-related_to`, `caused_by`, or `causes` item | A `## Relations` bullet with a plain link |
+| A format 2 relation item that does not parse | Moved unchanged to `## Relations` |
+| A format 3 "Part of", "Depends on", or "Conflicts with" bullet under `## Related`, or one with an alias verb | The link in the field; the bullet stays where it is |
+| A format 3 "Has part" or "Enables" bullet on A naming B | The field on B naming A, by a second BW117 fix; the bullet stays |
+| Format 1 `## Relations` lines | Left as they are: prose with plain links |
 | Unprefixed `stage` | `bw-stage` |
 
 - Claim metadata (`id`, `origin`, `inputs`, `at`) is dropped. An episode
@@ -735,16 +799,26 @@ converts it to format 3:
   `.md` and any `#…` fragment removed. URLs are kept, and conversation
   references (`host:session#T…`) are dropped. Items merge into an existing
   `bw-sources` without duplicates.
-- A relation bullet starts with its verb as a phrase, as in the example
-  below. "The page of the note's own topic" means the page's path, the folder's
-  name, or the topic's slug.
+- A converted bullet starts with the relation's verb as a phrase, as in
+  the example below. A format 2 `bw-part_of` item with text after it that
+  names the page of the note's own topic is dropped; a link-only one is
+  left to BW313. "The page of the note's own topic" means the page's
+  path, the folder's name, or the topic's slug.
 - A `bw-superseded_by` relation sets `status: superseded` only when the
   status was `active`.
-- For `bw-supersedes: X`, a second BW117 fix on X sets
-  `status: superseded` and a `bw-superseded_by` link back, by file name
-  when unique, else by path.
+- A link back to the declaring note uses its file name when unique, else
+  its path.
+- Format 3's `## Related` bullets are read only while the brain declares
+  format 3 or older. The run that converts them raises the brain to
+  format 4, after which `## Related` is ordinary prose. Format 3's
+  "Supersedes" bullets need nothing: its converter already marked the
+  replaced note. When every conversion was already in place,
+  `brain lint --fix` raises the format by itself.
 
 ```markdown
+---
+bw-depends_on: "[[SQLite version policy]]"
+---
 ## Facts
 
 - SQLite FTS5 is the default search backend.
@@ -753,17 +827,17 @@ converts it to format 3:
 
 - ~~Search shells out to ripgrep.~~ (too slow)
 
-## Related
+## Relations
 
 - Depends on [[SQLite version policy]] — needs the trigram tokenizer
 - Supersedes [[Use ripgrep for search]]
 ```
 
 - Items are appended to an existing `## Facts`, `## History`, or
-  `## Related` section rather than adding a second one. A legacy section
+  `## Relations` section rather than adding a second one. A legacy section
   left empty is removed.
 - All fixes form one undoable run, and `brain lint --fix --dry-run` shows
-  the diff first. The run raises `format` to 3.
+  the diff first. The run raises `format` to 4.
 - Until a note is converted, the text of its format 2 claims stays
   searchable, and lint keeps reporting the conversion command.
 - Episodes are immutable and are never converted. Readers accept their

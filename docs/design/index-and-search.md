@@ -42,7 +42,7 @@ Each brain has one index per device, in brain-wiki's cache directory.
 ## 3. Schema
 
 `src/brainwiki/index/_schema.py` is authoritative. This copy matches
-`SCHEMA_VERSION` 12. Any schema change bumps the version, and an index with
+`SCHEMA_VERSION` 14. Any schema change bumps the version, and an index with
 another version is rebuilt (§2). Values in comments are what the code
 writes. The schema itself has no CHECK constraints.
 
@@ -111,12 +111,13 @@ CREATE TABLE path_history (
   PRIMARY KEY (node_id, path)
 );
 
--- Where links point: body links, plus the links in bw-superseded_by and bw-sources.
+-- Where links point: body links, plus the links in the relation fields and bw-sources.
 CREATE TABLE edges (
   id          INTEGER PRIMARY KEY,
   src         TEXT,                 -- node id of the note that holds the link (= declared_in)
   dst         TEXT,                 -- node id the link resolves to (= other), NULL when unresolved
-  rel         TEXT NOT NULL,        -- links_to (body), superseded_by, source (bw-sources)
+  rel         TEXT NOT NULL,        -- links_to (body), a relation field's (part_of, depends_on,
+                                    -- conflicts_with, superseded_by), source (bw-sources)
   written     TEXT NOT NULL,        -- link form: wiki, md, embed; 'field' for metadata links
   declared_in TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
   other       TEXT,                 -- the resolved node at the far end, NULL when unresolved
@@ -208,9 +209,16 @@ rel='superseded_by'`. Each end reads an edge with its own label:
 
 | `rel` | Seen from `src` | Seen from `dst` |
 |---|---|---|
-| `links_to` | `links_to` | `linked_from` |
 | `superseded_by` | `superseded_by` | `supersedes` |
+| `conflicts_with` | `conflicts_with` | `conflicts_with` |
+| `depends_on` | `depends_on` | `depended_on_by` |
+| `part_of` | `part_of` | `has_part` |
+| `links_to` | `links_to` | `linked_from` |
 | `source` | `cites` | `cited_by` |
+
+The rows are in priority order: lists of links and neighbors put
+supersession first, then the other relations, then body links, then
+citations.
 
 Read, neighbors, `brain links`, and `brain backlinks` use these labels
 (§7, §9.2). Links in other frontmatter properties, such as `up:`, are not
@@ -533,14 +541,16 @@ Every link and backlink carries its handle, the path after the title. In
 the structured result, `outline` and `full` include:
 
 - `links`: items `{relation, target, id, title, path, resolved}`.
-  `relation` is `superseded_by`, `cites`, or `links_to`. `target` is the
-  link as written. `id`, `title`, and `path` are null when it does not
-  resolve. Metadata links come first, then body links in file order, one
-  entry per target. Text shows 20, then a pointer to
+  `relation` is the label seen from the note (§3), such as `depends_on`,
+  `cites`, or `links_to`. `target` is the link as written. `id`, `title`,
+  and `path` are null when it does not resolve. Metadata links come first,
+  then body links in file order, one entry per target, so a field wins
+  over a body link to the same note. Text shows 20, then a pointer to
   `brain_neighbors("<path>", direction="out")`.
 - `backlinks`: items `{id, title, path, relation}`, where `relation` is
-  `supersedes`, `cited_by`, or `linked_from`. Supersession comes first,
-  then the most recently updated, one entry per note, at most 10.
+  the label seen from the target (§3), such as `supersedes`, `has_part`,
+  or `linked_from`. They come in the priority order of §3, the most
+  recently updated first within each, one entry per note, at most 10.
   `backlinks_total` gives the full count, and text points to
   `brain_neighbors("<path>", direction="in")` for the rest.
 
@@ -615,7 +625,7 @@ The managed block of `AGENTS.md` is built from the same topic rows
 | Topic tree | `brain topics` | Each topic with its own and total note counts |
 | Tag and type counts | `brain tags`, `brain types`, search `facets`, orientation | — |
 | Orphans | `brain orphans`, BW406, `reports/orphans.md` | Notes no other node links to |
-| Unresolved links | `brain unresolved`, BW119, BW122, BW310 | Edges with no target |
+| Unresolved links | `brain unresolved`, BW119, BW122, BW124, BW310 | Edges with no target |
 | Stale links | `reports/stale.md`, the visualizer's `stale` flag | `stale_links`, defined below |
 | Neighborhood graph | visualizer | Nodes plus edges; see [visualizer](visualizer.md) |
 | Pending episodes | `brain consolidate --prepare`, orientation | `kind = 'episode'`, ordered by id |
@@ -675,8 +685,8 @@ edges without reading bodies, and returns a small subgraph.
 - The root comes first, at depth 0.
 - `via.relation` uses the labels in §3, read from the node it was reached
   from. `edges` keep the stored direction.
-- Within a depth, supersession comes first, then body links, then
-  citations, each newest first, so `limit` keeps what matters.
+- Within a depth, edges come in the priority order of §3, each newest
+  first, so `limit` keeps what matters.
 
 Typical uses: what a topic page lists (`out`), what refers to a decision (`in`),
 and how a note evolved (`both`, depth 3).

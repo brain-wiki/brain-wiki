@@ -215,9 +215,9 @@ def test_read_gives_a_handle_for_every_link_and_backlink(example: Path):
         full = read(eng, "fts5")
     link = next(r for r in outline["links"] if r["target"] == "sqlite-version-policy")
     assert link["path"] == "topics/storage/sqlite-version-policy.md" and link["id"]
-    assert link["relation"] == "links_to"
+    assert link["relation"] == "depends_on"  # the field wins over the plain link in prose
     text = format_read_text(outline)
-    assert '- links_to "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in text
+    assert '- depends_on "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in text
     assert '- linked_from "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in text
     assert '- supersedes "Use ripgrep for search" (topics/search/ripgrep.md)' in text
     assert outline["backlinks_total"] >= 1 and outline["backlinks"][0]["id"]
@@ -246,17 +246,19 @@ def test_neighbors_follow_links_by_direction_and_depth(example: Path):
         history = neighbors(eng, "ripgrep", depth=3)
         page = neighbors(eng, "Search", limit=2)
     assert [(n["title"], n["via"]["relation"]) for n in out["nodes"][1:]] == [
-        ("SQLite version policy", "links_to"),
-        ("Vector-only search proposal", "links_to"),
+        ("Vector-only search proposal", "conflicts_with"),  # typed relations first
+        ("SQLite version policy", "depends_on"),
         ("Use ripgrep for search", "links_to"),
         ("01M2Z44880248H248H248H248H", "cites"),
     ]
-    assert {"rel": "links_to", "src": out["root"], "dst": out["nodes"][1]["id"]} in out["edges"]
+    vector = out["nodes"][1]["id"]
+    assert {"rel": "conflicts_with", "src": out["root"], "dst": vector} in out["edges"]
+    assert {"rel": "links_to", "src": out["root"], "dst": vector} in out["edges"]
     assert {n["path"] for n in into["nodes"][1:]} == {
         "topics/storage/index.md",
         "topics/search/fts5.md",
     }
-    assert {n["via"]["relation"] for n in into["nodes"][1:]} == {"linked_from"}
+    assert {n["via"]["relation"] for n in into["nodes"][1:]} == {"depended_on_by", "linked_from"}
     assert history["nodes"][1]["via"]["relation"] == "superseded_by"  # supersession first
     assert max(n["depth"] for n in history["nodes"]) == 3
     assert page["truncated"] and len(page["nodes"]) == 3

@@ -51,3 +51,4 @@ Generated from `docs/decision/README.md`.
 - [[d36-harvest-into-notes]]: D36: Harvest and import file into notes, not episodes
 - [[d37-per-agent-consolidation]]: D37: Each agent consolidates its own episodes, in a session or on a schedule
 - [[d38-topic-pages]]: D38: A topic is a folder and its page
+- [[d39-relation-fields]]: D39: Relations are link-only fields the author declares

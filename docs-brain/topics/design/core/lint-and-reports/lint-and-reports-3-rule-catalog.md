@@ -28,12 +28,14 @@ marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
 | BW112 | File looks like a sync conflict copy. | warning / warning | — |
 | BW114 | Leftover merge conflict markers outside code. | error / error | — |
 | BW115 | `*.sqlite`, `*.sqlite3`, `*.db`, `*-wal`, or `*-shm` file inside the brain. | warning / warning | — |
-| BW117 † | Note is in format 1 or 2. | error / warning | Convert to format 3 (§5.1) |
+| BW117 † | Note is in an older format. | error / warning | Convert to format 4 (§5.1) |
 | BW118 † | Unknown `bw-` field in a note. | error / warning | — |
-| BW119 † | `bw-superseded_by` is malformed, unresolved, names its own note, or is set without `status: superseded`. | error / warning | Set `status: superseded` (last case only) |
+| BW119 † | `bw-superseded_by` holds something other than links, a link that does not resolve, or its own note, or is set without `status: superseded`. | error / warning | Set `status: superseded` (last case only) |
 | BW120 † | A `bw-sources` item is neither a link nor a URL. | error / warning | — |
 | BW121 † | A protected file was edited. | error / error | — |
 | BW122 † | A `bw-sources` link does not resolve. | warning / info | — |
+| BW123 † | A `bw-part_of`, `bw-depends_on`, or `bw-conflicts_with` item is not one link. | error / warning | — |
+| BW124 † | A `bw-part_of`, `bw-depends_on`, or `bw-conflicts_with` link does not resolve, or is ambiguous. | warning / info | — |
 
 - The BW103 message includes a fresh `id:` line an agent can paste.
 - BW105 keeps the id on the file with the oldest modification time.
@@ -43,10 +45,12 @@ marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
 - BW112 matches common sync-tool conflict names, and `note (1).md` or
   `note 2.md` when `note.md` exists with different content.
 - BW114 checks notes, topic pages, `rules.md`, `AGENTS.md`, and `log.md`.
-- BW117 lists what makes the note format 1 or 2
-  ([[brain-format-13-format-versioning|brain format §13]]). A
-  `bw-supersedes` relation adds a second BW117 whose fix marks the note it
-  names as superseded.
+- BW117 lists what makes the note an older format
+  ([[brain-format-13-format-versioning|brain format §13]]). Format 3
+  `## Related` bullets count only while the brain declares format 3 or
+  older. A relation held on the other side in format 4 (`bw-supersedes`,
+  `bw-has_part`, `bw-enables`, or their bullets) adds a second BW117,
+  whose fix writes the field on the note it names.
 - BW121 comes only from `brain validate`, for a path that
   [[write-path-23-direct-edits|write path §2.3]] protects.
 
@@ -57,6 +61,9 @@ marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
 |---|---|---|---|
 | BW307 † | Supersession cycle along `bw-superseded_by`. | error / error | — |
 | BW310 | Body link does not resolve, or is ambiguous. | warning / info | Repoint it from the index's path history |
+| BW312 † | `bw-part_of`, `bw-depends_on`, or `bw-conflicts_with` names its own note. | error / warning | — |
+| BW313 † | `bw-part_of` names the page of the note's own topic, which its folder already says. | info / info | Remove the item |
+| BW315 † | part_of cycle along `bw-part_of`. | error / error | — |
 
 An unresolved link's message suggests the closest title, and an ambiguous
 one lists up to five candidates. A wikilink to an attachment, such as

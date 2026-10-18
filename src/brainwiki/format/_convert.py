@@ -1,9 +1,11 @@
-"""Formats 1 and 2 into format 3 (brain-format.md §13).
+"""Older notes into format 4 (brain-format.md §13).
 
-Claims and typed relations become body Markdown (`## Facts`, `## History`, `## Related`); the
-episodes and URLs claims cited become `bw-sources`; a note superseded through a relation gets
-`status: superseded` and `bw-superseded_by`. A relation item that does not parse moves to
-`## Related` unchanged; other lines stay where they are.
+Claims become body Markdown (`## Facts`, `## History`), and the episodes and URLs they cited
+become `bw-sources`. A format 2 relation becomes a link in its format 4 field (`bw-part_of`,
+`bw-depends_on`, `bw-conflicts_with`, `bw-superseded_by`) on the note that field belongs on; what
+was written after the link, and relations format 4 has no field for, become prose under
+`## Relations`. Format 3 wrote typed relations as `## Related` bullets; in a brain that declares
+format 3 or older, those bullets also become fields, and stay where they are as prose.
 """
 
 from __future__ import annotations
@@ -12,46 +14,66 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from brainwiki import FORMAT_VERSION
 from brainwiki.format._claims import parse_claim_block
 from brainwiki.format._edit import append_to_section
 from brainwiki.format._fields import (
-    ALIAS_KEYS,
     CLAIMS,
     FIELDS,
+    LINK_FIELDS,
     PREFIX,
-    RELATION_KEYS,
+    RELATION_FIELDS,
     SUPERSEDED,
+    V2_ALIAS_KEYS,
+    V2_VERB_KEYS,
     add_items,
     as_items,
     item_lines,
     list_values,
     quote,
+    set_items,
     split_claim,
 )
 from brainwiki.format._frontmatter import remove_field, set_fields, set_raw, split
 from brainwiki.format._links import mask_code
-from brainwiki.format._relations import ALIASES, RelationError, parse_relation_line
+from brainwiki.format._relations import RelationError, canonical_verb, parse_relation_line
 
 _HEADING = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<text>.+?)\s*#*\s*$")
 _ITEM = re.compile(r"^\s*[-*+]\s+\S")
-_LEGACY_SECTIONS = ("claims", "relations")
-_SUPERSEDED_BY = "superseded_by"
+_ONE_LINK = re.compile(r"^\[\[[^\[\]\n]+\]\]$")
+# A bullet format 3's converter wrote: `- Depends on [[Target]] …`.
+_V3_BULLET = re.compile(r"^\s*[-*+]\s+(?P<phrase>[A-Za-z][A-Za-z ]*?)\s+(?P<link>\[\[[^\[\]]+\]\])")
 SUPERSEDED_BY = f"{PREFIX}superseded_by"
 SOURCES = f"{PREFIX}sources"
-NOTE_FIELDS = frozenset({SUPERSEDED_BY, SOURCES, FIELDS["stage"]})
+NOTE_FIELDS = frozenset({*LINK_FIELDS, FIELDS["stage"]})
+# Format 2 verb -> (format 4 field, whether the field goes on the other note). Verbs left out,
+# `related_to` and causation, become prose.
+_ROUTES = {
+    "part_of": ("bw-part_of", False),
+    "has_part": ("bw-part_of", True),
+    "depends_on": ("bw-depends_on", False),
+    "enables": ("bw-depends_on", True),
+    "conflicts_with": ("bw-conflicts_with", False),
+    "superseded_by": (SUPERSEDED_BY, False),
+    "supersedes": (SUPERSEDED_BY, True),
+}
+_CAUSATION = {"caused_by", "causes"}  # "caused by" stays prose (relations analysis, depends_on)
 
 
 @dataclass
 class Legacy:
-    """What a note still holds from formats 1 and 2, each with the line it sits on."""
+    """What a note still holds from older formats, each with the line it sits on."""
 
-    fields: list[tuple[str, int]] = field(default_factory=list)  # claim and relation keys
-    sections: list[tuple[str, int]] = field(default_factory=list)  # `## Claims`, `## Relations`
+    fields: list[tuple[str, int]] = field(default_factory=list)  # format 2 claim, relation keys
+    sections: list[tuple[str, int]] = field(default_factory=list)  # format 1 `## Claims`
+    bullets: list[tuple[str, int]] = field(default_factory=list)  # format 3 bullets: (field, line)
+    # (field, target): fields the linked note gets, pointing back here. They change other notes,
+    # so they alone do not make this one need converting.
     stage: bool = False  # `stage:` written without the prefix
-    supersedes: list[str] = field(default_factory=list)  # link targets this note replaces
+    inverse: list[tuple[str, str]] = field(default_factory=list)
 
     def __bool__(self) -> bool:
-        return bool(self.fields or self.sections or self.stage)
+        return bool(self.fields or self.sections or self.bullets or self.stage)
 
 
 def _sections(lines: list[str], first_body: int) -> list[tuple[str, int, int]]:
@@ -75,20 +97,77 @@ def _sections(lines: list[str], first_body: int) -> list[tuple[str, int, int]]:
     return out
 
 
-def _verb_of(key: str) -> str | None:
-    return RELATION_KEYS.get(key) or ALIAS_KEYS.get(key)
+def _route(written: str) -> tuple[str, bool] | None:
+    """Where a relation written with `written` goes in format 4; None for prose."""
+    word = written.lower().replace(" ", "_").replace("-", "_")
+    if word in _CAUSATION:
+        return None
+    verb, _ = canonical_verb(word)
+    return _ROUTES.get(verb or "")
+
+
+def _v2_verb(key: str) -> str | None:
+    return V2_VERB_KEYS.get(key) or V2_ALIAS_KEYS.get(key)
 
 
 def _is_legacy(key: str, value: Any) -> bool:
-    """A claim or relation key; `bw-superseded_by` only as format 2's list, since format 3 writes
-    it as one link."""
-    if key == SUPERSEDED_BY:
-        return isinstance(value, list)
-    return key in (CLAIMS, SUPERSEDED) or _verb_of(key) is not None
+    """A format 2 claim or relation key. A format 4 relation field counts only while one of its
+    items holds more than a link, as format 2's `"[[Target]] — note"` did."""
+    if key in (CLAIMS, SUPERSEDED):
+        return True
+    if _v2_verb(key) is None:
+        return False
+    if key in RELATION_FIELDS:
+        return any(
+            isinstance(v, str) and not _ONE_LINK.match(v.strip()) and _link_target(v) is not None
+            for v in as_items(value)
+        )
+    return True
 
 
-def legacy(text: str) -> Legacy:
-    """The format 1 and 2 constructs in a note; empty for a format 3 note or bad YAML."""
+def _target(written: str, value: str) -> str | None:
+    parsed = parse_relation_line(f"- {written} {value}", 1)
+    return None if isinstance(parsed, RelationError) else parsed.target
+
+
+def _link_target(value: str) -> str | None:
+    """The note a `"[[Target]] …"` value names."""
+    return _target("related_to", value)
+
+
+def _v3_bullets(lines: list[str], first_body: int) -> list[tuple[int, str, str, bool]]:
+    """Format 3's typed bullets under `## Related`: (line, field, target, on the other note)."""
+    masked = mask_code(lines[first_body - 1 :])
+    out = []
+    for name, heading, end in _sections(lines, first_body):
+        if name != "related":
+            continue
+        for n in range(heading + 1, end + 1):
+            match = _V3_BULLET.match(masked[n - first_body])
+            route = _route(match.group("phrase")) if match else None
+            if route == (SUPERSEDED_BY, True):
+                continue  # format 3's converter already marked the replaced note
+            if match and route:
+                target = _link_target(match.group("link"))
+                if target:
+                    out.append((n, route[0], target, route[1]))
+    return out
+
+
+def _norm(target: str) -> str:
+    return target.strip().removesuffix(".md").casefold()
+
+
+def _has_link(text: str, key: str, target: str) -> bool:
+    held = {_norm(t) for v in list_values(text, key) if (t := _link_target(str(v)))}
+    return _norm(target) in held
+
+
+def legacy(text: str, *, brain_format: int = FORMAT_VERSION) -> Legacy:
+    """The older-format constructs in a note; empty for a format 4 note or bad YAML.
+
+    `brain_format` is the format the brain declares: format 3's `## Related` bullets are read only
+    in a brain that has not moved past format 3."""
     fm = split(text)
     found = Legacy()
     if fm.error:
@@ -97,26 +176,24 @@ def legacy(text: str) -> Legacy:
         if not _is_legacy(key, fm.raw[key]):
             continue
         found.fields.append((key, item_lines(text, key, 1)[0]))
-        verb = _verb_of(key)
-        canonical = ALIASES.get(verb or "", verb)
-        if canonical == "supersedes":
+        verb = _v2_verb(key)
+        route = _route(verb) if verb else None
+        if route and route[1]:
             for value in as_items(fm.raw[key]):
-                if isinstance(value, str):
-                    parsed = parse_relation_line(f"- {verb} {value}", 1)
-                    if not isinstance(parsed, RelationError):
-                        found.supersedes.append(parsed.target)
+                target = _target(verb or "", value) if isinstance(value, str) else None
+                if target:
+                    found.inverse.append((route[0], target))
     found.stage = "stage" in fm.legacy_fields
     lines = text.splitlines()
     for name, heading, end in _sections(lines, fm.body_start_line):
-        if name in _LEGACY_SECTIONS and any(
-            _ITEM.match(lines[n - 1]) for n in range(heading + 1, end + 1)
-        ):
+        if name == "claims" and any(_ITEM.match(lines[n - 1]) for n in range(heading + 1, end + 1)):
             found.sections.append((name, heading))
-            if name == "relations":
-                for n in range(heading + 1, end + 1):
-                    parsed = parse_relation_line(lines[n - 1], n)
-                    if not isinstance(parsed, RelationError) and parsed.verb == "supersedes":
-                        found.supersedes.append(parsed.target)
+    if brain_format <= 3:
+        for line, key, target, other in _v3_bullets(lines, fm.body_start_line):
+            if other:
+                found.inverse.append((key, target))
+            elif not _has_link(text, key, target):
+                found.bullets.append((key, line))
     return found
 
 
@@ -154,30 +231,52 @@ def _struck(text: str, meta: dict[str, Any]) -> str:
     return line
 
 
-def _norm(target: str) -> str:
-    return target.strip().removesuffix(".md").casefold()
+def add_link(text: str, key: str, link: str) -> str:
+    """The note with a link to `link` in field `key`: one link as one value, several as a list.
+    A link the field already holds is left alone."""
+    item = link if link.startswith("[[") else f"[[{link}]]"
+    current = list_values(text, key)
+    target = _link_target(item)
+    if target and _has_link(text, key, target):
+        return text
+    values = [*current, item]
+    if len(values) == 1:
+        return set_raw(text, key, quote(item))
+    return set_items(text, key, values)
 
 
-def to_format3(
+def remove_link(text: str, key: str, target: str) -> str:
+    """The note without the link to `target` in field `key`; the field goes when it empties."""
+    kept = [v for v in list_values(text, key) if _norm(_link_target(v) or v) != _norm(target)]
+    if not kept:
+        return remove_field(text, key)
+    if len(kept) == 1:
+        return set_raw(text, key, quote(kept[0]))
+    return set_items(text, key, kept)
+
+
+def upgrade(
     text: str,
     *,
     page_names: frozenset[str] = frozenset(),
     inbox: str = "inbox",
     archive: str = "archive",
+    brain_format: int = FORMAT_VERSION,
 ) -> str:
-    """The note in format 3. `page_names` are the link targets that name the page of the note's
+    """The note in format 4. `page_names` are the link targets that name the page of the note's
     own topic (its path without `.md`, its folder's name); a `part_of` link to one is dropped,
-    since the folder already says it."""
+    since the folder already says it. Fields that belong on other notes are left to the caller
+    (`legacy(...).inverse`)."""
     fm = split(text)
-    if fm.error or not legacy(text):
+    if fm.error or not legacy(text, brain_format=brain_format):
         return text
     newline = "\r\n" if "\r\n" in text else "\n"
     pages = {_norm(p) for p in page_names}
     facts: list[str] = []
     history: list[str] = []
-    related: list[str] = []
+    prose: list[str] = []
     sources: list[str] = []
-    superseded_by: str | None = None
+    links: list[tuple[str, str]] = []  # (field, target) for this note
 
     for key in (CLAIMS, SUPERSEDED):
         for value in as_items(fm.raw.get(key)):
@@ -190,86 +289,94 @@ def to_format3(
                 _fact(body) if key == CLAIMS else _struck(body, meta)
             )
 
-    def relation(verb: str, value: str, written: str) -> None:
-        nonlocal superseded_by
-        parsed = parse_relation_line(f"- {verb} {value}", 1)
-        if isinstance(parsed, RelationError):
-            related.append(f"- {_phrase(written)} {value}")
+    def relation(written: str, value: str) -> None:
+        parsed = parse_relation_line(f"- {written} {value}", 1)
+        route = _route(written)
+        if isinstance(parsed, RelationError) or route is None:
+            prose.append(f"- {_phrase(written)} {value}")
             return
-        if parsed.verb == "part_of" and _norm(parsed.target) in pages:
+        key, other = route
+        if key == "bw-part_of" and not other and _norm(parsed.target) in pages:
             return
-        if parsed.verb == _SUPERSEDED_BY and superseded_by is None:
-            superseded_by = f"[[{parsed.target}]]"
-            return
-        related.append(f"- {_phrase(written)} {value}")
+        if not other:
+            links.append((key, parsed.target))
+        if other or parsed.qualifier or parsed.note or parsed.attrs:
+            prose.append(f"- {_phrase(written)} {value}")
 
-    for key, raw_values in fm.raw.items():
-        verb = _verb_of(key)
-        if verb is None or not _is_legacy(key, raw_values):
+    legacy_keys = [k for k, v in fm.raw.items() if _is_legacy(k, v)]
+    for key in legacy_keys:
+        verb = _v2_verb(key)
+        if verb is None:
             continue
-        for value in as_items(raw_values):
+        for value in as_items(fm.raw[key]):
             if isinstance(value, str):
-                relation(verb, value, key[len(PREFIX) :])
+                relation(key[len(PREFIX) :], value)
 
     lines = text.splitlines()
     drop: set[int] = set()
     for name, heading, end in _sections(lines, fm.body_start_line):
-        if name not in _LEGACY_SECTIONS:
+        if name != "claims":
             continue
         body = [(n, lines[n - 1]) for n in range(heading + 1, end + 1)]
-        if name == "claims":
-            claims, _ = parse_claim_block(body)
-            for claim in claims:
-                sources += _sources_of(claim.meta, inbox, archive)
-                if claim.status == "active":
-                    facts.append(_fact(claim.text))
-                else:
-                    history.append(_struck(claim.text, claim.meta))
-                drop.update(range(claim.line, claim.last_line + 1))
-        else:
-            for n, line in body:
-                parsed = parse_relation_line(line, n)
-                if isinstance(parsed, RelationError):
-                    if _ITEM.match(line):  # a list item like any other in format 3
-                        related.append(line.strip())
-                        drop.add(n)
-                    continue
-                rest = line.split(parsed.written_verb, 1)[1].strip()
-                relation(parsed.verb, rest, parsed.written_verb)
-                drop.add(n)
-        leftover = [n for n, line in body if n not in drop and line.strip()]
-        if not leftover:
+        claims, _ = parse_claim_block(body)
+        for claim in claims:
+            sources += _sources_of(claim.meta, inbox, archive)
+            if claim.status == "active":
+                facts.append(_fact(claim.text))
+            else:
+                history.append(_struck(claim.text, claim.meta))
+            drop.update(range(claim.line, claim.last_line + 1))
+        if not [n for n, line in body if n not in drop and line.strip()]:
             drop.update([heading, *(n for n, _ in body)])
+    if brain_format <= 3:
+        links += [
+            (key, target)
+            for _, key, target, other in _v3_bullets(lines, fm.body_start_line)
+            if not other
+        ]
 
     kept = [line for n, line in enumerate(lines, start=1) if n not in drop]
     while kept and not kept[-1].strip():
         kept.pop()
     out = newline.join(_collapse_blank(kept)) + newline
     present = {name for name, _, _ in _sections(out.splitlines(), split(out).body_start_line)}
-    for title, items in (("Facts", facts), ("History", history), ("Related", related)):
+    for title, items in (("Facts", facts), ("History", history), ("Relations", prose)):
         if items and title.lower() in present:  # a body the user already started
             out = append_to_section(out, title.lower(), items)
         elif items:
             out += newline.join(["", f"## {title}", "", *items]) + newline
 
-    for key in [k for k, v in fm.raw.items() if _is_legacy(k, v)]:
+    for key in legacy_keys:
         out = remove_field(out, key)
     if "stage" in fm.legacy_fields:
         out = set_fields(remove_field(out, "stage"), {FIELDS["stage"]: fm.raw.get("stage")})
-    if superseded_by:
-        if str(fm.raw.get("status") or "active") == "active":
-            out = set_fields(out, {"status": "superseded"}, order_first=("id", "type", "title"))
-        out = set_raw(out, SUPERSEDED_BY, quote(superseded_by))
+    for key, target in links:
+        out = add_link(out, key, target)
+    replaced = any(key == SUPERSEDED_BY for key, _ in links)
+    if replaced and str(fm.raw.get("status") or "active") == "active":
+        out = set_fields(out, {"status": "superseded"}, order_first=("id", "type", "title"))
     new_sources = [s for s in dict.fromkeys(sources) if s not in list_values(out, SOURCES)]
     if new_sources:
         out = add_items(out, SOURCES, new_sources)
     return out
 
 
+def link_back(key: str) -> Any:
+    """An edit that gives a note a link back in field `key`, for a relation the other note held
+    in the inverse direction; `bw-superseded_by` also sets `status: superseded`."""
+
+    def edit(text: str, link: str) -> str:
+        out = add_link(text, key, link)
+        if key == SUPERSEDED_BY:
+            out = set_fields(out, {"status": "superseded"}, order_first=("id", "type", "title"))
+        return out
+
+    return edit
+
+
 def mark_superseded(text: str, link: str) -> str:
-    """The note with `status: superseded` and `bw-superseded_by: "[[link]]"`."""
-    out = set_fields(text, {"status": "superseded"}, order_first=("id", "type", "title"))
-    return set_raw(out, SUPERSEDED_BY, quote(f"[[{link}]]"))
+    """The note with `status: superseded` and a link to `link` in `bw-superseded_by`."""
+    return link_back(SUPERSEDED_BY)(text, link)
 
 
 def _collapse_blank(lines: list[str]) -> list[str]:

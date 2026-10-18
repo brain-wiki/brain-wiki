@@ -24,6 +24,7 @@ Generated from `docs/design/glossary.md`.
 - [[concept-note]]: Note
 - [[concept-orientation]]: Orientation
 - [[concept-origin]]: Origin
+- [[concept-relation]]: Relation
 - [[concept-rule]]: Rule
 - [[concept-run]]: Run
 - [[concept-sources]]: Sources

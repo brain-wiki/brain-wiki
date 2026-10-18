@@ -30,8 +30,11 @@ _CHECKED_KINDS = (
 
 
 def _cache_prefix(engine: Engine) -> str:
+    """What file results depend on besides content: the rules, the budgets, and the declared
+    format (an older brain reads format 3's `## Related` bullets)."""
     budgets = json.dumps(vars(engine.manifest.budgets), sort_keys=True)
-    return f"{LINT_VERSION}:{hashlib.sha256(budgets.encode()).hexdigest()[:8]}:"
+    digest = hashlib.sha256(budgets.encode()).hexdigest()[:8]
+    return f"{LINT_VERSION}:{engine.manifest.format}:{digest}:"
 
 
 def _in_scope(path: str, scope: list[str] | None) -> bool:

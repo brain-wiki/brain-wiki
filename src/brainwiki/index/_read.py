@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING, Any
 
 from brainwiki.errors import Ambiguous, NotFound, UsageError
 from brainwiki.format import parse_document, strip_meta_comments
-from brainwiki.index._guards import banners, guards_for
+from brainwiki.index._edges import PRIORITY, edge_label
+from brainwiki.index._guards import _ts, banners, guards_for
 from brainwiki.index._resolver import Resolver
 
 if TYPE_CHECKING:
@@ -147,12 +148,6 @@ def untrusted_envelope(
     return f"{head}{sep}{body}{sep}</untrusted-episode>"
 
 
-# How an edge reads from each end: (from the note holding it, from the note it points to).
-_LABELS = {
-    "superseded_by": ("superseded_by", "supersedes"),
-    "links_to": ("links_to", "linked_from"),
-    "source": ("cites", "cited_by"),
-}
 _LINKS_SHOWN = 20
 
 
@@ -169,7 +164,7 @@ def _links(engine: Engine, node_id: str) -> list[dict[str, Any]]:
         if key in out or row["other"] == node_id:
             continue
         out[key] = {
-            "relation": _LABELS.get(row["rel"], (row["rel"],))[0],
+            "relation": edge_label(row["rel"], outgoing=True),
             "target": row["raw_target"],
             "id": row["other"],
             "title": row["title"],
@@ -180,14 +175,15 @@ def _links(engine: Engine, node_id: str) -> list[dict[str, Any]]:
 
 
 def _backlinks(engine: Engine, node_id: str, limit: int = 10) -> tuple[list[dict[str, Any]], int]:
-    """Notes that link here, supersession first, and how many there are in all."""
+    """Notes that link here, typed relations first (supersession leading), newest first within
+    each, and how many there are in all."""
     rows = engine.db.execute(
-        """SELECT n.id, n.title, n.path, n.topic, e.rel
+        """SELECT n.id, n.title, n.path, n.topic, n.updated, e.rel
            FROM edges e JOIN nodes n ON n.id = e.declared_in
-           WHERE e.other=? AND e.declared_in != ?
-           ORDER BY e.rel != 'superseded_by', n.updated DESC, n.path""",
+           WHERE e.other=? AND e.declared_in != ?""",
         (node_id, node_id),
     ).fetchall()
+    rows = sorted(rows, key=lambda r: (PRIORITY.get(r["rel"], 99), -_ts(r["updated"]), r["path"]))
     seen: dict[str, dict[str, Any]] = {}
     for r in rows:
         if r["id"] in seen:
@@ -196,7 +192,7 @@ def _backlinks(engine: Engine, node_id: str, limit: int = 10) -> tuple[list[dict
             "id": r["id"],
             "title": r["title"],
             "path": r["path"],
-            "relation": _LABELS.get(r["rel"], ("", r["rel"]))[1],
+            "relation": edge_label(r["rel"], outgoing=False),
         }
     links = list(seen.values())
     return links[:limit], len(links)

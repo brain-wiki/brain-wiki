@@ -1,8 +1,8 @@
 """brain-wiki's frontmatter fields and line-local list edits (brain-format.md §4, §6).
 
 brain-wiki's own metadata lives in fields named `bw-…`. Values are flat: strings or lists of
-strings, which Obsidian's Properties UI can show and edit. The claim and relation fields of
-format 2 are named here only so the conversion to format 3 can find them.
+strings, which Obsidian's Properties UI can show and edit. The claim fields and relation verbs of
+format 2 are named here only so the conversion to format 4 can find them.
 """
 
 from __future__ import annotations
@@ -17,8 +17,18 @@ from brainwiki.format._relations import ALIASES, CANONICAL
 PREFIX = "bw-"
 CLAIMS = "bw-claims"
 SUPERSEDED = "bw-claims-superseded"
-RELATION_KEYS = {f"{PREFIX}{verb}": verb for verb in CANONICAL}
-ALIAS_KEYS = {f"{PREFIX}{alias}": alias for alias in ALIASES}
+# Format 2's relation fields, by verb and by alias. Some share a name with a format 4 field.
+V2_VERB_KEYS = {f"{PREFIX}{verb}": verb for verb in CANONICAL}
+V2_ALIAS_KEYS = {f"{PREFIX}{alias}": alias for alias in ALIASES}
+# Format 4 fields whose values are links: field -> edge relation (brain-format.md §6.3 to §6.5).
+LINK_FIELDS = {
+    "bw-part_of": "part_of",
+    "bw-depends_on": "depends_on",
+    "bw-conflicts_with": "conflicts_with",
+    "bw-superseded_by": "superseded_by",
+    "bw-sources": "source",
+}
+RELATION_FIELDS = {key: rel for key, rel in LINK_FIELDS.items() if rel != "source"}
 # Unprefixed name -> field. Readers keep using the plain name; `split()` maps the field onto it.
 FIELDS = {
     "stage": "bw-stage",
@@ -181,3 +191,8 @@ def list_values(text: str, key: str) -> list[str]:
 
 def add_items(text: str, key: str, values: list[str]) -> str:
     return _set_list(text, key, [*list_values(text, key), *values])
+
+
+def set_items(text: str, key: str, values: list[str]) -> str:
+    """Write `key` as a block list of exactly `values`, replacing what it held."""
+    return _set_list(text, key, values)

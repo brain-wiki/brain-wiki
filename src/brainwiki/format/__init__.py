@@ -8,8 +8,9 @@ from brainwiki.format._convert import (
     SOURCES,
     SUPERSEDED_BY,
     legacy,
-    mark_superseded,
-    to_format3,
+    link_back,
+    remove_link,
+    upgrade,
 )
 from brainwiki.format._document import ParsedDoc, parse_document
 from brainwiki.format._edit import append_to_section
@@ -25,6 +26,7 @@ from brainwiki.format._episode import (
 )
 from brainwiki.format._fields import (
     FIELDS,
+    RELATION_FIELDS,
     add_items,
     field,
     item_lines,
@@ -45,6 +47,7 @@ __all__ = [
     "NOTE_FIELDS",
     "ORIGINS",
     "PATTERNS",
+    "RELATION_FIELDS",
     "RULES_HEADER",
     "SOURCES",
     "STATUSES",
@@ -60,15 +63,16 @@ __all__ = [
     "format_value",
     "item_lines",
     "legacy",
+    "link_back",
     "list_values",
     "map_status",
-    "mark_superseded",
     "mask_code",
     "now_iso",
     "parse_document",
     "parse_rules",
     "parse_session_url",
     "quote",
+    "remove_link",
     "render_episode",
     "replace_block",
     "session_url",
@@ -76,5 +80,5 @@ __all__ = [
     "split",
     "split_meta",
     "strip_meta_comments",
-    "to_format3",
+    "upgrade",
 ]

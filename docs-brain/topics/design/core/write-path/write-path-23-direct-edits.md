@@ -42,11 +42,12 @@ did anyway. A person may edit any file, protected ones included.
 | Frontmatter parses and holds flat values | BW101, BW102 |
 | `id` present, a ULID, and unique | BW103, BW104, BW105 |
 | `status` is `active`, `superseded`, or `archived` | BW106 |
-| No format 1 or 2 fields; the message names the conversion command | BW117 |
+| No older-format fields or sections; the message names the conversion command | BW117 |
 | No unknown `bw-` field | BW118 |
-| `bw-superseded_by` is one resolving link to another note, with `status: superseded` | BW119 |
+| `bw-superseded_by` holds resolving links to other notes, with `status: superseded` | BW119 |
 | `bw-sources` items are links or URLs, and the links resolve | BW120, BW122 |
-| No supersession cycle | BW307 |
+| The other relation fields hold resolving links to other notes, and `bw-part_of` skips the note's own topic page | BW123, BW124, BW312, BW313 |
+| No supersession or part_of cycle | BW307, BW315 |
 | The file is not a protected file | BW121 |
 
 - Paths default to the Markdown files git sees as changed or new, or every

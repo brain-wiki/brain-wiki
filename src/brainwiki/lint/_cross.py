@@ -13,9 +13,11 @@ from typing import TYPE_CHECKING
 
 from brainwiki.config import SLUG_RE
 from brainwiki.format import (
+    RELATION_FIELDS,
     append_to_section,
     extract_block,
     parse_document,
+    remove_link,
     replace_block,
     set_fields,
 )
@@ -203,6 +205,7 @@ def _edge_checks(engine: Engine, conn: sqlite3.Connection) -> list[Problem]:
             code, noun = {
                 "superseded_by": ("BW119", "bw-superseded_by target"),
                 "source": ("BW122", "bw-sources link"),
+                **{rel: ("BW124", f"{key} target") for rel, key in _OTHER_RELATIONS.items()},
             }.get(edge["rel"], ("BW310", "link target"))
             if code == "BW122":
                 pending = layout.inbox_dir + raw.removeprefix(layout.archive_dir).removesuffix(
@@ -236,12 +239,67 @@ def _edge_checks(engine: Engine, conn: sqlite3.Connection) -> list[Problem]:
             out.append(Problem("BW119", edge["from_path"], edge["line"], "names itself"))
             continue
         replaced_by[edge["src"]].append(edge)
-    out += _supersession_cycles(replaced_by, node)
+    out += _cycles(replaced_by, node, "BW307", "supersession")
+    out += _relation_checks(engine, conn, node)
     return out
 
 
-def _supersession_cycles(
-    graph: dict[str, list[sqlite3.Row]], lookup: Callable[[str], sqlite3.Row | None]
+# Relation fields other than supersession, which BW119 and BW307 cover: rel -> field.
+_OTHER_RELATIONS = {rel: key for key, rel in RELATION_FIELDS.items() if rel != "superseded_by"}
+
+
+def _relation_checks(
+    engine: Engine, conn: sqlite3.Connection, node: Callable[[str], sqlite3.Row | None]
+) -> list[Problem]:
+    """Self-relations (BW312), `bw-part_of` naming the note's own topic page (BW313), and
+    part_of cycles (BW315)."""
+    out: list[Problem] = []
+    marks = ",".join("?" * len(_OTHER_RELATIONS))
+    wholes: dict[str, list[sqlite3.Row]] = defaultdict(list)
+    for edge in conn.execute(
+        f"""SELECT {_EDGE_COLS}, a.path AS from_path, a.kind AS from_kind, a.topic AS from_topic,
+                   b.kind AS to_kind, b.topic AS to_topic
+            FROM edges e JOIN nodes a ON a.id = e.declared_in JOIN nodes b ON b.id = e.other
+            WHERE e.rel IN ({marks})""",  # noqa: S608 - placeholders only
+        list(_OTHER_RELATIONS),
+    ):
+        key = _OTHER_RELATIONS[edge["rel"]]
+        if edge["other"] == edge["declared_in"]:
+            out.append(
+                Problem("BW312", edge["from_path"], edge["line"], f"{key} names the note itself")
+            )
+            continue
+        if edge["rel"] != "part_of":
+            continue
+        own = edge["from_topic"]
+        if edge["from_kind"] == "topic" and own:
+            own = engine.topics.parent(own)
+        if edge["to_kind"] == "topic" and own and edge["to_topic"] == own:
+            target = edge["raw_target"]
+            out.append(
+                Problem(
+                    "BW313",
+                    edge["from_path"],
+                    edge["line"],
+                    f"{key} names {target!r}, the page of the note's own topic; its folder "
+                    "already says so",
+                    fix=Fix(
+                        f"remove {target!r} from {key}",
+                        lambda t, key=key, target=target: remove_link(t, key, target),
+                    ),
+                )
+            )
+            continue
+        wholes[edge["src"]].append(edge)
+    out += _cycles(wholes, node, "BW315", "part_of")
+    return out
+
+
+def _cycles(
+    graph: dict[str, list[sqlite3.Row]],
+    lookup: Callable[[str], sqlite3.Row | None],
+    code: str,
+    name: str,
 ) -> list[Problem]:
     out: list[Problem] = []
     state: dict[str, int] = {}  # 1 visiting, 2 done
@@ -272,10 +330,10 @@ def _supersession_cycles(
                         declared = lookup(edge["declared_in"])
                         out.append(
                             Problem(
-                                "BW307",
+                                code,
                                 declared["path"] if declared else "",
                                 edge["line"],
-                                f"supersession cycle: {names}",
+                                f"{name} cycle: {names}",
                             )
                         )
                 elif not state.get(child):

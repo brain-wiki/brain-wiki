@@ -20,8 +20,8 @@ rules, which query the index.
 
 File rules depend only on a file's content and the manifest. Their results
 are cached in `lint_cache`, keyed by content hash, `LINT_VERSION` (now
-`"2"`), and a hash of `[budgets]`, so whole-brain lint re-checks only
-changed files and stays under one second at 10k notes.
+`"3"`), and a hash of `[budgets]` and the brain's `format`, so whole-brain
+lint re-checks only changed files and stays under one second at 10k notes.
 
 Cross-file rules cover:
 
@@ -29,13 +29,17 @@ Cross-file rules cover:
   and database files (BW115).
 - Link resolution over the `edges` table
   ([[index-and-search-3-schema|index and search §3]]). An unresolved
-  body link is BW310, `bw-superseded_by` link BW119, and `bw-sources`
-  link BW122. A `bw-sources` link to `archive/episodes/…` is not reported
+  body link is BW310, a `bw-superseded_by` link BW119, another relation
+  field's link BW124, and a `bw-sources` link BW122. A `bw-sources` link
+  to `archive/episodes/…` is not reported
   while its episode is still under `inbox/episodes/`. The consolidation
   packet gives that path, and it resolves once
   `brain consolidate --done` archives the episode.
-- A `bw-superseded_by` naming its own note (BW119), and cycles (BW307).
-  Chains without a cycle are fine.
+- A relation field naming its own note (BW119 for `bw-superseded_by`,
+  else BW312), `bw-part_of` naming the page of the note's own topic
+  (BW313), and cycles along `bw-superseded_by` (BW307) or `bw-part_of`
+  (BW315). Chains without a cycle are fine, and so are `bw-depends_on`
+  cycles: two notes may each hold only while the other does.
 - Structure (BW4xx), the inbox (BW5xx), and `brain.toml` keys (BW109,
   BW409).
 

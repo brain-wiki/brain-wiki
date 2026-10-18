@@ -17,19 +17,20 @@ from brainwiki.format import (
     INPUTS,
     NOTE_FIELDS,
     ORIGINS,
+    RELATION_FIELDS,
     SOURCES,
     STATUSES,
     SUPERSEDED_BY,
     ParsedDoc,
     episode_path,
     legacy,
+    link_back,
     map_status,
-    mark_superseded,
     mask_code,
     parse_document,
     parse_rules,
     set_fields,
-    to_format3,
+    upgrade,
 )
 from brainwiki.ids import is_ulid, new_ulid
 from brainwiki.lint._catalog import severity
@@ -41,7 +42,7 @@ if TYPE_CHECKING:
     from brainwiki.index import TopicTree
     from brainwiki.runs import Run
 
-LINT_VERSION = "2"
+LINT_VERSION = "3"
 _NOTE_KINDS = ("note", "topic")
 _EPISODE_KINDS = ("episode", "archived_episode")
 _SECRET_KINDS = (
@@ -213,43 +214,49 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                 fix=Fix(f"status: {new_status}, stage: {stage}", _set(values)),
             )
         )
-    found = legacy(text)
+    brain_format = ctx.manifest.format
+    found = legacy(text, brain_format=brain_format)
     if found:
         what = [k for k, _ in found.fields] + [f"## {n.title()}" for n, _ in found.sections]
         what += ["unprefixed stage"] if found.stage else []
+        what += [f"## Related bullet for {k}" for k in dict.fromkeys(k for k, _ in found.bullets)]
         layout = ctx.manifest.layout
         pages = _page_names(ctx, rel, kind)
-        line = (found.fields or found.sections or [("", None)])[0][1]
+        line = (found.fields or found.sections or found.bullets or [("", None)])[0][1]
         problems.append(
             Problem(
                 "BW117",
                 rel,
                 line,
-                f"format 1 or 2 ({', '.join(what)}): facts and relations belong in the body "
-                "and frontmatter holds metadata only; `brain lint --fix` converts the note",
+                f"older format ({', '.join(what)}): facts belong in the body and relations in "
+                "link-only fields; `brain lint --fix` converts the note",
                 fix=Fix(
-                    "convert to format 3",
-                    lambda t: to_format3(
-                        t, page_names=pages, inbox=layout.inbox_dir, archive=layout.archive_dir
+                    "convert to format 4",
+                    lambda t: upgrade(
+                        t,
+                        page_names=pages,
+                        inbox=layout.inbox_dir,
+                        archive=layout.archive_dir,
+                        brain_format=brain_format,
                     ),
                 ),
             )
         )
-        for target in dict.fromkeys(found.supersedes):
-            problems.append(
-                Problem(
-                    "BW117",
-                    rel,
-                    line,
-                    f"supersedes [[{target}]]: that note gets status: superseded and "
-                    f"{SUPERSEDED_BY} linking here",
-                    fix=Fix(
-                        "mark the replaced note superseded",
-                        target_link=target,
-                        link_edit=mark_superseded,
-                    ),
-                )
+    for key, target in dict.fromkeys(found.inverse):
+        extra = "status: superseded and " if key == SUPERSEDED_BY else ""
+        problems.append(
+            Problem(
+                "BW117",
+                rel,
+                (found.fields or found.bullets or [("", None)])[0][1],
+                f"[[{target}]] gets {extra}{key} linking here, the side format 4 keeps it on",
+                fix=Fix(
+                    f"add {key} to the linked note",
+                    target_link=target,
+                    link_edit=link_back(key),
+                ),
             )
+        )
     legacy_keys = {k for k, _ in found.fields}
     for key in raw:
         if key.startswith("bw-") and key not in NOTE_FIELDS and key not in legacy_keys:
@@ -262,27 +269,34 @@ def _check_note(ctx: FileContext, rel: str, kind: str, text: str, fixes: bool) -
                     f"{', '.join(sorted(NOTE_FIELDS))}",
                 )
             )
-    if SUPERSEDED_BY in raw:
-        value = raw[SUPERSEDED_BY]
-        if not (isinstance(value, str) and _ONE_LINK.match(value.strip())):
+    malformed: set[str] = set()
+    for key in RELATION_FIELDS:
+        if key not in raw or key in legacy_keys:
+            continue
+        items = raw[key] if isinstance(raw[key], list) else [raw[key]]
+        bad = [v for v in items if not (isinstance(v, str) and _ONE_LINK.match(v.strip()))]
+        if bad or not items:
+            malformed.add(key)
             problems.append(
                 Problem(
-                    "BW119",
+                    "BW119" if key == SUPERSEDED_BY else "BW123",
                     rel,
-                    _fm_line(doc, SUPERSEDED_BY),
-                    f'{SUPERSEDED_BY} must be one link, like "[[newer note]]"',
+                    _fm_line(doc, key),
+                    f'{key} holds links only, like "[[note]]" or a list of them; '
+                    f"not {(bad or [None])[0]!r}",
                 )
             )
-        elif str(status or "active") != "superseded":
-            problems.append(
-                Problem(
-                    "BW119",
-                    rel,
-                    _fm_line(doc, SUPERSEDED_BY),
-                    f"{SUPERSEDED_BY} is set but status is {str(status or 'active')!r}",
-                    fix=Fix("set status: superseded", _set({"status": "superseded"})),
-                )
+    replaced = SUPERSEDED_BY in raw and SUPERSEDED_BY not in legacy_keys | malformed
+    if replaced and str(status or "active") != "superseded":
+        problems.append(
+            Problem(
+                "BW119",
+                rel,
+                _fm_line(doc, SUPERSEDED_BY),
+                f"{SUPERSEDED_BY} is set but status is {str(status or 'active')!r}",
+                fix=Fix("set status: superseded", _set({"status": "superseded"})),
             )
+        )
     if SOURCES in raw:
         value = raw[SOURCES]
         items = value if isinstance(value, list) else [value]

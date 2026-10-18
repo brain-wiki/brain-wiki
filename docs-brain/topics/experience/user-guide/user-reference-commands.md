@@ -92,7 +92,8 @@ The commands, in the order `brain --help` lists them:
 - `brain neighbors` puts a superseded note's replacement first. `--depth`
   is 1 to 3, `--limit` 1 to 100.
 - `brain links` lists what a note links to as written in its file: body
-  links, `bw-superseded_by`, and `bw-sources`. `brain backlinks` lists what
+  links, relation fields such as `bw-depends_on`, and `bw-sources`.
+  `brain backlinks` lists what
   links to it from other files.
 - `links`, `backlinks`, `tags`, `types`, `orphans`, and `unresolved` take
   `--limit`, `--cursor`, `--count`, and `--paths`. For `tags` and `types`,

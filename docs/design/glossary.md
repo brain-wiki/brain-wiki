@@ -6,7 +6,8 @@
 | topic | A folder under `topics/`, with a topic page that summarizes it and links its notes. A folder with its own topic page inside a topic is a sub-topic. |
 | topic page | A topic's own page, `index.md` in the topic folder by default. Only that file is one; a note's `type` never makes it one. |
 | note | A Markdown file in a topic. Frontmatter holds metadata, and facts and links are ordinary Markdown in the body. |
-| link | A wikilink or Markdown link to another note. Links are untyped, and the sentence around a link says why it is there. In frontmatter, only `bw-superseded_by` and `bw-sources` hold links. |
+| link | A wikilink or Markdown link to another note. A body link is untyped, and the sentence around it says why it is there. In frontmatter, only the relation fields and `bw-sources` hold links. |
+| relation | A typed link held in a frontmatter field on one side: `bw-part_of`, `bw-depends_on`, `bw-conflicts_with`, or `bw-superseded_by`. The note named sees it as a backlink. The author declares it; brain-wiki never infers one. |
 | supersession guard | The retrieval rule that a hit on a superseded note comes with the note named in its `bw-superseded_by`, followed to the newest, and a hit on a newer note lists the notes it replaced. |
 | sources | A note's `bw-sources` list: links to the episodes and notes, or URLs, that its content came from. |
 | episode | A file of raw observations in `inbox/episodes/`, written by an agent, a person, an import, or harvest. Its text never changes, and consolidation moves it to `archive/episodes/`. It may record the session and turns it came from. |

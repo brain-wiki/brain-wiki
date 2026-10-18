@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Link
 
-A wikilink or Markdown link to another note. Links are untyped, and the sentence around a link says why it is there. In frontmatter, only `bw-superseded_by` and `bw-sources` hold links.
+A wikilink or Markdown link to another note. A body link is untyped, and the sentence around it says why it is there. In frontmatter, only the relation fields and `bw-sources` hold links.

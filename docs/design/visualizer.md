@@ -202,7 +202,7 @@ The HTML export's details panel shows only what the topic data carries (links an
 A link's `rel` is one of:
 
 - `links_to`, a body wikilink.
-- `superseded_by`, from the old note's `bw-superseded_by`. The source is the old note and the target the new one.
+- `superseded_by`, `conflicts_with`, `depends_on`, or `part_of`, from a relation field ([brain format §6.6](brain-format.md#66-relations)). The source is the note that holds the field: the old note, either note of a conflict, the dependent, or the part.
 - `source`, a `bw-sources` entry. The source is the citing note and the target the cited note or episode.
 
 A node:
@@ -215,8 +215,8 @@ A node:
 
 `/api/note/<id>` returns the outline read (`id`, `title`, `path`, `abs_path`, `kind`, `type`, `status`, `topic`, `updated`, `banners`, `summary`) and the note's links:
 
-- `outlinks`: `[{relation, target, id, title, path, resolved}]`, one per target, metadata links first. `relation` reads from this note: `superseded_by`, `links_to`, or `cites` (a `bw-sources` entry). `target` is the link as written, and an unresolved link has `id`, `title`, and `path` null.
-- `backlinks`: `[{id, title, path, relation}]`, at most 10, supersession first. `relation` reads from this note: `supersedes` (the other note names this one in `bw-superseded_by`), `linked_from`, or `cited_by`.
+- `outlinks`: `[{relation, target, id, title, path, resolved}]`, one per target, metadata links first. `relation` reads from this note, with the labels of [index and search §3](index-and-search.md#3-schema): a relation field's name such as `depends_on`, `links_to`, or `cites` (a `bw-sources` entry). `target` is the link as written, and an unresolved link has `id`, `title`, and `path` null.
+- `backlinks`: `[{id, title, path, relation}]`, at most 10, typed relations first. `relation` reads from this note: `supersedes` (the other note names this one in `bw-superseded_by`), `conflicts_with`, `depended_on_by`, `has_part`, `linked_from`, or `cited_by`.
 
 It also returns what the preview needs:
 

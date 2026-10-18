@@ -9,7 +9,7 @@ source: "docs/design/index-and-search.md#7-read"
 
 `read(target, mode)` returns one note, topic page, or episode. The target is
 matched by node id, path, or frontmatter id, then by the link resolution
-order of [[brain-format-6-notes|brain format §6.5]]. An ambiguous target
+order of [[brain-format-65-links|brain format §6.5]]. An ambiguous target
 is an error that lists the candidates instead of guessing.
 
 | Mode | Returns |
@@ -55,14 +55,16 @@ Every link and backlink carries its handle, the path after the title. In
 the structured result, `outline` and `full` include:
 
 - `links`: items `{relation, target, id, title, path, resolved}`.
-  `relation` is `superseded_by`, `cites`, or `links_to`. `target` is the
-  link as written. `id`, `title`, and `path` are null when it does not
-  resolve. Metadata links come first, then body links in file order, one
-  entry per target. Text shows 20, then a pointer to
+  `relation` is the label seen from the note (§3), such as `depends_on`,
+  `cites`, or `links_to`. `target` is the link as written. `id`, `title`,
+  and `path` are null when it does not resolve. Metadata links come first,
+  then body links in file order, one entry per target, so a field wins
+  over a body link to the same note. Text shows 20, then a pointer to
   `brain_neighbors("<path>", direction="out")`.
 - `backlinks`: items `{id, title, path, relation}`, where `relation` is
-  `supersedes`, `cited_by`, or `linked_from`. Supersession comes first,
-  then the most recently updated, one entry per note, at most 10.
+  the label seen from the target (§3), such as `supersedes`, `has_part`,
+  or `linked_from`. They come in the priority order of §3, the most
+  recently updated first within each, one entry per note, at most 10.
   `backlinks_total` gives the full count, and text points to
   `brain_neighbors("<path>", direction="in")` for the rest.
 

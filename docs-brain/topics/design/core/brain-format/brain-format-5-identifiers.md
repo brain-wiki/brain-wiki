@@ -20,5 +20,5 @@ source: "docs/design/brain-format.md#5-identifiers"
 - Ids MUST be unique within a brain. Lint reports duplicates (BW105),
   usually a copied file, and `--fix` mints a new id for each newer copy
   of a note or topic page.
-- Format 2 also gave each claim a `c-` id. The conversion to format 3
-  drops them (§13).
+- Format 2 also gave each claim a `c-` id. The conversion drops them
+  (§13).

@@ -10,14 +10,14 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from brainwiki.format._fields import CLAIMS, as_items, item_lines, split_claim
+from brainwiki.format._fields import CLAIMS, LINK_FIELDS, as_items, item_lines, split_claim
 from brainwiki.format._frontmatter import Frontmatter, split
 from brainwiki.format._links import Link, extract_links, mask_code
 from brainwiki.format._meta import strip_meta_comments
 
 HEADING_RE = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<text>.+?)\s*#*\s*$")
 # Metadata fields whose values link to notes: (field, edge relation).
-_LINK_FIELDS = (("bw-superseded_by", "superseded_by"), ("bw-sources", "source"))
+_LINK_FIELDS = tuple(LINK_FIELDS.items())
 
 
 @dataclass

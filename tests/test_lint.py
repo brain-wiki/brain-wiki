@@ -72,7 +72,8 @@ def test_fix_converts_format_2_and_marks_the_replaced_note(example: Path):
         assert lint(e).problems == []
     assert 'status: superseded\nbw-superseded_by: "[[fts5]]"\n' in ripgrep.read_text()
     text = fts5.read_text()
-    assert text.count("## Related") == 1 and text.count("## Facts") == 1
+    assert text.count("## Relations") == 1 and text.count("## Facts") == 1
+    assert "- Supersedes [[ripgrep]] (replaced)" in text
     assert "- Supersedes [[ripgrep]] (replaced)\n" in text
     assert "- Prefix queries take 4 ms.\n" in text
     assert '  - "[[archive/episodes/2026/10/01M4KT3JPSB7BP2SNSCAVC2SFB]]"' in text
@@ -90,6 +91,92 @@ def test_agents_md_follows_the_default_profile(brain_dir: Path):
         fix(e, select=["BW408"])
     text = agents.read_text()
     assert "Do not change files here" in text and "brain validate" not in text
+
+
+FIELDS_NOTE = "---\nid: {id}\ntitle: {title}\n{fields}---\n# {title}\n\nText.\n"
+
+
+def fields_note(root: Path, rel: str, ulid: str, title: str, fields: str = "") -> None:
+    write(root, rel, FIELDS_NOTE.format(id=ulid, title=title, fields=fields))
+
+
+def test_relation_field_rules(brain_dir: Path):
+    fields_note(brain_dir, "topics/work/index.md", "01M4KT3JPRY4W6766VT18CQSA1", "Work")
+    fields_note(
+        brain_dir,
+        "topics/work/launch.md",
+        "01M4KT3JPRY4W6766VT18CQSA2",
+        "App v2 Launch",
+        'bw-part_of: "[[launch]]"\n',
+    )
+    fields_note(
+        brain_dir,
+        "topics/work/benchmark.md",
+        "01M4KT3JPRY4W6766VT18CQSA3",
+        "Storage Benchmark",
+        'bw-part_of: ["[[launch]]", "[[index]]"]\n',
+    )
+    fields_note(
+        brain_dir,
+        "topics/work/standup.md",
+        "01M4KT3JPRY4W6766VT18CQSA4",
+        "Team Standup",
+        'bw-depends_on: "[[missing note]]"\nbw-conflicts_with: plain text\n',
+    )
+    fields_note(
+        brain_dir, "topics/work/a.md", "01M4KT3JPRY4W6766VT18CQSA5", "A", 'bw-part_of: "[[b]]"\n'
+    )
+    fields_note(
+        brain_dir, "topics/work/b.md", "01M4KT3JPRY4W6766VT18CQSA6", "B", 'bw-part_of: "[[a]]"\n'
+    )
+    with eng(brain_dir) as e:
+        found = codes(lint(e))
+        assert found["BW312"] == ["topics/work/launch.md"]
+        assert found["BW313"] == ["topics/work/benchmark.md"]
+        assert found["BW124"] == ["topics/work/standup.md"]
+        assert found["BW123"] == ["topics/work/standup.md"]
+        assert len(found["BW315"]) == 1 and found["BW315"][0] in (
+            "topics/work/a.md",
+            "topics/work/b.md",
+        )
+        fix(e, select=["BW313"])  # info: fixed when asked for
+        assert "BW313" not in codes(lint(e))
+    assert 'bw-part_of: "[[launch]]"\n' in (brain_dir / "topics/work/benchmark.md").read_text()
+
+
+def test_fix_upgrades_a_format_3_brain(example: Path):
+    toml = example / "brain.toml"
+    toml.write_text(toml.read_text().replace("format = 4\n", "format = 3\n"))
+    for rel, field in (
+        (
+            "topics/search/fts5.md",
+            'bw-depends_on: "[[sqlite-version-policy]]"\nbw-conflicts_with: "[[vector-only]]"\n',
+        ),
+        ("topics/budget/gpu-freeze.md", 'bw-conflicts_with: "[[vector-only]]"\n'),
+        ("topics/storage/sqlite-version-policy.md", ""),
+    ):
+        path = example / rel
+        path.write_text(
+            path.read_text().replace(field, "").replace("## Relations\n", "## Related\n")
+        )
+    with eng(example) as e:
+        found = [p for p in lint(e).problems if p.code == "BW117"]
+        assert {p.path for p in found} == {
+            "topics/search/fts5.md",
+            "topics/budget/gpu-freeze.md",
+            "topics/storage/sqlite-version-policy.md",
+        }
+        fix(e)
+        assert lint(e).problems == []
+    assert "format = 4\n" in toml.read_text()
+    fts5 = (example / "topics/search/fts5.md").read_text()
+    assert 'bw-depends_on: "[[sqlite-version-policy]]"\n' in fts5
+    assert 'bw-conflicts_with: "[[vector-only]]"\n' in fts5
+    assert "- Depends on [[sqlite-version-policy]] — needs the trigram tokenizer" in fts5
+    assert (
+        'bw-conflicts_with: "[[vector-only]]"\n'
+        in (example / "topics/budget/gpu-freeze.md").read_text()
+    )
 
 
 def test_file_rules(brain_dir: Path):
@@ -219,7 +306,7 @@ def test_fix_is_one_undoable_run(brain_dir: Path):
         outcome = fix(e)
         text = (brain_dir / "topics/a/x.md").read_text()
         assert "status: active" in text and "bw-stage: wip" in text and "id: " in text
-        assert text.endswith("## Related\n\n- Requires [[y]]\n") and "## Relations" not in text
+        assert text.endswith("## Relations\n- requires [[y]]\n")  # free prose in format 4
         assert (brain_dir / "topics/a/index.md").exists()  # BW404 created the topic page
         undo(e, outcome.record.run)
         assert (brain_dir / "topics/a/x.md").read_text() == before

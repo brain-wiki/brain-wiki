@@ -71,12 +71,14 @@ marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
 | BW112 | File looks like a sync conflict copy. | warning / warning | — |
 | BW114 | Leftover merge conflict markers outside code. | error / error | — |
 | BW115 | `*.sqlite`, `*.sqlite3`, `*.db`, `*-wal`, or `*-shm` file inside the brain. | warning / warning | — |
-| BW117 † | Note is in format 1 or 2. | error / warning | Convert to format 3 (§5.1) |
+| BW117 † | Note is in an older format. | error / warning | Convert to format 4 (§5.1) |
 | BW118 † | Unknown `bw-` field in a note. | error / warning | — |
-| BW119 † | `bw-superseded_by` is malformed, unresolved, names its own note, or is set without `status: superseded`. | error / warning | Set `status: superseded` (last case only) |
+| BW119 † | `bw-superseded_by` holds something other than links, a link that does not resolve, or its own note, or is set without `status: superseded`. | error / warning | Set `status: superseded` (last case only) |
 | BW120 † | A `bw-sources` item is neither a link nor a URL. | error / warning | — |
 | BW121 † | A protected file was edited. | error / error | — |
 | BW122 † | A `bw-sources` link does not resolve. | warning / info | — |
+| BW123 † | A `bw-part_of`, `bw-depends_on`, or `bw-conflicts_with` item is not one link. | error / warning | — |
+| BW124 † | A `bw-part_of`, `bw-depends_on`, or `bw-conflicts_with` link does not resolve, or is ambiguous. | warning / info | — |
 
 - The BW103 message includes a fresh `id:` line an agent can paste.
 - BW105 keeps the id on the file with the oldest modification time.
@@ -86,10 +88,12 @@ marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
 - BW112 matches common sync-tool conflict names, and `note (1).md` or
   `note 2.md` when `note.md` exists with different content.
 - BW114 checks notes, topic pages, `rules.md`, `AGENTS.md`, and `log.md`.
-- BW117 lists what makes the note format 1 or 2
-  ([brain format §13](brain-format.md#13-format-versioning)). A
-  `bw-supersedes` relation adds a second BW117 whose fix marks the note it
-  names as superseded.
+- BW117 lists what makes the note an older format
+  ([brain format §13](brain-format.md#13-format-versioning)). Format 3
+  `## Related` bullets count only while the brain declares format 3 or
+  older. A relation held on the other side in format 4 (`bw-supersedes`,
+  `bw-has_part`, `bw-enables`, or their bullets) adds a second BW117,
+  whose fix writes the field on the note it names.
 - BW121 comes only from `brain validate`, for a path that
   [write path §2.3](write-path.md#23-direct-edits) protects.
 
@@ -99,6 +103,9 @@ marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
 |---|---|---|---|
 | BW307 † | Supersession cycle along `bw-superseded_by`. | error / error | — |
 | BW310 | Body link does not resolve, or is ambiguous. | warning / info | Repoint it from the index's path history |
+| BW312 † | `bw-part_of`, `bw-depends_on`, or `bw-conflicts_with` names its own note. | error / warning | — |
+| BW313 † | `bw-part_of` names the page of the note's own topic, which its folder already says. | info / info | Remove the item |
+| BW315 † | part_of cycle along `bw-part_of`. | error / error | — |
 
 An unresolved link's message suggests the closest title, and an ambiguous
 one lists up to five candidates. A wikilink to an attachment, such as
@@ -172,8 +179,8 @@ rules, which query the index.
 
 File rules depend only on a file's content and the manifest. Their results
 are cached in `lint_cache`, keyed by content hash, `LINT_VERSION` (now
-`"2"`), and a hash of `[budgets]`, so whole-brain lint re-checks only
-changed files and stays under one second at 10k notes.
+`"3"`), and a hash of `[budgets]` and the brain's `format`, so whole-brain
+lint re-checks only changed files and stays under one second at 10k notes.
 
 Cross-file rules cover:
 
@@ -181,13 +188,17 @@ Cross-file rules cover:
   and database files (BW115).
 - Link resolution over the `edges` table
   ([index and search §3](index-and-search.md#3-schema)). An unresolved
-  body link is BW310, `bw-superseded_by` link BW119, and `bw-sources`
-  link BW122. A `bw-sources` link to `archive/episodes/…` is not reported
+  body link is BW310, a `bw-superseded_by` link BW119, another relation
+  field's link BW124, and a `bw-sources` link BW122. A `bw-sources` link
+  to `archive/episodes/…` is not reported
   while its episode is still under `inbox/episodes/`. The consolidation
   packet gives that path, and it resolves once
   `brain consolidate --done` archives the episode.
-- A `bw-superseded_by` naming its own note (BW119), and cycles (BW307).
-  Chains without a cycle are fine.
+- A relation field naming its own note (BW119 for `bw-superseded_by`,
+  else BW312), `bw-part_of` naming the page of the note's own topic
+  (BW313), and cycles along `bw-superseded_by` (BW307) or `bw-part_of`
+  (BW315). Chains without a cycle are fine, and so are `bw-depends_on`
+  cycles: two notes may each hold only while the other does.
 - Structure (BW4xx), the inbox (BW5xx), and `brain.toml` keys (BW109,
   BW409).
 
@@ -231,18 +242,19 @@ on errors. See [write path §2.3](write-path.md#23-direct-edits).
 - Fixes that need judgment are never automatic: an ambiguous link, a
   secret, or a choice between conflict copies.
 
-### 5.1 Converting format 1 and 2 notes (BW117)
+### 5.1 Converting older notes (BW117)
 
-The BW117 fix rewrites a note in format 3. Claims become `## Facts` and
-`## History` bullets, relations become `## Related` bullets, cited
-episodes and URLs become `bw-sources`, and a superseded-by relation
-becomes the `bw-superseded_by` field. The full mapping is in
+The BW117 fix rewrites a note in format 4. Claims become `## Facts` and
+`## History` bullets, cited episodes and URLs become `bw-sources`, and
+typed relations become link-only relation fields on the side format 4
+keeps them on. Text a field cannot hold, and relations without a field,
+become `## Relations` bullets. The full mapping is in
 [brain format §13](brain-format.md#13-format-versioning).
 
 - Episodes are never converted.
 - Until a note is converted, the text of its format 2 claims stays
   searchable ([index and search §3](index-and-search.md#3-schema)).
-- Like any run that writes notes, the conversion raises `format` to 3.
+- Like any run that writes notes, the conversion raises `format` to 4.
 - `brain lint --fix --dry-run` shows the diff first, and `brain undo`
   reverses the whole conversion.
 

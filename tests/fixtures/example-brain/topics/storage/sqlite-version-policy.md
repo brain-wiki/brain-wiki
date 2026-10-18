@@ -7,6 +7,6 @@ title: SQLite version policy
 
 Lumen requires SQLite 3.35 or newer and uses the trigram tokenizer when present.
 
-## Related
+## Relations
 
 - Enables [[fts5]]

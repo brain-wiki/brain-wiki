@@ -22,7 +22,7 @@ Two independent fields on each episode, set by the code path that wrote it
   than brain-wiki.
 
 Notes carry no per-fact provenance. A note may list its sources in
-`bw-sources` ([[brain-format-6-notes|brain format §6.1]]), and
+`bw-sources` ([[brain-format-61-frontmatter|brain format §6.1]]), and
 git records when each line changed.
 
 

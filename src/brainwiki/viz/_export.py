@@ -65,8 +65,9 @@ def _nodes(engine: Engine, wanted: set[str] | None) -> list[dict[str, Any]]:
 
 
 def _links(engine: Engine, ids: set[str]) -> list[dict[str, Any]]:
-    """Where notes link, one entry per (source, target, relation): body links (`links_to`),
-    `bw-superseded_by` (`superseded_by`), and `bw-sources` (`source`)."""
+    """Where notes link, one entry per (source, target, relation): body links (`links_to`), the
+    relation fields (`part_of`, `depends_on`, `conflicts_with`, `superseded_by`), and `bw-sources`
+    (`source`)."""
     rows = engine.db.execute(
         """SELECT src, dst, rel FROM edges
            WHERE src IS NOT NULL AND dst IS NOT NULL AND src != dst

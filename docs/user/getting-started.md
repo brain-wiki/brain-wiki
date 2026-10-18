@@ -136,6 +136,9 @@ Replaced the earlier [[Use ripgrep for search]] approach.
   mark a note that a newer one replaced. Search then shows the newer note
   first.
 - `bw-sources` lists where the note's knowledge came from.
+- `bw-part_of`, `bw-depends_on`, and `bw-conflicts_with` link the note to
+  a whole it belongs to, a note it rests on, or a note it disagrees with.
+  Each holds links only; say why in the body.
 - brain-wiki reads the body's headings and links, never its meaning. The
   suggested shape (a summary paragraph, one fact per bullet, links inside
   sentences) is a convention, not a rule.
@@ -147,9 +150,9 @@ Edit notes in any editor, then check them:
 - `brain lint` checks the whole brain.
 - `brain lint --fix` repairs what is safe to repair, as one undoable run.
 
-Notes from brain-wiki 0.1 (format 1 or 2) still work, and `brain lint --fix`
-converts them. See
-[Maintenance](maintenance.md#convert-notes-from-brain-wiki-01).
+Notes from older versions (formats 1 to 3) still work, and
+`brain lint --fix` converts them. See
+[Maintenance](maintenance.md#convert-notes-from-older-versions).
 
 ## Next
 

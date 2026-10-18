@@ -5,20 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from brainwiki.errors import UsageError
+from brainwiki.index._edges import PRIORITY, edge_label
 from brainwiki.index._read import resolve_target
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
 _DIRECTIONS = ("out", "in", "both")
-# Supersession first, so a `limit` keeps the replacement; then body links; then citations.
-_PRIORITY = {"superseded_by": 0, "links_to": 1, "source": 2}
-# How an edge reads from each end: (from the note holding it, from the note it points to).
-_LABELS = {
-    "superseded_by": ("superseded_by", "supersedes"),
-    "links_to": ("links_to", "linked_from"),
-    "source": ("cites", "cited_by"),
-}
 
 
 def neighbors(
@@ -30,7 +23,8 @@ def neighbors(
     limit: int = 30,
 ) -> dict[str, Any]:
     """A small subgraph around `target`: the notes it links to (`out`), the notes that link to
-    it (`in`), or both, by depth. Within each depth, supersession comes first, newest first."""
+    it (`in`), or both, by depth. Within each depth, typed relations come first (supersession
+    leading), then plain links and citations, newest first."""
     if direction not in _DIRECTIONS:
         raise UsageError(f"direction must be one of {', '.join(_DIRECTIONS)}")
     depth = max(1, min(3, depth))
@@ -57,7 +51,7 @@ def neighbors(
                 if direction != "both" and outgoing != (direction == "out"):
                     continue
                 edge = {"rel": row["rel"], "src": row["src"], "dst": row["dst"]}
-                found.append((_PRIORITY.get(row["rel"], 9), current, edge, dict(row)))
+                found.append((PRIORITY.get(row["rel"], 99), current, edge, dict(row)))
         found.sort(key=lambda f: (f[0], -_stamp(f[3]["updated"]), f[3]["path"]))
         next_frontier: list[str] = []
         for _, parent, edge, row in found:
@@ -90,8 +84,7 @@ def _stamp(updated: Any) -> float:
 
 
 def _label(edge: dict[str, str], parent: str) -> str:
-    forward, backward = _LABELS.get(edge["rel"], (edge["rel"], edge["rel"]))
-    return forward if edge["src"] == parent else backward
+    return edge_label(edge["rel"], outgoing=edge["src"] == parent)
 
 
 def _node(row: Any, depth: int, via: dict[str, str] | None) -> dict[str, Any]:

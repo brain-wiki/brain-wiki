@@ -10,4 +10,4 @@ Title Case names by default for note files and topic folders (`Kestrel Launch/Us
 
 **Area:** Naming
 
-**Related design:** [[brain-format-6-notes|brain format §6.5]]
+**Related design:** [[brain-format-65-links|brain format §6.5]]

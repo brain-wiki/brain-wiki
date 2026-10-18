@@ -76,7 +76,7 @@ def test_graph_nodes_links_and_flags(example: Path):
     assert not any(set(n["flags"]) - {"superseded"} for n in graph["nodes"])
 
     fts5 = _node(graph, FTS5)
-    assert fts5["degree"] == 6
+    assert fts5["degree"] == 8  # its fields and the prose links beside them
     assert fts5["aliases"] == ["FTS5 decision"]
     assert fts5["updated"] == "2026-10-01"
 
@@ -221,7 +221,7 @@ def test_world_shape_and_totals(example: Path):
         "notes": 5,
         "pages": 3,
         "episodes": 1,
-        "links": 11,
+        "links": 14,
         "flagged": 1,
     }
     assert world["episodes"] == {"count": 1}
@@ -239,8 +239,8 @@ def test_world_shape_and_totals(example: Path):
     assert search["flagged"] == 1
     assert len({t["color"] for t in topics.values()}) == 3
     flows = {(f["a"], f["b"]): f for f in world["flows"]}
-    assert flows[("search", "storage")]["rels"] == {"links_to": 2}
-    assert flows[("budget", "search")]["rels"] == {"links_to": 1}
+    assert flows[("search", "storage")]["rels"] == {"links_to": 2, "depends_on": 1}
+    assert flows[("budget", "search")]["rels"] == {"links_to": 1, "conflicts_with": 1}
     assert all(f["a"] < f["b"] for f in world["flows"])
 
 
@@ -708,7 +708,7 @@ def test_server_api(server: _VizServer):
     assert note["path"] == "topics/search/fts5.md"
     assert note["banners"] == ['↳ supersedes "Use ripgrep for search" (topics/search/ripgrep.md).']
     assert {(x["relation"], x["path"]) for x in note["outlinks"]} >= {
-        ("links_to", "topics/storage/sqlite-version-policy.md"),
+        ("depends_on", "topics/storage/sqlite-version-policy.md"),
         ("cites", "archive/episodes/2026/09/01M2Z44880248H248H248H248H.md"),
     }
     assert _get(server, f"/api/note/{GPU}?t={server.token}")[0] == 200

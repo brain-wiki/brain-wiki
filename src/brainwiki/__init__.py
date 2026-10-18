@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-FORMAT_VERSION = 3
+FORMAT_VERSION = 4
 
 
 def __getattr__(name: str) -> str:

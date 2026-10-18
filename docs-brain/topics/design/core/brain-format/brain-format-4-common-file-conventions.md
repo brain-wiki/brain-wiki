@@ -17,12 +17,13 @@ source: "docs/design/brain-format.md#4-common-file-conventions"
   and lists of lists MUST NOT be used (BW102). Obsidian edits only flat
   properties, and LLMs often break nested YAML
   ([[d03-flat-frontmatter|D3]]).
-- Frontmatter holds metadata only. What a note knows (facts, reasons,
-  connections to other notes) MUST be written in the body (§6.2), since
-  Obsidian renders no Markdown in properties.
-- brain-wiki's own fields carry the reserved `bw-` prefix: on notes
-  `bw-superseded_by` (§6.3), `bw-sources` (§6.4), and `bw-stage`, and on
-  episodes the provenance fields (§9). Shared metadata stays unprefixed:
+- Frontmatter holds metadata: what a note is, and which notes it relates
+  to, as links (§6.6). What a note knows, its facts and reasons, MUST be
+  written in the body (§6.2), since Obsidian renders no Markdown in
+  properties.
+- brain-wiki's own fields carry the reserved `bw-` prefix: on notes the
+  relation fields (§6.6), `bw-superseded_by` (§6.3), `bw-sources` (§6.4),
+  and `bw-stage`, and on episodes the provenance fields (§9). Shared metadata stays unprefixed:
   `id`, `type`, `title`, `aliases`, `tags`, `status`, `created`,
   `updated`. The prefix marks what brain-wiki validates and cannot clash
   with other tools ([[d29-bw-prefix|D29]]). Lint reports an

@@ -16,7 +16,7 @@ source: "docs/design/index-and-search.md#9-other-queries"
 | Topic tree | `brain topics` | Each topic with its own and total note counts |
 | Tag and type counts | `brain tags`, `brain types`, search `facets`, orientation | — |
 | Orphans | `brain orphans`, BW406, `reports/orphans.md` | Notes no other node links to |
-| Unresolved links | `brain unresolved`, BW119, BW122, BW310 | Edges with no target |
+| Unresolved links | `brain unresolved`, BW119, BW122, BW124, BW310 | Edges with no target |
 | Stale links | `reports/stale.md`, the visualizer's `stale` flag | `stale_links`, defined below |
 | Neighborhood graph | visualizer | Nodes plus edges; see [[visualizer\|visualizer]] |
 | Pending episodes | `brain consolidate --prepare`, orientation | `kind = 'episode'`, ordered by id |
@@ -78,8 +78,8 @@ edges without reading bodies, and returns a small subgraph.
 - The root comes first, at depth 0.
 - `via.relation` uses the labels in §3, read from the node it was reached
   from. `edges` keep the stored direction.
-- Within a depth, supersession comes first, then body links, then
-  citations, each newest first, so `limit` keeps what matters.
+- Within a depth, edges come in the priority order of §3, each newest
+  first, so `limit` keeps what matters.
 
 Typical uses: what a topic page lists (`out`), what refers to a decision (`in`),
 and how a note evolved (`both`, depth 3).

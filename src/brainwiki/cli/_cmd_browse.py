@@ -95,13 +95,9 @@ def topics(args: Any) -> int:
     return _listing(args, items, line, empty="(no topics)")
 
 
-_FORWARD = {"links_to": "links_to", "superseded_by": "superseded_by", "source": "cites"}
-_BACKWARD = {"links_to": "linked_from", "superseded_by": "supersedes", "source": "cited_by"}
-
-
 def links(args: Any) -> int:
     """Everything a note links to: body links and metadata links, resolved or not."""
-    from brainwiki.index import resolve_target
+    from brainwiki.index import edge_label, resolve_target
 
     with _engine(args) as engine:
         node = resolve_target(engine, args.target)
@@ -114,7 +110,7 @@ def links(args: Any) -> int:
         ):
             rows.append(
                 {
-                    "relation": _FORWARD.get(edge["rel"], edge["rel"]),
+                    "relation": edge_label(edge["rel"], outgoing=True),
                     "target": edge["raw_target"],
                     "line": edge["line"],
                     "id": edge["id"],
@@ -138,7 +134,7 @@ def links(args: Any) -> int:
 
 
 def backlinks(args: Any) -> int:
-    from brainwiki.index import resolve_target
+    from brainwiki.index import edge_label, resolve_target
 
     with _engine(args) as engine:
         node = resolve_target(engine, args.target)
@@ -156,7 +152,7 @@ def backlinks(args: Any) -> int:
             seen.add(key)
             rows.append(
                 {
-                    "relation": _BACKWARD.get(edge["rel"], edge["rel"]),
+                    "relation": edge_label(edge["rel"], outgoing=False),
                     "id": edge["id"],
                     "title": edge["title"],
                     "path": edge["path"],
@@ -216,6 +212,8 @@ def orphans(args: Any) -> int:
 
 def unresolved(args: Any) -> int:
     """Links that resolve to no note."""
+    from brainwiki.index import edge_label
+
     with _engine(args) as engine:
         where, params = _note_where(engine)
         rows = [
@@ -223,7 +221,7 @@ def unresolved(args: Any) -> int:
                 "target": r["raw_target"],
                 "path": r["path"],
                 "line": r["line"],
-                "relation": _FORWARD.get(r["rel"], r["rel"]),
+                "relation": edge_label(r["rel"], outgoing=True),
             }
             for r in engine.db.execute(
                 f"""SELECT e.raw_target, e.line, e.rel, n.path FROM edges e

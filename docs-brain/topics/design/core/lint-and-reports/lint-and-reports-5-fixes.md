@@ -29,17 +29,18 @@ source: "docs/design/lint-and-reports.md#5-fixes"
   secret, or a choice between conflict copies.
 
 
-### 5.1 Converting format 1 and 2 notes (BW117)
+### 5.1 Converting older notes (BW117)
 
-The BW117 fix rewrites a note in format 3. Claims become `## Facts` and
-`## History` bullets, relations become `## Related` bullets, cited
-episodes and URLs become `bw-sources`, and a superseded-by relation
-becomes the `bw-superseded_by` field. The full mapping is in
+The BW117 fix rewrites a note in format 4. Claims become `## Facts` and
+`## History` bullets, cited episodes and URLs become `bw-sources`, and
+typed relations become link-only relation fields on the side format 4
+keeps them on. Text a field cannot hold, and relations without a field,
+become `## Relations` bullets. The full mapping is in
 [[brain-format-13-format-versioning|brain format §13]].
 
 - Episodes are never converted.
 - Until a note is converted, the text of its format 2 claims stays
   searchable ([[index-and-search-3-schema|index and search §3]]).
-- Like any run that writes notes, the conversion raises `format` to 3.
+- Like any run that writes notes, the conversion raises `format` to 4.
 - `brain lint --fix --dry-run` shows the diff first, and `brain undo`
   reverses the whole conversion.

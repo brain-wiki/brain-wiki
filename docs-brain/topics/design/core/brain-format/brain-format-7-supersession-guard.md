@@ -20,5 +20,5 @@ This holds regardless of search scores and result limits. The guard's
 notes come on top of the top-k results
 ([[index-and-search-5-supersession-guard|index and search §5]]).
 
-Format 3 has no conflict relation. A note that disagrees with another says
-so in a sentence with a link.
+`bw-conflicts_with` (§6.6) is indexed as an edge, which reads, backlinks,
+and `brain_neighbors` show; it adds nothing to search results yet.
