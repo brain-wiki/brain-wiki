@@ -8,8 +8,8 @@ anything under `inbox/`, `archive/`, or `reports/`.
 ## Notes
 
 A note is an ordinary Markdown page under `topics/<topic>/`. Frontmatter
-holds metadata only; what the note knows, and how it connects to other
-notes, is in the body.
+holds metadata and links only; what the note knows, and why it connects to
+other notes, is in the body.
 
 ```markdown
 ---
@@ -17,6 +17,7 @@ id: 01J9Z7Q2V8K3M4N5P6R7S8T9U0
 type: decision
 title: Store Lumen attachments as files
 tags: [storage]
+bw-part_of: "[[App v2 Launch]]"
 bw-sources:
   - "[[archive/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7]]"
   - "https://lumen.example/docs/attachments"
@@ -47,7 +48,8 @@ Values are scalars or lists of scalars; never nest mappings.
 | `title` | no | Default: the first `# ` heading, else the file name |
 | `aliases`, `tags` | no | Lists of strings, as in Obsidian |
 | `status` | no (default `active`) | `active`, `superseded`, or `archived` |
-| `bw-superseded_by` | only with `status: superseded` | One link, `"[[newer note]]"`, that resolves |
+| `bw-superseded_by` | only with `status: superseded` | One or more links, `"[[newer note]]"`, that resolve |
+| `bw-part_of`, `bw-depends_on`, `bw-conflicts_with` | no | One or more links to other notes (see Relations) |
 | `bw-sources` | no | A list of `"[[note or episode]]"` links or URLs |
 | `bw-stage` | no | Free workflow state (`draft`, `in review`, …) |
 | `created`, `updated` | no | ISO 8601 date or date-time; set `updated` when you edit |
@@ -68,8 +70,9 @@ meaning. The recommended shape:
 - To change a fact, edit its bullet; git keeps the history. Keep the user's
   prose, and do not reorder lines you are not changing.
 
-Notes converted from brain-wiki 0.1 have `## Facts`, `## History` (struck
-through), and `## Related` sections; keep using them in those notes.
+Notes converted from older versions have `## Facts`, `## History` (struck
+through), and `## Related` or `## Relations` sections; keep using them in
+those notes. brain-wiki does not parse them.
 
 ## Supersession
 
@@ -85,6 +88,31 @@ bw-superseded_by: "[[Store Lumen attachments as files]]"
 - The newer note may link back to the one it replaced in its body.
 - No cycles. Use `status: archived` for a note that is outdated with no
   successor.
+
+## Relations
+
+Typed links between notes go in frontmatter, each relation in one field on
+one side, as quoted links and nothing else:
+
+```yaml
+bw-part_of: "[[App v2 Launch]]"
+bw-depends_on: ["[[SQLite version policy]]", "[[Build server setup]]"]
+bw-conflicts_with: "[[Vector-only search proposal]]"
+```
+
+| Field | On which note | Means |
+|---|---|---|
+| `bw-part_of` | The part | It belongs to a whole: a project, a document, a series, a team. Not the note's own topic page; the folder already says that |
+| `bw-depends_on` | The dependent | It holds only while the target does; when the target is superseded, it is listed for review |
+| `bw-conflicts_with` | Either note, once | The two disagree, or one is an exception to the other; every search returns both |
+
+- The other note sees the relation as a backlink, so never write a field
+  on both sides (no `bw-has_part`, `bw-enables`, or `bw-supersedes`).
+- When you cannot tell which of two notes is right, add
+  `bw-conflicts_with` instead of overwriting one.
+- "Caused by" and "related to" have no field: write a sentence with a
+  plain link. Why a relation holds goes in the body too, in a
+  `## Relations` section or anywhere.
 
 ## Sources
 
@@ -111,11 +139,12 @@ episodes move to `archive/`, so cite the `archive/` path.
 
 ## Older notes
 
-Notes from brain-wiki 0.1 may hold `bw-claims`, `bw-claims-superseded`, or
-`bw-<verb>` relation fields (format 2), or `## Claims` and `## Relations`
-sections (format 1). Validation reports them as BW117. Do not convert them
-by hand: `brain lint --fix --dry-run`, then `brain lint --fix`, moves facts
-to `## Facts`, relations to `## Related`, and claim sources to `bw-sources`.
+Notes from older versions may hold `bw-claims`, `bw-claims-superseded`, or
+relation fields with text after the link (format 2), `## Claims` sections
+(format 1), or typed `## Related` bullets (format 3). Validation reports
+them as BW117. Do not convert them by hand: `brain lint --fix --dry-run`,
+then `brain lint --fix`, moves facts to `## Facts`, relations to the link
+fields (any text to `## Relations`), and claim sources to `bw-sources`.
 
 ## Episodes
 

@@ -45,7 +45,8 @@ Sections, in output order:
 8. Writing notes, only when the calling profile has `edit`: where files go
    (`topics/<topic>/<slug>.md`, with the existing top-level topics), the
    frontmatter fields and `status` values
-   ([[brain-format-61-frontmatter|brain format §6.1]]), the body
+   ([[brain-format-61-frontmatter|brain format §6.1]]), the relation
+   fields ([[brain-format-66-relations|brain format §6.6]]), the body
    conventions ([[brain-format-62-body|brain format §6.2]]), and "run
    `brain_validate` on the files you changed".
 

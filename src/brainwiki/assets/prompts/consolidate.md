@@ -56,6 +56,7 @@ capturing agent's guess; use it or not.
 id: 01J9Z7Q2K4M6N8P0R2S4T6V8W0
 type: decision
 title: Use SQLite FTS5 for local search
+bw-depends_on: "[[sqlite-version-policy]]"
 bw-sources:
   - "[[archive/episodes/2026/10/01J9Z6B5N3M1K9H7G5F3D1S9A7]]"
 updated: 2026-10-09
@@ -89,7 +90,8 @@ Lumen sync stopped for 40 minutes after the relay's certificate expired.
 - Frontmatter holds metadata only: `id` (keep it; for a new note,
   `brain_validate` gives the `id:` line to add),
   `type`, `title`, `aliases`, `tags`, `status`, `bw-superseded_by`,
-  `bw-sources`, `created`, `updated`. Set `updated` to today.
+  `bw-part_of`, `bw-depends_on`, `bw-conflicts_with`, `bw-sources`,
+  `created`, `updated`. Set `updated` to today.
 - The first paragraph summarizes the note.
 - One fact per bullet, specific: keep numbers, names, versions, dates, and
   units. Write each so it reads on its own, without the episode.
@@ -99,6 +101,14 @@ Lumen sync stopped for 40 minutes after the relay's certificate expired.
 - When an episode changes a fact, change the bullet in place; git keeps the
   history. When a whole note is replaced, set its `status: superseded` and
   `bw-superseded_by: "[[new note]]"`.
+- Relations are quoted links only, never text: `bw-part_of` names the
+  whole a note belongs to (a project, a series of meetings, a team),
+  `bw-depends_on` the notes it holds only while they do, and
+  `bw-conflicts_with` a note it disagrees with. Say why in the body.
+- When an episode contradicts a note and you cannot tell which is right,
+  do not overwrite it: write the episode's version as its own note with
+  `bw-conflicts_with: "[[the other note]]"`. Both then come back together
+  until someone decides.
 
 ## Rules
 

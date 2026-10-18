@@ -121,7 +121,11 @@ what the brain already says.
 4. Cite where the knowledge came from in `bw-sources`: episodes, notes, or
    URLs.
 5. To replace a whole note, set `status: superseded` and
-   `bw-superseded_by: "[[new note]]"` on the old one.
+   `bw-superseded_by: "[[new note]]"` on the old one. Name the whole a note
+   belongs to, the notes it rests on, or a note it disagrees with in
+   `bw-part_of`, `bw-depends_on`, or `bw-conflicts_with`, links only; when
+   two notes disagree and you cannot tell which is right, record the
+   conflict rather than overwrite one.
 6. Call `brain_validate` with the paths you changed, fix what it reports,
    and validate again. Tell the user in one line what you wrote.
 

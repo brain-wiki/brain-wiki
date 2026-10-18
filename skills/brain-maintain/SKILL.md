@@ -94,23 +94,29 @@ Full instructions, including the fallback: [references/harvest.md](references/ha
   user agrees, `brain lint --fix` applies them as one run that can be undone.
   Fixes that need judgment (an ambiguous link, a secret in a note, conflict
   copies from sync) are never automatic: show them and ask.
-- **Older notes.** BW117 marks a note from brain-wiki 0.1 (claims or
-  relations outside the body). `brain lint --fix` converts them to the
-  current format (facts to `## Facts`, relations to `## Related`, sources to
-  `bw-sources`); always show the `--dry-run` diff first.
+- **Older notes.** BW117 marks a note in an older format (claims outside
+  the body, or relations not in link-only fields). `brain lint --fix`
+  converts them to the current format (facts to `## Facts`, relations to
+  `bw-part_of`, `bw-depends_on`, `bw-conflicts_with`, or
+  `bw-superseded_by`, sources to `bw-sources`); always show the `--dry-run`
+  diff first.
 - `brain report` regenerates pages under `reports/` that the user can browse
   in Obsidian:
 
 | Page | Shows |
 |---|---|
-| `reports/stale.md` | Active notes that link to superseded or archived notes |
+| `reports/stale.md` | Notes that rest on a superseded or archived note, open conflicts, then stale links |
 | `reports/inbox.md` | Pending episodes by age and agent; open proposals |
 | `reports/orphans.md` | Notes nothing links to |
 | `reports/lint.md` | The latest lint results |
 
 To summarize health without changing anything, use `brain_orient` and
-`brain_search`; report old pending episodes, stale links, and unharvested
-sessions, and suggest the commands above.
+`brain_search`; report old pending episodes, open conflicts and notes
+resting on outdated notes (the briefing's "Needs review" line), stale
+links, and unharvested sessions, and suggest the commands above. For a
+conflict, ask the user which note holds: supersede the other, or keep
+both and say why. `brain lint --fix --select BW314` then removes conflicts
+that supersession closed.
 
 ## 5. Commit
 

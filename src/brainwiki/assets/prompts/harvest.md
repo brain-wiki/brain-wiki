@@ -52,7 +52,12 @@ Give each session one outcome, as consolidation does:
 2. Edit or create the notes. Prefer an existing note; one fact per bullet,
    specific (numbers, names, versions, dates), and failed approaches as
    facts. A new note gets a line in its topic page's `## Notes`; for a new
-   note, `brain_validate` gives the `id:` line to add.
+   note, `brain_validate` gives the `id:` line to add. Relations are quoted
+   links only: `bw-part_of` (its project, series, or team), `bw-depends_on`
+   (notes it rests on), `bw-conflicts_with` (a note it disagrees with).
+   When a session contradicts a note and you cannot tell which is right,
+   write its version as its own note with `bw-conflicts_with` naming the
+   other, rather than overwriting.
 3. Cite the session: add its `source` URL to the `bw-sources` of every note
    you changed for it, as a quoted string:
    `- "session://claude-code/5f2c9a1e-…#turns=12-48"`.

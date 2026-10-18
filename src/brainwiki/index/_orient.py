@@ -210,6 +210,9 @@ def _writing_lines(engine: Engine, topics: list[dict[str, Any]]) -> list[str]:
         '`status: superseded`, `bw-sources: ["[[archive/episodes/…]]", "https://…"]`, '
         "`tags`, `aliases`, `updated`. Keep an existing `id`; for a new note, "
         "`brain_validate` gives the `id:` line to add.",
+        "- Relations, as quoted links only: `bw-part_of` (its project, series, or team), "
+        "`bw-depends_on` (notes it rests on), `bw-conflicts_with` (a note it disagrees with; "
+        "record that rather than overwrite either). Say why in the body.",
         "- Body: a one-paragraph summary, then one fact per bullet; link notes with "
         "`[[wikilinks]]` inside sentences.",
         "- Then run `brain_validate` on the files you changed and fix what it reports.",

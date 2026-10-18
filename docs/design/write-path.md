@@ -558,6 +558,10 @@ It also tells the model to:
   wikilinks inside sentences, recording failed approaches as facts;
 - change a fact in place, and mark a replaced note `status: superseded`
   with `bw-superseded_by`;
+- write relations as link-only fields (`bw-part_of`, `bw-depends_on`,
+  `bw-conflicts_with`), and when an episode contradicts a note and it
+  cannot tell which is right, write the episode's version as its own note
+  with `bw-conflicts_with` instead of overwriting;
 - cite the episode's `archive_to` path in `bw-sources`, run
   `brain_validate`, then call `brain_consolidate_done` with one outcome per
   episode, skipped ones included;
