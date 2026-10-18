@@ -10,7 +10,9 @@ user's brain, use the brain-wiki MCP tools or the `brain` skill.
   the relevant document together with the code. A design decision gets a
   file in `docs/decision/`. Unbuilt designs live in `docs/proposal/`; when
   one is built, move its content into `docs/design/` and delete the
-  proposal. Milestones, open questions, and ideas are in `docs/roadmap/`.
+  proposal. Whether a concept should exist at all is studied first in
+  `docs/analysis/` (method and template in its README). Milestones, open
+  questions, and ideas are in `docs/roadmap/`.
 - Every curated change goes through `brainwiki.runs.Run`; writers change
   only the lines they must.
 - Only `brain mcp` may import the MCP SDK; the CLI imports subcommand
