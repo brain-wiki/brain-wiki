@@ -69,11 +69,10 @@ The layout is deterministic and local. The same brain always produces the same m
 
 The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Conflicts with, Depends on, Part of, Cites, and from the other end links here, replaced by this, conflicts with this, depends on this, parts, cites this), and every number names its unit.
 
-The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. Links between notes come in six kinds. Each has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
+The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. A body wikilink only says that one note mentions another, so the map does not draw it: the Details panel lists it, and links inside a folder still pull notes together (§3.1). The map draws five kinds of link between notes. Each has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
 
 | Kind (dock chip) | From | Trail |
 |---|---|---|
-| Links | A wikilink in the body (`links_to`) | Faint violet, the main structure |
 | Replaces | `bw-superseded_by` (`superseded_by`) | Amber, pulsing from old to new |
 | Sources | A `bw-sources` entry (`source`) | Faint grey-blue, from the citing note to the cited one |
 | Conflicts | `bw-conflicts_with` (`conflicts_with`) | Red and thick, with no direction |
@@ -104,7 +103,7 @@ Right panel, headed Details, is always shown and says how to fill it when nothin
 - A topic shows its description; counts of notes, notes changed in 7 days, and notes with issues; the last change; a breakdown of issues; a button to open the topic page; its sub-topics and folders with note counts; its most connected notes, hidden for topics of five notes or fewer; and linked topics.
 - A note shows where it lives ("In Guide › Sync › …"), type, status, and issue chips, and banners for a superseded note or the notes it replaces. Then come its summary, its outgoing links grouped as Replaced by, Conflicts with, Depends on, Part of, Links to, and Cites, its parts (the notes that name it in `bw-part_of`) by title, and its backlinks with how each links here. A resolved link flies to its note, an unresolved one says "not found", and one outside the mapped topics says "not on the map". Last come the path, with a copy button, and an `obsidian://` link.
 - A clicked connection replaces the details of the focused place, and the map stays where it is, with the connection lit, until it closes (its ✕, `Esc`, or going to another place):
-  - A link between two notes reads as a sentence: the two notes as cards that open them, and how they link ("links to", "supersedes", "conflicts with", "depends on", "is part of", "cites"). Under "Where … says it" come the passages of the linking note that hold the link, rendered like the preview: the paragraph, or the list item or table row, for a body link, and the property entry (`bw-superseded_by`, `bw-conflicts_with`, `bw-depends_on`, `bw-part_of`, or `bw-sources`) for a metadata link. A button reads the whole note, and "Both ways" says when the other note links back.
+  - A link between two notes reads as a sentence: the two notes as cards that open them, and how they link ("supersedes", "conflicts with", "depends on", "is part of", "cites"). Under "Where … says it" comes the property entry of the linking note that holds the link (`bw-superseded_by`, `bw-conflicts_with`, `bw-depends_on`, `bw-part_of`, or `bw-sources`), rendered like the preview. A button reads the whole note, and "Both ways" says when the other note links back.
   - The links between two topics name both topics, which open them, and the count by kind, then list each link between their notes; a row opens that link as a connection. Between two groups, the list is the topic pairs, and a row opens the links between that pair.
 
 Clicking a note anywhere (a star, a row, a search result, a wikilink) also opens a preview over the details panel. The preview renders the note like Obsidian's reading view: properties from the frontmatter, then the body with headings, lists and tasks, tables, code, callouts, highlights, tags, and footnotes. Wikilinks in the body and in property values open the linked note and move the map with it, so the relation fields and each `bw-sources` entry are links. `Esc` closes the preview and `P` toggles it.
@@ -118,7 +117,7 @@ Overlays:
 
 - Hovering a star shows its title, topic, status, and flags.
 - Hovering a trail lights it and both ends, and reads the link as a sentence ("2026.9.9 supersedes 2026.9.8"). Clicking opens the connection in the Details panel.
-- Hovering a flow shows the two topics and the link count, split by kind when not all are body links. Clicking lists those links in the Details panel.
+- Hovering a flow shows the two topics and the link count, split by kind. Clicking lists those links in the Details panel.
 - The command palette shows server-side search results grouped by topic, and `?` shows the shortcuts.
 
 One table drives both the key handler and the shortcuts sheet, which writes keys the way each platform does (⌥ and ⌘ on a Mac, Alt and Ctrl elsewhere):
@@ -131,7 +130,7 @@ One table drives both the key handler and the shortcuts sheet, which writes keys
 | Move | `Alt-←` / `Alt-→` (⌘ on a Mac) | The browser's own back and forward |
 | Move | `Esc` | Close what is open, or else go up one level |
 | Show | `P`, `I`, `L` | Note preview; highlight issues; labels |
-| Show | `1`–`6` | Show or hide a kind of link, in the dock's order |
+| Show | `1`–`5` | Show or hide a kind of link, in the dock's order |
 | Find | `/` or `Ctrl-K` (⌘ on a Mac) | Search |
 | Find | `?` | The shortcuts sheet |
 
@@ -191,7 +190,7 @@ The HTML export's details panel shows only what the topic data carries (links an
 ```
 
 - `recent` counts notes updated in the last 7 days.
-- `flows` count the links between notes of two topics, by `rel`, with `a` < `b`. Each topic keeps its 8 strongest flows.
+- `flows` count the links between notes of two topics, by `rel`, with `a` < `b`. Each topic keeps its 8 strongest flows. The map draws a flow from the kinds it draws, leaving out `links_to`, and does not draw a flow made only of body links.
 - `runs` lists the 20 most recent runs, leaving out failed and unfinished ones, with the notes each changed.
 - A constellation's `title` joins up to three topic titles. A constellation from the topic tree leads with its top topic. A clustered one leads with a topic linked to at least half of the others in it, such as a plugins topic linked to one topic per plugin, or else with its largest topics. The map labels a constellation by its first topic.
 

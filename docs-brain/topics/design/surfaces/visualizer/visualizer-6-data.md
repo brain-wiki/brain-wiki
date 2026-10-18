@@ -29,7 +29,7 @@ source: "docs/design/visualizer.md#6-data"
 ```
 
 - `recent` counts notes updated in the last 7 days.
-- `flows` count the links between notes of two topics, by `rel`, with `a` < `b`. Each topic keeps its 8 strongest flows.
+- `flows` count the links between notes of two topics, by `rel`, with `a` < `b`. Each topic keeps its 8 strongest flows. The map draws a flow from the kinds it draws, leaving out `links_to`, and does not draw a flow made only of body links.
 - `runs` lists the 20 most recent runs, leaving out failed and unfinished ones, with the notes each changed.
 - A constellation's `title` joins up to three topic titles. A constellation from the topic tree leads with its top topic. A clustered one leads with a topic linked to at least half of the others in it, such as a plugins topic linked to one topic per plugin, or else with its largest topics. The map labels a constellation by its first topic.
 

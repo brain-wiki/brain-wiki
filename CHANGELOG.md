@@ -38,9 +38,11 @@
 - **`brain_neighbors` by relation.** `relations` (`--relation`) follows
   only the edges named, such as `depends_on` with `direction="in"` for what
   rests on a note.
-- **The map shows the relations.** `brain viz` draws Conflicts (red),
-  Depends on (blue, pulsing), and Part of (teal) as link kinds of their
-  own, each a dock chip and a number key (`4`–`6`). A note lists its links
+- **The map draws meaning, not mentions.** `brain viz` no longer draws
+  body wikilinks, as trails or in the flows between topics; the Details
+  panel still lists them. It draws Conflicts (red), Depends on (blue,
+  pulsing), and Part of (teal) beside Replaces and Sources, each a dock
+  chip and a number key (`1`–`5`). A note lists its links
   by relation and a whole lists its parts by title. A new `conflict` issue
   marks both notes of an open conflict, and `stale` now also marks a note
   that rests on an outdated note.

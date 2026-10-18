@@ -40,11 +40,10 @@ The layout is deterministic and local. The same brain always produces the same m
 
 The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Conflicts with, Depends on, Part of, Cites, and from the other end links here, replaced by this, conflicts with this, depends on this, parts, cites this), and every number names its unit.
 
-The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. Links between notes come in six kinds. Each has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
+The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. A body wikilink only says that one note mentions another, so the map does not draw it: the Details panel lists it, and links inside a folder still pull notes together (§3.1). The map draws five kinds of link between notes. Each has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
 
 | Kind (dock chip) | From | Trail |
 |---|---|---|
-| Links | A wikilink in the body (`links_to`) | Faint violet, the main structure |
 | Replaces | `bw-superseded_by` (`superseded_by`) | Amber, pulsing from old to new |
 | Sources | A `bw-sources` entry (`source`) | Faint grey-blue, from the citing note to the cited one |
 | Conflicts | `bw-conflicts_with` (`conflicts_with`) | Red and thick, with no direction |
