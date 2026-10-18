@@ -1,5 +1,5 @@
-"""Search: FTS5 with field weights, filters before ranking, browse, and the supersession guard
-(index-and-search.md §6).
+"""Search: FTS5 with field weights, filters before ranking, browse, guards, and the wholes a hit
+belongs to (index-and-search.md §6).
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 from brainwiki.errors import NotFound, UsageError
 from brainwiki.index._db import has_trigram
 from brainwiki.index._guards import banners, guards_for
-from brainwiki.index._read import untrusted_envelope
+from brainwiki.index._read import resolve_target, untrusted_envelope
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
@@ -182,8 +182,10 @@ def node_filters(
     where: dict[str, Any] | None = None,
     since: str | None = None,
     until: str | None = None,
+    part_of: str | None = None,
 ) -> tuple[str, list[Any]]:
-    """SQL over `nodes n` for the requested filters."""
+    """SQL over `nodes n` for the requested filters. `part_of` is a node id: only the notes that
+    name it in `bw-part_of`, one level."""
     clauses = [
         f"n.kind IN ({','.join('?' * len(kinds))})",
         f"n.status IN ({','.join('?' * len(statuses))})",
@@ -231,6 +233,9 @@ def node_filters(
     if until:
         clauses.append("substr(n.updated, 1, 10) <= ?")
         params.append(until)
+    if part_of:
+        clauses.append("n.id IN (SELECT src FROM edges WHERE rel = 'part_of' AND dst = ?)")
+        params.append(part_of)
     return " AND ".join(clauses), params
 
 
@@ -307,11 +312,14 @@ def search(
     include_episodes: bool | None = None,
     include_archived: bool = False,
     include_archived_episodes: bool = False,
+    within: str | None = None,
 ) -> dict[str, Any]:
     """Search, or browse when the query has no words. Browsing leaves out pending episodes
-    unless `include_episodes` asks for them, so a listing shows curated notes."""
+    unless `include_episodes` asks for them, so a listing shows curated notes. `within` names a
+    whole: only the notes that name it in `bw-part_of` are searched."""
     engine.scan()
     conn = engine.db
+    whole = resolve_target(engine, within) if within else None
     limit = max(1, min(50, limit))
     offset = parse_cursor(cursor)
     tokens = _content_tokens(query)
@@ -338,12 +346,15 @@ def search(
         where=where,
         since=_date_bound(since),
         until=_date_bound(until),
+        part_of=whole["id"] if whole else None,
     )
     result: dict[str, Any] = {
         "brain": engine.brain.display_name,
         "query": query,
         "sort": sort,
     }
+    if whole:
+        result["within"] = {k: whole[k] for k in ("id", "title", "path")}
     if browse:
         page, total, matched = _browse(engine, where_sql, params, sort, limit, offset, count_only)
     else:
@@ -358,9 +369,12 @@ def search(
         result["truncated"] = False
         return result
     results = page
-    guard_info = guards_for(engine, [r["id"] for r in results if r["kind"] in ("note", "topic")])
+    curated = [r["id"] for r in results if r["kind"] in ("note", "topic")]
+    guard_info = guards_for(engine, curated)
+    wholes = _wholes(conn, curated, skip=whole["id"] if whole else None)
     for r in results:
         r.update(guard_info.get(r["id"], {"guards": [], "more_guards": 0}))
+        r["wholes"] = wholes.get(r["id"], [])
     more = total > offset + len(page)
     result.update(
         results=results,
@@ -392,6 +406,27 @@ def _browse(
     ).fetchall()
     page = [_row_result(r, None, _lead(r["snip"])) for r in rows]
     return page, total, matched
+
+
+def _wholes(conn: Any, ids: list[str], skip: str | None) -> dict[str, list[dict[str, Any]]]:
+    """The wholes each hit names in `bw-part_of`, with the opening of each one's body as context.
+    `skip` is the whole a scoped search already named."""
+    if not ids:
+        return {}
+    marks = ",".join("?" * len(ids))
+    out: dict[str, list[dict[str, Any]]] = {}
+    for r in conn.execute(
+        f"""SELECT DISTINCT e.src, n.id, n.title, n.path, substr(d.body, 1, 400) AS snip
+            FROM edges e JOIN nodes n ON n.id = e.dst LEFT JOIN docs d ON d.node_id = n.id
+            WHERE e.rel = 'part_of' AND e.src IN ({marks}) AND e.dst != e.src
+            ORDER BY n.title COLLATE NOCASE""",  # noqa: S608 - placeholders only
+        ids,
+    ):
+        if r["id"] != skip:
+            out.setdefault(r["src"], []).append(
+                {"id": r["id"], "title": r["title"], "path": r["path"], "summary": _lead(r["snip"])}
+            )
+    return out
 
 
 def _lead(text: str | None) -> str | None:
@@ -615,6 +650,9 @@ def format_search_text(result: dict[str, Any], fmt: str = "text") -> str:
         lines.append(f"{i}. {r['title']}  [{tag}]")
         for banner in banners(r, r["path"]):
             lines.append(f"   {banner}")
+        for w in r.get("wholes") or []:
+            about = f": {w['summary']}" if w.get("summary") else ""
+            lines.append(f'   ↑ part of "{w["title"]}" ({w["path"]}){about}')
         if r.get("snippet"):
             snippet = " ".join(str(r["snippet"]).split())
             if r["kind"] in ("episode", "archived_episode"):

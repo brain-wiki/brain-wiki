@@ -80,6 +80,7 @@ def search(args: Any) -> int:
             else (False if args.no_episodes else None),
             include_archived="archived" in include,
             include_archived_episodes="archived_episodes" in include,
+            within=args.within,
         )
     _print_results(args, result)
     return 0
@@ -121,6 +122,7 @@ def neighbors(args: Any) -> int:
             direction=args.direction,
             depth=args.depth,
             limit=args.limit,
+            relations=args.relation,
         )
     text = (
         "\n".join(n["path"] for n in result["nodes"][1:])

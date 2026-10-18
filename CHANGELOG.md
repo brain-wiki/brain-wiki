@@ -30,6 +30,14 @@
   that rest on a superseded or archived note, open conflicts, and stale
   links; its title is now "Needs review". The briefing counts the first
   two, and `brain_orient` returns them as `needs_review`.
+- **Wholes and parts.** `brain_read` on a whole lists its parts by title,
+  comparing numbers as numbers ("2 Design" before "10 Rollout"), and
+  leaves them out of the backlinks. A search hit names the wholes it is
+  part of, with the opening of each, and `brain_search(within=…)`
+  (`--within`) searches only a whole's parts.
+- **`brain_neighbors` by relation.** `relations` (`--relation`) follows
+  only the edges named, such as `depends_on` with `direction="in"` for what
+  rests on a note.
 - **Typed links come first.** `brain_read`, `brain_neighbors`,
   `brain links`, and `brain backlinks` label relation edges and list them
   before body links and citations.

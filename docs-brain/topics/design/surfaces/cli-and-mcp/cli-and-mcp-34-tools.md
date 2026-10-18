@@ -74,6 +74,8 @@ Input schemas (JSON Schema 2020-12; output shapes are in
       "format": {"enum": ["text", "paths"], "default": "text"},
       "include_episodes": {"type": "boolean", "description": "Default: on for a query, off when browsing."},
       "include_archived": {"type": "boolean", "default": false},
+      "within": {"type": "string",
+                 "description": "A whole (project, series, team): only the notes that name it in bw-part_of."},
       "brain":  {"type": "string"}}},
 
   "brain_neighbors": {"type": "object", "additionalProperties": false, "required": ["target"],
@@ -82,6 +84,9 @@ Input schemas (JSON Schema 2020-12; output shapes are in
       "direction": {"enum": ["out", "in", "both"], "default": "both"},
       "depth":     {"type": "integer", "minimum": 1, "maximum": 3, "default": 1},
       "limit":     {"type": "integer", "minimum": 1, "maximum": 100, "default": 30},
+      "relations": {"type": "array", "items": {"enum": ["superseded_by", "conflicts_with",
+                    "depends_on", "part_of", "links_to", "source"]},
+                    "description": "Follow only these edges; default all."},
       "brain":     {"type": "string"}}},
 
   "brain_validate": {"type": "object", "additionalProperties": false,

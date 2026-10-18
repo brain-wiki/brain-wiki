@@ -22,8 +22,8 @@ is an error that lists the candidates instead of guessing.
 - The outline summary is the first paragraph that is not a heading, up to
   600 characters.
 - `full` returns the body without frontmatter or HTML comments. For notes
-  and topic pages it appends "Links:" and "Linked from:" lists below a `---`
-  line, since the file's own wikilinks carry no paths.
+  and topic pages it appends "Links:", "Parts:", and "Linked from:" lists
+  below a `---` line, since the file's own wikilinks carry no paths.
 - `section` matches a heading's text, case-insensitively. Passing a
   section implies this mode. The mode without a section, or a section with
   another mode, is a usage error.
@@ -61,12 +61,20 @@ the structured result, `outline` and `full` include:
   then body links in file order, one entry per target, so a field wins
   over a body link to the same note. Text shows 20, then a pointer to
   `brain_neighbors("<path>", direction="out")`.
+- `parts`: items `{id, title, path}`, the notes that name this one in
+  `bw-part_of`, sorted by title with the numbers in titles compared as
+  numbers, so "2 Design" comes before "10 Rollout" and dated titles sort
+  by date. The result keeps 50 and `parts_total` gives the full count.
+  Text shows 20, then a pointer to `brain_search("", within="<path>")`. A
+  part names its wholes in `links`, where `part_of` comes before body
+  links.
 - `backlinks`: items `{id, title, path, relation}`, where `relation` is
-  the label seen from the target (§3), such as `supersedes`, `has_part`,
-  or `linked_from`. They come in the priority order of §3, the most
-  recently updated first within each, one entry per note, at most 10.
-  `backlinks_total` gives the full count, and text points to
-  `brain_neighbors("<path>", direction="in")` for the rest.
+  the label seen from the target (§3), such as `supersedes` or
+  `linked_from`. Parts are left out, since `parts` lists them. They come in
+  the priority order of §3, the most recently updated first within each,
+  one entry per note, at most 10. `backlinks_total` gives the full count,
+  and text points to `brain_neighbors("<path>", direction="in")` for the
+  rest.
 
 An episode's result adds `agent`, `inputs`, `origin`, `session`, and
 `origin_turns`.

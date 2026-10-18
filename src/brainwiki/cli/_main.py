@@ -396,6 +396,10 @@ def _search(
     facets: Annotated[
         bool, typer.Option("--facets", help="counts by type, topic, and tag")
     ] = False,
+    within: Annotated[
+        str | None,
+        typer.Option("--within", help="only notes that name this note in bw-part_of"),
+    ] = None,
     paths: _Paths = False,
     brain: _Brain = None,
     as_host: _As = None,
@@ -418,6 +422,7 @@ def _search(
         no_episodes=no_episodes,
         count=count,
         facets=facets,
+        within=within,
         paths=paths,
     )
 
@@ -456,6 +461,14 @@ def _neighbors(
     limit: Annotated[
         int, typer.Option("--limit", min=1, help="most neighbors to return (1-100)")
     ] = 30,
+    relation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--relation",
+            help="follow only these edges (repeatable): superseded_by, conflicts_with, "
+            "depends_on, part_of, links_to, source",
+        ),
+    ] = None,
     paths: _Paths = False,
     brain: _Brain = None,
     as_host: _As = None,
@@ -468,6 +481,7 @@ def _neighbors(
         direction=direction,
         depth=depth,
         limit=limit,
+        relation=relation or None,
         paths=paths,
     )
 

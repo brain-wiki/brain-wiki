@@ -61,7 +61,7 @@ each for?" for the calling host.
 
 ### 9.2 Neighbors
 
-`neighbors(target, direction, depth, limit)` follows a node's resolved
+`neighbors(target, direction, depth, limit, relations)` follows a node's resolved
 edges without reading bodies, and returns a small subgraph.
 
 - `direction` is `out` (what it links to), `in` (what links to it), or
@@ -70,10 +70,16 @@ edges without reading bodies, and returns a small subgraph.
 - `limit` caps the nodes returned besides the root (default 30, at most
   100). The engine clamps out-of-range values, and the CLI rejects values
   below 1.
-- There is no filter by relation.
+- `relations` limits the edges followed to the `rel` values listed, from
+  §3 (`superseded_by`, `conflicts_with`, `depends_on`, `part_of`,
+  `links_to`, `source`); the default is all. With `direction`, it answers
+  questions such as "what rests on this note"
+  (`relations=["depends_on"], direction="in"`). An unknown value is a usage
+  error that lists the valid ones. The CLI spelling is `--relation`,
+  repeatable.
 
 ```json
-{"brain": "personal", "root": "01J9…", "direction": "both", "depth": 1,
+{"brain": "personal", "root": "01J9…", "direction": "both", "depth": 1, "relations": null,
  "nodes": [{"id": "01J9…", "path": "…", "title": "…", "type": "decision",
             "topic": "search", "status": "active", "depth": 0},
            {"id": "01J8…", "path": "…", "title": "…", "type": "decision",

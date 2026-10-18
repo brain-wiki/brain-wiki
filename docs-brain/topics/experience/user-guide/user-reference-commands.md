@@ -24,7 +24,7 @@ The commands, in the order `brain --help` lists them:
 | `brain orient` | Print the briefing agents get |
 | `brain search [QUERY] [options]` | Search, or browse with an empty query |
 | `brain read TARGET [--mode outline\|full\|section\|raw] [--section H]` | Read a note, topic page, or episode |
-| `brain neighbors TARGET [--direction out\|in\|both] [--depth N] [--limit N] [--paths]` | Follow a note's links and backlinks |
+| `brain neighbors TARGET [--direction out\|in\|both] [--depth N] [--limit N] [--relation REL]... [--paths]` | Follow a note's links and backlinks |
 | `brain topics [TOPIC]` | The topic tree with note counts |
 | `brain links TARGET` | What a note links to |
 | `brain backlinks TARGET` | What links to a note |
@@ -82,15 +82,19 @@ The commands, in the order `brain --help` lists them:
   (`YYYY-MM-DD`, or `7d`, `4w`, `3m`), `--sort relevance|recent|title`,
   `--limit N` (1 to 50, default 8), `--cursor C`, `--include
   archived,episodes,archived_episodes`, `--no-episodes`, `--count`,
-  `--facets`, and `--paths`.
+  `--facets`, `--within WHOLE` (only notes that name WHOLE in
+  `bw-part_of`), and `--paths`.
 - With an empty query, `brain search` browses, newest first:
   `brain search "" --since 7d` lists recent notes. An unknown `--topic` is
   not found (exit 3).
-- `brain read --mode outline` shows the summary, headings, links, and
-  backlinks. It is the default for topic pages. `--mode raw` prints the file byte
+- `brain read --mode outline` shows the summary, headings, links, parts
+  (the notes that name it in `bw-part_of`, by title), and backlinks. It is
+  the default for topic pages. `--mode raw` prints the file byte
   for byte. `--section H` alone implies `--mode section`.
 - `brain neighbors` puts a superseded note's replacement first. `--depth`
-  is 1 to 3, `--limit` 1 to 100.
+  is 1 to 3, `--limit` 1 to 100. `--relation` (repeatable) follows only
+  those edges: `brain neighbors "Build Server Setup" --relation depends_on
+  --direction in` lists what rests on it.
 - `brain links` lists what a note links to as written in its file: body
   links, relation fields such as `bw-depends_on`, and `bw-sources`.
   `brain backlinks` lists what

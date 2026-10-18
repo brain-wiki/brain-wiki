@@ -21,12 +21,19 @@ def neighbors(
     direction: str = "both",
     depth: int = 1,
     limit: int = 30,
+    relations: list[str] | None = None,
 ) -> dict[str, Any]:
     """A small subgraph around `target`: the notes it links to (`out`), the notes that link to
-    it (`in`), or both, by depth. Within each depth, typed relations come first (supersession
-    leading), then plain links and citations, newest first."""
+    it (`in`), or both, by depth, along the edges named in `relations` (all by default). Within
+    each depth, typed relations come first (supersession leading), then plain links and
+    citations, newest first."""
     if direction not in _DIRECTIONS:
         raise UsageError(f"direction must be one of {', '.join(_DIRECTIONS)}")
+    unknown = sorted(set(relations or ()) - set(PRIORITY))
+    if unknown:
+        raise UsageError(
+            f"no relation {', '.join(map(repr, unknown))}; relations: {', '.join(PRIORITY)}"
+        )
     depth = max(1, min(3, depth))
     limit = max(1, min(100, limit))
     root = resolve_target(engine, target)
@@ -50,6 +57,8 @@ def neighbors(
                 outgoing = row["src"] == current
                 if direction != "both" and outgoing != (direction == "out"):
                     continue
+                if relations and row["rel"] not in relations:
+                    continue
                 edge = {"rel": row["rel"], "src": row["src"], "dst": row["dst"]}
                 found.append((PRIORITY.get(row["rel"], 99), current, edge, dict(row)))
         found.sort(key=lambda f: (f[0], -_stamp(f[3]["updated"]), f[3]["path"]))
@@ -71,6 +80,7 @@ def neighbors(
         "root": root["id"],
         "direction": direction,
         "depth": depth,
+        "relations": relations or None,
         "nodes": list(nodes.values()),
         "edges": list(edges.values()),
         "truncated": truncated,
@@ -119,7 +129,7 @@ def format_neighbors_text(result: dict[str, Any]) -> str:
     if len(nodes) == 1:
         lines.append("(no linked notes)")
     if result["truncated"]:
-        lines.append("Truncated: raise limit, or narrow the direction.")
+        lines.append("Truncated: raise limit, or narrow the direction or relations.")
     return "\n".join(lines)
 
 

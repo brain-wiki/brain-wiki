@@ -350,6 +350,7 @@ Search is one call for both keyword search and browsing. MCP exposes it as
 | `type` | any | Note types; a note of any of them matches |
 | `tag` | any | Tags; a note must carry all of them |
 | `where` | none | Frontmatter equality, e.g. `{"stage": "open"}` |
+| `within` | none | A whole, by any target `read` accepts: only the notes that name it in `bw-part_of` |
 | `include_episodes` | on for a query, off when browsing | Pending episodes |
 | `include_archived` | false | Notes with `status: archived` |
 | `include_archived_episodes` | false | Consolidated episodes (CLI only) |
@@ -375,6 +376,10 @@ Search is one call for both keyword search and browsing. MCP exposes it as
   written). `bw-` fields other than `bw-stage` cannot be filtered.
 - `since` and `until` take `YYYY-MM-DD`, or `7d`, `4w`, `3m` (30 days), or
   `1y` (365 days), and compare the date part of `updated`.
+- `within` goes one level: the parts of the whole, not their parts. A
+  whole that does not resolve is `not_found`. To search a topic's folder,
+  use `topic`; `within` on a topic page finds only the notes elsewhere
+  that name it.
 - `facets` counts the top 10 values of each.
 - CLI spellings: `--where KEY=VALUE`, `--count`, `--paths`,
   `--no-episodes`, and `--include archived,episodes,archived_episodes`.
@@ -397,7 +402,7 @@ Search is one call for both keyword search and browsing. MCP exposes it as
    the query has no CJK.
 6. CJK runs shorter than 3 characters, which trigram cannot match, use a
    bounded `LIKE` scan over `docs.title` and `docs.body`.
-7. Topic, type, tag, property, and date filters apply to FTS candidates
+7. Topic, type, tag, property, date, and `within` filters apply to FTS candidates
    before scoring and truncation (R3). Candidates come in growing batches,
    starting at four times what the page needs and doubling, so
    filtered-out notes never displace matching ones.
@@ -432,7 +437,7 @@ recency_factor = 0.85 + 0.15 × 0.5^(age_days / 180)       # never below 0.85
 ### 6.4 Graph expansion
 
 Search does not follow links. It returns matching notes plus their guard
-notes (§5) and nothing else. To see what a hit links to, what links to it,
+notes (§5) and the wholes each names in `bw-part_of`, and nothing else. To see what a hit links to, what links to it,
 or how it evolved, call `brain_neighbors` on it (§9.2).
 
 ### 6.5 Output
@@ -461,7 +466,11 @@ with `--json`:
          "path": "topics/search/ripgrep.md", "status": "superseded",
          "updated": "2026-09-02", "via_titles": []}
       ],
-      "more_guards": 0
+      "more_guards": 0,
+      "wholes": [
+        {"id": "01JA…", "title": "App v2 Launch", "path": "topics/company/launch.md",
+         "summary": "Ship the second version of the app by December."}
+      ]
     }
   ],
   "truncated": true,
@@ -476,10 +485,14 @@ with `--json`:
 - `facets` appears only when requested.
 - `score` is null when results are ordered by date or title.
 - `inputs` and `agent` are set for episode hits only.
+- `wholes` are the notes and topic pages the hit names in `bw-part_of`,
+  by title, each with the opening words of its body (at most 160
+  characters) as context. A search `within` a whole leaves that whole out.
+  `within` echoes the whole as `{id, title, path}`.
 
 The text form (MCP text content, CLI default) shows each hit's path, which
-is the handle for the next call. Guard banners (§5) come before the
-snippet:
+is the handle for the next call. Guard banners (§5), then the wholes, come
+before the snippet:
 
 ```
 1. Use ripgrep for search  [decision · SUPERSEDED · topics/search/ripgrep.md]
@@ -487,6 +500,7 @@ snippet:
    # Use «ripgrep» for «search» Lumen shells out to «ripgrep» for «search».
 2. Use SQLite FTS5 for local search  [decision · active · topics/search/fts5.md]
    ↳ supersedes "Use ripgrep for search" (topics/search/ripgrep.md).
+   ↑ part of "App v2 Launch" (topics/company/launch.md): Ship the second version of the app by December.
    …Lumen searches notes with SQLite FTS5 instead of «ripgrep»…
 ```
 
@@ -515,8 +529,8 @@ is an error that lists the candidates instead of guessing.
 - The outline summary is the first paragraph that is not a heading, up to
   600 characters.
 - `full` returns the body without frontmatter or HTML comments. For notes
-  and topic pages it appends "Links:" and "Linked from:" lists below a `---`
-  line, since the file's own wikilinks carry no paths.
+  and topic pages it appends "Links:", "Parts:", and "Linked from:" lists
+  below a `---` line, since the file's own wikilinks carry no paths.
 - `section` matches a heading's text, case-insensitively. Passing a
   section implies this mode. The mode without a section, or a section with
   another mode, is a usage error.
@@ -554,12 +568,20 @@ the structured result, `outline` and `full` include:
   then body links in file order, one entry per target, so a field wins
   over a body link to the same note. Text shows 20, then a pointer to
   `brain_neighbors("<path>", direction="out")`.
+- `parts`: items `{id, title, path}`, the notes that name this one in
+  `bw-part_of`, sorted by title with the numbers in titles compared as
+  numbers, so "2 Design" comes before "10 Rollout" and dated titles sort
+  by date. The result keeps 50 and `parts_total` gives the full count.
+  Text shows 20, then a pointer to `brain_search("", within="<path>")`. A
+  part names its wholes in `links`, where `part_of` comes before body
+  links.
 - `backlinks`: items `{id, title, path, relation}`, where `relation` is
-  the label seen from the target (§3), such as `supersedes`, `has_part`,
-  or `linked_from`. They come in the priority order of §3, the most
-  recently updated first within each, one entry per note, at most 10.
-  `backlinks_total` gives the full count, and text points to
-  `brain_neighbors("<path>", direction="in")` for the rest.
+  the label seen from the target (§3), such as `supersedes` or
+  `linked_from`. Parts are left out, since `parts` lists them. They come in
+  the priority order of §3, the most recently updated first within each,
+  one entry per note, at most 10. `backlinks_total` gives the full count,
+  and text points to `brain_neighbors("<path>", direction="in")` for the
+  rest.
 
 An episode's result adds `agent`, `inputs`, `origin`, `session`, and
 `origin_turns`.
@@ -677,7 +699,7 @@ each for?" for the calling host.
 
 ### 9.2 Neighbors
 
-`neighbors(target, direction, depth, limit)` follows a node's resolved
+`neighbors(target, direction, depth, limit, relations)` follows a node's resolved
 edges without reading bodies, and returns a small subgraph.
 
 - `direction` is `out` (what it links to), `in` (what links to it), or
@@ -686,10 +708,16 @@ edges without reading bodies, and returns a small subgraph.
 - `limit` caps the nodes returned besides the root (default 30, at most
   100). The engine clamps out-of-range values, and the CLI rejects values
   below 1.
-- There is no filter by relation.
+- `relations` limits the edges followed to the `rel` values listed, from
+  §3 (`superseded_by`, `conflicts_with`, `depends_on`, `part_of`,
+  `links_to`, `source`); the default is all. With `direction`, it answers
+  questions such as "what rests on this note"
+  (`relations=["depends_on"], direction="in"`). An unknown value is a usage
+  error that lists the valid ones. The CLI spelling is `--relation`,
+  repeatable.
 
 ```json
-{"brain": "personal", "root": "01J9…", "direction": "both", "depth": 1,
+{"brain": "personal", "root": "01J9…", "direction": "both", "depth": 1, "relations": null,
  "nodes": [{"id": "01J9…", "path": "…", "title": "…", "type": "decision",
             "topic": "search", "status": "active", "depth": 0},
            {"id": "01J8…", "path": "…", "title": "…", "type": "decision",

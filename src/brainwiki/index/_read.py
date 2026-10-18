@@ -105,6 +105,7 @@ def read(
         result["headings"] = [h[2] for h in doc.headings]
         result["links"] = _links(engine, node["id"])
         result["backlinks"], result["backlinks_total"] = _backlinks(engine, node["id"])
+        result["parts"], result["parts_total"] = _parts(engine, node["id"])
         summary = next(
             (
                 p.strip()
@@ -119,6 +120,7 @@ def read(
         result["content"] = _render_full(engine, text)
         result["links"] = _links(engine, node["id"])
         result["backlinks"], result["backlinks_total"] = _backlinks(engine, node["id"])
+        result["parts"], result["parts_total"] = _parts(engine, node["id"])
         handles = _handle_lines(result)
         if handles and kind in ("note", "topic"):
             result["content"] += "\n\n---\n" + "\n".join(handles)
@@ -174,14 +176,36 @@ def _links(engine: Engine, node_id: str) -> list[dict[str, Any]]:
     return list(out.values())
 
 
+_PARTS_KEPT = 50
+_PARTS_SHOWN = 20
+_NUMBERS = re.compile(r"(\d+)")
+
+
+def _title_key(title: str | None) -> list[Any]:
+    """Sort key that compares the numbers in a title as numbers: "2 Design" before "10 Rollout"."""
+    return [int(t) if t.isdecimal() else t.casefold() for t in _NUMBERS.split(title or "")]
+
+
+def _parts(engine: Engine, node_id: str) -> tuple[list[dict[str, Any]], int]:
+    """The notes that name this one in `bw-part_of`, by title, and how many there are."""
+    rows = engine.db.execute(
+        """SELECT DISTINCT n.id, n.title, n.path FROM edges e JOIN nodes n ON n.id = e.src
+           WHERE e.rel = 'part_of' AND e.dst = ? AND e.src != ?""",
+        (node_id, node_id),
+    ).fetchall()
+    parts = sorted((dict(r) for r in rows), key=lambda r: (_title_key(r["title"]), r["path"]))
+    return parts[:_PARTS_KEPT], len(parts)
+
+
 def _backlinks(engine: Engine, node_id: str, limit: int = 10) -> tuple[list[dict[str, Any]], int]:
     """Notes that link here, typed relations first (supersession leading), newest first within
-    each, and how many there are in all."""
+    each, and how many there are in all. Parts are listed by `_parts` instead."""
     rows = engine.db.execute(
         """SELECT n.id, n.title, n.path, n.topic, n.updated, e.rel
            FROM edges e JOIN nodes n ON n.id = e.declared_in
-           WHERE e.other=? AND e.declared_in != ?""",
-        (node_id, node_id),
+           WHERE e.other=? AND e.declared_in != ? AND n.id NOT IN (
+             SELECT src FROM edges WHERE rel = 'part_of' AND dst = ?)""",
+        (node_id, node_id, node_id),
     ).fetchall()
     rows = sorted(rows, key=lambda r: (PRIORITY.get(r["rel"], 99), -_ts(r["updated"]), r["path"]))
     seen: dict[str, dict[str, Any]] = {}
@@ -215,6 +239,12 @@ def _handle_lines(result: dict[str, Any]) -> list[str]:
                 f"- … {len(links) - _LINKS_SHOWN} more; "
                 f'brain_neighbors("{result["path"]}", direction="out") lists them'
             )
+    parts = result.get("parts") or []
+    if parts:
+        lines += ["Parts:"] + [f'- "{p["title"]}" ({p["path"]})' for p in parts[:_PARTS_SHOWN]]
+        more = result.get("parts_total", len(parts)) - min(len(parts), _PARTS_SHOWN)
+        if more:
+            lines.append(f'- … {more} more; brain_search("", within="{result["path"]}") lists them')
     backlinks = result.get("backlinks") or []
     if backlinks:
         lines += ["Linked from:"] + [

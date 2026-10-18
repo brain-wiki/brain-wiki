@@ -48,3 +48,12 @@ bw-conflicts_with: "[[Vector-Only Search Proposal]]"
   body links and checks nothing against the fields.
 - "Caused by" and "related to" have no field. A sentence with a plain link
   says them.
+
+What the engine does with each relation:
+
+| Relation | Behavior |
+|---|---|
+| `bw-part_of` | Reading a whole lists its parts by title; a search hit names its wholes; search can be scoped to a whole ([[index-and-search-6-search\|index and search §6, §7]]) |
+| `bw-depends_on` | A note resting on a superseded or archived note is listed for review ([[index-and-search-9-other-queries\|index and search §9]]) |
+| `bw-conflicts_with` | The conflict guard (§7), and open conflicts listed for review |
+| `bw-superseded_by` | The supersession guard (§7) |

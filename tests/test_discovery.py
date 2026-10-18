@@ -290,6 +290,104 @@ def test_cli_neighbors(example: Path, capsys: pytest.CaptureFixture[str]):
     assert sorted(rest) == ["topics/search/index.md", "topics/storage/sqlite-version-policy.md"]
 
 
+# -- relations: wholes and parts, dependents (index-and-search.md §6, §7, §9.2)
+# ---------------------------------------------------------------------------
+
+
+def _note(root: Path, rel: str, title: str, body: str = "Text.", **fields: list[str]) -> None:
+    from tests.conftest import write
+
+    lines = [f"title: {title}"]
+    for key, links in fields.items():
+        lines.append(f"bw-{key}: [{', '.join(repr(f'[[{t}]]') for t in links)}]")
+    write(root, rel, "---\n" + "\n".join(lines) + f"\n---\n# {title}\n\n{body}\n")
+
+
+def _wholes_and_parts(root: Path) -> None:
+    meetings = "topics/company/meetings"
+    _note(root, f"{meetings}/team-standup.md", "Team Standup", "Weekly sync of the whole team.")
+    _note(root, f"{meetings}/standup-14.md", "Team Standup 2026-10-14", part_of=["Team Standup"])
+    _note(root, f"{meetings}/standup-07.md", "Team Standup 2026-10-07", part_of=["Team Standup"])
+    _note(root, f"{meetings}/rin-1-1.md", "Rin 1-1", "Fortnightly one-on-one.")
+    _note(root, f"{meetings}/rin-09.md", "Rin 1-1 2026-10-09", part_of=["Rin 1-1"])
+    _note(root, "topics/teams/search-team.md", "Search Team", "Owns search.")
+    _note(root, "topics/teams/sync-team.md", "Sync Team", "Owns sync.")
+    _note(root, "topics/people/rin.md", "Rin Sato", part_of=["Search Team"])
+    _note(root, "topics/people/ari.md", "Ari Moss", part_of=["Search Team", "Sync Team"])
+    _note(root, "topics/company/plan.md", "Launch Plan", "The plan for the launch.")
+    for title in ("10 Rollout", "2 Design", "1 Overview"):
+        _note(root, f"topics/company/{title.split()[0]}.md", title, part_of=["Launch Plan"])
+    _note(root, "topics/company/launch.md", "App v2 Launch", "Ship the second version.")
+    _note(
+        root,
+        "topics/storage/bench.md",
+        "Storage Benchmark",
+        "Storage speed.",
+        part_of=["App v2 Launch"],
+    )
+    _note(root, "topics/storage/costs.md", "Archive Storage Costs", "Storage prices.")
+
+
+def test_read_lists_parts_by_title_and_search_hits_carry_their_whole(brain_dir: Path):
+    from brainwiki.index._read import format_read_text, read
+    from brainwiki.index._search import format_search_text, search
+
+    _wholes_and_parts(brain_dir)
+    with _engine(brain_dir) as eng:
+        standup = read(eng, "Team Standup")
+        team = read(eng, "Search Team", mode="outline")
+        ari = read(eng, "Ari Moss")
+        plan = read(eng, "Launch Plan")
+        hits = search(eng, "Team Standup 2026-10-14")
+        scoped = search(eng, "storage", within="App v2 Launch")
+    # series in one folder: only the standup's own meetings, in date order
+    assert [p["title"] for p in standup["parts"]] == [
+        "Team Standup 2026-10-07",
+        "Team Standup 2026-10-14",
+    ]
+    assert [p["title"] for p in team["parts"]] == ["Ari Moss", "Rin Sato"]
+    assert team["backlinks"] == []  # parts are listed once, under Parts
+    assert '\nParts:\n- "Ari Moss" (topics/people/ari.md)' in format_read_text(team)
+    assert [(r["relation"], r["title"]) for r in ari["links"]] == [
+        ("part_of", "Search Team"),
+        ("part_of", "Sync Team"),
+    ]
+    assert [p["title"] for p in plan["parts"]] == ["1 Overview", "2 Design", "10 Rollout"]
+    hit = next(r for r in hits["results"] if r["title"] == "Team Standup 2026-10-14")
+    assert [(w["title"], w["summary"]) for w in hit["wholes"]] == [
+        ("Team Standup", "Weekly sync of the whole team.")
+    ]
+    assert (
+        '↑ part of "Team Standup" (topics/company/meetings/team-standup.md): Weekly sync'
+        in format_search_text(hits)
+    )
+    # scoped to a whole across folders, one level; the whole is not repeated as context
+    assert [r["title"] for r in scoped["results"]] == ["Storage Benchmark"]
+    assert scoped["within"]["title"] == "App v2 Launch" and scoped["results"][0]["wholes"] == []
+
+
+def test_neighbors_follow_only_the_relations_asked_for(brain_dir: Path):
+    from brainwiki.errors import NotFound, UsageError
+    from brainwiki.index._neighbors import neighbors
+    from brainwiki.index._search import search
+
+    _note(brain_dir, "topics/infra/build.md", "Build Server Setup")
+    _note(
+        brain_dir, "topics/infra/release.md", "Release Checklist", depends_on=["Build Server Setup"]
+    )
+    _note(brain_dir, "topics/infra/nightly.md", "Nightly Tests", depends_on=["Build Server Setup"])
+    _note(brain_dir, "topics/infra/faq.md", "Infra FAQ", "See [[Build Server Setup]].")
+    with _engine(brain_dir) as eng:
+        rests = neighbors(eng, "Build Server Setup", relations=["depends_on"], direction="in")
+        everything = neighbors(eng, "Build Server Setup", direction="in")
+        with pytest.raises(UsageError, match="depended_on_by"):
+            neighbors(eng, "Build Server Setup", relations=["depended_on_by"])
+        with pytest.raises(NotFound):
+            search(eng, "setup", within="No Such Project")
+    assert sorted(n["title"] for n in rests["nodes"][1:]) == ["Nightly Tests", "Release Checklist"]
+    assert len(everything["nodes"]) == 4 and rests["relations"] == ["depends_on"]
+
+
 # -- the briefing (index-and-search.md §8)
 # ---------------------------------------------------------------
 

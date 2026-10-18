@@ -294,6 +294,13 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             Field(description="Pending episodes; default on for a query, off when browsing."),
         ] = None,
         include_archived: Annotated[bool, Field(description="Include archived notes.")] = False,
+        within: Annotated[
+            str | None,
+            Field(
+                description="A whole (project, series, team): only the notes that name it in "
+                "bw-part_of."
+            ),
+        ] = None,
         brain: _Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -315,6 +322,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             facets=facets,
             include_episodes=include_episodes,
             include_archived=include_archived,
+            within=within,
         )
         return _result(format_search_text(result, format), result)
 
@@ -352,7 +360,8 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         annotations=_READ,
         description="Follow a note's links without reading bodies: what it links to (out), "
         "what links to it (in), or both, up to 3 hops; a superseded note's replacement comes "
-        "first. Returns the linked notes with their paths, the handles for brain_read.",
+        "first. relations narrows to some edges, e.g. depends_on with direction=in for what "
+        "rests on a note. Returns the linked notes with their paths, the handles for brain_read.",
     )
     @guard
     def brain_neighbors(
@@ -363,6 +372,15 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         ] = "both",
         depth: Annotated[int, Field(ge=1, le=3, description="Hops to follow.")] = 1,
         limit: Annotated[int, Field(ge=1, le=100, description="Most neighbors to return.")] = 30,
+        relations: Annotated[
+            list[
+                Literal[
+                    "superseded_by", "conflicts_with", "depends_on", "part_of", "links_to", "source"
+                ]
+            ]
+            | None,
+            Field(description="Follow only these edges; default all."),
+        ] = None,
         brain: _Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -374,6 +392,7 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
             direction=direction,
             depth=depth,
             limit=limit,
+            relations=list(relations) if relations else None,
         )
         return _result(format_neighbors_text(result), result)
 

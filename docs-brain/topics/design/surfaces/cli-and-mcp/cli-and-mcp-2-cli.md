@@ -22,9 +22,10 @@ brain setup [--guide]                                  # terminal wizard; --guid
 brain orient
 brain search [QUERY] [--limit N] [--topic T]... [--type T]... [--tag T]... [--where KEY=VALUE]...
              [--since D] [--until D] [--sort relevance|recent|title] [--cursor C]
-             [--include archived,episodes,archived_episodes] [--no-episodes] [--count] [--facets] [--paths]
+             [--include archived,episodes,archived_episodes] [--no-episodes] [--count] [--facets]
+             [--within WHOLE] [--paths]
 brain read TARGET [--mode outline|full|section|raw] [--section HEADING]
-brain neighbors TARGET [--direction out|in|both] [--depth N] [--limit N] [--paths]
+brain neighbors TARGET [--direction out|in|both] [--depth N] [--limit N] [--relation REL]... [--paths]
 
 brain topics [TOPIC]                                   # the topic tree with note counts
 brain links TARGET | backlinks TARGET                  # paged: --limit, --cursor, --count, --paths
@@ -96,7 +97,8 @@ Where each command is specified:
 | `connect`, `mcp` | [[agent-integrations\|agent integrations]], §3 |
 | `doctor`, `setup` | [[skills-and-onboarding\|skills and onboarding]] |
 
-`search` does not follow links, and `neighbors` has no relation filter.
+`search` does not follow links; `--within` limits it to the parts of a
+whole, and `neighbors --relation` to some kinds of edge.
 `consolidate` needs exactly one of `--prepare` and `--done`; with
 `--prepare`, `--json` prints the packet and `--out` writes
 `{guidance, packet}`. `--agent`, `--unowned`, `--all`, and `--out` go only

@@ -119,9 +119,10 @@ brain setup [--guide]                                  # terminal wizard; --guid
 brain orient
 brain search [QUERY] [--limit N] [--topic T]... [--type T]... [--tag T]... [--where KEY=VALUE]...
              [--since D] [--until D] [--sort relevance|recent|title] [--cursor C]
-             [--include archived,episodes,archived_episodes] [--no-episodes] [--count] [--facets] [--paths]
+             [--include archived,episodes,archived_episodes] [--no-episodes] [--count] [--facets]
+             [--within WHOLE] [--paths]
 brain read TARGET [--mode outline|full|section|raw] [--section HEADING]
-brain neighbors TARGET [--direction out|in|both] [--depth N] [--limit N] [--paths]
+brain neighbors TARGET [--direction out|in|both] [--depth N] [--limit N] [--relation REL]... [--paths]
 
 brain topics [TOPIC]                                   # the topic tree with note counts
 brain links TARGET | backlinks TARGET                  # paged: --limit, --cursor, --count, --paths
@@ -193,7 +194,8 @@ Where each command is specified:
 | `connect`, `mcp` | [agent integrations](agent-integrations.md), §3 |
 | `doctor`, `setup` | [skills and onboarding](skills-and-onboarding.md) |
 
-`search` does not follow links, and `neighbors` has no relation filter.
+`search` does not follow links; `--within` limits it to the parts of a
+whole, and `neighbors --relation` to some kinds of edge.
 `consolidate` needs exactly one of `--prepare` and `--done`; with
 `--prepare`, `--json` prints the packet and `--out` writes
 `{guidance, packet}`. `--agent`, `--unowned`, `--all`, and `--out` go only
@@ -412,6 +414,8 @@ Input schemas (JSON Schema 2020-12; output shapes are in
       "format": {"enum": ["text", "paths"], "default": "text"},
       "include_episodes": {"type": "boolean", "description": "Default: on for a query, off when browsing."},
       "include_archived": {"type": "boolean", "default": false},
+      "within": {"type": "string",
+                 "description": "A whole (project, series, team): only the notes that name it in bw-part_of."},
       "brain":  {"type": "string"}}},
 
   "brain_neighbors": {"type": "object", "additionalProperties": false, "required": ["target"],
@@ -420,6 +424,9 @@ Input schemas (JSON Schema 2020-12; output shapes are in
       "direction": {"enum": ["out", "in", "both"], "default": "both"},
       "depth":     {"type": "integer", "minimum": 1, "maximum": 3, "default": 1},
       "limit":     {"type": "integer", "minimum": 1, "maximum": 100, "default": 30},
+      "relations": {"type": "array", "items": {"enum": ["superseded_by", "conflicts_with",
+                    "depends_on", "part_of", "links_to", "source"]},
+                    "description": "Follow only these edges; default all."},
       "brain":     {"type": "string"}}},
 
   "brain_validate": {"type": "object", "additionalProperties": false,
