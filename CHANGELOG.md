@@ -64,8 +64,8 @@
   visualizer's `hubs` total to `pages`. `brain import --overlay --json`
   reports `topic_page` instead of `hub_filename`.
 - **AGENTS.md wording.** The managed block's table header is now
-  `Topic | Page | About`, so existing brains report BW408 until
-  `brain lint --fix` regenerates the block.
+  `Topic | Page | About`, and the block names the relation fields, so
+  existing brains report BW408 until `brain lint --fix` regenerates it.
 
 ## 0.3.2 (2026-10-16)
 

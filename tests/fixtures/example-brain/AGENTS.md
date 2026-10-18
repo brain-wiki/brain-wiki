@@ -5,7 +5,8 @@
 - Knowledge lives in `topics/<topic>/`; each topic has a page (`index.md`).
 - Do not change files here. To record something, call the brain-wiki MCP tool
   `brain_log_episode`.
-- A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note
+- A note's frontmatter is metadata; its facts and `[[links]]` are in the body. Relation
+  fields hold links: `bw-part_of`, `bw-depends_on`, `bw-conflicts_with` (read both). A note
   with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
 
 | Topic | Page | About |

@@ -21,7 +21,8 @@ outside the markers is preserved.
   `brain validate <path>` (MCP: `brain_validate`) and fix what it reports. Something
   not organized yet goes in `inbox/episodes/YYYY/MM/<ULID>.md` (or the MCP tool
   `brain_log_episode`). Never edit `rules.md`, episodes, or `log.md`.
-- A note's frontmatter is metadata; its facts and `[[links]]` are in the body. A note
+- A note's frontmatter is metadata; its facts and `[[links]]` are in the body. Relation
+  fields hold links: `bw-part_of`, `bw-depends_on`, `bw-conflicts_with` (read both). A note
   with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
 
 | Topic | Page | About |
