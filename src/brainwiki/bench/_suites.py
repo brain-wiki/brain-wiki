@@ -85,6 +85,7 @@ def retrieval(work: Path, size: int, seed: int = 0) -> SuiteResult:
         "notes": size,
         "queries": dict(Counter(q.family for q in truth.queries)),
         "supersessions": len(truth.supersedes),
+        "conflicts": len(truth.conflicts),
     }
     failures: list[dict[str, Any]] = []
     ranking: dict[str, list[tuple[float, float, float]]] = {}
@@ -181,7 +182,7 @@ description = "Costs and contracts."
 
 
 def _note(title: str, body: str, facts: list[str], extra: str = "") -> str:
-    """A format 3 note: metadata in frontmatter, facts as body bullets."""
+    """A note: metadata in frontmatter, facts as body bullets."""
     from brainwiki.ids import new_ulid
 
     lines = ["---", f"id: {new_ulid()}", "type: decision", f"title: {title}"]
@@ -375,6 +376,53 @@ def _bw120(root: Path) -> _Expect:
     return [("BW120", _IL, _frontmatter(root, _IL, "bw-sources: [not a link]"))], None
 
 
+@_case("BW117:format-3")
+def _bw117_format3(root: Path) -> _Expect:
+    toml = root / "brain.toml"
+    text = toml.read_text(encoding="utf-8")
+    assert "\nformat = 4\n" in text
+    toml.write_text(text.replace("\nformat = 4\n", "\nformat = 3\n"), encoding="utf-8")
+    line = _append(root, _QC, "\n## Related\n\n- Depends on [[broker-policy]]\n")
+    return [("BW117", _QC, line + 3)], {_QC: 1, "brain.toml": 1}
+
+
+@_case("BW123")
+def _bw123(root: Path) -> _Expect:
+    return [("BW123", _IL, _frontmatter(root, _IL, "bw-depends_on: the broker policy"))], None
+
+
+@_case("BW124")
+def _bw124(root: Path) -> _Expect:
+    return [("BW124", _IL, _frontmatter(root, _IL, 'bw-depends_on: "[[missing-note]]"'))], None
+
+
+@_case("BW312")
+def _bw312(root: Path) -> _Expect:
+    return [("BW312", _IL, _frontmatter(root, _IL, 'bw-depends_on: "[[ingest-limits]]"'))], None
+
+
+@_case("BW313")
+def _bw313(root: Path) -> _Expect:
+    return [("BW313", _IL, _frontmatter(root, _IL, 'bw-part_of: "[[alpha/index]]"'))], {_IL: 1}
+
+
+@_case("BW314")
+def _bw314(root: Path) -> _Expect:
+    _frontmatter(root, _BP, "status: superseded")
+    _frontmatter(root, _BP, 'bw-superseded_by: "[[queue-choice]]"')
+    line = _frontmatter(root, _IL, 'bw-conflicts_with: "[[broker-policy]]"')
+    return [("BW314", _IL, line)], {_IL: 1}
+
+
+@_case("BW315")
+def _bw315(root: Path) -> _Expect:
+    lines = (
+        _frontmatter(root, _IL, 'bw-part_of: "[[queue-choice]]"'),
+        _frontmatter(root, _QC, 'bw-part_of: "[[ingest-limits]]"'),
+    )
+    return [("BW315", (_IL, _QC), lines)], None
+
+
 @_case("BW307")
 def _bw307(root: Path) -> _Expect:
     lines = []
@@ -460,6 +508,14 @@ def _clean_base(root: Path) -> _Expect:
 @_case("clean:wikilink-after-token")
 def _clean_wikilink(root: Path) -> _Expect:
     _insert(root, _IL, "Producers", "The rotation token is [[broker-policy]] for now.\n")
+    return [], None
+
+
+@_case("clean:relations")
+def _clean_relations(root: Path) -> _Expect:
+    _frontmatter(root, _QC, 'bw-depends_on: "[[broker-policy]]"')
+    _frontmatter(root, _IL, 'bw-part_of: ["[[queue-choice]]"]')
+    _frontmatter(root, _VC, 'bw-conflicts_with: "[[broker-policy]]"')
     return [], None
 
 

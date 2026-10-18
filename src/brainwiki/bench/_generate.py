@@ -100,6 +100,7 @@ class Truth:
     root: Path
     nodes: dict[str, Node] = field(default_factory=dict)
     supersedes: list[tuple[str, str]] = field(default_factory=list)  # (newer, older)
+    conflicts: list[tuple[str, str]] = field(default_factory=list)  # (holder, other), both active
     queries: list[Query] = field(default_factory=list)
     relation_counts: Counter[str] = field(default_factory=Counter)
 
@@ -109,9 +110,13 @@ class Truth:
     def _index(self) -> None:
         self.newer: dict[str, list[str]] = defaultdict(list)
         self.older: dict[str, list[str]] = defaultdict(list)
+        self.conflicting: dict[str, list[str]] = defaultdict(list)
         for new, old in self.supersedes:
             self.newer[old].append(new)
             self.older[new].append(old)
+        for a, b in self.conflicts:
+            self.conflicting[a].append(b)
+            self.conflicting[b].append(a)
 
     def chain(self, node_id: str) -> list[str]:
         """Successors from the direct one to the newest."""
@@ -123,9 +128,15 @@ class Truth:
 
     def expected_guards(self, node_id: str) -> set[tuple[str, str]]:
         """The guards (label, id) a hit must carry (index-and-search.md §5); `superseded_by` is the
-        newest.
+        newest, and a conflict counts while both notes are active.
         """
         shown = {("supersedes", other) for other in self.older.get(node_id, [])}
+        if self.nodes[node_id].status == "active":
+            shown |= {
+                ("conflicts_with", other)
+                for other in self.conflicting.get(node_id, [])
+                if self.nodes[other].status == "active"
+            }
         chain = self.chain(node_id)
         if chain:
             shown.add(("superseded_by", chain[-1]))
@@ -231,6 +242,11 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
         members = free(pool, rng.choice((2, 2, 3, 3, 4)))  # chains of 1-3 supersessions
         if members:
             chain_of(members)
+    # Conflicts between two active notes of a topic, about one per 100 notes, written once.
+    for _ in range(max(3, notes // 100)):
+        pair = free(pools[rng.randrange(len(pools))], 2)
+        if pair:
+            truth.conflicts.append((pair[0].id, pair[1].id))
     truth._index()
     # Dates follow supersession: newer notes are updated later.
     day = {n.id: rng.randrange(0, 200) for n in order}
@@ -240,9 +256,11 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
         for newer in truth.chain(node_id):
             day[newer] = max(day[newer], day[node_id] + 1)
 
-    # Related notes, written as body links; the older note names its replacement in metadata.
+    # Related notes: each relation is a body bullet, and a dependency is also a `bw-depends_on`
+    # field. The older note names its replacement, and one note of a conflict the other.
     relations: dict[str, list[tuple[str, str]]] = defaultdict(list)  # note -> (verb, link)
     replaced_by: dict[str, str] = {}  # older note -> newer note's link
+    conflicts_with: dict[str, str] = {}  # holder -> the other note's link
     linked: dict[str, set[str]] = defaultdict(set)
 
     def link_name(n: Node) -> str:
@@ -253,11 +271,15 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
         linked[old].add(new)
         linked[new].add(old)
         truth.relation_counts["superseded_by"] += 1
+    for a, b in truth.conflicts:
+        conflicts_with[a] = link_name(truth.nodes[b])
+        linked[a].add(b)
+        linked[b].add(a)
+        truth.relation_counts["conflicts_with"] += 1
     for n in order:
         same = by_topic[n.topic or ""]
         for _ in range(2 if rng.random() < 0.85 else 1):
-            pick = rng.random()
-            verb = "depends_on" if pick < 0.45 else "related_to" if pick < 0.88 else "enables"
+            verb = "depends_on" if rng.random() < 0.5 else "related_to"
             for _attempt in range(6):
                 pool = same if rng.random() < 0.6 and len(same) > 1 else order
                 other = pool[rng.randrange(len(pool))]
@@ -265,7 +287,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
                     relations[n.id].append((verb, link_name(other)))
                     linked[n.id].add(other.id)
                     linked[other.id].add(n.id)
-                    truth.relation_counts["depends_on" if verb == "enables" else verb] += 1
+                    truth.relation_counts[verb] += 1
                     break
 
     # Group queries: a shared token planted 3, 2 and 1 times gives graded relevance.
@@ -294,6 +316,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
                 by_topic[n.topic or ""],
                 relations[n.id],
                 replaced_by.get(n.id),
+                conflicts_with.get(n.id),
             ),
         )
 
@@ -361,6 +384,7 @@ def _note_text(
     same: list[Node],
     relations: list[tuple[str, str]],
     replaced_by: str | None = None,
+    conflicts_with: str | None = None,
 ) -> str:
     rng = g.rng
     when = date(2026, 1, 1) + timedelta(days=day)
@@ -376,6 +400,11 @@ def _note_text(
         fm.append(f"status: {n.status}")
     if replaced_by:
         fm.append(f"bw-superseded_by: {quote(f'[[{replaced_by}]]')}")
+    if conflicts_with:
+        fm.append(f"bw-conflicts_with: {quote(f'[[{conflicts_with}]]')}")
+    depends = [link for verb, link in relations if verb == "depends_on"]
+    if depends:
+        fm += ["bw-depends_on:", *[f"  - {quote(f'[[{link}]]')}" for link in depends]]
     links = []
     for _ in range(5):  # prose links mostly stay in the note's own topic, as people write them
         pool = same if rng.random() < 0.8 and len(same) > 1 else order
@@ -400,13 +429,13 @@ def _note_text(
     related = [f"- {verb.replace('_', ' ').capitalize()} [[{link}]]" for verb, link in relations]
     body += ["", "## Facts", "", *facts]
     if related:
-        body += ["", "## Related", "", *related]
+        body += ["", "## Relations", "", *related]
     return "\n".join([*fm, "---", f"# {n.title}", "", *body]) + "\n"
 
 
 def _plant_queries(g: _Gen, truth: Truth, order: list[Node]) -> None:
     rng = g.rng
-    guarded = {x for pair in truth.supersedes for x in pair}
+    guarded = {x for pair in [*truth.supersedes, *truth.conflicts] for x in pair}
     sample = rng.sample(order, max(30, len(order) // 10))
     ids = dict.fromkeys([*sorted(guarded), *(n.id for n in sample)])
     for n in (truth.nodes[i] for i in ids):

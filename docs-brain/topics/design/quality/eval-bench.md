@@ -36,28 +36,30 @@ Published numbers come only from this bench, with the command and version that p
 
 ### 3.1 `retrieval` (offline)
 
-The suite generates a format-3 brain (§4), runs the planted queries, and checks every note and topic page in the top 8 results against the ground truth. The only guard is supersession ([[brain-format-7-guards|brain format §7]]).
+The suite generates a format-4 brain (§4), runs the planted queries, and checks every note and topic page in the top 8 results against the ground truth. The guards are supersession and conflicts ([[brain-format-7-guards|brain format §7]]).
 
 | Metric | Target |
 |---|---|
 | Recall@8, MRR, and nDCG@8, overall and per query family | None; tracked to tune ranking |
-| Guard recall: a hit on a superseded note carries a `superseded_by` guard, and a hit on a successor carries `supersedes` guards for the notes it replaced | 100%, hard |
+| Guard recall: a hit on a superseded note carries a `superseded_by` guard, a hit on a successor carries `supersedes` guards for the notes it replaced, and a hit on either note of a conflict carries a `conflicts_with` guard for the other | 100%, hard |
 | Guards the ground truth does not have | 0, soft |
 | Newest successor: the `superseded_by` guard names the end of the chain | 100%, hard |
 
 
 ### 3.2 `lint` (offline)
 
-Each case copies a small hand-written format-3 brain, breaks one thing, and lists the diagnostics it expects by code, path, and line:
+Each case copies a small hand-written format-4 brain, breaks one thing, and lists the diagnostics it expects by code, path, and line:
 
 | Case | Planted problem |
 |---|---|
 | BW103, BW104, BW106 | Missing id; malformed id; a `status` outside the standard values |
 | BW114 | Leftover merge conflict markers |
-| BW117, BW117 format-1, BW117 supersedes | A format-2 `bw-claims` field; format-1 `## Claims` and `## Relations` sections; a `bw-supersedes` field, reported twice, whose fix also marks the replaced note superseded |
+| BW117, BW117 format-1, BW117 supersedes, BW117 format-3 | A format-2 `bw-claims` field; format-1 `## Claims` and `## Relations` sections; a `bw-supersedes` field, reported twice, whose fix also marks the replaced note superseded; a format-3 "Depends on" bullet in a brain that declares format 3, whose fix adds the field and raises the format |
 | BW118 | An unknown `bw-` field |
 | BW119, BW119 unresolved | `bw-superseded_by` without `status: superseded`; a target that does not resolve |
 | BW120 | A `bw-sources` item that is neither a link nor a URL |
+| BW123, BW124, BW312 | A `bw-depends_on` item that is text, one that does not resolve, and one naming its own note |
+| BW313, BW314, BW315 | `bw-part_of` naming the note's own topic page; a conflict with a superseded note; a part_of cycle |
 | BW307 | A supersession cycle |
 | BW310 | A body link that does not resolve |
 | BW402 | `rules.md` over its budget |
@@ -65,7 +67,7 @@ Each case copies a small hand-written format-3 brain, breaks one thing, and list
 | BW502, BW503 | An episode at the wrong path; an episode without provenance |
 | BW601, BW602 | A rule without a quote; a rule not from the owner |
 | BW701 | A secret in a note |
-| `clean:*` | Text that must produce no finding: the unchanged base brain, a wikilink after the word "token", conflict markers inside a code block |
+| `clean:*` | Text that must produce no finding: the unchanged base brain, valid relation fields, a wikilink after the word "token", conflict markers inside a code block |
 
 When a case has a fix, the suite runs `brain lint --fix` for that code twice and compares the files.
 
@@ -106,11 +108,12 @@ Reserved for end-to-end runs of real hosts with the plugin installed on a fixtur
 ## 4. Data
 
 - The generator (`brainwiki/bench/_generate.py`) is seeded, and the same seed writes byte-identical files. Notes are about invented software projects, in common English words plus generated pseudo-words drawn with a Zipf distribution, so FTS ranks them like real prose.
-- Each note has a summary, a `## Facts` list, and a `## Related` list of prose links. Body links mostly stay inside the note's own topic, and every topic has a topic page.
+- Each note has a summary, a `## Facts` list, and a `## Relations` list of prose links; about half of those relations are dependencies, also written as `bw-depends_on`. Body links mostly stay inside the note's own topic, and every topic has a topic page.
 - Supersession chains of two to four notes make up about 3% of links, written as `bw-superseded_by` on the older notes.
+- Conflicts, one per 100 notes and at least 3, pair two active notes of a topic, written as `bw-conflicts_with` on one of them.
 - Pending episodes, one per 50 notes and at least 5, record `inputs` as `local` or `unknown`.
 - The generator records the ground truth, including the chains and the queries. Queries come in three families: a token planted in one note (`exact`), a note's title (`title`), and a token planted three, two, and one times in three notes, for graded relevance (`group`).
-- The `lint` suite starts from a separate hand-written format-3 brain about a fictional project.
+- The `lint` suite starts from a separate hand-written format-4 brain about a fictional project.
 
 
 ## 5. Output

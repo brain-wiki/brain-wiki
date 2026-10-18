@@ -741,7 +741,7 @@ and how a note evolved (`both`, depth 3).
 ## 10. Performance budgets
 
 The bench performance suite measures these on generated brains of 1k and
-10k notes (5 prose links and a `## Related` list each), with a warm cache
+10k notes (5 prose links and a `## Relations` list each), with a warm cache
 on a local SSD.
 
 | Operation | Budget at 10k |

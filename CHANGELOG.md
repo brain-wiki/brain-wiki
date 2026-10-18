@@ -38,6 +38,10 @@
 - **`brain_neighbors` by relation.** `relations` (`--relation`) follows
   only the edges named, such as `depends_on` with `direction="in"` for what
   rests on a note.
+- **The bench measures the new relations.** Generated brains plant
+  conflicts and `bw-depends_on` fields, guard recall covers conflicts, and
+  the lint suite adds cases for BW123, BW124, BW312 to BW315, and the
+  format 3 conversion.
 - **Typed links come first.** `brain_read`, `brain_neighbors`,
   `brain links`, and `brain backlinks` label relation edges and list them
   before body links and citations.
