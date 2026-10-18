@@ -38,6 +38,12 @@
 - **`brain_neighbors` by relation.** `relations` (`--relation`) follows
   only the edges named, such as `depends_on` with `direction="in"` for what
   rests on a note.
+- **The map shows the relations.** `brain viz` draws Conflicts (red),
+  Depends on (blue, pulsing), and Part of (teal) as link kinds of their
+  own, each a dock chip and a number key (`4`–`6`). A note lists its links
+  by relation and a whole lists its parts by title. A new `conflict` issue
+  marks both notes of an open conflict, and `stale` now also marks a note
+  that rests on an outdated note.
 - **The bench measures the new relations.** Generated brains plant
   conflicts and `bw-depends_on` fields, guard recall covers conflicts, and
   the lint suite adds cases for BW123, BW124, BW312 to BW315, and the

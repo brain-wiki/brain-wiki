@@ -63,6 +63,8 @@ _NOTE_FIELDS = (
     "banners",
     "summary",
     "backlinks",
+    "parts",
+    "parts_total",
 )
 
 

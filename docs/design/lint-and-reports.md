@@ -306,7 +306,8 @@ into prompts.
 briefing counts its first two sections. Its stale links leave out topic
 pages, which list their topic's history, a link from a note to the note it
 replaced, and a link from a note that depends on its target. The
-visualizer's `stale` flag uses the stale-links query.
+visualizer's `stale` flag uses the dependents and stale-links queries, and its
+`conflict` flag the open conflicts.
 
 `brain report` regenerates the reports, and so does
 `brain consolidate --done` when `[reports] after_consolidate = true` (the

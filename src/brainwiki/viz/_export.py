@@ -85,7 +85,7 @@ def _links(engine: Engine, ids: set[str]) -> list[dict[str, Any]]:
 
 
 def _flags(engine: Engine) -> dict[str, list[str]]:
-    from brainwiki.index import stale_links
+    from brainwiki.index import open_conflicts, stale_dependents, stale_links
 
     conn = engine.db
     queries = {
@@ -104,9 +104,10 @@ def _flags(engine: Engine) -> dict[str, list[str]]:
         flag: [row[0] for row in conn.execute(sql, params)]
         for flag, (sql, params) in queries.items()
     }
-    found["stale"] = [row["src"] for row in stale_links(conn)]
+    found["stale"] = [row["src"] for row in [*stale_dependents(conn), *stale_links(conn)]]
+    found["conflict"] = [row[end] for row in open_conflicts(conn) for end in ("a", "b")]
     flags: dict[str, list[str]] = {}
-    for flag in ("superseded", "stale", "orphan", "lint_error"):
+    for flag in ("conflict", "stale", "superseded", "orphan", "lint_error"):
         for node_id in found[flag]:
             bucket = flags.setdefault(node_id, [])
             if flag not in bucket:

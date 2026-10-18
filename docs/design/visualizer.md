@@ -67,15 +67,18 @@ The layout is deterministic and local. The same brain always produces the same m
 
 ### 3.2 Words and lines
 
-The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Cites, and from the other end links here, replaced by this, cites this), and every number names its unit.
+The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Conflicts with, Depends on, Part of, Cites, and from the other end links here, replaced by this, conflicts with this, depends on this, parts, cites this), and every number names its unit.
 
-The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. Links between notes come in three kinds. Each has a chip in the dock, and all are on by default:
+The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. Links between notes come in six kinds. Each has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
 
 | Kind (dock chip) | From | Trail |
 |---|---|---|
 | Links | A wikilink in the body (`links_to`) | Faint violet, the main structure |
 | Replaces | `bw-superseded_by` (`superseded_by`) | Amber, pulsing from old to new |
 | Sources | A `bw-sources` entry (`source`) | Faint grey-blue, from the citing note to the cited one |
+| Conflicts | `bw-conflicts_with` (`conflicts_with`) | Red and thick, with no direction |
+| Depends on | `bw-depends_on` (`depends_on`) | Blue, pulsing from the dependent to the note it rests on |
+| Part of | `bw-part_of` (`part_of`) | Teal, from the part to its whole |
 
 ## 4. HUD and navigation
 
@@ -99,12 +102,12 @@ Right panel, headed Details, is always shown and says how to fill it when nothin
 
 - A group shows its topics.
 - A topic shows its description; counts of notes, notes changed in 7 days, and notes with issues; the last change; a breakdown of issues; a button to open the topic page; its sub-topics and folders with note counts; its most connected notes, hidden for topics of five notes or fewer; and linked topics.
-- A note shows where it lives ("In Guide › Sync › …"), type, status, and issue chips, and banners for a superseded note or the notes it replaces. Then come its summary, its outgoing links grouped as Replaced by, Links to, and Cites, and its backlinks with how each links here. A resolved link flies to its note, an unresolved one says "not found", and one outside the mapped topics says "not on the map". Last come the path, with a copy button, and an `obsidian://` link.
+- A note shows where it lives ("In Guide › Sync › …"), type, status, and issue chips, and banners for a superseded note or the notes it replaces. Then come its summary, its outgoing links grouped as Replaced by, Conflicts with, Depends on, Part of, Links to, and Cites, its parts (the notes that name it in `bw-part_of`) by title, and its backlinks with how each links here. A resolved link flies to its note, an unresolved one says "not found", and one outside the mapped topics says "not on the map". Last come the path, with a copy button, and an `obsidian://` link.
 - A clicked connection replaces the details of the focused place, and the map stays where it is, with the connection lit, until it closes (its ✕, `Esc`, or going to another place):
-  - A link between two notes reads as a sentence: the two notes as cards that open them, and how they link ("links to", "supersedes", "cites"). Under "Where … says it" come the passages of the linking note that hold the link, rendered like the preview: the paragraph, or the list item or table row, for a body link, and the `bw-superseded_by` or `bw-sources` entry for a metadata link. A button reads the whole note, and "Both ways" says when the other note links back.
+  - A link between two notes reads as a sentence: the two notes as cards that open them, and how they link ("links to", "supersedes", "conflicts with", "depends on", "is part of", "cites"). Under "Where … says it" come the passages of the linking note that hold the link, rendered like the preview: the paragraph, or the list item or table row, for a body link, and the property entry (`bw-superseded_by`, `bw-conflicts_with`, `bw-depends_on`, `bw-part_of`, or `bw-sources`) for a metadata link. A button reads the whole note, and "Both ways" says when the other note links back.
   - The links between two topics name both topics, which open them, and the count by kind, then list each link between their notes; a row opens that link as a connection. Between two groups, the list is the topic pairs, and a row opens the links between that pair.
 
-Clicking a note anywhere (a star, a row, a search result, a wikilink) also opens a preview over the details panel. The preview renders the note like Obsidian's reading view: properties from the frontmatter, then the body with headings, lists and tasks, tables, code, callouts, highlights, tags, and footnotes. Wikilinks in the body and in property values open the linked note and move the map with it, so `bw-superseded_by` and each `bw-sources` entry are links. `Esc` closes the preview and `P` toggles it.
+Clicking a note anywhere (a star, a row, a search result, a wikilink) also opens a preview over the details panel. The preview renders the note like Obsidian's reading view: properties from the frontmatter, then the body with headings, lists and tasks, tables, code, callouts, highlights, tags, and footnotes. Wikilinks in the body and in property values open the linked note and move the map with it, so the relation fields and each `bw-sources` entry are links. `Esc` closes the preview and `P` toggles it.
 
 Bottom of the screen:
 
@@ -128,7 +131,7 @@ One table drives both the key handler and the shortcuts sheet, which writes keys
 | Move | `Alt-←` / `Alt-→` (⌘ on a Mac) | The browser's own back and forward |
 | Move | `Esc` | Close what is open, or else go up one level |
 | Show | `P`, `I`, `L` | Note preview; highlight issues; labels |
-| Show | `1`–`3` | Show or hide a kind of link, in the dock's order |
+| Show | `1`–`6` | Show or hide a kind of link, in the dock's order |
 | Find | `/` or `Ctrl-K` (⌘ on a Mac) | Search |
 | Find | `?` | The shortcuts sheet |
 
@@ -216,7 +219,8 @@ A node:
 `/api/note/<id>` returns the outline read (`id`, `title`, `path`, `abs_path`, `kind`, `type`, `status`, `topic`, `updated`, `banners`, `summary`) and the note's links:
 
 - `outlinks`: `[{relation, target, id, title, path, resolved}]`, one per target, metadata links first. `relation` reads from this note, with the labels of [index and search §3](index-and-search.md#3-schema): a relation field's name such as `depends_on`, `links_to`, or `cites` (a `bw-sources` entry). `target` is the link as written, and an unresolved link has `id`, `title`, and `path` null.
-- `backlinks`: `[{id, title, path, relation}]`, at most 10, typed relations first. `relation` reads from this note: `supersedes` (the other note names this one in `bw-superseded_by`), `conflicts_with`, `depended_on_by`, `has_part`, `linked_from`, or `cited_by`.
+- `backlinks`: `[{id, title, path, relation}]`, at most 10, typed relations first. `relation` reads from this note: `supersedes` (the other note names this one in `bw-superseded_by`), `conflicts_with`, `depended_on_by`, `linked_from`, or `cited_by`.
+- `parts` and `parts_total`: the notes that name this one in `bw-part_of`, `[{id, title, path}]` sorted by title with numbers compared as numbers, at most 50, and their count ([index and search §7](index-and-search.md#7-read)).
 
 It also returns what the preview needs:
 
@@ -232,12 +236,13 @@ A node's `flags`:
 
 | Flag | Meaning |
 |---|---|
+| `conflict` | An active note in a `bw-conflicts_with` relation with another active note, whichever holds the field |
+| `stale` | An active note that rests on (`bw-depends_on`), or links to, a superseded or archived note other than one it replaced; the queries of the stale report ([lint §7](lint-and-reports.md#7-reports)) |
 | `superseded` | Its status is superseded |
-| `stale` | An active note that links to a superseded or archived note other than one it replaced; the same query as the stale report ([lint §7](lint-and-reports.md#7-reports)) |
 | `orphan` | A note that nothing else links to |
 | `lint_error` | The index recorded a parse problem for the file |
 
-The map lists the flags in the order stale, superseded, orphan, lint error, and a star's halo shows the first that applies.
+The map lists the flags in the order conflict, stale, superseded, orphan, lint error, and a star's halo shows the first that applies.
 
 ## 7. Budgets
 
@@ -276,7 +281,7 @@ The map lists the flags in the order stale, superseded, orphan, lint error, and 
 | A 2.5D terrain atlas, with topics as territories and notes as towns | Easiest to navigate, but the galaxy keeps depth for separating dense clusters. Both would use the same levels and API. |
 | No build step, with vendored ES modules and hand-written JavaScript | Keeps contributors off Node, but panels of this size and custom shaders are much harder to maintain without types and a bundler. Committing the bundle keeps users off Node anyway. |
 | React | Preact gives the same model at a fraction of the size. |
-| Obsidian's built-in graph | It shows no supersession, citations, or health flags. It works alongside this map. |
+| Obsidian's built-in graph | It shows no supersession, relation kinds, citations, or health flags. It works alongside this map. |
 | Rendering images on the server | No interaction. |
 
 ## 11. Choosing a brain, and opening it in Obsidian

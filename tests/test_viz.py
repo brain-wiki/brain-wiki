@@ -73,7 +73,8 @@ def test_graph_nodes_links_and_flags(example: Path):
 
     assert _node(graph, RIPGREP)["status"] == "superseded"
     assert _node(graph, RIPGREP)["flags"] == ["superseded"]
-    assert not any(set(n["flags"]) - {"superseded"} for n in graph["nodes"])
+    assert {n["id"] for n in graph["nodes"] if "conflict" in n["flags"]} == {FTS5, VECTOR, GPU}
+    assert not any(set(n["flags"]) - {"superseded", "conflict"} for n in graph["nodes"])
 
     fts5 = _node(graph, FTS5)
     assert fts5["degree"] == 8  # its fields and the prose links beside them
@@ -121,6 +122,20 @@ def test_health_flags(example: Path):
     assert set(legacy["flags"]) == {"stale", "orphan"}
     broken = next(n for n in graph["nodes"] if n["path"] == "topics/search/broken.md")
     assert "lint_error" in broken["flags"]
+    # both notes of an open conflict, whichever holds the field, conflict first
+    assert _node(graph, FTS5)["flags"][0] == "conflict"
+    proposal = next(n for n in graph["nodes"] if n["path"] == "topics/search/vector-only.md")
+    assert proposal["flags"] == ["conflict"]
+
+
+def test_resting_on_an_outdated_note_is_stale(example: Path):
+    policy = example / "topics/storage/sqlite-version-policy.md"
+    policy.write_text(
+        policy.read_text().replace("type: reference\n", "type: reference\nstatus: archived\n")
+    )
+    with engine_for(example) as eng:
+        graph = build_graph(eng)
+    assert "stale" in _node(graph, FTS5)["flags"]  # bw-depends_on names the archived policy
 
 
 def test_runs_from_records(example: Path):
@@ -222,7 +237,7 @@ def test_world_shape_and_totals(example: Path):
         "pages": 3,
         "episodes": 1,
         "links": 14,
-        "flagged": 1,
+        "flagged": 4,
     }
     assert world["episodes"] == {"count": 1}
     [only] = world["constellations"]
@@ -235,8 +250,8 @@ def test_world_shape_and_totals(example: Path):
     assert search["page"] == "01M4KT3JPRY4W6766VT18CQS90"
     assert search["description"] == "How local search works and why."
     assert search["constellation"] == "c1"
-    assert search["flags"] == {"superseded": 1}
-    assert search["flagged"] == 1
+    assert search["flags"] == {"superseded": 1, "conflict": 2}
+    assert search["flagged"] == 3
     assert len({t["color"] for t in topics.values()}) == 3
     flows = {(f["a"], f["b"]): f for f in world["flows"]}
     assert flows[("search", "storage")]["rels"] == {"links_to": 2, "depends_on": 1}
@@ -303,7 +318,7 @@ def test_topic_payload(example: Path):
 
 def test_health_payload(example: Path):
     health = _atlas(example).health()
-    assert health["counts"] == {"superseded": 1}
+    assert health["counts"] == {"superseded": 1, "conflict": 3}
     items = health["items"]["superseded"]
     assert [i["id"] for i in items] == [RIPGREP]
     assert set(items[0]) == {"id", "title", "topic"}
@@ -715,6 +730,7 @@ def test_server_api(server: _VizServer):
         ("depends_on", "topics/storage/sqlite-version-policy.md"),
         ("cites", "archive/episodes/2026/09/01M2Z44880248H248H248H248H.md"),
     }
+    assert note["parts"] == [] and note["parts_total"] == 0
     assert _get(server, f"/api/note/{GPU}?t={server.token}")[0] == 200
 
 

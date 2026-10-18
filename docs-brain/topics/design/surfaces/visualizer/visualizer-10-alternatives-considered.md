@@ -17,5 +17,5 @@ source: "docs/design/visualizer.md#10-alternatives-considered"
 | A 2.5D terrain atlas, with topics as territories and notes as towns | Easiest to navigate, but the galaxy keeps depth for separating dense clusters. Both would use the same levels and API. |
 | No build step, with vendored ES modules and hand-written JavaScript | Keeps contributors off Node, but panels of this size and custom shaders are much harder to maintain without types and a bundler. Committing the bundle keeps users off Node anyway. |
 | React | Preact gives the same model at a fraction of the size. |
-| Obsidian's built-in graph | It shows no supersession, citations, or health flags. It works alongside this map. |
+| Obsidian's built-in graph | It shows no supersession, relation kinds, citations, or health flags. It works alongside this map. |
 | Rendering images on the server | No interaction. |

@@ -38,12 +38,15 @@ The layout is deterministic and local. The same brain always produces the same m
 
 ### 3.2 Words and lines
 
-The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Cites, and from the other end links here, replaced by this, cites this), and every number names its unit.
+The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Conflicts with, Depends on, Part of, Cites, and from the other end links here, replaced by this, conflicts with this, depends on this, parts, cites this), and every number names its unit.
 
-The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. Links between notes come in three kinds. Each has a chip in the dock, and all are on by default:
+The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. Links between notes come in six kinds. Each has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
 
 | Kind (dock chip) | From | Trail |
 |---|---|---|
 | Links | A wikilink in the body (`links_to`) | Faint violet, the main structure |
 | Replaces | `bw-superseded_by` (`superseded_by`) | Amber, pulsing from old to new |
 | Sources | A `bw-sources` entry (`source`) | Faint grey-blue, from the citing note to the cited one |
+| Conflicts | `bw-conflicts_with` (`conflicts_with`) | Red and thick, with no direction |
+| Depends on | `bw-depends_on` (`depends_on`) | Blue, pulsing from the dependent to the note it rests on |
+| Part of | `bw-part_of` (`part_of`) | Teal, from the part to its whole |

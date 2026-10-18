@@ -57,7 +57,8 @@ A node:
 `/api/note/<id>` returns the outline read (`id`, `title`, `path`, `abs_path`, `kind`, `type`, `status`, `topic`, `updated`, `banners`, `summary`) and the note's links:
 
 - `outlinks`: `[{relation, target, id, title, path, resolved}]`, one per target, metadata links first. `relation` reads from this note, with the labels of [[index-and-search-3-schema|index and search §3]]: a relation field's name such as `depends_on`, `links_to`, or `cites` (a `bw-sources` entry). `target` is the link as written, and an unresolved link has `id`, `title`, and `path` null.
-- `backlinks`: `[{id, title, path, relation}]`, at most 10, typed relations first. `relation` reads from this note: `supersedes` (the other note names this one in `bw-superseded_by`), `conflicts_with`, `depended_on_by`, `has_part`, `linked_from`, or `cited_by`.
+- `backlinks`: `[{id, title, path, relation}]`, at most 10, typed relations first. `relation` reads from this note: `supersedes` (the other note names this one in `bw-superseded_by`), `conflicts_with`, `depended_on_by`, `linked_from`, or `cited_by`.
+- `parts` and `parts_total`: the notes that name this one in `bw-part_of`, `[{id, title, path}]` sorted by title with numbers compared as numbers, at most 50, and their count ([[index-and-search-7-read|index and search §7]]).
 
 It also returns what the preview needs:
 
@@ -73,9 +74,10 @@ A node's `flags`:
 
 | Flag | Meaning |
 |---|---|
+| `conflict` | An active note in a `bw-conflicts_with` relation with another active note, whichever holds the field |
+| `stale` | An active note that rests on (`bw-depends_on`), or links to, a superseded or archived note other than one it replaced; the queries of the stale report ([[lint-and-reports-7-reports\|lint §7]]) |
 | `superseded` | Its status is superseded |
-| `stale` | An active note that links to a superseded or archived note other than one it replaced; the same query as the stale report ([[lint-and-reports-7-reports\|lint §7]]) |
 | `orphan` | A note that nothing else links to |
 | `lint_error` | The index recorded a parse problem for the file |
 
-The map lists the flags in the order stale, superseded, orphan, lint error, and a star's halo shows the first that applies.
+The map lists the flags in the order conflict, stale, superseded, orphan, lint error, and a star's halo shows the first that applies.

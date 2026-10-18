@@ -17,7 +17,7 @@ source: "docs/design/index-and-search.md#9-other-queries"
 | Tag and type counts | `brain tags`, `brain types`, search `facets`, orientation | — |
 | Orphans | `brain orphans`, BW406, `reports/orphans.md` | Notes no other node links to |
 | Unresolved links | `brain unresolved`, BW119, BW122, BW124, BW310 | Edges with no target |
-| Stale dependents, open conflicts, stale links | `reports/stale.md`, orientation, the visualizer's `stale` flag | `stale_dependents`, `open_conflicts`, and `stale_links`, defined below |
+| Stale dependents, open conflicts, stale links | `reports/stale.md`, orientation, the visualizer's `stale` and `conflict` flags | `stale_dependents`, `open_conflicts`, and `stale_links`, defined below |
 | Neighborhood graph | visualizer | Nodes plus edges; see [[visualizer\|visualizer]] |
 | Pending episodes | `brain consolidate --prepare`, orientation | `kind = 'episode'`, ordered by id |
 
