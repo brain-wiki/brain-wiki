@@ -63,6 +63,7 @@ marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
 | BW310 | Body link does not resolve, or is ambiguous. | warning / info | Repoint it from the index's path history |
 | BW312 † | `bw-part_of`, `bw-depends_on`, or `bw-conflicts_with` names its own note. | error / warning | — |
 | BW313 † | `bw-part_of` names the page of the note's own topic, which its folder already says. | info / info | Remove the item |
+| BW314 † | `bw-conflicts_with` names a superseded or archived note, or is held by one: the conflict is likely resolved. | info / info | Remove the item |
 | BW315 † | part_of cycle along `bw-part_of`. | error / error | — |
 
 An unresolved link's message suggests the closest title, and an ambiguous

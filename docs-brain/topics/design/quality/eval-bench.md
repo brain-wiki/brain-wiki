@@ -36,7 +36,7 @@ Published numbers come only from this bench, with the command and version that p
 
 ### 3.1 `retrieval` (offline)
 
-The suite generates a format-3 brain (§4), runs the planted queries, and checks every note and topic page in the top 8 results against the ground truth. The only guard is supersession ([[brain-format-7-supersession-guard|brain format §7]]).
+The suite generates a format-3 brain (§4), runs the planted queries, and checks every note and topic page in the top 8 results against the ground truth. The only guard is supersession ([[brain-format-7-guards|brain format §7]]).
 
 | Metric | Target |
 |---|---|

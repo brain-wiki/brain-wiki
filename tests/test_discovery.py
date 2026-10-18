@@ -235,6 +235,13 @@ def test_banners_show_three_then_point_to_neighbors():
     assert len(lines) == 4 and lines[0].startswith('⚠ SUPERSEDED by "Release 2" (t/r2.md)')
     assert lines[2] == '↳ supersedes "Bug 1" (t/bug1.md).'
     assert lines[3].startswith("… 6 more") and 'brain_neighbors("t/release.md"' in lines[3]
+    # a conflict is never folded into the count, however many guards come first
+    conflicts = [
+        {"label": "conflicts_with", "title": f"Plan {i}", "path": f"t/p{i}.md"} for i in range(3)
+    ]
+    lines = banners({"guards": guards[:1] + conflicts + guards[1:], "more_guards": 0}, "t/x.md")
+    assert [line[:12] for line in lines[:4]] == ["⚠ SUPERSEDED"] + ["⚠ CONFLICTS "] * 3
+    assert lines[4].startswith("… 6 more replaced notes")
 
 
 def test_neighbors_follow_links_by_direction_and_depth(example: Path):

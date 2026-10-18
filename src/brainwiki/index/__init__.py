@@ -6,7 +6,7 @@ from brainwiki.index import _written as written
 from brainwiki.index._brains import format_brain_list, list_brains
 from brainwiki.index._db import open_index
 from brainwiki.index._edges import edge_label
-from brainwiki.index._guards import stale_links
+from brainwiki.index._guards import open_conflicts, stale_dependents, stale_links
 from brainwiki.index._inbox import (
     consolidation_runs,
     pending_by_agent,
@@ -45,6 +45,7 @@ __all__ = [
     "neighbors",
     "node_filters",
     "norm_key",
+    "open_conflicts",
     "open_index",
     "orient",
     "page_name",
@@ -57,6 +58,7 @@ __all__ = [
     "scheduled_runs",
     "search",
     "slugify",
+    "stale_dependents",
     "stale_links",
     "topic_rows",
     "topic_tree",

@@ -51,6 +51,13 @@ _RULES = [
     _RuleInfo("BW310", "warning", "info", True, "body link does not resolve"),
     _RuleInfo("BW312", "error", "warning", False, "note names itself in a relation field"),
     _RuleInfo("BW313", "info", "info", True, "bw-part_of names the note's own topic page"),
+    _RuleInfo(
+        "BW314",
+        "info",
+        "info",
+        True,
+        "conflict with a superseded or archived note (likely resolved)",
+    ),
     _RuleInfo("BW315", "error", "error", False, "part_of cycle (bw-part_of)"),
     _RuleInfo("BW402", "error", "error", False, "rules.md exceeds its budget"),
     _RuleInfo("BW403", "error", "warning", True, "AGENTS.md exceeds its budget"),
@@ -90,6 +97,7 @@ SCHEMA_CODES = (
     "BW307",
     "BW312",
     "BW313",
+    "BW314",
     "BW315",
 )
 

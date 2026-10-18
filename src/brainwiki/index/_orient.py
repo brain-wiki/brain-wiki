@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from brainwiki.format import parse_rules
 from brainwiki.ids import is_ulid, ulid_datetime
+from brainwiki.index._guards import open_conflicts, stale_dependents
 from brainwiki.index._inbox import last_consolidations, pending_by_agent, scheduled_runs
 
 if TYPE_CHECKING:
@@ -251,6 +252,18 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
                 f"- {label}: "
                 + ", ".join(f"topic {s} ({c} {kind} notes)" for s, c in info["homes"][kind])
             )
+    conflicts = len(open_conflicts(engine.db))
+    dependents = len({r["src"] for r in stale_dependents(engine.db)})
+    review = [f"{conflicts} open conflict{'s' if conflicts != 1 else ''}"] if conflicts else []
+    if dependents:
+        review.append(
+            f"{dependents} note{'s' if dependents != 1 else ''} resting on an outdated note"
+        )
+    if review:
+        content_lines.append(
+            f"- Needs review: {', '.join(review)}; `brain report` lists them in "
+            f"{engine.manifest.layout.reports_dir}/stale.md."
+        )
     if len(content_lines) == 1:
         content_lines.append("(empty so far)")
     inbox_lines = [
@@ -378,6 +391,7 @@ def orient(engine: Engine, *, extra_lines: list[str] | None = None) -> dict[str,
         "pending_episodes": inbox["pending"],
         "pending_by_agent": waiting,
         "open_proposals": len(inbox["rule_proposals"]),
+        "needs_review": {"open_conflicts": conflicts, "stale_dependents": dependents},
         "notes": info["notes"],
     }
 

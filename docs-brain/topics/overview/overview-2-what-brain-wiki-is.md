@@ -31,6 +31,7 @@ A brain is a directory of Markdown files with a small manifest, `brain.toml`. It
 
 - Topic notes. Each topic is a folder of Markdown pages with a short topic page. Frontmatter holds metadata, and facts and wikilinks to other notes are ordinary Markdown in the body.
 - Supersession. A note that a newer note replaced says so in its metadata (`status: superseded`, `bw-superseded_by`), and retrieval always returns the newer note with it.
+- Relations. A note may name the whole it is part of, the notes it rests on, and the notes it disagrees with, in link-only fields. Retrieval returns both sides of a conflict, and notes resting on outdated notes are listed for review.
 - An inbox of episodes. Episodes are raw observations that agents or the user write during work. They are only ever added, never edited.
 - Rules. A short list of standing directives from the user.
 

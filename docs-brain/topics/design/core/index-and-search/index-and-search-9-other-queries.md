@@ -17,13 +17,21 @@ source: "docs/design/index-and-search.md#9-other-queries"
 | Tag and type counts | `brain tags`, `brain types`, search `facets`, orientation | — |
 | Orphans | `brain orphans`, BW406, `reports/orphans.md` | Notes no other node links to |
 | Unresolved links | `brain unresolved`, BW119, BW122, BW124, BW310 | Edges with no target |
-| Stale links | `reports/stale.md`, the visualizer's `stale` flag | `stale_links`, defined below |
+| Stale dependents, open conflicts, stale links | `reports/stale.md`, orientation, the visualizer's `stale` flag | `stale_dependents`, `open_conflicts`, and `stale_links`, defined below |
 | Neighborhood graph | visualizer | Nodes plus edges; see [[visualizer\|visualizer]] |
 | Pending episodes | `brain consolidate --prepare`, orientation | `kind = 'episode'`, ordered by id |
 
-A stale link is a body link from an active note (not a topic page) to a
-superseded or archived note. A link from a note to the note it replaced is
-not stale.
+Three queries find notes that may need review, listed in this order in
+`reports/stale.md`:
+
+- A stale dependent is an active note or topic page whose `bw-depends_on`
+  names a superseded or archived note. It rests on something outdated.
+- An open conflict is a pair of active notes in a `bw-conflicts_with`
+  relation, listed once whichever note holds the field.
+- A stale link is a body link from an active note (not a topic page) to a
+  superseded or archived note. A link from a note to the note it replaced
+  is not stale, and neither is a link from a note that already depends on
+  its target, which is listed as a dependent instead.
 
 
 ### 9.1 Brain list

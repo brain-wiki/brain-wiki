@@ -1,5 +1,6 @@
-"""The supersession guard: a hit on a superseded note always comes with the note that replaced it
-(index-and-search.md §5). A note names its replacement in `bw-superseded_by`."""
+"""Guards (index-and-search.md §5): a hit on a superseded note always comes with the note that
+replaced it (`bw-superseded_by`), and a hit on an active note with the active notes it conflicts
+with (`bw-conflicts_with`). Also the stale and conflict queries behind `reports/stale.md`."""
 
 from __future__ import annotations
 
@@ -12,7 +13,9 @@ if TYPE_CHECKING:
     from brainwiki.engine import Engine
 
 _MAX_CHAIN = 5
-_ORDER = {"superseded_by": 0, "supersedes": 1}
+_ORDER = {"superseded_by": 0, "conflicts_with": 1, "supersedes": 2}
+# Guards a hit always carries in full; only the notes it replaced (`supersedes`) are capped.
+_ALWAYS = ("superseded_by", "conflicts_with")
 
 
 def stale_links(conn: sqlite3.Connection) -> list[sqlite3.Row]:
@@ -27,8 +30,48 @@ def stale_links(conn: sqlite3.Connection) -> list[sqlite3.Row]:
              AND b.status IN ('superseded', 'archived')
              AND NOT EXISTS (SELECT 1 FROM edges s WHERE s.rel = 'superseded_by'
                              AND s.src = b.id AND s.dst = a.id)
+             AND NOT EXISTS (SELECT 1 FROM edges d WHERE d.rel = 'depends_on'
+                             AND d.src = a.id AND d.dst = b.id)
            ORDER BY a.path, b.path"""
     ).fetchall()
+
+
+def stale_dependents(conn: sqlite3.Connection) -> list[sqlite3.Row]:
+    """Active notes and topic pages that rest (`bw-depends_on`) on superseded or archived notes,
+    with the columns of `stale_links`. They need review; a plain link only mentions."""
+    return conn.execute(
+        """SELECT DISTINCT a.id AS src, a.path AS src_path, a.title AS src_title,
+                  b.id AS dst, b.path AS dst_path, b.title AS dst_title, b.status AS dst_status
+           FROM edges e JOIN nodes a ON a.id = e.src JOIN nodes b ON b.id = e.dst
+           WHERE e.rel = 'depends_on' AND a.status = 'active' AND a.kind IN ('note', 'topic')
+             AND b.status IN ('superseded', 'archived')
+           ORDER BY a.path, b.path"""
+    ).fetchall()
+
+
+def open_conflicts(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+    """Pairs of active notes in conflict (`bw-conflicts_with`), once per pair whichever note holds
+    the field: (a, a_path, a_title, b, b_path, b_title), with a_path < b_path."""
+    pairs: dict[frozenset[str], dict[str, Any]] = {}
+    for r in conn.execute(
+        """SELECT a.id AS a, a.path AS a_path, a.title AS a_title,
+                  b.id AS b, b.path AS b_path, b.title AS b_title
+           FROM edges e JOIN nodes a ON a.id = e.src JOIN nodes b ON b.id = e.dst
+           WHERE e.rel = 'conflicts_with' AND e.src != e.dst
+             AND a.status = 'active' AND b.status = 'active'"""
+    ):
+        row = dict(r)
+        if row["a_path"] > row["b_path"]:
+            row = {
+                "a": row["b"],
+                "a_path": row["b_path"],
+                "a_title": row["b_title"],
+                "b": row["a"],
+                "b_path": row["a_path"],
+                "b_title": row["a_title"],
+            }
+        pairs.setdefault(frozenset((row["a"], row["b"])), row)
+    return sorted(pairs.values(), key=lambda r: (r["a_path"], r["b_path"]))
 
 
 def _node(engine: Engine, node_id: str) -> dict[str, Any] | None:
@@ -61,8 +104,9 @@ def _successor_chain(engine: Engine, node_id: str) -> list[str]:
 
 
 def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]:
-    """For each hit, the notes that replaced it (resolved to the newest) and the notes it
-    replaced, capped and ordered. The notes between in a chain are listed in `via_titles`."""
+    """For each hit, the notes that replaced it (resolved to the newest), the active notes an
+    active hit conflicts with, and the notes it replaced, in that order. Only the replaced notes
+    are capped. The notes between in a chain are listed in `via_titles`."""
     result: dict[str, dict[str, Any]] = {n: {"guards": [], "more_guards": 0} for n in node_ids}
     if not node_ids:
         return result
@@ -111,12 +155,40 @@ def guards_for(engine: Engine, node_ids: list[str]) -> dict[str, dict[str, Any]]
                 "updated": info["updated"],
                 "via_titles": [(node(v) or {}).get("title", v) for v in via],
             }
+    rows = engine.db.execute(
+        f"""SELECT src, dst FROM edges
+            WHERE rel='conflicts_with' AND src IS NOT NULL AND dst IS NOT NULL AND src != dst
+              AND (src IN ({placeholders}) OR dst IN ({placeholders}))""",  # noqa: S608 - placeholders only
+        (*node_ids, *node_ids),
+    ).fetchall()
+    for row in rows:
+        for hit in (row["src"], row["dst"]):
+            if hit not in result:
+                continue
+            neighbor = row["dst"] if row["src"] == hit else row["src"]
+            mine, info = node(hit), node(neighbor)
+            if not (mine and info and mine["status"] == info["status"] == "active"):
+                continue  # once a side is superseded or archived, supersession takes over
+            per_hit[hit].setdefault(
+                ("conflicts_with", neighbor),
+                {
+                    "label": "conflicts_with",
+                    "id": neighbor,
+                    "title": info["title"],
+                    "path": info["path"],
+                    "status": info["status"],
+                    "updated": info["updated"],
+                    "via_titles": [],
+                },
+            )
     for hit in result:
-        shown = sorted(
+        ordered = sorted(
             per_hit[hit].values(), key=lambda e: (_ORDER[e["label"]], -_ts(e.get("updated")))
         )
-        result[hit]["guards"] = shown[:cap]
-        result[hit]["more_guards"] = max(0, len(shown) - cap)
+        always = [g for g in ordered if g["label"] in _ALWAYS]
+        replaced = [g for g in ordered if g["label"] not in _ALWAYS]
+        result[hit]["guards"] = always + replaced[:cap]
+        result[hit]["more_guards"] = max(0, len(replaced) - cap)
     return result
 
 
@@ -137,19 +209,23 @@ _BANNER_LIMIT = 3
 def banners(
     guard_info: dict[str, Any], target: str | None = None, limit: int = _BANNER_LIMIT
 ) -> list[str]:
-    """Warning lines for a hit or read: the first `limit` guards in full, then a count.
-
-    Guards arrive newest successor first, so a superseded note always shows what replaced it.
+    """Warning lines for a hit or read: every replacement and conflict in full, then the notes it
+    replaced up to `limit` lines in all, then a count of the rest.
     """
     guards = guard_info.get("guards", [])
+    warnings = [g for g in guards if g["label"] in _ALWAYS]
+    replaced = [g for g in guards if g["label"] not in _ALWAYS]
+    shown = replaced[: max(0, limit - len(warnings))]
     lines = []
-    for g in guards[:limit]:
+    for g in warnings + shown:
         if g["label"] == "superseded_by":
             via = f" (via {', '.join(g['via_titles'])})" if g.get("via_titles") else ""
             lines.append(f'⚠ SUPERSEDED by "{g["title"]}" ({g["path"]}){via}: prefer it.')
+        elif g["label"] == "conflicts_with":
+            lines.append(f'⚠ CONFLICTS with "{g["title"]}" ({g["path"]}): read both before acting.')
         else:
             lines.append(f'↳ supersedes "{g["title"]}" ({g["path"]}).')
-    more = max(0, len(guards) - limit) + guard_info.get("more_guards", 0)
+    more = len(replaced) - len(shown) + guard_info.get("more_guards", 0)
     if more:
         pointer = (
             f'brain_neighbors("{target}", direction="in") lists them'

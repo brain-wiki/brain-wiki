@@ -37,7 +37,7 @@ Cross-file rules cover:
   `brain consolidate --done` archives the episode.
 - A relation field naming its own note (BW119 for `bw-superseded_by`,
   else BW312), `bw-part_of` naming the page of the note's own topic
-  (BW313), and cycles along `bw-superseded_by` (BW307) or `bw-part_of`
+  (BW313), a conflict that supersession has closed (BW314), and cycles along `bw-superseded_by` (BW307) or `bw-part_of`
   (BW315). Chains without a cycle are fine, and so are `bw-depends_on`
   cycles: two notes may each hold only while the other does.
 - Structure (BW4xx), the inbox (BW5xx), and `brain.toml` keys (BW109,

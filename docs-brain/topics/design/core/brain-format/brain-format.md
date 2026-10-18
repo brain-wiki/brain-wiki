@@ -28,7 +28,7 @@ Generated from `docs/design/brain-format.md`.
   - [[brain-format-64-sources]]: Sources
   - [[brain-format-65-links]]: Links
   - [[brain-format-66-relations]]: Relations
-- [[brain-format-7-supersession-guard]]: Supersession guard (Brain format)
+- [[brain-format-7-guards]]: Guards (Brain format)
 - [[brain-format-8-topic-pages]]: Topic pages
 - [[brain-format-9-episodes]]: Episodes
 - [[brain-format-10-rules]]: Rules (Brain format)

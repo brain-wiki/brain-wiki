@@ -706,7 +706,11 @@ def test_server_api(server: _VizServer):
     assert status == 200
     assert note["title"] == "Use SQLite FTS5 for local search"
     assert note["path"] == "topics/search/fts5.md"
-    assert note["banners"] == ['↳ supersedes "Use ripgrep for search" (topics/search/ripgrep.md).']
+    assert note["banners"] == [
+        '⚠ CONFLICTS with "Vector-only search proposal" (topics/search/vector-only.md): '
+        "read both before acting.",
+        '↳ supersedes "Use ripgrep for search" (topics/search/ripgrep.md).',
+    ]
     assert {(x["relation"], x["path"]) for x in note["outlinks"]} >= {
         ("depends_on", "topics/storage/sqlite-version-policy.md"),
         ("cites", "archive/episodes/2026/09/01M2Z44880248H248H248H248H.md"),

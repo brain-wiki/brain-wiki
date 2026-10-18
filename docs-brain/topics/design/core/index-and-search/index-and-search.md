@@ -19,7 +19,7 @@ Generated from `docs/design/index-and-search.md`.
 - [[index-and-search-2-location-and-lifecycle]]: Location and lifecycle
 - [[index-and-search-3-schema]]: Schema
 - [[index-and-search-4-freshness]]: Freshness
-- [[index-and-search-5-supersession-guard]]: Supersession guard (Index and search)
+- [[index-and-search-5-guards]]: Guards (Index and search)
 - [[index-and-search-6-search]]: Search
 - [[index-and-search-7-read]]: Read
 - [[index-and-search-8-orientation-the-briefing]]: Orientation (the briefing)

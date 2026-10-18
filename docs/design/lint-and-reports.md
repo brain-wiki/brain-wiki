@@ -105,6 +105,7 @@ marked † are `SCHEMA_CODES`, the rules `brain validate` runs.
 | BW310 | Body link does not resolve, or is ambiguous. | warning / info | Repoint it from the index's path history |
 | BW312 † | `bw-part_of`, `bw-depends_on`, or `bw-conflicts_with` names its own note. | error / warning | — |
 | BW313 † | `bw-part_of` names the page of the note's own topic, which its folder already says. | info / info | Remove the item |
+| BW314 † | `bw-conflicts_with` names a superseded or archived note, or is held by one: the conflict is likely resolved. | info / info | Remove the item |
 | BW315 † | part_of cycle along `bw-part_of`. | error / error | — |
 
 An unresolved link's message suggests the closest title, and an ambiguous
@@ -196,7 +197,7 @@ Cross-file rules cover:
   `brain consolidate --done` archives the episode.
 - A relation field naming its own note (BW119 for `bw-superseded_by`,
   else BW312), `bw-part_of` naming the page of the note's own topic
-  (BW313), and cycles along `bw-superseded_by` (BW307) or `bw-part_of`
+  (BW313), a conflict that supersession has closed (BW314), and cycles along `bw-superseded_by` (BW307) or `bw-part_of`
   (BW315). Chains without a cycle are fine, and so are `bw-depends_on`
   cycles: two notes may each hold only while the other does.
 - Structure (BW4xx), the inbox (BW5xx), and `brain.toml` keys (BW109,
@@ -294,15 +295,18 @@ into prompts.
 | File | Contents |
 |---|---|
 | `reports/index.md` | Counts, last consolidation, lint totals, links to the other reports |
-| `reports/stale.md` | Active notes that link to superseded or archived notes |
+| `reports/stale.md` | Notes that need review, in three sections: active notes that rest on a superseded or archived note, open conflicts between active notes, and active notes that link to superseded or archived notes |
 | `reports/inbox.md` | Pending episodes by owner and age, and open proposals |
 | `reports/consolidation.md` | The last 20 consolidation runs from `log.md`, newest first: agent, summary, and each episode's pattern and notes |
 | `reports/orphans.md` | Notes no other note links to |
 | `reports/lint.md` | The latest lint results |
 
-`stale.md` leaves out topic pages, which list their topic's history, and a link
-from a note to the note it replaced. The visualizer's `stale` flag uses the
-same query ([index and search §9](index-and-search.md#9-other-queries)).
+`stale.md` uses the queries in
+[index and search §9](index-and-search.md#9-other-queries), and the
+briefing counts its first two sections. Its stale links leave out topic
+pages, which list their topic's history, a link from a note to the note it
+replaced, and a link from a note that depends on its target. The
+visualizer's `stale` flag uses the stale-links query.
 
 `brain report` regenerates the reports, and so does
 `brain consolidate --done` when `[reports] after_consolidate = true` (the

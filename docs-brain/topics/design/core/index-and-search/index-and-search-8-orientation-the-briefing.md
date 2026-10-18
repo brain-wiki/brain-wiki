@@ -22,7 +22,9 @@ Sections, in output order:
    short enough to always fit.
 3. What's in this brain: note counts by type (up to 8, largest first), the
    5 largest topics, and up to two topics that hold `person` or `meeting`
-   notes when notes of those types exist.
+   notes when notes of those types exist. When any exist, one line counts
+   open conflicts and notes resting on an outdated note (§9) and points to
+   `reports/stale.md`.
 4. Topics: the top-level topics, most recently active first. Each line
    gives the slug, title, description, note count including sub-topics,
    last update, and the number of sub-topics with the 4 most recently
@@ -56,8 +58,8 @@ room left, and the whole text is cut at the budget.
 
 The structured result has `brain`, `text`, `rules`, `topics` (every topic
 of the tree with its counts and parent), `contents`, `pending_episodes`,
-`pending_by_agent` (owner to `{count, oldest}`), `open_proposals`, and
-`notes`.
+`pending_by_agent` (owner to `{count, oldest}`), `open_proposals`,
+`needs_review` (`{open_conflicts, stale_dependents}`), and `notes`.
 
 The managed block of `AGENTS.md` is built from the same topic rows
 ([[brain-format-11-agentsmd|brain format §11]]).

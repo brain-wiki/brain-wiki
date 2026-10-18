@@ -251,14 +251,15 @@ _OTHER_RELATIONS = {rel: key for key, rel in RELATION_FIELDS.items() if rel != "
 def _relation_checks(
     engine: Engine, conn: sqlite3.Connection, node: Callable[[str], sqlite3.Row | None]
 ) -> list[Problem]:
-    """Self-relations (BW312), `bw-part_of` naming the note's own topic page (BW313), and
-    part_of cycles (BW315)."""
+    """Self-relations (BW312), `bw-part_of` naming the note's own topic page (BW313), conflicts
+    with a superseded or archived note (BW314), and part_of cycles (BW315)."""
     out: list[Problem] = []
     marks = ",".join("?" * len(_OTHER_RELATIONS))
     wholes: dict[str, list[sqlite3.Row]] = defaultdict(list)
     for edge in conn.execute(
         f"""SELECT {_EDGE_COLS}, a.path AS from_path, a.kind AS from_kind, a.topic AS from_topic,
-                   b.kind AS to_kind, b.topic AS to_topic
+                   a.status AS from_status, b.kind AS to_kind, b.topic AS to_topic,
+                   b.path AS to_path, b.status AS to_status
             FROM edges e JOIN nodes a ON a.id = e.declared_in JOIN nodes b ON b.id = e.other
             WHERE e.rel IN ({marks})""",  # noqa: S608 - placeholders only
         list(_OTHER_RELATIONS),
@@ -268,6 +269,31 @@ def _relation_checks(
             out.append(
                 Problem("BW312", edge["from_path"], edge["line"], f"{key} names the note itself")
             )
+            continue
+        if edge["rel"] == "conflicts_with":
+            closed = [
+                (path, status)
+                for path, status in (
+                    (edge["from_path"], edge["from_status"]),
+                    (edge["to_path"], edge["to_status"]),
+                )
+                if status in ("superseded", "archived")
+            ]
+            if closed:
+                target = edge["raw_target"]
+                out.append(
+                    Problem(
+                        "BW314",
+                        edge["from_path"],
+                        edge["line"],
+                        f"{key} names {target!r}, but {closed[0][0]} is {closed[0][1]}; the "
+                        "conflict is likely resolved",
+                        fix=Fix(
+                            f"remove {target!r} from {key}",
+                            lambda t, key=key, target=target: remove_link(t, key, target),
+                        ),
+                    )
+                )
             continue
         if edge["rel"] != "part_of":
             continue

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from brainwiki.ids import is_ulid, ulid_datetime
 from brainwiki.lint._model import LintResult
@@ -29,20 +29,42 @@ def _page(title: str, intro: str, lines: list[str], empty: str) -> str:
 
 
 def _stale(engine: Engine) -> str:
-    from brainwiki.index import stale_links
+    from brainwiki.index import open_conflicts, stale_dependents, stale_links
 
-    lines = [
-        f"- {_link(r['src_path'], r['src_title'])} links to "
-        f"{_link(r['dst_path'], r['dst_title'])} ({r['dst_status']})"
-        for r in stale_links(engine.db)
+    def pair(r: Any, verb: str) -> str:
+        return (
+            f"- {_link(r['src_path'], r['src_title'])} {verb} "
+            f"{_link(r['dst_path'], r['dst_title'])} ({r['dst_status']})"
+        )
+
+    sections = [
+        (
+            "Dependents",
+            "Active notes that rest (`bw-depends_on`) on a superseded or archived note. Review "
+            "each: does it still hold?",
+            [pair(r, "depends on") for r in stale_dependents(engine.db)],
+        ),
+        (
+            "Open conflicts",
+            "Active notes that conflict (`bw-conflicts_with`). Decide which holds and supersede "
+            "the other, or keep both and say why.",
+            [
+                f"- {_link(r['a_path'], r['a_title'])} conflicts with "
+                f"{_link(r['b_path'], r['b_title'])}"
+                for r in open_conflicts(engine.db)
+            ],
+        ),
+        (
+            "Stale links",
+            "Active notes that link to superseded or archived notes other than the ones they "
+            "replaced; they may need updating.",
+            [pair(r, "links to") for r in stale_links(engine.db)],
+        ),
     ]
-    return _page(
-        "Stale links",
-        "Active notes that link to superseded or archived notes other than the ones they replaced; "
-        "they may need updating.",
-        lines,
-        "No stale links.",
-    )
+    lines: list[str] = []
+    for heading, intro, items in sections:
+        lines += [f"## {heading}", "", intro, "", *(items or ["None."]), ""]
+    return _page("Needs review", "Notes that may be out of date or contradict another.", lines, "")
 
 
 def _inbox(engine: Engine) -> str:

@@ -38,6 +38,7 @@ A brain is a directory of Markdown files with a small manifest, `brain.toml`. It
 
 - Topic notes. Each topic is a folder of Markdown pages with a short topic page. Frontmatter holds metadata, and facts and wikilinks to other notes are ordinary Markdown in the body.
 - Supersession. A note that a newer note replaced says so in its metadata (`status: superseded`, `bw-superseded_by`), and retrieval always returns the newer note with it.
+- Relations. A note may name the whole it is part of, the notes it rests on, and the notes it disagrees with, in link-only fields. Retrieval returns both sides of a conflict, and notes resting on outdated notes are listed for review.
 - An inbox of episodes. Episodes are raw observations that agents or the user write during work. They are only ever added, never edited.
 - Rules. A short list of standing directives from the user.
 
@@ -82,7 +83,7 @@ The model that writes notes is the agent the user already runs, working through 
 | G2 | One brain works with the agents people use: Claude Code, Codex, Antigravity, OpenClaw (as a bundle), Cursor, and other MCP clients. | The plugin loads in each host, `brain connect <host>` wires it, and a smoke test per host passes ([agent integrations](agent-integrations.md)). |
 | G3 | Code and data are separate. The repository holds only source, brains live where the user chooses, and one user can have several. | No brain content in the repository. Config selects a brain by name for each project, host, or call. |
 | G4 | Writes are safe. Untrusted content cannot become a standing directive, and every change to a note can be undone. | Rules change only from the user's own words, with confirmation. `brain undo` restores the exact bytes from before a run, and git restores a direct edit that `brain commit` recorded. |
-| G5 | Retrieval is correct about change. Retrieving a superseded note also retrieves the newer note. | Guard recall is 100% in the bench's retrieval suite. |
+| G5 | Retrieval is correct about change. Retrieving a superseded or contradicted note also retrieves the newer or conflicting note. | Guard recall is 100% in the bench's retrieval suite. |
 | G6 | No required services or keys. brain-wiki runs offline on a laptop with Python and SQLite. | Core features pass tests with no network access. |
 | G7 | Fast enough to call on every turn. | At 10,000 notes, warm search p95 is under 50 ms and a freshness check of an unchanged tree is under 150 ms ([engineering](engineering.md)). |
 | G8 | Measurable. A reproducible bench measures retrieval quality, lint accuracy, and performance. | `brain bench` runs offline on synthetic data and writes a JSON and a Markdown report. |

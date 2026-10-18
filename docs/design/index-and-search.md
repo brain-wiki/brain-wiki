@@ -11,7 +11,7 @@ in `src/brainwiki/index/`.
 | R1 | The index is derived entirely from the brain folder and can be deleted at any time. | Files are the truth ([D1](../decision/d01-source-of-truth.md)). Users rebuild an index, never repair it. |
 | R2 | Results reflect edits made a moment ago by any tool (Obsidian, git pull, another agent). | Agents act on what they retrieve. Stale results cause wrong actions. |
 | R3 | Filters (topic, type, tag, property, date) apply before ranking. | Filtering after top-k can starve results. |
-| R4 | A superseded note always comes with the note that replaced it ([brain format §7](brain-format.md#7-supersession-guard)). | Correctness about change is the core retrieval promise (G5). |
+| R4 | A superseded note always comes with the note that replaced it, and an active note with the active notes it conflicts with ([brain format §7](brain-format.md#7-guards)). | Correctness about change and disagreement is the core retrieval promise (G5). |
 | R5 | Search p95 under 50 ms and a freshness check under 150 ms at 10k notes. | Agents search and read many times in one task (G7). |
 | R6 | Lexical search works without any model. | No required services (G6). |
 
@@ -283,11 +283,13 @@ scan(brain):
   A file watcher for network file systems and very large brains is in the
   [ideas list](../roadmap/ideas.md).
 
-## 5. Supersession guard
+## 5. Guards
 
-The guard adds, to every note or topic page a search or read returns, the notes
-that replaced it and the notes it replaced. Given the hit node ids `H`, it
-reads the `superseded_by` edges that touch them:
+The guards add, to every note or topic page a search or read returns, the
+notes that replaced it, the notes it conflicts with, and the notes it
+replaced ([brain format §7](brain-format.md#7-guards)). Given the hit node
+ids `H`, they read the `superseded_by` and `conflicts_with` edges that
+touch them:
 
 ```sql
 SELECT src, dst FROM edges
@@ -295,32 +297,37 @@ WHERE rel = 'superseded_by' AND src IS NOT NULL AND dst IS NOT NULL AND src != d
   AND (src IN (H) OR dst IN (H));
 ```
 
-Then, in code:
+The same query with `rel = 'conflicts_with'` finds the conflicts. Then, in
+code:
 
 | Hit is | Label shown on the hit | Meaning for the agent |
 |---|---|---|
-| `src` (the hit names a replacement) | `superseded_by` | The hit is outdated. The neighbor is current. |
-| `dst` (other notes name the hit) | `supersedes` | The hit replaced the neighbor (history). |
+| `src` of `superseded_by` (the hit names a replacement) | `superseded_by` | The hit is outdated. The neighbor is current. |
+| Either end of `conflicts_with`, both notes active | `conflicts_with` | The two notes disagree. Read both before acting. |
+| `dst` of `superseded_by` (other notes name the hit) | `supersedes` | The hit replaced the neighbor (history). |
 
 - From a hit's replacement, `superseded_by` is followed up to 5 more hops,
   so the agent gets the newest note. The notes passed on the way are listed
   in `via_titles`. A cycle is a lint error (BW307), and the walk stops at
   the first repeat.
+- A conflict is one hop, never followed further. It needs both notes
+  `active`, so it ends when either is superseded or archived.
 - Guard notes come on top of the result limit. Each is compact: `label`,
   `id`, `title`, `path`, `status`, `updated`, and `via_titles`. The agent
   reads one with `brain_read`.
-- Each hit carries at most `search.max_guards_per_hit` guards (default
-  10). Replacements come first, then the notes it replaced, each group
-  most recently updated first. The rest are counted in `more_guards`, so
-  the agent knows to look.
+- Guards come in the table's order, each group most recently updated
+  first. A hit carries every replacement and conflict, and at most
+  `search.max_guards_per_hit` (default 10) notes it replaced. The rest are
+  counted in `more_guards`, so the agent knows to look.
 - Superseded notes still match a query, but `status_factor` ranks them
   lower (§6.3).
 
-Text output turns guards into banners, the first three in full, then a
-count:
+Text output turns guards into banners: every replacement and conflict in
+full, then the notes it replaced up to three lines in all, then a count:
 
 ```
 ⚠ SUPERSEDED by "Use SQLite FTS5 for local search" (topics/search/fts5.md): prefer it.
+⚠ CONFLICTS with "Vector-only search proposal" (topics/search/vector-only.md): read both before acting.
 ↳ supersedes "Use ripgrep for search" (topics/search/ripgrep.md).
 … 4 more replaced notes; brain_neighbors("topics/search/fts5.md", direction="in") lists them.
 ```
@@ -574,7 +581,9 @@ Sections, in output order:
    short enough to always fit.
 3. What's in this brain: note counts by type (up to 8, largest first), the
    5 largest topics, and up to two topics that hold `person` or `meeting`
-   notes when notes of those types exist.
+   notes when notes of those types exist. When any exist, one line counts
+   open conflicts and notes resting on an outdated note (§9) and points to
+   `reports/stale.md`.
 4. Topics: the top-level topics, most recently active first. Each line
    gives the slug, title, description, note count including sub-topics,
    last update, and the number of sub-topics with the 4 most recently
@@ -608,8 +617,8 @@ room left, and the whole text is cut at the budget.
 
 The structured result has `brain`, `text`, `rules`, `topics` (every topic
 of the tree with its counts and parent), `contents`, `pending_episodes`,
-`pending_by_agent` (owner to `{count, oldest}`), `open_proposals`, and
-`notes`.
+`pending_by_agent` (owner to `{count, oldest}`), `open_proposals`,
+`needs_review` (`{open_conflicts, stale_dependents}`), and `notes`.
 
 The managed block of `AGENTS.md` is built from the same topic rows
 ([brain format §11](brain-format.md#11-agentsmd)).
@@ -626,13 +635,21 @@ The managed block of `AGENTS.md` is built from the same topic rows
 | Tag and type counts | `brain tags`, `brain types`, search `facets`, orientation | — |
 | Orphans | `brain orphans`, BW406, `reports/orphans.md` | Notes no other node links to |
 | Unresolved links | `brain unresolved`, BW119, BW122, BW124, BW310 | Edges with no target |
-| Stale links | `reports/stale.md`, the visualizer's `stale` flag | `stale_links`, defined below |
+| Stale dependents, open conflicts, stale links | `reports/stale.md`, orientation, the visualizer's `stale` flag | `stale_dependents`, `open_conflicts`, and `stale_links`, defined below |
 | Neighborhood graph | visualizer | Nodes plus edges; see [visualizer](visualizer.md) |
 | Pending episodes | `brain consolidate --prepare`, orientation | `kind = 'episode'`, ordered by id |
 
-A stale link is a body link from an active note (not a topic page) to a
-superseded or archived note. A link from a note to the note it replaced is
-not stale.
+Three queries find notes that may need review, listed in this order in
+`reports/stale.md`:
+
+- A stale dependent is an active note or topic page whose `bw-depends_on`
+  names a superseded or archived note. It rests on something outdated.
+- An open conflict is a pair of active notes in a `bw-conflicts_with`
+  relation, listed once whichever note holds the field.
+- A stale link is a body link from an active note (not a topic page) to a
+  superseded or archived note. A link from a note to the note it replaced
+  is not stale, and neither is a link from a note that already depends on
+  its target, which is listed as a dependent instead.
 
 ### 9.1 Brain list
 

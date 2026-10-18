@@ -12,7 +12,7 @@ source: "docs/design/brain-format.md#63-status-and-supersession"
 | `status` | Meaning | In retrieval |
 |---|---|---|
 | `active` | Current knowledge | Ranked normally |
-| `superseded` | Replaced by a newer note, kept as history | Ranked lower, with a banner naming its replacement ([[index-and-search-5-supersession-guard\|index and search §5]]) |
+| `superseded` | Replaced by a newer note, kept as history | Ranked lower, with a banner naming its replacement ([[index-and-search-5-guards\|index and search §5]]) |
 | `archived` | No longer relevant, kept | Left out of search unless asked for |
 
 When a newer note replaces an older one, the older note gets

@@ -20,6 +20,16 @@
   relation link does not resolve), BW312 (a note names itself), BW313
   (`bw-part_of` names the page of the note's own topic, fixable), and BW315
   (a part_of cycle).
+- **The conflict guard.** A search or read that returns an active note in
+  a conflict with another active note also returns the other, with a
+  banner: `⚠ CONFLICTS with "…": read both before acting.` It stops once
+  either note is superseded or archived; BW314 then suggests removing the
+  conflict. A hit now carries every replacement and conflict, and
+  `search.max_guards_per_hit` caps only the notes it replaced.
+- **Notes that need review.** `reports/stale.md` lists, in order, notes
+  that rest on a superseded or archived note, open conflicts, and stale
+  links; its title is now "Needs review". The briefing counts the first
+  two, and `brain_orient` returns them as `needs_review`.
 - **Typed links come first.** `brain_read`, `brain_neighbors`,
   `brain links`, and `brain backlinks` label relation edges and list them
   before body links and citations.

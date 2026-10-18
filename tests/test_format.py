@@ -338,6 +338,6 @@ def test_converted_claims_keep_their_text(text, superseded):
     key = "bw-claims-superseded" if superseded else "bw-claims"
     note = f"---\nid: X\n{key}:\n  - {quote(text + ' {id: c-1}')}\n---\n# T\n"
     out = upgrade(note)
-    assert not legacy(out) and "bw-claims" not in out
+    assert not legacy(out) and "bw-claims" not in out.split("\n---\n", 1)[0]  # the text may say it
     section = "## History" if superseded else "## Facts"
     assert section in out and "{id: c-1}" not in out

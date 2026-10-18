@@ -8,7 +8,7 @@ source: "docs/decision/d05-supersession-guard.md"
 # D5: The supersession guard
 
 Status: accepted.
-Argued in: [[brain-format-7-supersession-guard|brain format §7]], [[index-and-search-5-supersession-guard|index and search §5]].
+Argued in: [[brain-format-7-guards|brain format §7]], [[index-and-search-5-guards|index and search §5]].
 
 When retrieval returns a superseded note, it also returns the note that replaced it, following `bw-superseded_by` to the newest note in the chain. When it returns a note that replaced others, it names the notes it replaced. Search ranks by similarity, which says nothing about which note is current, so this rule makes retrieval correct about change.
 

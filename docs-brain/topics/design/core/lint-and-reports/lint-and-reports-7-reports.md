@@ -15,15 +15,18 @@ into prompts.
 | File | Contents |
 |---|---|
 | `reports/index.md` | Counts, last consolidation, lint totals, links to the other reports |
-| `reports/stale.md` | Active notes that link to superseded or archived notes |
+| `reports/stale.md` | Notes that need review, in three sections: active notes that rest on a superseded or archived note, open conflicts between active notes, and active notes that link to superseded or archived notes |
 | `reports/inbox.md` | Pending episodes by owner and age, and open proposals |
 | `reports/consolidation.md` | The last 20 consolidation runs from `log.md`, newest first: agent, summary, and each episode's pattern and notes |
 | `reports/orphans.md` | Notes no other note links to |
 | `reports/lint.md` | The latest lint results |
 
-`stale.md` leaves out topic pages, which list their topic's history, and a link
-from a note to the note it replaced. The visualizer's `stale` flag uses the
-same query ([[index-and-search-9-other-queries|index and search §9]]).
+`stale.md` uses the queries in
+[[index-and-search-9-other-queries|index and search §9]], and the
+briefing counts its first two sections. Its stale links leave out topic
+pages, which list their topic's history, a link from a note to the note it
+replaced, and a link from a note that depends on its target. The
+visualizer's `stale` flag uses the stale-links query.
 
 `brain report` regenerates the reports, and so does
 `brain consolidate --done` when `[reports] after_consolidate = true` (the

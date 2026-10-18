@@ -57,8 +57,38 @@ def test_guard_recall_both_directions(example: Path):
         assert [g["label"] for g in old["guards"]] == ["superseded_by"]
         assert old["guards"][0]["title"] == "Use SQLite FTS5 for local search"
         new = _hit(search(eng, "FTS5 default backend"), "Use SQLite FTS5 for local search")
-        labels = sorted(g["label"] for g in new["guards"])
-        assert labels == ["supersedes"]
+        assert [g["label"] for g in new["guards"]] == ["conflicts_with", "supersedes"]
+
+
+def test_conflict_guard_covers_both_notes_until_one_is_superseded(example: Path):
+    with engine_for(example) as eng:
+        proposal = _hit(search(eng, "embeddings vector index"), "Vector-only search proposal")
+        # neither field is on the proposal: the conflict applies to both notes
+        assert sorted(g["title"] for g in proposal["guards"]) == [
+            "No GPU spending this year",
+            "Use SQLite FTS5 for local search",
+        ]
+        assert {g["label"] for g in proposal["guards"]} == {"conflicts_with"}
+        banners = read(eng, "fts5")["banners"]
+        assert banners[0] == (
+            '⚠ CONFLICTS with "Vector-only search proposal" (topics/search/vector-only.md): '
+            "read both before acting."
+        )
+        assert orient(eng)["needs_review"] == {"open_conflicts": 2, "stale_dependents": 0}
+        assert "- Needs review: 2 open conflicts;" in orient(eng)["text"]
+    note = example / "topics/search/vector-only.md"
+    note.write_text(
+        note.read_text().replace(
+            "created: 2026-09-25\n",
+            'created: 2026-09-25\nstatus: superseded\nbw-superseded_by: "[[fts5]]"\n',
+        )
+    )
+    with engine_for(example) as eng:
+        eng.last_scan_ns = 0
+        fts5 = read(eng, "fts5")
+        assert [g["label"] for g in fts5["guards"]] == ["supersedes", "supersedes"]
+        assert not any(b.startswith("⚠ CONFLICTS") for b in fts5["banners"])
+        assert orient(eng)["needs_review"]["open_conflicts"] == 0
 
 
 def test_any_host_reads_every_topic(example: Path):

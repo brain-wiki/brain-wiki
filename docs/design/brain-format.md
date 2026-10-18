@@ -342,7 +342,7 @@ Replaced the earlier [[Use ripgrep for search]] approach.
 | `status` | Meaning | In retrieval |
 |---|---|---|
 | `active` | Current knowledge | Ranked normally |
-| `superseded` | Replaced by a newer note, kept as history | Ranked lower, with a banner naming its replacement ([index and search §5](index-and-search.md#5-supersession-guard)) |
+| `superseded` | Replaced by a newer note, kept as history | Ranked lower, with a banner naming its replacement ([index and search §5](index-and-search.md#5-guards)) |
 | `archived` | No longer relevant, kept | Left out of search unless asked for |
 
 When a newer note replaces an older one, the older note gets
@@ -487,23 +487,29 @@ bw-conflicts_with: "[[Vector-Only Search Proposal]]"
 - "Caused by" and "related to" have no field. A sentence with a plain link
   says them.
 
-## 7. Supersession guard
+## 7. Guards
 
-`bw-superseded_by` (§6.3) changes what retrieval must return.
+Two relations change what retrieval must return.
 
 - When a search or read returns a note that names a replacement in
-  `bw-superseded_by`, the replacement MUST be returned with it, and the
-  old note MUST be labeled superseded. A chain is followed to the newest
-  note.
+  `bw-superseded_by` (§6.3), the replacement MUST be returned with it, and
+  the old note MUST be labeled superseded. A chain is followed to the
+  newest note.
 - When a search or read returns a note that other notes name in
   `bw-superseded_by`, those notes are listed as the history it replaced.
+- When a search or read returns an active note in a `bw-conflicts_with`
+  relation (§6.6) with another active note, held on either of them, the
+  other note MUST be returned with it, labeled as a conflict. Once either
+  note is superseded or archived, the conflict guard stops and the
+  supersession guard carries the reader to the current note.
 
 This holds regardless of search scores and result limits. The guard's
 notes come on top of the top-k results
-([index and search §5](index-and-search.md#5-supersession-guard)).
+([index and search §5](index-and-search.md#5-guards)).
 
-`bw-conflicts_with` (§6.6) is indexed as an edge, which reads, backlinks,
-and `brain_neighbors` show; it adds nothing to search results yet.
+`bw-depends_on` adds no guard. A note that rests on a superseded or
+archived note is listed for review instead
+([index and search §9](index-and-search.md#9-other-queries)).
 
 ## 8. Topic pages
 
