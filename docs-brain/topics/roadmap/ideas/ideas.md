@@ -35,3 +35,7 @@ Generated from `docs/roadmap/ideas.md`.
 - Importers
   - [[idea-chat-exports-email-and-documents]]: Chat exports, email, and documents
   - [[idea-an-authority-order-for-when-sources]]: An authority order for when sources disagree
+- Setup
+  - [[idea-an-option-for-brain-init-to]]: An option for brain init to make the new brain an Obsidian vault by writing…
+- Naming
+  - [[idea-title-case-names-by-default-for]]: Title Case names by default for note files and topic folders
