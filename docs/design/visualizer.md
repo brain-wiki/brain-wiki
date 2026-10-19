@@ -63,7 +63,7 @@ Navigation is a map you can turn:
 
 - The default view is tilted 50° from straight down, heading north, so the lower planes show.
 - Dragging pans across the map, moving the plane of the topic in view with the cursor: whenever the camera settles, and before a drag starts, what it looks at slides along the line of sight onto that plane. Shift+drag turns the view around the point in view, in any direction, stopping before the camera goes below the map (78° from straight down) or upside down. `R` returns to the default tilt and heading.
-- The wheel or a trackpad pinch zooms toward the point under the cursor. The camera's target stays on its plane, so a zoom never stalls in empty space. A touchscreen pinch zooms toward the middle of the view.
+- The wheel or a trackpad pinch zooms toward the point under the cursor, also while Shift is held (browsers then report the wheel as horizontal). The camera's target stays on its plane, so a zoom never stalls in empty space. A touchscreen pinch zooms toward the middle of the view.
 - Flights keep the heading and tilt the user turned to. Bloom fades at the topic and note levels, where full strength would merge a ring into one white blob.
 
 Other rendering behavior:
