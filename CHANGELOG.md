@@ -5,7 +5,8 @@
 - **The map is the topic tree, in layers.** Each level of topics sits on its
   own plane, with a stem from each sub-topic to its parent. A topic's notes
   form a ring of slices around its topic page, clockwise by file name, a
-  longer note wider and reaching farther. The levels are Overview, Topic,
+  longer note wider and reaching farther; past one ring, they form spiral
+  arms like a galaxy's. The levels are Overview, Topic,
   and Note: groups of topics are gone. Shift+drag turns the view, and `R`
   turns it back. Stems and links are drawn as curves. Flows between
   top-level topics count only typed links

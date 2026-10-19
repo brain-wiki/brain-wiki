@@ -60,7 +60,8 @@ The layout is deterministic. The same brain always produces the same map. A topi
 - Notes go clockwise from 12 o'clock, in file-name order with numbers compared as numbers, as Obsidian's file explorer shows them.
 - Each note is a slice. A longer note gets a wider slice, and its slice reaches farther from the center, the reach growing with the square root of its content, so long notes do not swamp the topic. The longest note's tip is at the ring's radius, which grows with the square root of the topic's own content.
 - A slice is faint and filled in the topic's color, brighter when recently updated and fainter when wide, with no outline and a gap of up to 1.4° to its neighbors. A star at its outer tip carries the label, the issue halo, and the selection, and grows a little with the note's content.
-- Slices are at least a 48th of a turn wide. When a ring is full, the order continues on the next ring outward, again clockwise from 12 o'clock.
+- Slices are at least a 48th of a turn wide.
+- A topic with too many notes for one ring lays them out as spiral arms, like a galaxy's: two arms, three from 80 notes, four from 150, starting evenly round from 12 o'clock. Notes in file-name order are dealt round the arms, so on every arm the order runs outward, and dated notes end newest at the rim. Each arm is a logarithmic spiral that winds 1.4 turns clockwise and widens as it goes out, and so do its slices and stars; a longer note's stretch of arm is longer and reaches farther.
 
 
 ### 3.3 Words and lines
