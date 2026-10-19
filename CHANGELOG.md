@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 (unreleased)
+## 0.3.3 (2026-10-18)
 
 - **Typed relations, as link-only fields (format 4).** A note may name
   the whole it is part of (`bw-part_of`), the notes it rests on

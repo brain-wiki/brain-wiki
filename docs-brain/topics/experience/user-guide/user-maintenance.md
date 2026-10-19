@@ -173,7 +173,7 @@ reports the leftover `bw-conflicts_with` as BW314, and
 
 brain-wiki 0.1 kept facts and relations in `bw-claims` and `bw-<verb>`
 fields (format 2), or in `## Claims` and `## Relations` sections (format
-1). brain-wiki 0.3 wrote relations as `## Related` bullets (format 3).
+1). brain-wiki 0.2.0 to 0.3.2 wrote relations as `## Related` bullets (format 3).
 Those notes still work and stay searchable. Lint reports them as BW117.
 Convert them in one undoable run:
 

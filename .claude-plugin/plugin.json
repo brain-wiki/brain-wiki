@@ -1,7 +1,7 @@
 {
   "name": "brain-wiki",
   "displayName": "brain-wiki",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "A local-first second brain for AI agents: plain Markdown notes that you own, connected by meaningful links.",
   "author": {
     "name": "brain-wiki contributors"
