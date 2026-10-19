@@ -51,7 +51,7 @@ The layout is deterministic. The same brain always produces the same map. A topi
 | Footprint | The smallest circle around a topic's ring and its sub-topics' footprints, so it grows with all the content under it. Top down, each topic turns about its footprint's center until its empty wedge faces its parent. Top-level footprints are packed by size on plane 0, and the map is scaled to a fixed radius. Footprints are not drawn |
 | Center | The topic page is a bright core at the topic's center, labeled with the topic's title. A topic without a page shows a small marker labeled with its folder name. Flying to a topic puts its center in the middle of the view, far enough out to show its whole footprint |
 | Ring | The topic's other notes, around its center on its plane (§3.2) |
-| Stem | A curve from the edge of the parent's ring to the sub-topic's center: it drops from the parent and comes down onto the sub-topic from above, running between the two planes and never along either. Seen from above it is a straight line inside the sub-topic's wedge, so it crosses neither the parent's ring nor another topic |
+| Stem | A curve from the parent's center to the sub-topic's: it drops from the parent and comes down onto the sub-topic from above, running between the two planes and never along either. Seen from above it is a straight line inside the sub-topic's wedge, so it crosses no other topic |
 
 `bw-part_of` does not move anything: a note sits only under its folder, and Part of shows as a link.
 
@@ -69,7 +69,7 @@ The layout is deterministic. The same brain always produces the same map. A topi
 
 The interface says Overview, Topic, and Note, and calls a topic by its title, or by its folder name when it has no topic page. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Conflicts with, Depends on, Part of, Cites, and from the other end links here, replaced by this, conflicts with this, depends on this, parts, cites this), and every number names its unit.
 
-The topic tree is always drawn, as a curved stem from the edge of each parent's ring down to its sub-topic's center, brighter at the parent end. A body wikilink only says that one note mentions another, so the map does not draw it, and flows count only typed links; the Details panel lists body links. The map draws five kinds of link between notes, as arcs from tip to tip that rise higher the farther apart the notes are, across planes when the two notes' topics are on different levels. Flows between top-level topics arc the same way. Each kind has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
+The topic tree is always drawn, as a curved stem from each parent's center down to its sub-topic's, brighter at the parent end. A body wikilink only says that one note mentions another, so the map does not draw it, and flows count only typed links; the Details panel lists body links. The map draws five kinds of link between notes, as arcs from tip to tip that rise higher the farther apart the notes are, across planes when the two notes' topics are on different levels. Flows between top-level topics arc the same way. Each kind has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
 
 | Kind (dock chip) | From | Trail |
 |---|---|---|
