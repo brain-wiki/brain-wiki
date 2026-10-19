@@ -14,28 +14,28 @@ source: "docs/design/visualizer.md#6-data"
   "brain": "personal", "generated": "2026-10-11T18:00:00Z", "profile": "owner",
   "totals": {"topics": 250, "notes": 10250, "pages": 250, "episodes": 200,
              "links": 29935, "flagged": 1925},
-  "constellations": [{"id": "c1", "title": "Bispai · Ditpi · …", "color": "#6aa9ff",
-                      "topics": ["bispai", "ditpi"]}],
-  "topics": [{"slug": "search", "title": "Search", "description": "…", "parent": null,
-              "color": "#6aa9ff", "constellation": "c1", "notes": 12,
-              "page": "01J9…", "updated": "2026-10-09", "recent": 3,
-              "flags": {"stale": 2}, "flagged": 2}],
-  "flows": [{"a": "search", "b": "storage", "total": 7,
-             "rels": {"links_to": 6, "superseded_by": 1}}],
+  "topics": [{"slug": "search", "title": "Search", "name": "02 Search", "description": "…",
+              "parent": null, "depth": 0, "color": "#6aa9ff", "notes": 12,
+              "page": "01J9…", "chars": 18400, "tree_chars": 52100,
+              "updated": "2026-10-09", "recent": 3, "flags": {"stale": 2}, "flagged": 2}],
+  "flows": [{"a": "search", "b": "storage", "total": 3,
+             "rels": {"depends_on": 2, "superseded_by": 1}}],
   "episodes": {"count": 200},
   "runs": [{"id": "run-01JA…", "kind": "consolidate", "at": "…", "episodes": 6,
             "topics": {"search": 3}, "touched": ["01J9…"]}]
 }
 ```
 
+- `topics` come depth first, siblings in folder-name order with numbers compared as numbers. `name` is the topic's folder name and `depth` its level below the top (0).
+- `chars` counts the characters of the text of the topic's notes and its topic page, without frontmatter, and `tree_chars` adds every topic below it.
+- A top-level topic has its own hue, and the topics below it vary that hue.
 - `recent` counts notes updated in the last 7 days.
-- `flows` count the links between notes of two topics, by `rel`, with `a` < `b`. Each topic keeps its 8 strongest flows. The map draws a flow from the kinds it draws, leaving out `links_to`, and does not draw a flow made only of body links.
+- `flows` count the typed links between the notes of two topics, by `rel`, with `a` < `b`. Body links (`links_to`) are left out. Each topic keeps its 8 strongest flows. The map adds them up between top-level topics.
 - `runs` lists the 20 most recent runs, leaving out failed and unfinished ones, with the notes each changed.
-- A constellation's `title` joins up to three topic titles. A constellation from the topic tree leads with its top topic. A clustered one leads with a topic linked to at least half of the others in it, such as a plugins topic linked to one topic per plugin, or else with its largest topics. The map labels a constellation by its first topic.
 
 `/api/topic/<slug>` returns `{slug, title, color, page, path, nodes, links, external}`:
 
-- `path` is the topic's folder, which the map uses to place notes by sub-folder.
+- `path` is the topic's folder.
 - `nodes` are the topic's notes and its topic page (kind `topic`), in the node shape below.
 - `links` are `{source, target, rel}` with both ends in the topic.
 - `external` are links between this topic's notes and other topics' notes, as `{source, target, rel, topic, title, dir}` with `dir` `out` or `in`. There are at most 400, metadata links first.
@@ -51,8 +51,11 @@ A node:
 ```json
 {"id": "01J9Z7Q2…", "title": "Use SQLite FTS5 for local search", "path": "topics/search/fts5.md",
  "kind": "note", "topic": "search", "type": "decision", "status": "active",
- "updated": "2026-10-09", "aliases": [], "lines": 42, "degree": 7, "flags": ["stale"]}
+ "updated": "2026-10-09", "aliases": [], "lines": 42, "chars": 1830, "degree": 7,
+ "flags": ["stale"]}
 ```
+
+`chars` counts the characters of the note's text without its frontmatter.
 
 `/api/note/<id>` returns the outline read (`id`, `title`, `path`, `abs_path`, `kind`, `type`, `status`, `topic`, `updated`, `banners`, `summary`) and the note's links:
 

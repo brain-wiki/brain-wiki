@@ -6,70 +6,110 @@
 
 | Question | What the map shows |
 |---|---|
-| What is in here? | Topics as glowing clouds grouped into constellations; zooming in shows notes as stars |
+| What is in here? | The topic tree, one plane per level; zooming in shows each topic's notes as a ring of slices around its topic page |
 | What is unhealthy? | Superseded notes, notes that still link to them, orphans, files that failed to parse |
 | What changed recently? | Brightness by recency, and recent runs highlighted where they changed notes |
 
 The map is read-only and local. It does not edit notes, support collaboration, or get hosted publicly.
 
-This is the second design. The first drew every note in one 3D force graph. At 10k notes and 90k links that meant 19.5 MB of JSON, a global layout in the browser, overlapping labels, and a tangle of lines, and its flat list of 250 topic checkboxes did not help anyone navigate. The second design works like a map: it shows a little at every zoom level, adds detail as you approach, and keeps positions stable. Every visual element encodes data.
+This is the third design ([D41](../decision/d41-map-of-the-topic-tree.md)):
+
+- The first drew every note in one 3D force graph. At 10k notes and 90k links that meant 19.5 MB of JSON, a global layout in the browser, overlapping labels, and a tangle of lines.
+- The second grouped topics into clusters by their links and scattered each topic's notes as stars around its page. The groups were not anything the user made, and a scatter showed neither how long a note is nor where it sits in its folder.
+- The third draws the folder tree itself. It works like a map: it shows a little at every zoom level, adds detail as you approach, and keeps positions stable. Every visual element encodes data.
 
 ## 2. Levels (semantic zoom)
 
 ```
- Galaxy ──► Constellation ──► Topic ──► Note
- groups of     topics as        page core,    one note in focus,
- topics        nebulae          notes as      its linked neighborhood
-                                stars         lit, the rest dimmed
+ Overview ──► Topic ──► Note
+ every topic   its notes as a    one note in focus,
+ center and    ring of slices,   its linked notes lit,
+ stem          sub-topics below  the rest dimmed
 ```
 
 | Level | Shows | Loaded from |
 |---|---|---|
-| Galaxy | Constellations as labeled clusters, the flows between them, and the inbox at the center | `/api/world` |
-| Constellation | Its topics as clouds, sized by note count and brightened by recency, and the flows between them | `/api/world` |
-| Topic | The topic page as a bright core, each sub-folder as a labeled branch with its notes around it, links between notes as trails, and links leaving the topic running toward the other topic | `/api/topic/<slug>` |
+| Overview | Every topic's center and the stems that join them, top-level topics on plane 0 and each level below on its own plane, the flows between top-level topics, and the inbox beside the map | `/api/world` |
+| Topic | Its notes as a ring of slices around its topic page, its sub-topics on the plane below, links between notes, and links to notes of other topics whose rings are loaded | `/api/topic/<slug>` |
 | Note | The note and the notes it links to or from lit, the rest dimmed, with its details in the side panel | `/api/note/<id>` |
+
+What shows:
+
+| Element | When |
+|---|---|
+| Topic centers and stems | Always, for the whole tree |
+| A topic's ring | When the ring is about 70 px or more across on screen (radius), at most 16 at once, biggest first |
+| Planes more than two levels below the topic in view (below plane 0 at the overview) | Fade out |
+| Ancestors of the topic in view | Keep a faint center and stem; their rings fade out |
+| Siblings of the topic in view | Nearly full, on their own plane |
+| Other topics | Dimmed |
 
 How the levels behave:
 
-- Detail follows screen size, as on a map. A topic's stars load when its cloud grows past a size on screen, wherever the camera is. Labels appear the same way, in priority order: topic pages, then flagged notes, then well-linked notes and the stars biggest on screen. Labels that would collide are hidden. Map labels name their units: "82 notes", "82 notes · 3 with issues", "5 session captures". At most 12 topics show their stars at once, nearest first.
-- Zooming changes the level. Scrolling in on a constellation enters it once it fills about a quarter of the screen, and on a topic at about a fifth. Scrolling out leaves below a smaller size, so the level does not flicker, and panning to a neighbor at the same zoom switches to it. The camera stays where the user put it, and the change replaces the current history entry. Clicking selects directly: the camera flies there and a history entry is added. A selected note stays selected while its topic is on screen, and `Esc` goes up one level.
-- Constellations come from the topic tree ([brain format §2](brain-format.md#2-directory-layout)). Each top-level topic with sub-topics forms a constellation with everything below it. The remaining topics, and every topic of a flat brain, are grouped by the links between their notes, with deterministic modularity clustering into groups of 4 to 40 topics. Topics with no links to other topics are grouped in chunks of up to 40. A brain with 12 topics or fewer has one constellation and opens at that level.
+- Labels appear by screen size, in priority order: topic pages, then flagged notes, then well-linked notes and the stars biggest on screen. Labels that would collide are hidden. Map labels name their units: "82 notes", "82 notes · 3 with issues", "5 session captures". A topic's note count includes its sub-topics.
+- Zooming changes the level. Scrolling in enters the deepest topic around the point in view once its footprint fills about 30% of the screen height, and then its sub-topics the same way. Scrolling out below 20% returns to the topic above, or to the overview, so the level does not flicker. Panning to a neighbor at the same zoom switches to it. The camera stays where the user put it, and the change replaces the current history entry.
+- Clicking selects directly: the camera flies there and a history entry is added. A selected note stays selected while its topic is on screen, and `Esc` goes up one level.
 
 ## 3. Rendering
 
 The scene uses three.js on WebGL2:
 
-- Clouds are additive glow particles, one draw call for all topics.
-- Stars are instanced glow points drawn by one shader. Size shows how much a note holds (the fourth root of its line count), color its topic, and brightness its recency. Superseded and archived notes look faded, and each health flag adds a halo ring.
-- Trails are solid thick lines. Supersession adds slow pulses running from the old note to the new one, so the line shows direction without breaking into dashes.
+- Topic centers are additive glow points, one draw call for all topics: a bright core where the topic page is, with a faint halo as wide as its ring, or a small marker for a folder without a page. Markers keep a minimum size on screen.
+- Each loaded ring is one mesh of slices. Stars at the slices' tips are glow points drawn by one shader: color is the topic's, brightness the note's recency, superseded and archived notes look faded, and each health flag adds a halo ring.
+- Stems and trails are solid thick lines. Supersession adds slow pulses running from the old note to the new one, so the line shows direction without breaking into dashes.
 - Post-processing adds bloom, tone mapping, a vignette, depth fog, and a starfield backdrop. Camera moves are eased flights, not jumps.
 
-Navigation is a 2.5D map, not a free 3D camera. The view keeps a fixed tilt and heading, dragging pans across the map, and the wheel or a trackpad pinch zooms toward the point under the cursor. The camera's target stays on the map's plane, so a zoom never stalls in empty space above it. A touchscreen pinch zooms toward the middle of the view. Depth still separates dense clusters, but nobody ends up upside down. Bloom and the constellation dust fade at the topic and note levels, where full strength would merge a cluster into one white blob.
+Navigation is a map you can turn:
+
+- The default view is tilted 50° from straight down, heading north, so the lower planes show.
+- Dragging pans across the map. Shift+drag turns the view around the point in view, in any direction, stopping before the camera goes below the map (78° from straight down) or upside down. `R` returns to the default tilt and heading.
+- The wheel or a trackpad pinch zooms toward the point under the cursor. The camera's target stays on its plane, so a zoom never stalls in empty space. A touchscreen pinch zooms toward the middle of the view.
+- Flights keep the heading and tilt the user turned to. Bloom fades at the topic and note levels, where full strength would merge a ring into one white blob.
 
 Other rendering behavior:
 
-- Highlight issues (`I`) recolors the map. Each topic cloud and constellation takes a tint from cool through amber to red by its share of flagged notes, ranked against the other flagged topics, so a brain where every topic has some flags still shows where the trouble concentrates. Unflagged topics turn grey and faint, flows fade, unflagged stars dim, and flagged stars show their halo rings. A legend explains the colors, and the minimap uses them too.
+- Highlight issues (`I`) recolors the map. Each topic center takes a tint from cool through amber to red by its share of flagged notes, ranked against the other flagged topics, so a brain where every topic has some flags still shows where the trouble concentrates. Unflagged topics turn grey and faint, flows fade, unflagged stars and slices dim, and flagged stars show their halo rings. A legend explains the colors, and the minimap uses them too.
 - Graphics quality has three settings. Low, the default, draws without post-processing. High adds bloom, the vignette, and grain. Auto ignores the first 1.5 s after load, samples 2.5 s of frames, and picks Low when the median frame takes longer than 1/30 s. The setting is in the dock's ⋯ menu, the browser remembers it, and `?quality=` in the URL overrides it. `prefers-reduced-motion` turns off flows and flights.
 - Without WebGL2 (hardware acceleration off, or a remote desktop or VM without a GPU), the stage says why the map could not start and how to check. The topic list, search, and details panel keep working.
 - When a note or topic is gone or fails to load, its panel says so instead of loading forever. When `brain viz` stops, the map backs off from topics it could not fetch, for up to a minute, and a message says the connection was lost. A failure at start-up says whether the server is unreachable or the link's token is wrong. A mangled link opens the overview.
 
 ### 3.1 Layout
 
-The layout is deterministic and local. The same brain always produces the same map, and no layout spans the whole brain.
+The layout is deterministic. The same brain always produces the same map. A topic is a folder ([brain format §2.1](brain-format.md#21-topics)): its topic page (`Index.md`) is the topic itself, every other note in the folder describes the topic, and every sub-folder is a sub-topic.
 
-- Constellations sit on a disk along a golden-angle spiral, pushed apart where they collide. Topics sit on a spiral inside their constellation, with a parent topic at the center of the constellation its sub-topics form.
-- Inside a topic, the map's tree is the folder tree, as Obsidian shows it. Each sub-folder is a branch, and its folder note (`x/x.md`, `x/index.md`, or `x/readme.md`) is its core, where its links meet. A folder without a folder note uses its longest note as the core, or is an empty junction when it holds only sub-folders.
-- A folder's notes form a star cluster around its core, on a projected Plummer profile in order of length, so the core is dense, the edge sparse, and long notes sink toward the middle. Each note's direction is random but seeded by its id, so stars clump instead of spacing evenly. Links inside a folder pull notes together, gravity holds each at its depth, and close neighbors push apart. A note's space grows with the fourth root of its line count.
-- Sub-folders orbit their parent's core, each in its own wedge, largest first, and an empty wedge keeps the way in from the parent clear. A line runs from each folder's core to its parent's core. Because every folder stays inside its wedge, no tree line crosses another or runs through a folder it does not join.
-- Each nesting level sits one step farther from the camera, straight along the view, so depth never moves a star on screen. Links between folders are drawn but do not move stars, so a link to a note in another folder never changes where that note sits.
-- Each folder is labeled directly above its topmost note. A label drops the leading ` · ` parts that its parent folders' titles already say, so "Lumen guide · Sync · Conflicts" reads "Conflicts".
+```
+           plane 0   ·  top-level topics, packed by size
+     ◜◝ ring ◜◝      ·  each topic's notes around its topic page
+        │ stem
+           plane 1   ·  sub-topics, packed inside the parent's footprint
+     ◜◝ ring ◜◝
+        │
+           plane 2   ·  and so on, one plane per level
+```
 
-### 3.2 Words and lines
+| Rule | Detail |
+|---|---|
+| Content | The characters of a note's text, without its frontmatter. A topic's content is the sum over every note under it |
+| Planes | Top-level topics sit on plane 0. Each level of sub-topics sits on its own plane below: the first 6% of the map's radius under plane 0, each further gap three quarters of the one above, so deep trees stay short |
+| Footprint | Bottom up, a topic packs its sub-topics' footprints around its center, largest first; its footprint's area is its ring's plus that packing, so it grows with all the content under it. Top-level footprints are packed the same way on plane 0, and the map is scaled to a fixed radius. Footprints are not drawn |
+| Center | The topic page is a bright core at the center of the footprint, labeled with the topic's title. A topic without a page shows a small marker labeled with its folder name |
+| Ring | The topic's other notes, around its center on its plane (§3.2) |
+| Stem | A line joins each sub-topic's center to its parent's |
 
-The galaxy is the look, not the vocabulary. The interface says Overview, Group (of topics), Topic, and Note, never galaxy or constellation. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Conflicts with, Depends on, Part of, Cites, and from the other end links here, replaced by this, conflicts with this, depends on this, parts, cites this), and every number names its unit.
+`bw-part_of` does not move anything: a note sits only under its folder, and Part of shows as a link.
 
-The folder tree is always drawn, as one line from each folder's core to its parent's, brighter at the parent end. A body wikilink only says that one note mentions another, so the map does not draw it: the Details panel lists it, and links inside a folder still pull notes together (§3.1). The map draws five kinds of link between notes. Each has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
+### 3.2 A topic's ring
+
+- Notes go clockwise from 12 o'clock, in file-name order with numbers compared as numbers, as Obsidian's file explorer shows them.
+- Each note is a slice. A longer note gets a wider slice, and its slice reaches farther from the center, the reach growing with the square root of its content, so long notes do not swamp the topic. The longest note's tip is at the ring's radius, which grows with the square root of the topic's own content.
+- A slice is faint and filled in the topic's color, brighter when recently updated and fainter when wide, with no outline and a gap of up to 1.4° to its neighbors. A star at its outer tip carries the label, the issue halo, and the selection, and grows a little with the note's content.
+- Slices are at least a 48th of a turn wide. When a ring is full, the order continues on the next ring outward, again clockwise from 12 o'clock.
+
+### 3.3 Words and lines
+
+The interface says Overview, Topic, and Note, and calls a topic by its title, or by its folder name when it has no topic page. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Conflicts with, Depends on, Part of, Cites, and from the other end links here, replaced by this, conflicts with this, depends on this, parts, cites this), and every number names its unit.
+
+The topic tree is always drawn, as a stem from each sub-topic's center to its parent's, brighter at the parent end. A body wikilink only says that one note mentions another, so the map does not draw it, and flows count only typed links; the Details panel lists body links. The map draws five kinds of link between notes, from tip to tip, across planes when the two notes' topics are on different levels. Each kind has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
 
 | Kind (dock chip) | From | Trail |
 |---|---|---|
@@ -87,35 +127,34 @@ Top bar:
 
 - The brain's name and profile.
 - Back, forward, and a list of everything opened in this tab.
-- The breadcrumb: Overview › group › parent topics › topic › folders › note.
+- The breadcrumb: Overview › parent topics › topic › note.
 - Search, opened with `/` or `Ctrl/⌘-K`.
 - Totals: topics, notes, links, notes with issues, and the inbox. "With issues" opens the Issues tab, and "inbox" says what is waiting to be merged.
 
 Left panel, with three tabs:
 
-- Topics lists groups and their topics, with sub-topics nested under their parent. A group opens when you enter it, and its chevron or a second click closes it. Rows show note counts, issue badges, and recency bars. The list can be filtered and sorted by name (the default, ignoring case and with numbers in order), most notes, most issues, or most recently changed.
+- Topics lists the topic tree the way a file explorer lists folders: top-level topics, each opening onto its sub-topics. The way to the topic in view opens by itself, and a filter shows each match with the topics above it. Rows show note counts including sub-topics, issue badges, and recency bars. The list can be sorted by name (the default, ignoring case and with numbers in order), most notes, most issues, or most recently changed.
 - Issues lists notes with issues grouped by kind, counts first, with the switch that highlights them on the map.
-- Activity lists recent runs. Selecting one highlights the notes it changed.
+- Activity lists recent runs. Selecting one highlights the notes it changed and flies to the top-level topic where it changed the most.
 
 Right panel, headed Details, is always shown and says how to fill it when nothing is selected:
 
-- A group shows its topics.
-- A topic shows its description; counts of notes, notes changed in 7 days, and notes with issues; the last change; a breakdown of issues; a button to open the topic page; its sub-topics and folders with note counts; its most connected notes, hidden for topics of five notes or fewer; and linked topics.
-- A note shows where it lives ("In Guide › Sync › …"), type, status, and issue chips, and banners for a superseded note or the notes it replaces. Then come its summary, its outgoing links grouped as Replaced by, Conflicts with, Depends on, Part of, Links to, and Cites, its parts (the notes that name it in `bw-part_of`) by title, and its backlinks with how each links here. A resolved link flies to its note, an unresolved one says "not found", and one outside the mapped topics says "not on the map". Last come the path, with a copy button, and an `obsidian://` link.
+- A topic shows its description; counts of notes, notes changed in 7 days, and notes with issues; the last change; a breakdown of issues; a button to open the topic page; its sub-topics with note counts; its most connected notes, hidden for topics of five notes or fewer; and linked topics.
+- A note shows where it lives ("In Guide › Sync"), type, status, and issue chips, and banners for a superseded note or the notes it replaces. Then come its summary, its outgoing links grouped as Replaced by, Conflicts with, Depends on, Part of, Links to, and Cites, its parts (the notes that name it in `bw-part_of`) by title, and its backlinks with how each links here. A resolved link flies to its note, an unresolved one says "not found", and one outside the mapped topics says "not on the map". Last come the path, with a copy button, and an `obsidian://` link.
 - A clicked connection replaces the details of the focused place, and the map stays where it is, with the connection lit, until it closes (its ✕, `Esc`, or going to another place):
   - A link between two notes reads as a sentence: the two notes as cards that open them, and how they link ("supersedes", "conflicts with", "depends on", "is part of", "cites"). Under "Where … says it" comes the property entry of the linking note that holds the link (`bw-superseded_by`, `bw-conflicts_with`, `bw-depends_on`, `bw-part_of`, or `bw-sources`), rendered like the preview. A button reads the whole note, and "Both ways" says when the other note links back.
-  - The links between two topics name both topics, which open them, and the count by kind, then list each link between their notes; a row opens that link as a connection. Between two groups, the list is the topic pairs, and a row opens the links between that pair.
+  - A flow between two top-level topics names both topics, which open them, and the count by kind, then lists the pairs of topics under them whose notes link; a row opens the links between that pair, each of which opens that link as a connection.
 
 Clicking a note anywhere (a star, a row, a search result, a wikilink) also opens a preview over the details panel. The preview renders the note like Obsidian's reading view: properties from the frontmatter, then the body with headings, lists and tasks, tables, code, callouts, highlights, tags, and footnotes. Wikilinks in the body and in property values open the linked note and move the map with it, so the relation fields and each `bw-sources` entry are links. `Esc` closes the preview and `P` toggles it.
 
 Bottom of the screen:
 
-- Bottom left, a minimap shows the galaxy from above with the current view, and clicking it flies there. Beside it, a zoom ladder names the levels (Overview, Group, Topic, Note) and the current place. A marker creeps toward the next level as you scroll, and earlier levels are clickable.
+- Bottom left, a minimap shows plane 0 from above, each top-level topic's footprint with the current view, and clicking it flies to the nearest top-level topic. Beside it, a zoom ladder names the levels (Overview, Topic, Note) and the current place. A marker creeps toward the next level as you scroll, and earlier levels are clickable.
 - Bottom center, the dock has one chip per link kind, which is both legend and filter; a hidden kind shows a hollow swatch and a struck-through label. The dock also has the highlight-issues switch, a ⋯ menu for labels and graphics quality, and help. The breadcrumb's first crumb or `O` returns to the overview.
 
 Overlays:
 
-- Hovering a star shows its title, topic, status, and flags.
+- Hovering a star shows its title, topic, status, and flags. Hovering a topic center shows its notes, sub-topics, and issues.
 - Hovering a trail lights it and both ends, and reads the link as a sentence ("2026.9.9 supersedes 2026.9.8"). Clicking opens the connection in the Details panel.
 - Hovering a flow shows the two topics and the link count, split by kind. Clicking lists those links in the Details panel.
 - The command palette shows server-side search results grouped by topic, and `?` shows the shortcuts.
@@ -124,9 +163,10 @@ One table drives both the key handler and the shortcuts sheet, which writes keys
 
 | Section | Keys | Does |
 |---|---|---|
-| Move | `Ctrl-↑` / `Ctrl-↓` (⌘ on a Mac) | Up or down one level: note, folder, topic, group, overview. Down retraces the way up, or else enters the biggest place inside |
-| Move | `[` / `]` | Previous or next place at the same level |
+| Move | `Ctrl-↑` / `Ctrl-↓` (⌘ on a Mac) | Up or down one level: note, topic, parent topics, overview. Down retraces the way up, or else enters the biggest sub-topic, then the topic page and the notes in ring order |
+| Move | `[` / `]` | Previous or next topic, or note, under the same parent |
 | Move | `O` | Overview |
+| Move | `R` | Turn the view back to the default tilt, heading north |
 | Move | `Alt-←` / `Alt-→` (⌘ on a Mac) | The browser's own back and forward |
 | Move | `Esc` | Close what is open, or else go up one level |
 | Show | `P`, `I`, `L` | Note preview; highlight issues; labels |
@@ -134,9 +174,9 @@ One table drives both the key handler and the shortcuts sheet, which writes keys
 | Find | `/` or `Ctrl-K` (⌘ on a Mac) | Search |
 | Find | `?` | The shortcuts sheet |
 
-While typing in a field, only `Esc` and `Ctrl/⌘-K` work, so `Ctrl/⌘-↑` and `-↓` still move the caret. The shortcuts sheet also explains mouse gestures and how to read the map: star size, brightness, rings, and pulses.
+While typing in a field, only `Esc` and `Ctrl/⌘-K` work, so `Ctrl/⌘-↑` and `-↓` still move the caret. The shortcuts sheet also explains mouse gestures, Shift+drag among them, and how to read the map: planes, rings, slices, brightness, rings on stars, and pulses.
 
-The URL hash records the focus (`#/c/<id>`, `#/t/<slug>`, `#/t/<slug>/n/<id>`), so a view can be reopened. Every place opened becomes a browser history entry tagged with its position in the tab's trail. The top bar's back and forward buttons, the history list, `Alt-←` and `Alt-→`, and the browser's buttons all move through the same stack, which survives reloading the tab.
+The URL hash records the focus (`#/t/<slug>`, `#/t/<slug>/n/<id>`), so a view can be reopened; a link to a group from the previous design opens the overview. Every place opened becomes a browser history entry tagged with its position in the tab's trail. The top bar's back and forward buttons, the history list, `Alt-←` and `Alt-→`, and the browser's buttons all move through the same stack, which survives reloading the tab.
 
 ## 5. Architecture
 
@@ -175,28 +215,28 @@ The HTML export's details panel shows only what the topic data carries (links an
   "brain": "personal", "generated": "2026-10-11T18:00:00Z", "profile": "owner",
   "totals": {"topics": 250, "notes": 10250, "pages": 250, "episodes": 200,
              "links": 29935, "flagged": 1925},
-  "constellations": [{"id": "c1", "title": "Bispai · Ditpi · …", "color": "#6aa9ff",
-                      "topics": ["bispai", "ditpi"]}],
-  "topics": [{"slug": "search", "title": "Search", "description": "…", "parent": null,
-              "color": "#6aa9ff", "constellation": "c1", "notes": 12,
-              "page": "01J9…", "updated": "2026-10-09", "recent": 3,
-              "flags": {"stale": 2}, "flagged": 2}],
-  "flows": [{"a": "search", "b": "storage", "total": 7,
-             "rels": {"links_to": 6, "superseded_by": 1}}],
+  "topics": [{"slug": "search", "title": "Search", "name": "02 Search", "description": "…",
+              "parent": null, "depth": 0, "color": "#6aa9ff", "notes": 12,
+              "page": "01J9…", "chars": 18400, "tree_chars": 52100,
+              "updated": "2026-10-09", "recent": 3, "flags": {"stale": 2}, "flagged": 2}],
+  "flows": [{"a": "search", "b": "storage", "total": 3,
+             "rels": {"depends_on": 2, "superseded_by": 1}}],
   "episodes": {"count": 200},
   "runs": [{"id": "run-01JA…", "kind": "consolidate", "at": "…", "episodes": 6,
             "topics": {"search": 3}, "touched": ["01J9…"]}]
 }
 ```
 
+- `topics` come depth first, siblings in folder-name order with numbers compared as numbers. `name` is the topic's folder name and `depth` its level below the top (0).
+- `chars` counts the characters of the text of the topic's notes and its topic page, without frontmatter, and `tree_chars` adds every topic below it.
+- A top-level topic has its own hue, and the topics below it vary that hue.
 - `recent` counts notes updated in the last 7 days.
-- `flows` count the links between notes of two topics, by `rel`, with `a` < `b`. Each topic keeps its 8 strongest flows. The map draws a flow from the kinds it draws, leaving out `links_to`, and does not draw a flow made only of body links.
+- `flows` count the typed links between the notes of two topics, by `rel`, with `a` < `b`. Body links (`links_to`) are left out. Each topic keeps its 8 strongest flows. The map adds them up between top-level topics.
 - `runs` lists the 20 most recent runs, leaving out failed and unfinished ones, with the notes each changed.
-- A constellation's `title` joins up to three topic titles. A constellation from the topic tree leads with its top topic. A clustered one leads with a topic linked to at least half of the others in it, such as a plugins topic linked to one topic per plugin, or else with its largest topics. The map labels a constellation by its first topic.
 
 `/api/topic/<slug>` returns `{slug, title, color, page, path, nodes, links, external}`:
 
-- `path` is the topic's folder, which the map uses to place notes by sub-folder.
+- `path` is the topic's folder.
 - `nodes` are the topic's notes and its topic page (kind `topic`), in the node shape below.
 - `links` are `{source, target, rel}` with both ends in the topic.
 - `external` are links between this topic's notes and other topics' notes, as `{source, target, rel, topic, title, dir}` with `dir` `out` or `in`. There are at most 400, metadata links first.
@@ -212,8 +252,11 @@ A node:
 ```json
 {"id": "01J9Z7Q2…", "title": "Use SQLite FTS5 for local search", "path": "topics/search/fts5.md",
  "kind": "note", "topic": "search", "type": "decision", "status": "active",
- "updated": "2026-10-09", "aliases": [], "lines": 42, "degree": 7, "flags": ["stale"]}
+ "updated": "2026-10-09", "aliases": [], "lines": 42, "chars": 1830, "degree": 7,
+ "flags": ["stale"]}
 ```
+
+`chars` counts the characters of the note's text without its frontmatter.
 
 `/api/note/<id>` returns the outline read (`id`, `title`, `path`, `abs_path`, `kind`, `type`, `status`, `topic`, `updated`, `banners`, `summary`) and the note's links:
 
@@ -263,9 +306,9 @@ The map lists the flags in the order conflict, stale, superseded, orphan, lint e
 ## 9. Testing
 
 - Server: the token or cookie is required on every route; loopback is the default, and `--host` binds beyond it with the token still required; the CSP; every API shape on fixture brains.
-- Constellations: deterministic, within the size limits, and one constellation for small brains.
+- The topic tree: depth-first order with numbers compared as numbers, content totals, and flows of typed links only.
 - Export: titles containing HTML and script are inert, and the CSP hashes match.
-- Front end, in brain-wiki-viz: type checks and unit tests for layout determinism and level selection (`npm run check`). Here: the bundle is complete, stamped with a clean commit, and matches a rebuild.
+- Front end, in brain-wiki-viz: type checks and unit tests for layout determinism, footprint containment, ring order and wrapping, and level selection (`npm run check`). Here: the bundle is complete, stamped with a clean commit, and matches a rebuild.
 - Browser: headless Chrome screenshots of each level on the fixture brain and a generated 10k brain, interaction scripts (search, fly to a topic, select a note, `Esc`), and frame time. Scripts drive the app through `window.__brainViz` (the controller, the scene, and a `ready` flag) and wait for `body[data-ready]`.
 
 ## 10. Alternatives considered
@@ -277,7 +320,10 @@ The map lists the flags in the order conflict, stale, superseded, orphan, lint e
 | A radial tree per topic, with a slice per folder and a line per note | No crossings, but a folder of 200 daily notes became a spiky ball, lines routed along rings read as bent polylines, and nothing showed how much a note holds. |
 | Circle packing per topic, nested circles with no lines | Compact, but containment alone did not read as levels, the topic page often landed at the edge, and lines from a folder to its sub-folders ran through sibling circles (7 of 33 on a 176-note topic). Orbits around each folder's core fix both, at some cost in space when a folder has many sub-folders. |
 | Sunflower clusters inside folder outlines | No crossings, but golden-angle spacing laid notes out evenly, so a folder of 200 daily notes read as a grid rather than a cluster, and the outlines added clutter the links already conveyed. |
-| A 2.5D terrain atlas, with topics as territories and notes as towns | Easiest to navigate, but the galaxy keeps depth for separating dense clusters. Both would use the same levels and API. |
+| Groups of topics clustered by their links, and each topic's notes as a star cluster around its page (the second design) | The folder tree already says how topics group, and clustering put topics in groups nobody made. A scatter showed neither a note's length nor its place in its folder, and the cluster around each folder note only hinted at the tree. |
+| Sub-topics packed around their parent's own notes, with the parent's ring as the center of the packing | A small center lands at the edge of the packing, so each level could double a footprint; a tree seven folders deep took most of the map. |
+| A fixed gap between planes | Deep sub-topics are small, so a gap that reads at the top made their stems long vertical spikes; the gap shrinks with depth instead. |
+| A 2.5D terrain atlas, with topics as territories and notes as towns | Easiest to navigate, but the map keeps depth for separating levels. Both would use the same levels and API. |
 | No build step, with vendored ES modules and hand-written JavaScript | Keeps contributors off Node, but panels of this size and custom shaders are much harder to maintain without types and a bundler. Committing the bundle keeps users off Node anyway. |
 | React | Preact gives the same model at a fraction of the size. |
 | Obsidian's built-in graph | It shows no supersession, relation kinds, citations, or health flags. It works alongside this map. |

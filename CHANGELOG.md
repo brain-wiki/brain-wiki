@@ -2,6 +2,19 @@
 
 ## 0.3.4 (unreleased)
 
+- **The map is the topic tree, in layers.** Each level of topics sits on its
+  own plane, with a stem from each sub-topic to its parent. A topic's notes
+  form a ring of slices around its topic page, clockwise by file name, a
+  longer note wider and reaching farther. The levels are Overview, Topic,
+  and Note: groups of topics are gone. Shift+drag turns the view, and `R`
+  turns it back. Flows between top-level topics count only typed links
+  ([D41](docs/decision/d41-map-of-the-topic-tree.md)).
+- **Content sizes in the map's data.** Each node in `/api/world`,
+  `/api/topic`, and `--export` carries `chars`, its text without
+  frontmatter; each topic carries `chars`, `tree_chars`, `depth`, and its
+  folder `name`. `constellations` and each topic's `constellation` are
+  removed.
+
 - **Every folder is a topic.** A folder inside a topic is a sub-topic
   whether or not it has a topic page, so a note belongs to the folder it
   sits in, as a file browser shows. Before, a folder without a page was

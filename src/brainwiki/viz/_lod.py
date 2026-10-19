@@ -6,175 +6,56 @@ Pure functions over a `build_graph` dict; no database access.
 from __future__ import annotations
 
 import colorsys
+import re
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-_SINGLE_MAX = 12
-_GROUP_MIN = 4
-_GROUP_MAX = 40
 _RECENT_DAYS = 7
 _MAX_EXTERNAL = 400
 _FLOWS_PER_TOPIC = 8
 _MAX_HEALTH = 200
 MAX_SEARCH = 20
-_PASSES = 50
-_EPS = 1e-12
-
-_Adjacency = dict[str, dict[str, float]]
+_DIGITS = re.compile(r"(\d+)")
 
 
-# --- constellations -------------------------------------------------------
+# --- the topic tree ---------------------------------------------------------
 
 
-def topic_weights(nodes: list[dict[str, Any]], links: list[dict[str, Any]]) -> _Adjacency:
-    """Undirected topic graph: weight = links between two different topics."""
-    topic_of = {n["id"]: n["topic"] for n in nodes}
-    adj: _Adjacency = {}
-    for link in links:
-        a, b = topic_of.get(link["source"]), topic_of.get(link["target"])
-        if a is None or b is None or a == b:
-            continue
-        adj.setdefault(a, {})[b] = adj.setdefault(a, {}).get(b, 0) + 1
-        adj.setdefault(b, {})[a] = adj.setdefault(b, {}).get(a, 0) + 1
-    return adj
+def _natural(name: str) -> list[Any]:
+    """A sort key that compares runs of digits as numbers and ignores case, as Obsidian's file
+    explorer orders names. Split on digits, the parts alternate text and number, so keys compare
+    part by part without mixing types."""
+    return [int(p) if i % 2 else p.casefold() for i, p in enumerate(_DIGITS.split(name))]
 
 
-def _group_topics(slugs: list[str], adj: _Adjacency) -> list[list[str]]:
-    """Deterministic constellations: sorted slug lists, largest first."""
-    slugs = sorted(set(slugs))
-    if len(slugs) <= _SINGLE_MAX:
-        return [slugs] if slugs else []
+def _root(slug: str, parents: dict[str, str | None]) -> str:
+    seen = {slug}
+    while (parent := parents.get(slug)) is not None and parent in parents and parent not in seen:
+        slug = parent
+        seen.add(slug)
+    return slug
+
+
+def tree_order(
+    slugs: list[str], parents: dict[str, str | None], names: dict[str, str]
+) -> list[str]:
+    """Topics depth first, siblings by folder name with numbers compared as numbers."""
     present = set(slugs)
-    sub = {s: {t: w for t, w in adj.get(s, {}).items() if t in present} for s in slugs}
-    linked = [s for s in slugs if sub[s]]
-    unlinked = [s for s in slugs if not sub[s]]
-    groups = _merge_small(_cluster(linked, sub), sub) if linked else []
-    groups = [part for g in groups for part in _split(g, sub)]
-    groups += _chunks(unlinked)
-    return sorted(groups, key=lambda g: (-len(g), g[0]))
-
-
-def tree_groups(
-    slugs: list[str], parents: dict[str, str | None], adj: _Adjacency
-) -> list[list[str]]:
-    """Constellations from the topic tree (brain-format.md §2): each top-level topic that has
-    sub-topics, with
-    everything below it; the remaining topics are grouped by their links (`group_topics`)."""
-    present = sorted(set(slugs))
-    if len(present) <= _SINGLE_MAX:
-        return [present] if present else []
-
-    def root(slug: str) -> str:
-        seen = {slug}
-        while (parent := parents.get(slug)) in present and parent not in seen:
-            slug = parent
-            seen.add(slug)
-        return slug
-
-    by_root: dict[str, list[str]] = {}
-    for slug in present:
-        by_root.setdefault(root(slug), []).append(slug)
-    trees = [members for members in by_root.values() if len(members) > 1]
-    rest = [members[0] for members in by_root.values() if len(members) == 1]
-    groups = trees + (_group_topics(rest, adj) if rest else [])
-    return sorted(groups, key=lambda g: (-len(g), g[0]))
-
-
-def _chunks(slugs: list[str]) -> list[list[str]]:
-    return [slugs[i : i + _GROUP_MAX] for i in range(0, len(slugs), _GROUP_MAX)]
-
-
-def _split(group: list[str], adj: _Adjacency) -> list[list[str]]:
-    if len(group) <= _GROUP_MAX:
-        return [group]
-    parts = _merge_small(_cluster(group, adj), adj)
-    if len(parts) < 2:
-        return _chunks(group)
-    return [p for part in parts for p in _split(part, adj)]
-
-
-def _cluster(members: list[str], adj: _Adjacency) -> list[list[str]]:
-    """Two levels of Louvain local moving over the subgraph induced by `members`."""
-    inside = set(members)
-    sub = {m: {t: w for t, w in adj.get(m, {}).items() if t in inside} for m in members}
-    degree = {m: float(sum(sub[m].values())) for m in members}
-    first = _local_moving(members, sub, degree)
-    level1 = _groups(members, first)
-
-    # Second level: each first-level community becomes one node.
-    names = [g[0] for g in level1]
-    owner = {m: g[0] for g in level1 for m in g}
-    agg: _Adjacency = {n: {} for n in names}
-    for m in members:
-        for t, w in sub[m].items():
-            a, b = owner[m], owner[t]
-            if a != b:
-                agg[a][b] = agg[a].get(b, 0) + w
-    agg_degree = {g[0]: sum(degree[m] for m in g) for g in level1}
-    second = _local_moving(names, agg, agg_degree)
-    merged = {m: second[owner[m]] for m in members}
-    return _groups(members, merged)
-
-
-def _local_moving(order: list[str], adj: _Adjacency, degree: dict[str, float]) -> dict[str, int]:
-    comm = {n: i for i, n in enumerate(order)}
-    m2 = sum(degree.values())
-    if m2 <= 0:
-        return comm
-    tot = {i: degree[n] for n, i in comm.items()}
-    for _ in range(_PASSES):
-        moved = False
-        for n in order:
-            current = comm[n]
-            k = degree[n]
-            tot[current] -= k
-            weights: dict[int, float] = {}
-            for t, w in adj[n].items():
-                if t != n:
-                    weights[comm[t]] = weights.get(comm[t], 0.0) + w
-            best = current
-            best_gain = weights.get(current, 0.0) - tot[current] * k / m2
-            for c in sorted(weights):
-                gain = weights[c] - tot[c] * k / m2
-                if gain > best_gain + _EPS or (abs(gain - best_gain) <= _EPS and c < best):
-                    best, best_gain = c, gain
-            tot[best] += k
-            if best != current:
-                comm[n] = best
-                moved = True
-        if not moved:
-            break
-    return comm
-
-
-def _groups(order: list[str], comm: dict[str, int]) -> list[list[str]]:
-    by: dict[int, list[str]] = {}
-    for n in order:
-        by.setdefault(comm[n], []).append(n)
-    return sorted((sorted(g) for g in by.values()), key=lambda g: g[0])
-
-
-def _merge_small(groups: list[list[str]], adj: _Adjacency) -> list[list[str]]:
-    groups = [list(g) for g in groups]
-    while len(groups) > 1:
-        small = [g for g in groups if len(g) < _GROUP_MIN]
-        if not small:
-            break
-        group = min(small, key=lambda g: (len(g), g[0]))
-        members = set(group)
-        others = [g for g in groups if g is not group]
-        strength = [
-            sum(adj.get(a, {}).get(b, 0) for a in members for b in other) for other in others
-        ]
-        if max(strength) > 0:
-            target = min(
-                range(len(others)), key=lambda i: (-strength[i], len(others[i]), others[i][0])
-            )
-        else:
-            target = min(range(len(others)), key=lambda i: (len(others[i]), others[i][0]))
-        others[target] = sorted(others[target] + group)
-        groups = others
-    return sorted(groups, key=lambda g: g[0])
+    children: dict[str | None, list[str]] = {}
+    for slug in slugs:
+        parent = parents.get(slug)
+        children.setdefault(parent if parent in present else None, []).append(slug)
+    for kids in children.values():
+        kids.sort(key=lambda s: (_natural(names.get(s) or s), s))
+    out: list[str] = []
+    stack = list(reversed(children.get(None, [])))
+    while stack:
+        slug = stack.pop()
+        if slug in out:  # a cycle in malformed input
+            continue
+        out.append(slug)
+        stack.extend(reversed(children.get(slug, [])))
+    return out + sorted(present - set(out))
 
 
 def _hex(hue: float, saturation: float, lightness: float) -> str:
@@ -186,23 +67,30 @@ def _frac(x: float) -> float:
     return x - int(x)
 
 
-def _constellation_hue(index: int) -> float:
-    return (210 + 137.508 * index) % 360
-
-
-def _constellation_color(index: int) -> str:
-    return _hex(_constellation_hue(index), 0.70, 0.62)
-
-
 def _topic_color(index: int, position: int) -> str:
-    """Constellation hue shifted by up to ±18°, lightness 55–72%, spread by golden ratio."""
+    """The hue of top-level topic `index`, spread by the golden angle, shifted by up to ±18° and
+    lightened to 55–72% for its sub-topics in order."""
     offset = 36 * (_frac(0.5 + position * 0.618034) - 0.5)
     lightness = 0.55 + 0.17 * _frac(0.5 + position * 0.381966)
-    return _hex(_constellation_hue(index) + offset, 0.70, lightness)
+    return _hex(210 + 137.508 * index + offset, 0.70, lightness)
 
 
-def topic_colors(groups: list[list[str]]) -> dict[str, str]:
-    return {slug: _topic_color(i, j) for i, g in enumerate(groups) for j, slug in enumerate(g)}
+def topic_colors(order: list[str], parents: dict[str, str | None]) -> dict[str, str]:
+    """One hue per top-level topic; its sub-topics vary around it (`order` is `tree_order`)."""
+    hue: dict[str, int] = {}
+    seen: dict[str, int] = {}
+    colors = {}
+    for slug in order:
+        root = _root(slug, parents)
+        index = hue.setdefault(root, len(hue))
+        colors[slug] = _topic_color(index, seen.get(root, 0))
+        seen[root] = seen.get(root, 0) + 1
+    return colors
+
+
+def folder_name(topic: dict[str, Any]) -> str:
+    path = topic.get("path") or ""
+    return path.rstrip("/").rsplit("/", 1)[-1] or topic["slug"]
 
 
 # --- payloads ---------------------------------------------------------------
@@ -222,11 +110,10 @@ class Atlas:
             if n["kind"] in ("note", "topic") and n["topic"] in self.topics
         ]
         self._topic_of = {n["id"]: n["topic"] for n in self.notes}
-        self._adj = topic_weights(self.notes, graph["links"])
         self._parents = {s: t.get("parent") for s, t in self.topics.items()}
-        self.groups = tree_groups(list(self.topics), self._parents, self._adj)
-        self.colors = topic_colors(self.groups)
-        self.constellation_of = {s: f"c{i + 1}" for i, g in enumerate(self.groups) for s in g}
+        names = {s: folder_name(t) for s, t in self.topics.items()}
+        self.order = tree_order(list(self.topics), self._parents, names)
+        self.colors = topic_colors(self.order, self._parents)
         self._inner: dict[str, list[dict[str, Any]]] = {}
         self._outer: dict[str, list[dict[str, Any]]] = {}
         for link in graph["links"]:
@@ -252,21 +139,6 @@ class Atlas:
         g = self.graph
         flagged = [n for n in self.notes if n["flags"]]
         links = g["links"]
-        constellations = []
-        for i, group in enumerate(self.groups):
-            ranked = sorted(group, key=lambda s: (-self.topics[s]["notes"], s))
-            lead = self._tree_root(group) or self._central_topic(group)
-            if lead:  # the map labels a constellation by its first topic
-                ranked = [lead, *(s for s in ranked if s != lead)]
-            titles = [self.topics[s]["title"] for s in ranked[:3]]
-            constellations.append(
-                {
-                    "id": f"c{i + 1}",
-                    "title": " · ".join(titles) + (" · …" if len(group) > 3 else ""),
-                    "color": _constellation_color(i),
-                    "topics": group,
-                }
-            )
         return {
             "brain": g["brain"],
             "generated": g["generated"],
@@ -279,28 +151,11 @@ class Atlas:
                 "links": len(links),
                 "flagged": len(flagged),
             },
-            "constellations": constellations,
             "topics": self._topic_summaries(),
             "flows": self._flows(links),
             "episodes": {"count": self._episode_count()},
             "runs": [self._run(r) for r in g["runs"]],
         }
-
-    def _tree_root(self, group: list[str]) -> str | None:
-        """The topic every other topic in the group sits under, for a group from the tree."""
-        inside = set(group)
-        tops = [s for s in group if self._parents.get(s) not in inside]
-        return tops[0] if len(tops) == 1 and len(group) > 1 else None
-
-    def _central_topic(self, group: list[str]) -> str | None:
-        """The topic linked to at least half of the others in its group (a plugins topic
-        and each plugin, people and each person), or None when no topic holds the group together."""
-        if len(group) < 3:
-            return None
-        inside = set(group)
-        reach = {s: len(set(self._adj.get(s, {})) & inside - {s}) for s in group}
-        best = min(group, key=lambda s: (-reach[s], -self.topics[s]["notes"], s))
-        return best if reach[best] * 2 >= len(group) - 1 else None
 
     def _episode_count(self) -> int:
         return sum(1 for n in self.graph["nodes"] if n["kind"] == "episode")
@@ -310,38 +165,58 @@ class Atlas:
         by_topic: dict[str, list[dict[str, Any]]] = {}
         for node in self.notes:
             by_topic.setdefault(node["topic"], []).append(node)
+        own = {s: sum(n.get("chars") or 0 for n in by_topic.get(s, [])) for s in self.order}
+        tree = dict(own)
+        for slug in reversed(self.order):  # children come after their parent
+            parent = self._parents.get(slug)
+            if parent in tree:
+                tree[parent] += tree[slug]
         out = []
-        for group in self.groups:
-            for slug in group:
-                topic = self.topics[slug]
-                members = by_topic.get(slug, [])
-                flags: dict[str, int] = {}
-                for node in members:
-                    for flag in node["flags"]:
-                        flags[flag] = flags.get(flag, 0) + 1
-                dates = [n["updated"] for n in members if n["updated"]]
-                notes = [n for n in members if n["kind"] == "note"]  # not the topic page
-                out.append(
-                    {
-                        "slug": slug,
-                        "title": topic["title"],
-                        "description": topic.get("description") or "",
-                        "parent": topic.get("parent"),
-                        "color": self.colors[slug],
-                        "constellation": self.constellation_of[slug],
-                        "notes": len(notes),
-                        "page": topic.get("page"),
-                        "updated": max(dates) if dates else None,
-                        "recent": sum(1 for n in notes if (n["updated"] or "") >= cutoff),
-                        "flags": flags,
-                        "flagged": sum(1 for n in members if n["flags"]),
-                    }
-                )
+        for slug in self.order:
+            topic = self.topics[slug]
+            members = by_topic.get(slug, [])
+            flags: dict[str, int] = {}
+            for node in members:
+                for flag in node["flags"]:
+                    flags[flag] = flags.get(flag, 0) + 1
+            dates = [n["updated"] for n in members if n["updated"]]
+            notes = [n for n in members if n["kind"] == "note"]  # not the topic page
+            parent = topic.get("parent")
+            out.append(
+                {
+                    "slug": slug,
+                    "title": topic["title"],
+                    "name": folder_name(topic),
+                    "description": topic.get("description") or "",
+                    "parent": parent if parent in self.topics else None,
+                    "depth": len(self._ancestors(slug)),
+                    "color": self.colors[slug],
+                    "notes": len(notes),
+                    "page": topic.get("page"),
+                    "chars": own[slug],
+                    "tree_chars": tree[slug],
+                    "updated": max(dates) if dates else None,
+                    "recent": sum(1 for n in notes if (n["updated"] or "") >= cutoff),
+                    "flags": flags,
+                    "flagged": sum(1 for n in members if n["flags"]),
+                }
+            )
+        return out
+
+    def _ancestors(self, slug: str) -> list[str]:
+        out: list[str] = []
+        while (parent := self._parents.get(slug)) in self.topics and parent not in out:
+            out.append(parent)
+            slug = parent
         return out
 
     def _flows(self, links: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Typed links between the notes of two topics; body links are not drawn, and the map adds
+        the flows up between top-level topics (visualizer.md §3)."""
         flows: dict[tuple[str, str], dict[str, int]] = {}
         for link in links:
+            if link["rel"] == "links_to":
+                continue
             a, b = self._topic_of.get(link["source"]), self._topic_of.get(link["target"])
             if a is None or b is None or a == b:
                 continue

@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from brainwiki.viz._lod import topic_colors, topic_weights, tree_groups
+from brainwiki.viz._lod import folder_name, topic_colors, tree_order
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
@@ -39,7 +39,7 @@ def build_graph(engine: Engine, *, topics: list[str] | None = None) -> dict[str,
         degree[link["source"]] = degree.get(link["source"], 0) + 1
         degree[link["target"]] = degree.get(link["target"], 0) + 1
     nodes = [_node(row, degree, flags) for row in rows]
-    topic_list = _topics(topic_rows(engine), nodes, links, wanted)
+    topic_list = _topics(topic_rows(engine), nodes, wanted)
     return {
         "brain": engine.brain.display_name,
         "generated": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -53,8 +53,10 @@ def build_graph(engine: Engine, *, topics: list[str] | None = None) -> dict[str,
 
 def _nodes(engine: Engine, wanted: set[str] | None) -> list[dict[str, Any]]:
     rows = engine.db.execute(
-        """SELECT id, path, kind, topic, title, type, status, updated, aliases, line_count
-           FROM nodes WHERE kind IN ('note','topic','episode') ORDER BY path"""
+        """SELECT n.id, n.path, n.kind, n.topic, n.title, n.type, n.status, n.updated, n.aliases,
+                  n.line_count, COALESCE(length(d.body), 0) AS chars
+           FROM nodes n LEFT JOIN docs d ON d.node_id = n.id
+           WHERE n.kind IN ('note','topic','episode') ORDER BY n.path"""
     ).fetchall()
     out = []
     for row in rows:
@@ -133,6 +135,7 @@ def _node(
         "updated": (row["updated"] or "")[:10] or None,
         "aliases": aliases,
         "lines": row["line_count"],
+        "chars": row["chars"],  # the text without frontmatter
         "degree": degree.get(row["id"], 0),
         "flags": list(flags.get(row["id"], [])),
     }
@@ -141,7 +144,6 @@ def _node(
 def _topics(
     rows: list[dict[str, Any]],
     nodes: list[dict[str, Any]],
-    links: list[dict[str, Any]],
     wanted: set[str] | None,
 ) -> list[dict[str, Any]]:
     counts: dict[str, int] = {}
@@ -154,11 +156,10 @@ def _topics(
     rows = sorted(
         (r for r in rows if wanted is None or r["slug"] in wanted), key=lambda r: r["slug"]
     )
-    notes = [n for n in nodes if n["kind"] in ("note", "topic")]
     shown = {r["slug"] for r in rows}
     parents = {r["slug"]: r.get("parent") if r.get("parent") in shown else None for r in rows}
-    groups = tree_groups([r["slug"] for r in rows], parents, topic_weights(notes, links))
-    colors = topic_colors(groups)
+    names = {r["slug"]: folder_name(r) for r in rows}
+    colors = topic_colors(tree_order(list(shown), parents, names), parents)
     return [
         {
             "slug": row["slug"],
@@ -238,6 +239,7 @@ _NODE_KEYS = (
     ("status", "string"),
     ("updated", "string"),
     ("degree", "int"),
+    ("chars", "int"),
     ("flags", "string"),
 )
 _EDGE_KEYS = (("rel", "string"),)

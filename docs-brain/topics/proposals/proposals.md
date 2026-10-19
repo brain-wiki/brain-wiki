@@ -22,4 +22,3 @@ Generated from `docs/proposal/README.md`.
 - [[proposal-public-benchmarks]]: Public memory benchmarks
 - [[proposal-remote-mcp]]: Remote MCP for chat apps
 - [[proposal-remote-sync]]: Remote sync and object storage
-- [[proposal-visualizer-layers]]: Visualizer layers: topics as planes, notes as rings

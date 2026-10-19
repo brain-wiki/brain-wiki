@@ -20,7 +20,7 @@ One file per decision. Each says what was decided and why, what was rejected, an
 | [D14: The repo root is the plugin root](d14-repo-is-plugin-root.md) | Accepted |
 | [D15: Remote MCP is designed, not built](d15-remote-mcp-later.md) | Accepted |
 | [D16: Python 3.11 or newer, stdlib first](d16-python-stdlib-first.md) | Accepted |
-| [D17: A WebGL visualizer with semantic zoom](d17-webgl-visualizer.md) | Accepted |
+| [D17: A WebGL visualizer with semantic zoom](d17-webgl-visualizer.md) | Accepted, amended by [D41](d41-map-of-the-topic-tree.md) |
 | [D18: A synthetic, deterministic bench](d18-synthetic-bench.md) | Accepted |
 | [D19: Apache-2.0](d19-apache-license.md) | Accepted |
 | [D20: Harvest from the hosts' session stores](d20-harvest-host-sessions.md) | Accepted |
@@ -44,3 +44,4 @@ One file per decision. Each says what was decided and why, what was rejected, an
 | [D38: A topic is a folder and its page](d38-topic-pages.md) | Accepted |
 | [D39: Relations are link-only fields the author declares](d39-relation-fields.md) | Accepted |
 | [D40: Every folder is a topic](d40-every-folder-is-a-topic.md) | Accepted |
+| [D41: The map draws the topic tree in layers](d41-map-of-the-topic-tree.md) | Accepted |

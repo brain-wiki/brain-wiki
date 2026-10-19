@@ -17,7 +17,6 @@ from brainwiki.index._search import search
 from brainwiki.index._topics import _build_tree
 from brainwiki.lint import lint
 from brainwiki.runs._undo import undo
-from brainwiki.viz._lod import tree_groups
 from brainwiki.write._move import move_note
 
 MANIFEST = """format = 3
@@ -171,13 +170,3 @@ def test_mv_moves_a_topic_folder_and_keeps_its_identity(people: Path):
         assert row.fetchone()[0] == "rin-sato"
         undo(e, record.run)
         assert (people / "topics/people/rin-sato/priority.md").exists()
-
-
-def test_tree_groups_make_a_constellation_per_top_topic():
-    slugs = ["people", *[f"p{i}" for i in range(12)], "search", "storage"]
-    parents = {"people": None, "search": None, "storage": None} | {
-        f"p{i}": "people" for i in range(12)
-    }
-    groups = tree_groups(slugs, parents, {"search": {"storage": 1.0}, "storage": {"search": 1.0}})
-    assert groups[0] == sorted(["people", *[f"p{i}" for i in range(12)]])
-    assert groups[1] == ["search", "storage"]

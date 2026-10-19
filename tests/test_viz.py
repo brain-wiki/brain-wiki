@@ -21,7 +21,7 @@ from brainwiki.engine import Engine
 from brainwiki.viz import _export as export
 from brainwiki.viz import _server as viz_server
 from brainwiki.viz._export import _script_json, build_graph, to_graphml, to_standalone_html
-from brainwiki.viz._lod import _GROUP_MAX, Atlas, _group_topics, topic_weights
+from brainwiki.viz._lod import Atlas, tree_order
 from brainwiki.viz._server import _CSP, _make_server, _VizServer
 
 FIXTURE = Path(__file__).parent / "fixtures" / "example-brain"
@@ -78,6 +78,7 @@ def test_graph_nodes_links_and_flags(example: Path):
 
     fts5 = _node(graph, FTS5)
     assert fts5["degree"] == 8  # its fields and the prose links beside them
+    assert 0 < fts5["chars"] < len((example / fts5["path"]).read_text())
     assert fts5["aliases"] == ["FTS5 decision"]
     assert fts5["updated"] == "2026-10-01"
 
@@ -225,7 +226,6 @@ def test_world_shape_and_totals(example: Path):
         "generated",
         "profile",
         "totals",
-        "constellations",
         "topics",
         "flows",
         "episodes",
@@ -240,22 +240,20 @@ def test_world_shape_and_totals(example: Path):
         "flagged": 4,
     }
     assert world["episodes"] == {"count": 1}
-    [only] = world["constellations"]
-    assert only["id"] == "c1"
-    assert sorted(only["topics"]) == ["budget", "search", "storage"]
-    assert re.fullmatch(r"#[0-9a-f]{6}", only["color"])
     topics = {t["slug"]: t for t in world["topics"]}
     search = topics["search"]
     assert search["notes"] == 3
     assert search["page"] == "01M4KT3JPRY4W6766VT18CQS90"
     assert search["description"] == "How local search works and why."
-    assert search["constellation"] == "c1"
+    assert (search["name"], search["depth"], search["parent"]) == ("search", 0, None)
+    assert search["tree_chars"] == search["chars"] > 0
     assert search["flags"] == {"superseded": 1, "conflict": 2}
     assert search["flagged"] == 3
     assert len({t["color"] for t in topics.values()}) == 3
-    flows = {(f["a"], f["b"]): f for f in world["flows"]}
-    assert flows[("search", "storage")]["rels"] == {"links_to": 2, "depends_on": 1}
-    assert flows[("budget", "search")]["rels"] == {"links_to": 1, "conflicts_with": 1}
+    assert all(re.fullmatch(r"#[0-9a-f]{6}", t["color"]) for t in topics.values())
+    flows = {(f["a"], f["b"]): f for f in world["flows"]}  # typed links only
+    assert flows[("search", "storage")]["rels"] == {"depends_on": 1}
+    assert flows[("budget", "search")]["rels"] == {"conflicts_with": 1}
     assert all(f["a"] < f["b"] for f in world["flows"])
 
 
@@ -332,22 +330,34 @@ def test_search_titles_matches_aliases(example: Path):
     assert atlas.search_titles("  ") == []
 
 
-def test_small_brain_has_one_constellation():
-    adj = {"a": {"b": 3.0}, "b": {"a": 3.0}}
-    slugs = [f"t{i:02d}" for i in range(12)]
-    assert _group_topics(slugs, adj) == [sorted(slugs)]
-    assert _group_topics([], {}) == []
+def test_chars_count_the_text_without_frontmatter(example: Path):
+    write(example, "topics/search/short.md", "---\ntitle: Short\n---\nabcde\n")
+    with engine_for(example) as eng:
+        graph = build_graph(eng)
+    short = next(n for n in graph["nodes"] if n["path"] == "topics/search/short.md")
+    assert short["chars"] == 5
 
 
-def _topic_graph(notes: dict[str, int], edges: list[tuple[str, str]]) -> dict:
-    """A minimal graph: `notes` notes per topic, one link per edge between topics."""
-    nodes = [
-        {"id": f"{t}-{i}", "kind": "note", "topic": t, "flags": [], "updated": None}
-        for t, count in notes.items()
-        for i in range(count)
+def _tree_graph() -> dict:
+    """Two top-level topics; `work` has the sub-topics `2 Plans` and `10 Notes`, and `10 Notes`
+    has its own sub-topic."""
+    topics = [
+        {"slug": "work", "title": "Work", "path": "topics/Work", "parent": None},
+        {"slug": "notes", "title": "notes", "path": "topics/Work/10 Notes", "parent": "work"},
+        {"slug": "plans", "title": "plans", "path": "topics/Work/2 Plans", "parent": "work"},
+        {"slug": "old", "title": "old", "path": "topics/Work/10 Notes/Old", "parent": "notes"},
+        {"slug": "home", "title": "Home", "path": "topics/Home", "parent": None},
     ]
-    links = [{"source": f"{a}-0", "target": f"{b}-0", "rel": "links_to"} for a, b in edges]
-    topics = [{"slug": t, "title": t.title(), "notes": n} for t, n in notes.items()]
+    chars = {"work": 100, "notes": 20, "plans": 30, "old": 5, "home": 7}
+    nodes = [
+        {"id": s, "kind": "note", "topic": s, "title": s, "updated": None, "flags": [], "chars": c}
+        for s, c in chars.items()
+    ]
+    links = [
+        {"source": "old", "target": "home", "rel": "depends_on"},
+        {"source": "plans", "target": "home", "rel": "links_to"},  # a body link: no flow
+        {"source": "plans", "target": "notes", "rel": "part_of"},
+    ]
     return {
         "brain": "b",
         "generated": "",
@@ -359,54 +369,45 @@ def _topic_graph(notes: dict[str, int], edges: list[tuple[str, str]]) -> dict:
     }
 
 
-def test_constellation_title_leads_with_its_central_topic():
-    plugins = ["calendar", "kanban", "tasks", "web-clipper"]
-    star = _topic_graph(
-        {"plugins": 1, **dict.fromkeys(plugins, 3)}, [("plugins", p) for p in plugins]
-    )
-    [only] = Atlas(star).world()["constellations"]
-    assert only["title"] == "Plugins · Calendar · Kanban · …"
-    chain = ["a", "b", "c", "d", "e", "f"]  # no topic reaches half of the others
-    line = _topic_graph(
-        dict(zip(chain, range(1, 7), strict=True)), list(zip(chain, chain[1:], strict=False))
-    )
-    assert Atlas(line).world()["constellations"][0]["title"] == "F · E · D · …"
+def test_world_lays_out_the_topic_tree():
+    world = Atlas(_tree_graph()).world()
+    topics = {t["slug"]: t for t in world["topics"]}
+    # depth first, siblings by folder name with numbers as numbers
+    assert [t["slug"] for t in world["topics"]] == ["home", "work", "plans", "notes", "old"]
+    assert {s: t["depth"] for s, t in topics.items()} == {
+        "home": 0,
+        "work": 0,
+        "plans": 1,
+        "notes": 1,
+        "old": 2,
+    }
+    assert topics["old"]["name"] == "Old" and topics["notes"]["name"] == "10 Notes"
+    assert (topics["work"]["chars"], topics["work"]["tree_chars"]) == (100, 155)
+    assert (topics["notes"]["chars"], topics["notes"]["tree_chars"]) == (20, 25)
+    assert world["flows"] == [  # typed links only, between the notes' own topics
+        {"a": "home", "b": "old", "total": 1, "rels": {"depends_on": 1}},
+        {"a": "notes", "b": "plans", "total": 1, "rels": {"part_of": 1}},
+    ]
+    assert len({topics[s]["color"] for s in topics}) == 5
 
 
-def test_constellations_on_generated_brain(tmp_path: Path):
+def test_tree_order_survives_a_parent_cycle():
+    parents: dict[str, str | None] = {"a": "b", "b": "a", "c": None}
+    assert sorted(tree_order(["a", "b", "c"], parents, {})) == ["a", "b", "c"]
+
+
+def test_tree_order_and_colors_on_generated_brain(tmp_path: Path):
     from brainwiki.bench._generate import generate
 
     root = tmp_path / "gen"
     generate(root, notes=800, seed=1)
     with engine_for(root) as eng:
         graph = build_graph(eng)
-    first = Atlas(graph).world()["constellations"]
-    assert Atlas(graph).world()["constellations"] == first
-    slugs = [t["slug"] for t in graph["topics"]]
-    assert len(slugs) > 12
-    assert 2 <= len(first) <= 12
-    assert [c["id"] for c in first] == [f"c{i + 1}" for i in range(len(first))]
-    placed = [s for c in first for s in c["topics"]]
-    assert sorted(placed) == sorted(slugs)
-    assert all(1 <= len(c["topics"]) <= _GROUP_MAX for c in first)
-    sizes = [len(c["topics"]) for c in first]
-    assert sizes == sorted(sizes, reverse=True)
+    first = Atlas(graph).world()["topics"]
+    assert Atlas(graph).world()["topics"] == first
+    assert sorted(t["slug"] for t in first) == sorted(t["slug"] for t in graph["topics"])
     colors = {t["slug"]: t["color"] for t in graph["topics"]}
-    world_colors = {t["slug"]: t["color"] for t in Atlas(graph).world()["topics"]}
-    assert colors == world_colors
-
-
-def test_constellations_split_and_chunk():
-    # One dense clique of 90 topics cannot be split by modularity, so it is chunked;
-    # unlinked topics land in their own chunks.
-    clique = [f"k{i:03d}" for i in range(90)]
-    adj = {a: {b: 1.0 for b in clique if b != a} for a in clique}
-    loose = [f"z{i:03d}" for i in range(45)]
-    groups = _group_topics(clique + loose, adj)
-    assert sorted(s for g in groups for s in g) == sorted(clique + loose)
-    assert all(len(g) <= _GROUP_MAX for g in groups)
-    assert _group_topics(clique + loose, adj) == groups
-    assert [len(g) for g in groups] == [40, 40, 40, 10, 5]
+    assert colors == {t["slug"]: t["color"] for t in first}
 
 
 def test_world_keeps_each_topics_strongest_flows():
@@ -416,7 +417,7 @@ def test_world_keeps_each_topics_strongest_flows():
         for s in slugs
     ]
     links = [
-        {"source": a, "target": b, "rel": "links_to"}
+        {"source": a, "target": b, "rel": "depends_on"}
         for i, a in enumerate(slugs)
         for b in slugs[i + 1 :]
     ]
@@ -435,22 +436,11 @@ def test_world_keeps_each_topics_strongest_flows():
         "a": "t00",
         "b": "t19",
         "total": 2,
-        "rels": {"links_to": 1, "superseded_by": 1},
+        "rels": {"depends_on": 1, "superseded_by": 1},
     }
     assert len(flows) < 190
     for slug in slugs:
         assert sum(slug in (f["a"], f["b"]) for f in flows) >= 8
-
-
-def test_topic_weights_count_cross_topic_links():
-    nodes = [{"id": "a", "topic": "x"}, {"id": "b", "topic": "y"}, {"id": "c", "topic": "x"}]
-    links = [
-        {"source": "a", "target": "b", "rel": "links_to"},
-        {"source": "c", "target": "b", "rel": "links_to"},
-        {"source": "a", "target": "b", "rel": "superseded_by"},
-        {"source": "a", "target": "c", "rel": "links_to"},  # within one topic
-    ]
-    assert topic_weights(nodes, links) == {"x": {"y": 3}, "y": {"x": 3}}
 
 
 def _inline(html: str, tag: str) -> list[str]:
