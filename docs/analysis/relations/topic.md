@@ -113,7 +113,8 @@ All exist today.
    map already draws every folder. Every folder is a topic, whatever it
    holds. A folder without a topic page is a topic with no content of its
    own: its title is the folder name, and it has no description or
-   summary.
+   summary. On 2026-10-19 the maintainer narrowed this: a folder with no
+   notes under it, such as one of images only, is not a topic.
 2. **Where does a topic's title and description live?** Settled
    (2026-10-17): on its topic page only. Under Title Case naming the page
    is `Index.md`, and it never carries the folder's leading number: the
@@ -176,7 +177,8 @@ topics/Notes App/Sync/Images/Merge Flow.png         no notes in Images/
 
 - `Records/` is a sub-topic of Sync, and the outage note belongs to it; a
   search filtered to the topic `notes-app` still finds the note.
-- `Images/` is a topic too, with no notes and no content of its own.
+- `Images/` holds no notes, so it is not a topic (settled 2026-10-19: a
+  folder with no notes under it does not count).
 - The briefing lists Notes App with its sub-topic count, not Records or Images
   on their own lines.
 

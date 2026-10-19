@@ -75,9 +75,10 @@ A topic is the unit people browse and search filters by, and its topic
 page summarizes it. Topics are folders, so every file browser shows them, and they
 form a tree ([D30](../decision/d30-topic-tree.md)).
 
-- Every folder under `topics/` that holds a file, directly or deeper, is a
-  topic ([D40](../decision/d40-every-folder-is-a-topic.md)). There are no
-  named levels: `people/` and `people/rin-sato/` are both topics.
+- Every folder under `topics/` that holds a note, directly or deeper, is a
+  topic ([D40](../decision/d40-every-folder-is-a-topic.md)). A folder of
+  attachments only, or with nothing in it, is not. There are no named
+  levels: `people/` and `people/rin-sato/` are both topics.
 - The topic page (`layout.topic_page`, §8) is optional. A topic without
   one has no content of its own: no description and no summary.
 - A sub-topic's parent is the topic of the folder above it. A note belongs to the

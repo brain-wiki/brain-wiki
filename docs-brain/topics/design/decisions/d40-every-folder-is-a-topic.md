@@ -10,7 +10,7 @@ source: "docs/decision/d40-every-folder-is-a-topic.md"
 Status: accepted.
 Argued in: [[brain-format-2-directory-layout|brain format §2.1]], the topic analysis.
 
-Every folder under `topics/` that holds a file, directly or deeper, is a topic, with or without a topic page. A topic without a page has no content of its own. A note belongs to the topic of the folder that holds it, so adding or removing a page no longer moves notes between topics. Only top-level and declared topics are expected to have a page (BW404).
+Every folder under `topics/` that holds a note, directly or deeper, is a topic, with or without a topic page. A topic without a page has no content of its own. A folder of attachments only, such as `Images/`, or with nothing in it, is not a topic: it would be a topic with no notes at all. A note belongs to the topic of the folder that holds it, so adding or removing a page no longer moves notes between topics. Only top-level and declared topics are expected to have a page (BW404).
 
 This amends [[d30-topic-tree|D30]], under which a folder below the top level was a topic only if it had a topic page, and was otherwise plain organization whose notes belonged to the enclosing topic.
 

@@ -18,7 +18,8 @@
 
 - **Every folder is a topic.** A folder inside a topic is a sub-topic
   whether or not it has a topic page, so a note belongs to the folder it
-  sits in, as a file browser shows. Before, a folder without a page was
+  sits in, as a file browser shows. A folder with no notes under it, such
+  as one of images only, is not a topic. Before, a folder without a page was
   plain organization and its notes belonged to the enclosing topic. Only
   top-level and declared topics are expected to have a page (BW404)
   ([D40](docs/decision/d40-every-folder-is-a-topic.md)).

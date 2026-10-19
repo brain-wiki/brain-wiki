@@ -41,7 +41,7 @@ def test_tree_slugs_and_parents():
             "topics/search/fts.md",
             "topics/search/notes/index.md",
             "topics/search/guide/index.md",
-            "topics/search/images/flow.png",  # no notes: a topic with no content of its own
+            "topics/search/images/flow.png",  # attachments only: not a topic
             "inbox/episodes/index.md",  # not under topics/
         ],
     )
@@ -54,7 +54,6 @@ def test_tree_slugs_and_parents():
         "notes": "topics/people/notes",
         "search-notes": "topics/search/notes",  # a clash takes its parent's slug as prefix
         "handbook": "topics/search/guide",  # an explicit path wins its folder
-        "images": "topics/search/images",
     }
     assert tree.parent("meetings") == "rin-sato" and tree.ancestors("meetings") == [
         "rin-sato",

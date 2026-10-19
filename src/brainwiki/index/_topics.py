@@ -1,7 +1,8 @@
 """The topic tree (brain-format.md §2): which folders are topics, their parents, what they inherit.
 
-Every folder under the topics directory that holds a file is a topic, with or without a topic
-page; one without a page has no content of its own. Its slug, not its path, is its identity, so
+Every folder under the topics directory that holds a note, directly or deeper, is a topic, with
+or without a topic page; one without a page has no content of its own. A folder of attachments
+only, or with nothing in it, is not a topic. Its slug, not its path, is its identity, so
 folders can be reorganized.
 """
 
@@ -96,12 +97,14 @@ class TopicTree:
 
 
 def _build_tree(manifest: Manifest, files: Iterable[str]) -> TopicTree:
-    """The tree from every folder under the topics directory that holds a file."""
+    """The tree from every folder under the topics directory that holds a note."""
     layout = manifest.layout
     base = "" if layout.topics_dir in (".", "") else layout.topics_dir.rstrip("/") + "/"
     reserved = (layout.inbox_dir, layout.archive_dir, layout.reports_dir)
     folders: set[str] = set()
     for rel in files:
+        if not rel.lower().endswith(".md"):
+            continue  # attachments alone do not make a topic
         folder = posixpath.dirname(rel)
         while folder and folder.startswith(base) and folder not in folders:
             if any(folder == r or folder.startswith(r + "/") for r in reserved) or (
