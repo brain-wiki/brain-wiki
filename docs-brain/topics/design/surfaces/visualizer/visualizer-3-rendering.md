@@ -37,7 +37,7 @@ The layout is deterministic. The same brain always produces the same map. A topi
            plane 0   ·  top-level topics, packed by size
      ◜◝ ring ◜◝      ·  each topic's notes around its topic page
         │ stem
-           plane 1   ·  sub-topics, packed inside the parent's footprint
+           plane 1   ·  sub-topics, in orbit outside the parent's ring
      ◜◝ ring ◜◝
         │
            plane 2   ·  and so on, one plane per level
@@ -47,10 +47,11 @@ The layout is deterministic. The same brain always produces the same map. A topi
 |---|---|
 | Content | The characters of a note's text, without its frontmatter. A topic's content is the sum over every note under it |
 | Planes | Top-level topics sit on plane 0. Each level of sub-topics sits on its own plane below: the first 6% of the map's radius under plane 0, each further gap three quarters of the one above, so deep trees stay short |
-| Footprint | Bottom up, a topic packs its sub-topics' footprints around its center, largest first; its footprint's area is its ring's plus that packing, so it grows with all the content under it. Top-level footprints are packed the same way on plane 0, and the map is scaled to a fixed radius. Footprints are not drawn |
-| Center | The topic page is a bright core at the center of the footprint, labeled with the topic's title. A topic without a page shows a small marker labeled with its folder name |
+| Orbit | Bottom up, a topic's sub-topics orbit outside its ring, each in a wedge of its own wide enough for its footprint, as near the ring as the wedges allow: the largest first, the rest alternating to either side. One wedge stays empty, for the stem coming in from the topic above |
+| Footprint | The smallest circle around a topic's ring and its sub-topics' footprints, so it grows with all the content under it. Top down, each topic turns about its footprint's center until its empty wedge faces its parent. Top-level footprints are packed by size on plane 0, and the map is scaled to a fixed radius. Footprints are not drawn |
+| Center | The topic page is a bright core at the topic's center, labeled with the topic's title. A topic without a page shows a small marker labeled with its folder name. Flying to a topic puts its center in the middle of the view, far enough out to show its whole footprint |
 | Ring | The topic's other notes, around its center on its plane (§3.2) |
-| Stem | A curve joins each sub-topic's center to its parent's: it drops from the parent and comes down onto the sub-topic from above, running between the two planes and never along either |
+| Stem | A curve from the edge of the parent's ring to the sub-topic's center: it drops from the parent and comes down onto the sub-topic from above, running between the two planes and never along either. Seen from above it is a straight line inside the sub-topic's wedge, so it crosses neither the parent's ring nor another topic |
 
 `bw-part_of` does not move anything: a note sits only under its folder, and Part of shows as a link.
 
@@ -68,7 +69,7 @@ The layout is deterministic. The same brain always produces the same map. A topi
 
 The interface says Overview, Topic, and Note, and calls a topic by its title, or by its folder name when it has no topic page. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Conflicts with, Depends on, Part of, Cites, and from the other end links here, replaced by this, conflicts with this, depends on this, parts, cites this), and every number names its unit.
 
-The topic tree is always drawn, as a curved stem from each sub-topic's center to its parent's, brighter at the parent end. A body wikilink only says that one note mentions another, so the map does not draw it, and flows count only typed links; the Details panel lists body links. The map draws five kinds of link between notes, as arcs from tip to tip that rise higher the farther apart the notes are, across planes when the two notes' topics are on different levels. Flows between top-level topics arc the same way. Each kind has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
+The topic tree is always drawn, as a curved stem from the edge of each parent's ring down to its sub-topic's center, brighter at the parent end. A body wikilink only says that one note mentions another, so the map does not draw it, and flows count only typed links; the Details panel lists body links. The map draws five kinds of link between notes, as arcs from tip to tip that rise higher the farther apart the notes are, across planes when the two notes' topics are on different levels. Flows between top-level topics arc the same way. Each kind has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
 
 | Kind (dock chip) | From | Trail |
 |---|---|---|
