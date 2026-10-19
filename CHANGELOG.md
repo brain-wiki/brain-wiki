@@ -7,7 +7,8 @@
   form a ring of slices around its topic page, clockwise by file name, a
   longer note wider and reaching farther. The levels are Overview, Topic,
   and Note: groups of topics are gone. Shift+drag turns the view, and `R`
-  turns it back. Flows between top-level topics count only typed links
+  turns it back. Stems and links are drawn as curves. Flows between
+  top-level topics count only typed links
   ([D41](docs/decision/d41-map-of-the-topic-tree.md)).
 - **Content sizes in the map's data.** Each node in `/api/world`,
   `/api/topic`, and `--export` carries `chars`, its text without

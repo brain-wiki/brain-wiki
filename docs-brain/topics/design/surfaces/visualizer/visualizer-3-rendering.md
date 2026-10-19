@@ -11,7 +11,7 @@ The scene uses three.js on WebGL2:
 
 - Topic centers are additive glow points, one draw call for all topics: a bright core where the topic page is, with a faint halo as wide as its ring, or a small marker for a folder without a page. Markers keep a minimum size on screen.
 - Each loaded ring is one mesh of slices. Stars at the slices' tips are glow points drawn by one shader: color is the topic's, brightness the note's recency, superseded and archived notes look faded, and each health flag adds a halo ring.
-- Stems and trails are solid thick lines. Supersession adds slow pulses running from the old note to the new one, so the line shows direction without breaking into dashes.
+- Stems, trails, and flows are solid thick lines drawn as curves. Supersession adds slow pulses running from the old note to the new one, so the line shows direction without breaking into dashes.
 - Post-processing adds bloom, tone mapping, a vignette, depth fog, and a starfield backdrop. Camera moves are eased flights, not jumps.
 
 Navigation is a map you can turn:
@@ -50,7 +50,7 @@ The layout is deterministic. The same brain always produces the same map. A topi
 | Footprint | Bottom up, a topic packs its sub-topics' footprints around its center, largest first; its footprint's area is its ring's plus that packing, so it grows with all the content under it. Top-level footprints are packed the same way on plane 0, and the map is scaled to a fixed radius. Footprints are not drawn |
 | Center | The topic page is a bright core at the center of the footprint, labeled with the topic's title. A topic without a page shows a small marker labeled with its folder name |
 | Ring | The topic's other notes, around its center on its plane (§3.2) |
-| Stem | A line joins each sub-topic's center to its parent's |
+| Stem | A curve joins each sub-topic's center to its parent's: it leaves the parent level with the parent's plane and comes down onto the sub-topic from above |
 
 `bw-part_of` does not move anything: a note sits only under its folder, and Part of shows as a link.
 
@@ -67,7 +67,7 @@ The layout is deterministic. The same brain always produces the same map. A topi
 
 The interface says Overview, Topic, and Note, and calls a topic by its title, or by its folder name when it has no topic page. It says issues, not flags; session captures, not episodes; and Sources, not `bw-sources`. Links read as plain verbs (Links to, Replaced by, Conflicts with, Depends on, Part of, Cites, and from the other end links here, replaced by this, conflicts with this, depends on this, parts, cites this), and every number names its unit.
 
-The topic tree is always drawn, as a stem from each sub-topic's center to its parent's, brighter at the parent end. A body wikilink only says that one note mentions another, so the map does not draw it, and flows count only typed links; the Details panel lists body links. The map draws five kinds of link between notes, from tip to tip, across planes when the two notes' topics are on different levels. Each kind has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
+The topic tree is always drawn, as a curved stem from each sub-topic's center to its parent's, brighter at the parent end. A body wikilink only says that one note mentions another, so the map does not draw it, and flows count only typed links; the Details panel lists body links. The map draws five kinds of link between notes, as arcs from tip to tip that rise higher the farther apart the notes are, across planes when the two notes' topics are on different levels. Flows between top-level topics arc the same way. Each kind has a chip in the dock, and all are on by default. A trail runs from the note that holds the link to the one it names:
 
 | Kind (dock chip) | From | Trail |
 |---|---|---|
