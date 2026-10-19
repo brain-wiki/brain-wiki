@@ -33,7 +33,7 @@ _HOST = "127.0.0.1"
 # Every-interface address -> the loopback address to open locally. Opt-in through --host.
 _WILDCARDS = {"0.0.0.0": "127.0.0.1", "::": "::1"}  # noqa: S104
 _LOOPBACK = ("127.0.0.1", "::1", "localhost")
-_IDLE_SECONDS = 30 * 60
+_IDLE_SECONDS = 2 * 60 * 60
 _MAX_MARKDOWN = 200_000
 # Read at request time, so tests can point the server at a stand-in build.
 _APP_DIR: Path = export.APP_DIR
@@ -391,7 +391,7 @@ def serve(
         )
     # Flush: through a pipe (an agent's shell tool, `| tee`) the token URL would otherwise
     # stay buffered until the server exits, and the map is unreachable without it.
-    print("Press Ctrl-C to stop (stops by itself after 30 minutes idle).", flush=True)
+    print("Press Ctrl-C to stop (stops by itself after 2 hours idle).", flush=True)
     if open_browser:
         webbrowser.open(server.url)
     try:

@@ -2,6 +2,9 @@
 
 ## 0.3.4 (unreleased)
 
+- **The map stays up longer.** `brain viz` stops after 2 hours without a
+  request, instead of 30 minutes.
+
 - **The map is the topic tree, in layers.** Each level of topics sits on its
   own plane, with a stem from each sub-topic to its parent. A topic's notes
   form a ring of slices around its topic page, clockwise by file name, a
