@@ -22,3 +22,4 @@ Generated from `docs/proposal/README.md`.
 - [[proposal-public-benchmarks]]: Public memory benchmarks
 - [[proposal-remote-mcp]]: Remote MCP for chat apps
 - [[proposal-remote-sync]]: Remote sync and object storage
+- [[proposal-visualizer-camera]]: Visualizer camera: turning at the cursor, view modes, and a navigation control
