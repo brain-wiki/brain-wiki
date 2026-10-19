@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4 (unreleased)
+
+- **`brain mv` rewrites links in tables.** A wikilink in a Markdown table
+  row escapes its pipe (`[[note\|label]]`, as Obsidian writes it), and
+  `brain mv` left such links pointing at the old path.
+
 ## 0.3.3 (2026-10-18)
 
 - **Typed relations, as link-only fields (format 4).** A note may name

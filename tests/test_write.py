@@ -216,7 +216,9 @@ def test_mv_rewrites_links_and_undoes(example: Path):
     write(
         example,
         "topics/storage/links.md",
-        "---\nid: 01M4KT3JPRY4W6766VT18CQS60\n---\n# Links\n\nSee [policy](sqlite-version-policy.md) and [[sqlite-version-policy]].\n\n## Related\n- [[Storage]]\n",
+        "---\nid: 01M4KT3JPRY4W6766VT18CQS60\n---\n# Links\n\nSee [policy](sqlite-version-policy.md) and [[sqlite-version-policy]].\n\n"
+        "| Note | Why |\n|---|---|\n| [[topics/storage/sqlite-version-policy\\|the policy]] | a table link |\n\n"
+        "## Related\n- [[Storage]]\n",
     )
     with eng(example) as e:
         e.scan(force=True)
@@ -225,6 +227,7 @@ def test_mv_rewrites_links_and_undoes(example: Path):
         )
         links = (example / "topics/storage/links.md").read_text()
         assert "[[sqlite-policy]]" in links and "](sqlite-policy.md)" in links
+        assert "| [[sqlite-policy\\|the policy]] |" in links  # Obsidian's escaped pipe in tables
         fts5 = (example / "topics/search/fts5.md").read_text()
         assert "- Depends on [[sqlite-policy]] — needs the trigram tokenizer" in fts5
         unresolved = e.db.execute("SELECT raw_target FROM edges WHERE other IS NULL").fetchall()

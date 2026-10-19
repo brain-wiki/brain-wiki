@@ -266,8 +266,9 @@ def _rewrite_links(engine: Engine, run: Run, mapping: dict[str, str]) -> None:
                 continue
             line = lines[line_no - 1]
             if wiki is not None:
+                # `\|` is Obsidian's escaped pipe in a table row: `[[note\|label]]`.
                 line = re.sub(
-                    r"\[\[\s*" + re.escape(raw) + r"(?=\s*(?:\||#|\]\]))", "[[" + wiki, line
+                    r"\[\[\s*" + re.escape(raw) + r"(?=\s*(?:\\?\||#|\]\]))", "[[" + wiki, line
                 )
             if target is not None and (written == "md" or "](" in line):
                 href_new = posixpath.relpath(target, posixpath.dirname(where) or ".")
