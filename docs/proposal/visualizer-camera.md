@@ -1,6 +1,6 @@
 # Visualizer camera: turning at the cursor, view modes, and a navigation control
 
-Status: draft; research done 2026-10-19; open questions in §6. Not built.
+Status: draft; research done and questions 1, 3, and 4 decided with the maintainer on 2026-10-19 (§6). Not built.
 
 The map can be turned since the layers design
 ([visualizer §3](../design/visualizer.md#3-rendering)), but turning feels
@@ -21,14 +21,15 @@ tools have settled on and fits it to the map's planes and rings.
 | Tool | Turn and tilt | Pivot | Reset | 2D and 3D |
 |---|---|---|---|---|
 | Google Maps (vector map) | Shift+drag: up and down tilts, left and right turns the heading. Shift+arrow keys do the same | The map's center | The Rotate control in the bottom right combines tilt and rotate; the 3D map's Compass control resets the heading to north | Tilt is capped by zoom: 30° at zoom 10 or lower, rising to 67.5° at zoom 15.5 |
-| Google Earth (web) | Ctrl+drag; Shift+arrow keys rotate the globe | Not documented | Compass button: true north. Keys: `n` north, `u` top-down, `r` reset the view | A button in the bottom right switches between top-down and orbiting 3D, labeled with the mode it switches to. Key `o` |
-| MapLibre GL JS | Right-drag or Ctrl+drag turns and tilts | The map's center | The navigation control holds zoom buttons and a compass; with `visualizePitch` the compass tilts to show the pitch | Pitch is part of the camera |
+| Google Earth (web) | Ctrl+drag; Shift+arrow keys rotate the globe. A right drag zooms | Not documented | Compass button: true north. Keys: `n` north, `u` top-down, `r` reset the view | A button in the bottom right switches between top-down and orbiting 3D, labeled with the mode it switches to. Key `o` |
+| MapLibre GL JS | Right-drag or Ctrl+drag turns and tilts (unlike Google, where a right drag zooms) | The map's center | The navigation control holds zoom buttons and a compass; with `visualizePitch` the compass tilts to show the pitch | Pitch is part of the camera |
 | Blender | Middle-drag orbits | "Auto Depth" orbits around the surface under the cursor; "Orbit Around Selection" around the selection | View menu | Perspective and orthographic toggle |
 | camera-controls (our library) | Any button can rotate | `setOrbitPoint(x, y, z)` moves the pivot without moving the camera; it must not run during a transition | `rotateTo`, `setLookAt` | Works with a perspective or orthographic camera |
 
 Three patterns recur:
 
-- Turning is Shift+drag (or a second button), and Shift+arrow keys turn too.
+- Turning is Shift+drag, and Shift+arrow keys turn too. In Google Maps and Google
+  Earth a right drag zooms; MapLibre uses it to turn instead.
 - A compass in the corner shows the heading, and clicking it resets to north.
 - A control switches between a flat top-down view and a turnable 3D view.
 
@@ -38,8 +39,7 @@ on several planes), and pointing at one before turning is the natural gesture.
 
 ## 3. Turn around the point under the cursor
 
-- On Shift+drag (or a right-drag, §6 question 1), the pivot is what the cursor
-  points at: a star or topic center within a few pixels, or else the point on the
+- On Shift+drag, the pivot is what the cursor points at: a star or topic center within a few pixels, or else the point on the
   plane of the topic in view. The camera does not move when the pivot changes;
   only the turn does.
 - A small ring marks the pivot while the turn lasts, so the user sees what the
@@ -54,13 +54,36 @@ on several planes), and pointing at one before turning is the natural gesture.
 
 | Mode | Tilt | Heading | Planes | Shift+drag | For |
 |---|---|---|---|---|---|
-| 2D | Straight down, fixed | Turnable | Shown from above; see §6 question 2 | Turns the heading | Reading the layout and the rings as a flat map |
+| 2D | Straight down, fixed | Turnable | One level at a time (§4.1) | Turns the heading | Reading the layout and the rings as a flat map |
 | 2.5D (default) | 50°, fixed | Turnable | Stacked | Turns the heading | Everyday use: the levels show, and no accidental tilt |
-| 3D | 0° to 78°, free | Turnable | Stacked | Turns and tilts | Looking between the planes and along links |
+| 3D | Free, up to 60° at the overview and 78° close to a topic | Turnable | Stacked | Turns and tilts | Looking between the planes and along links |
 
 - Switching modes animates the tilt, and the mode is remembered like the
   graphics setting, with `?view=` in the URL to override it.
 - Flights keep the mode's tilt and the user's heading.
+- In 3D the tilt limit rises with zoom, as Google Maps caps tilt at 30° zoomed
+  out and 67.5° close in, so the whole map never turns edge-on.
+
+### 4.1 One level at a time in 2D
+
+From straight above, a parent's ring lies over the sub-topics packed under it.
+Google Maps never shows a container and its contents at full detail together:
+zoomed out it names countries, closer in cities, then streets, each giving way
+to the next; and in a building with indoor maps it shows one floor at a time,
+with a level picker that appears when such a building is focused. The 2D mode
+does the same with the planes:
+
+- **By zoom.** A topic's ring fades out as the rings of its sub-topics load, so
+  while you zoom into a topic its own notes give way to its sub-topics, as a
+  country's name gives way to its cities. Zooming back out brings the topic's
+  ring back. Centers and labels of the level below show before their rings do,
+  like city names before streets.
+- **By choice.** When the topic in view has sub-topics, a level picker appears
+  above the navigation control, listing the topic and each level below it
+  ("Projects · project level · records level"). Picking a level shows that
+  plane in full and fades the others, like choosing a floor; picking the topic
+  again returns to zoom-driven fading.
+- 2.5D and 3D keep every plane, since there the planes are apart on screen.
 
 ## 5. A navigation control
 
@@ -87,6 +110,7 @@ Keys and gestures, following Google Maps and Google Earth where ours are free:
 | Input | Does | From |
 |---|---|---|
 | Shift+drag | Turn around the point under the cursor (tilt too, in 3D) | Google Maps, Google Earth; the pivot from Blender's Auto Depth |
+| Right drag | Zoom: drag up to zoom in and down to zoom out, toward the point where the drag began | Google Maps, Google Earth |
 | Shift+← / → | Turn the heading by 15° | Google Maps, Google Earth |
 | Shift+↑ / ↓ | Tilt by 10°, in 3D | Google Maps |
 | `N` | North up, keeping the tilt | Google Earth |
@@ -98,23 +122,21 @@ Keys and gestures, following Google Maps and Google Earth where ours are free:
 `R` today resets the heading and tilt around the same point. It becomes the
 full reset, and the compass click takes over the orientation-only reset.
 
-## 6. Open questions
+## 6. Decided
 
-1. Should a right-drag turn the view, as in Google Maps and MapLibre, instead of
-   panning as it does now?
-2. In 2D, should the planes flatten onto plane 0? From straight above, a
-   parent's ring covers the sub-topics packed under it either way; reserving the
-   ring's area when packing would fix that, at the cost of larger footprints.
-3. Is `V` right for the view mode, with `O` kept for the overview?
-4. Should tilt be capped when zoomed out, as Google Maps does, so the overview
-   never shows the map edge-on?
+| Question | Answer (2026-10-19) |
+|---|---|
+| What does a right drag do? | It zooms, as in Google Maps and Google Earth; Shift+drag turns, and a left drag still pans |
+| How does 2D handle a parent's ring over its sub-topics? | As Google Maps does: one level at a time, by zoom and with a level picker (§4.1); proposed, to confirm |
+| Which key switches view modes? | `V`; `O` stays the overview |
+| Should tilt be capped when zoomed out? | Yes, by zoom, as Google Maps does |
 
 ## 7. Changes
 
 | Area | Change |
 |---|---|
-| Viz scene | Pivot under the cursor with a marker; view modes with animated tilt; Shift+arrow keys; optional flattening in 2D |
-| Viz HUD | The navigation control; the shortcuts sheet; the mode remembered and read from `?view=` |
+| Viz scene | Pivot under the cursor with a marker; a right drag zooms; view modes with animated tilt and a tilt cap by zoom; one level at a time in 2D; Shift+arrow keys |
+| Viz HUD | The navigation control and the 2D level picker; the shortcuts sheet; the mode remembered and read from `?view=` |
 | Docs | [Visualizer](../design/visualizer.md) §3 and §4 rewritten when built; this proposal deleted |
 
 ## Sources
@@ -124,11 +146,14 @@ full reset, and the compass click takes over the orientation-only reset.
 - Google Maps controls (Rotate control) and 3D map controls (Compass, Tilt):
   https://developers.google.com/maps/documentation/javascript/controls,
   https://developers.google.com/maps/documentation/javascript/3d/map-controls
+- Google Maps SDK level picker for indoor maps:
+  https://developers.google.com/android/reference/com/google/android/gms/maps/UiSettings
 - Google Earth navigation and keyboard shortcuts:
   https://developers.google.com/maps/documentation/earth/navigate-the-globe,
   https://developers.google.com/maps/documentation/earth/use-keyboard-shortcuts
-- MapLibre navigation control options:
-  https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/NavigationControlOptions/
+- MapLibre navigation control options and drag to rotate:
+  https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/NavigationControlOptions/,
+  https://maplibre.org/maplibre-gl-js/docs/API/classes/DragRotateHandler/
 - Blender navigation preferences:
   https://docs.blender.org/manual/en/latest/editors/preferences/navigation.html
 - camera-controls 2.10.1, `setOrbitPoint` in its type declarations.
