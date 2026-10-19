@@ -25,7 +25,7 @@ What shows:
 | Element | When |
 |---|---|
 | Topic centers and stems | Always, for the whole tree |
-| A topic's ring | When the ring is about 70 px or more across on screen (radius), at most 16 at once, biggest first |
+| A topic's ring | When the ring is about 140 px or more across on screen (radius), at most 16 at once, biggest first; until then the topic is its star |
 | Planes more than two levels below the topic in view (below plane 0 at the overview) | Fade out |
 | Ancestors of the topic in view | Keep a faint center and stem; their rings fade out |
 | Siblings of the topic in view | Nearly full, on their own plane |

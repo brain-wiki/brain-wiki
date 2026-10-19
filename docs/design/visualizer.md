@@ -38,7 +38,7 @@ What shows:
 | Element | When |
 |---|---|
 | Topic centers and stems | Always, for the whole tree |
-| A topic's ring | When the ring is about 70 px or more across on screen (radius), at most 16 at once, biggest first |
+| A topic's ring | When the ring is about 140 px or more across on screen (radius), at most 16 at once, biggest first; until then the topic is its star |
 | Planes more than two levels below the topic in view (below plane 0 at the overview) | Fade out |
 | Ancestors of the topic in view | Keep a faint center and stem; their rings fade out |
 | Siblings of the topic in view | Nearly full, on their own plane |
@@ -54,7 +54,7 @@ How the levels behave:
 
 The scene uses three.js on WebGL2:
 
-- Topic centers are additive glow points, one draw call for all topics: a bright core where the topic page is, with a faint halo as wide as its ring, or a small marker for a folder without a page. Markers keep a minimum size on screen.
+- Each topic is a star at its center, drawn as additive glow points in one draw call for all topics: sized by everything under it and never under 6 px on screen, with a faint halo as wide as its ring; a folder without a topic page is a smaller, dimmer star.
 - Each loaded ring is one mesh of slices. Stars at the slices' tips are glow points drawn by one shader: color is the topic's, brightness the note's recency, superseded and archived notes look faded, and each health flag adds a halo ring.
 - Stems, trails, and flows are solid thick lines drawn as curves. Supersession adds slow pulses running from the old note to the new one, so the line shows direction without breaking into dashes.
 - Post-processing adds bloom, tone mapping, a vignette, depth fog, and a starfield backdrop. Camera moves are eased flights, not jumps.
@@ -62,7 +62,7 @@ The scene uses three.js on WebGL2:
 Navigation is a map you can turn:
 
 - The default view is tilted 50° from straight down, heading north, so the lower planes show.
-- Dragging pans across the map. Shift+drag turns the view around the point in view, in any direction, stopping before the camera goes below the map (78° from straight down) or upside down. `R` returns to the default tilt and heading.
+- Dragging pans across the map, moving the plane of the topic in view with the cursor: whenever the camera settles, and before a drag starts, what it looks at slides along the line of sight onto that plane. Shift+drag turns the view around the point in view, in any direction, stopping before the camera goes below the map (78° from straight down) or upside down. `R` returns to the default tilt and heading.
 - The wheel or a trackpad pinch zooms toward the point under the cursor. The camera's target stays on its plane, so a zoom never stalls in empty space. A touchscreen pinch zooms toward the middle of the view.
 - Flights keep the heading and tilt the user turned to. Bloom fades at the topic and note levels, where full strength would merge a ring into one white blob.
 
@@ -94,7 +94,7 @@ The layout is deterministic. The same brain always produces the same map. A topi
 | Footprint | Bottom up, a topic packs its sub-topics' footprints around its center, largest first; its footprint's area is its ring's plus that packing, so it grows with all the content under it. Top-level footprints are packed the same way on plane 0, and the map is scaled to a fixed radius. Footprints are not drawn |
 | Center | The topic page is a bright core at the center of the footprint, labeled with the topic's title. A topic without a page shows a small marker labeled with its folder name |
 | Ring | The topic's other notes, around its center on its plane (§3.2) |
-| Stem | A curve joins each sub-topic's center to its parent's: it leaves the parent level with the parent's plane and comes down onto the sub-topic from above |
+| Stem | A curve joins each sub-topic's center to its parent's: it drops from the parent and comes down onto the sub-topic from above, running between the two planes and never along either |
 
 `bw-part_of` does not move anything: a note sits only under its folder, and Part of shows as a link.
 
