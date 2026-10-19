@@ -51,7 +51,7 @@ The commands, in the order `brain --help` lists them:
 | `brain connect HOST [--scope user\|project] [--print] [--force] [--dry-run] [--uninstall]` | Connect an agent app |
 | `brain mcp [--host HOST]` | The stdio MCP server, started by agent apps |
 | `brain import PATH --overlay [--phase 0\|1\|2]` or `brain import PATH --into BRAIN` | Adopt or copy existing Markdown |
-| `brain viz [BRAIN] [--topic T] [--port P] [--host ADDRESS] [--no-open] [--export FILE]` | Open the 3D brain map |
+| `brain viz [BRAIN] [--topic T] [--port P] [--host ADDRESS] [--no-open] [--keep-token] [--export FILE]` | Open the 3D brain map |
 | `brain obsidian [BRAIN]` | Open the brain's folder as a vault in Obsidian |
 | `brain bench [SUITE…] [--sizes 1k,10k] [--backends …] [--out DIR] [--compare A B] [-q]` | Run the evaluation bench |
 
@@ -168,6 +168,8 @@ The commands, in the order `brain --help` lists them:
   [[user-import|Import]].
 - `brain viz` and `brain obsidian` open BRAIN, the only brain, or the one
   you pick. `brain viz --host 0.0.0.0` lets other machines open the map.
+  `--port 8792 --keep-token` keeps the same link across restarts; delete
+  the token file it names to change it.
   `--export` writes `.html`, `.json`, or `.graphml` and exits.
 - `brain bench` runs `retrieval`, `lint`, and `perf` by default. The
   `agent` suite is reserved and reports as skipped. `-q` prints a summary,

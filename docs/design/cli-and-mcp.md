@@ -160,7 +160,7 @@ brain import PATH --into BRAIN [--topic SLUG] [--dry-run | --apply]
 brain connect HOST [--scope user|project] [--print] [--force] [--dry-run] [--uninstall]
 brain mcp [--host HOST]                                # stdio MCP server; --host defaults to auto
 
-brain viz [BRAIN] [--topic T]... [--port P] [--host ADDRESS] [--no-open] [--export FILE.html|.json|.graphml]
+brain viz [BRAIN] [--topic T]... [--port P] [--host ADDRESS] [--no-open] [--keep-token] [--export FILE.html|.json|.graphml]
 brain obsidian [BRAIN]                                 # open the brain's folder as a vault in Obsidian
 brain bench [SUITE]... [--backends PRESET,...] [--sizes 1k,10k] [--out DIR] [-q]
 brain bench --compare A.json B.json

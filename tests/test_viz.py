@@ -594,7 +594,29 @@ def test_cli_passes_host(example: Path, monkeypatch: pytest.MonkeyPatch):
     assert main(["viz", "--brain", str(example), "--no-open"]) == 0
     assert seen["host"] == "127.0.0.1"
     assert main(["viz", "--brain", str(example), "--host", "0.0.0.0", "--no-open"]) == 0
-    assert seen["host"] == "0.0.0.0"
+    assert seen["host"] == "0.0.0.0" and seen["keep_token"] is False
+    assert main(["viz", "--brain", str(example), "--port", "8792", "--keep-token"]) == 0
+    assert seen["keep_token"] is True
+    # the link includes the port, and an export has no link
+    assert main(["viz", "--brain", str(example), "--keep-token"]) == 2
+    out = example / "map.json"
+    assert main(["viz", "--brain", str(example), "--keep-token", "--export", str(out)]) == 2
+
+
+def test_kept_token_stays_per_brain_and_port(example: Path):
+    with engine_for(example) as eng:
+        first, path = viz_server.kept_token(eng, 8792)
+        assert viz_server.kept_token(eng, 8792) == (first, path)
+        assert viz_server.kept_token(eng, 8793)[0] != first
+        assert path.stat().st_mode & 0o777 == 0o600  # the token reads the whole brain
+        path.write_text("tampered\n")
+        replaced, _ = viz_server.kept_token(eng, 8792)
+        assert replaced not in (first, "tampered") and len(replaced) >= 16
+        srv = _make_server(eng, 0, token=replaced)
+        try:
+            assert srv.url.endswith(f"/?t={replaced}")
+        finally:
+            srv.server_close()
 
 
 def _get(

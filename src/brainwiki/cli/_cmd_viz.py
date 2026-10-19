@@ -14,6 +14,10 @@ _FORMATS = {".html": "html", ".htm": "html", ".json": "json", ".graphml": "graph
 
 
 def viz(args: Any) -> int:
+    if args.keep_token and args.export:
+        raise UsageError("--keep-token is for serving the map, not --export")
+    if args.keep_token and not args.port:
+        raise UsageError("--keep-token needs --port: the link includes the port")
     with open_engine(chosen_brain(args), host=args.as_host) as engine:
         if args.topic:  # an unknown topic is an error, not an empty map
             from brainwiki.index import known_topics
@@ -24,7 +28,14 @@ def viz(args: Any) -> int:
             return _export(args, engine)
         from brainwiki.viz import serve
 
-        serve(engine, args.port, not args.no_open, topics=args.topic, host=args.host)
+        serve(
+            engine,
+            args.port,
+            not args.no_open,
+            topics=args.topic,
+            host=args.host,
+            keep_token=args.keep_token,
+        )
     return 0
 
 

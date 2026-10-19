@@ -1329,6 +1329,12 @@ def _viz(
     no_open: Annotated[
         bool, typer.Option("--no-open", help="print the URL; do not open a browser")
     ] = False,
+    keep_token: Annotated[
+        bool,
+        typer.Option(
+            "--keep-token", help="reuse this brain and port's saved token, so the link stays put"
+        ),
+    ] = False,
     export: Annotated[
         str | None,
         typer.Option("--export", help="write the map to FILE (.html, .json, .graphml) and exit"),
@@ -1345,6 +1351,7 @@ def _viz(
         port=port,
         host=host,
         no_open=no_open,
+        keep_token=keep_token,
         export=export,
     )
 

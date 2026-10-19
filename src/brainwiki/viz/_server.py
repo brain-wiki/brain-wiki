@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import hmac
 import json
+import os
 import re
 import secrets
 import socket
@@ -72,7 +73,12 @@ class _VizServer(ThreadingHTTPServer):
     daemon_threads = True
 
     def __init__(
-        self, engine: Engine, port: int, topics: list[str] | None = None, host: str = _HOST
+        self,
+        engine: Engine,
+        port: int,
+        topics: list[str] | None = None,
+        host: str = _HOST,
+        token: str | None = None,
     ):
         self.host = host
         if ":" in host:
@@ -80,7 +86,7 @@ class _VizServer(ThreadingHTTPServer):
         super().__init__((host, port), _Handler)
         self.engine = engine
         self.topics = topics
-        self.token = secrets.token_urlsafe(24)
+        self.token = token or secrets.token_urlsafe(24)
         self.lock = threading.Lock()
         self.last_request = time.monotonic()
         self._atlas: Atlas | None = None
@@ -328,9 +334,37 @@ def _app_dir() -> Path:
 
 
 def _make_server(
-    engine: Engine, port: int = 0, topics: list[str] | None = None, host: str = _HOST
+    engine: Engine,
+    port: int = 0,
+    topics: list[str] | None = None,
+    host: str = _HOST,
+    token: str | None = None,
 ) -> _VizServer:
-    return _VizServer(engine, port, topics, host)
+    return _VizServer(engine, port, topics, host, token)
+
+
+_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{16,}$")
+
+
+def kept_token(engine: Engine, port: int) -> tuple[str, Path]:
+    """The token saved for this brain and port, made on first use; readable by the user only, so
+    the map's link stays the same across restarts until the file is deleted."""
+    from brainwiki.config import brain_state_dir
+
+    path = brain_state_dir(engine.brain.key) / "viz" / f"token-{port}"
+    try:
+        token = path.read_text(encoding="utf-8").strip()
+        if _TOKEN_RE.match(token):
+            return token, path
+    except FileNotFoundError:
+        pass
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.unlink(missing_ok=True)  # a damaged file is replaced
+    token = secrets.token_urlsafe(24)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(token + "\n")
+    return token, path
 
 
 def serve(
@@ -340,10 +374,14 @@ def serve(
     *,
     topics: list[str] | None = None,
     host: str = _HOST,
+    keep_token: bool = False,
 ) -> None:
-    server = _make_server(engine, port, topics, host)
+    token, token_file = kept_token(engine, port) if keep_token else (None, None)
+    server = _make_server(engine, port, topics, host, token)
     server.watch_idle()
     print(f"brain viz: {server.url}")
+    if token_file:
+        print(f"The link stays the same on every start; delete {token_file} to change it.")
     if server.remote_url:
         print(f"From other machines: {server.remote_url}")
         print(

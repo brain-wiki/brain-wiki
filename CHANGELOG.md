@@ -2,6 +2,10 @@
 
 ## 0.3.4 (unreleased)
 
+- **A link to the map that stays put.** `brain viz --port P --keep-token`
+  reuses the token saved for that brain and port, so a bookmarked link keeps
+  working after a restart. Without it, each start has a new token as before.
+
 - **`brain mv` rewrites links in tables.** A wikilink in a Markdown table
   row escapes its pipe (`[[note\|label]]`, as Obsidian writes it), and
   `brain mv` left such links pointing at the old path.
