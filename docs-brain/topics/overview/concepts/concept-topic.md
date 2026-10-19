@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Topic
 
-A folder under `topics/`, with a topic page that summarizes it and links its notes. A folder with its own topic page inside a topic is a sub-topic.
+A folder under `topics/`, usually with a topic page that summarizes it and links its notes. Every folder inside a topic is a sub-topic, with or without a page.

@@ -84,9 +84,8 @@ one lists up to five candidates. A wikilink to an attachment, such as
 | BW408 | `AGENTS.md` or its managed block is missing or out of date. | warning / warning | Create the file or regenerate the block |
 | BW409 | A topic slug declared in `brain.toml` is invalid. | error / warning | — |
 
-A deeper folder without a topic page is not a topic
-([[brain-format-2-directory-layout|brain format §2.1]]), so BW404 concerns
-top-level folders and declared topics.
+A sub-topic needs no page ([[brain-format-2-directory-layout|brain format §2.1]]),
+so BW404 concerns top-level topics and declared topics.
 
 
 ### BW5xx: inbox

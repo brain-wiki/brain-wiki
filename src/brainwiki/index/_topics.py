@@ -1,7 +1,8 @@
 """The topic tree (brain-format.md §2): which folders are topics, their parents, what they inherit.
 
-A topic is a folder directly under the topics directory, or a folder at any depth below it that
-has a topic page. Its slug, not its path, is its identity, so folders can be reorganized.
+Every folder under the topics directory that holds a file is a topic, with or without a topic
+page; one without a page has no content of its own. Its slug, not its path, is its identity, so
+folders can be reorganized.
 """
 
 from __future__ import annotations
@@ -27,11 +28,6 @@ def slugify(name: str) -> str:
 def page_name(layout: Layout, folder: str) -> str:
     """The file name of the topic page in `folder` (`layout.topic_page`)."""
     return layout.topic_page.replace("{folder}", folder.rsplit("/", 1)[-1])
-
-
-def _is_page_file(layout: Layout, rel: str) -> bool:
-    folder, _, name = rel.rpartition("/")
-    return bool(folder) and name == page_name(layout, folder)
 
 
 @dataclass(frozen=True)
@@ -99,24 +95,21 @@ class TopicTree:
         )
 
 
-def _build_tree(
-    manifest: Manifest, top_dirs: Iterable[str], page_files: Iterable[str]
-) -> TopicTree:
-    """The tree from the folders directly under the topics directory and the topic pages below
-    it."""
+def _build_tree(manifest: Manifest, files: Iterable[str]) -> TopicTree:
+    """The tree from every folder under the topics directory that holds a file."""
     layout = manifest.layout
     base = "" if layout.topics_dir in (".", "") else layout.topics_dir.rstrip("/") + "/"
     reserved = (layout.inbox_dir, layout.archive_dir, layout.reports_dir)
-    folders = set(top_dirs)
-    for rel in page_files:
+    folders: set[str] = set()
+    for rel in files:
         folder = posixpath.dirname(rel)
-        if (
-            folder
-            and folder.startswith(base)
-            and not any(folder == r or folder.startswith(r + "/") for r in reserved)
-            and not manifest.is_ignored(folder)
-        ):
+        while folder and folder.startswith(base) and folder not in folders:
+            if any(folder == r or folder.startswith(r + "/") for r in reserved) or (
+                manifest.is_ignored(folder)
+            ):
+                break
             folders.add(folder)
+            folder = posixpath.dirname(folder)
     ordered = sorted(folders, key=lambda f: (f.count("/"), f))
 
     paths: dict[str, str] = {}
@@ -164,67 +157,33 @@ def _build_tree(
 
 
 def topic_tree(engine: Engine) -> TopicTree:
-    """The engine's topic tree, rebuilt only when the top-level folders or topic pages change."""
-    pages = _page_files(engine)
-    top = _top_dirs(engine)
-    key = (id(engine.manifest), top, pages)
+    """The engine's topic tree, rebuilt only when the set of files changes."""
+    files = _files(engine)
+    key = (id(engine.manifest), files)
     cached = getattr(engine, "_topic_tree", None)
     if cached is not None and cached[0] == key:
         return cached[1]
-    tree = _build_tree(engine.manifest, top, pages)
+    tree = _build_tree(engine.manifest, files)
     engine._topic_tree = (key, tree)  # type: ignore[attr-defined]
     return tree
 
 
-def _page_files(engine: Engine) -> frozenset[str]:
-    """Topic pages in the brain as of the last scan (the scan keeps this current)."""
-    cached = getattr(engine, "_page_files", None)
+def _files(engine: Engine) -> frozenset[str]:
+    """Every file in the brain as of the last scan (the scan keeps this current)."""
+    cached = getattr(engine, "_files", None)
     if cached is None:
-        layout = engine.manifest.layout
-        rows = engine.db.execute("SELECT path FROM files")
-        cached = frozenset(r[0] for r in rows if _is_page_file(layout, r[0]))
-        engine._page_files = cached  # type: ignore[attr-defined]
+        cached = frozenset(r[0] for r in engine.db.execute("SELECT path FROM files"))
+        engine._files = cached  # type: ignore[attr-defined]
     return cached
 
 
-def note_page_changes(engine: Engine, present: Iterable[str], absent: Iterable[str]) -> None:
-    """Keep the topic-page set current after a scan saw files appear or disappear."""
-    layout = engine.manifest.layout
-    current = set(_page_files(engine))
-    current.update(p for p in present if _is_page_file(layout, p))
-    current.difference_update(p for p in absent if _is_page_file(layout, p))
-    engine._page_files = frozenset(current)  # type: ignore[attr-defined]
+def note_file_changes(engine: Engine, present: Iterable[str], absent: Iterable[str]) -> None:
+    """Keep the file set current after a scan saw files appear or disappear."""
+    current = set(_files(engine))
+    current.update(present)
+    current.difference_update(absent)
+    engine._files = frozenset(current)  # type: ignore[attr-defined]
 
 
-def set_page_files(engine: Engine, paths: Iterable[str]) -> None:
-    layout = engine.manifest.layout
-    engine._page_files = frozenset(p for p in paths if _is_page_file(layout, p))  # type: ignore[attr-defined]
-
-
-def _top_dirs(engine: Engine) -> tuple[str, ...]:
-    """Folders directly under the topics directory, cached on its modification time."""
-    layout = engine.manifest.layout
-    base = engine.brain.root / layout.topics_dir
-    try:
-        stamp = base.stat().st_mtime_ns
-    except OSError:
-        stamp = None
-    cached = getattr(engine, "_top_dirs", None)
-    if cached is not None and cached[0] == stamp:
-        return cached[1]
-    reserved = {layout.inbox_dir, layout.archive_dir, layout.reports_dir}
-    prefix = "" if layout.topics_dir in (".", "") else f"{layout.topics_dir}/"
-    found: list[str] = []
-    if base.is_dir():
-        for child in sorted(base.iterdir()):
-            rel = f"{prefix}{child.name}"
-            if (
-                child.is_dir()
-                and not child.name.startswith(".")
-                and rel not in reserved
-                and not engine.manifest.is_ignored(rel)
-            ):
-                found.append(rel)
-    out = tuple(found)
-    engine._top_dirs = (stamp, out)  # type: ignore[attr-defined]
-    return out
+def set_files(engine: Engine, paths: Iterable[str]) -> None:
+    engine._files = frozenset(paths)  # type: ignore[attr-defined]

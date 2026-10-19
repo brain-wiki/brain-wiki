@@ -389,9 +389,11 @@ def _structure_checks(
             "SELECT id, path, title FROM nodes WHERE topic=? AND kind='note' ORDER BY path", (slug,)
         ).fetchall()
         if page is None:
-            if engine.store.exists(page_path):
-                continue
             declared = manifest.topics.get(slug)
+            if engine.store.exists(page_path) or (
+                engine.topics.parent(slug) is not None and declared is None
+            ):
+                continue  # a sub-topic needs no page: without one it has no content of its own
             title = (declared.title if declared and declared.title else None) or slug.replace(
                 "-", " "
             ).title()

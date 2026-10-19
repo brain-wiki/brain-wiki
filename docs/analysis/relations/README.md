@@ -1,6 +1,6 @@
 # Typed relations
 
-Status: built 2026-10-18 in format 4 ([D39](../../decision/d39-relation-fields.md)), except the topic changes, which are still to do.
+Status: built 2026-10-18 in format 4 ([D39](../../decision/d39-relation-fields.md)), except the topic changes: every folder is a topic since 2026-10-19 ([D40](../../decision/d40-every-folder-is-a-topic.md)), and a topic's title on its page is still to do.
 Question: which relation types should brain-wiki read again, and how should they be written?
 
 The most used relation has no field: a note's folder says which topic it
@@ -22,7 +22,7 @@ mistakes.
 
 | Concept | Format 2 family | Today | Status | Verdict |
 |---|---|---|---|---|
-| [topic](topic.md) | Containment, by folder | Folders and topic pages | Concluded, not built | Keep as the primary part_of; every folder is a topic, and its title lives on its page |
+| [topic](topic.md) | Containment, by folder | Folders and topic pages | Concluded, partly built | Keep as the primary part_of; every folder is a topic, and its title lives on its page |
 | [part_of](part-of.md) | Containment | Folder membership only | Built | Revive as `bw-part_of` on each part, covering membership |
 | [depends_on](depends-on.md) | Dependency | A "Depends on" bullet nothing reads | Built | Revive as `bw-depends_on` on the dependent note, for requirements only |
 | [conflicts_with](conflicts-with.md) | Conflict, a guard | A sentence with a link | Built | Revive as `bw-conflicts_with`, written once on either note, with a guard between active notes |
@@ -98,5 +98,6 @@ Findings that hold for every relation, added as analyses conclude.
    straight from these analyses without a separate proposal: format 4
    ([brain format §6.6](../../design/brain-format.md#66-relations) and
    [§7](../../design/brain-format.md#7-guards)) and [D39](../../decision/d39-relation-fields.md).
-4. The topic verdict (every folder is a topic, its title on its page) is
-   still to build.
+4. The topic verdict: every folder is a topic, built on 2026-10-19
+   ([D40](../../decision/d40-every-folder-is-a-topic.md)); a topic's title
+   on its page is still to build.

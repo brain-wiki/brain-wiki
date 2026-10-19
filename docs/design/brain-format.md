@@ -39,9 +39,8 @@ root. The default layout follows. Every folder name is configurable in
 │   └── <topic>/
 │       ├── index.md            the topic page
 │       ├── <note>.md           curated notes
-│       ├── <subfolder>/…       further organization inside the topic
-│       └── <sub-topic>/        a folder with its own topic page is a topic too, at any depth
-│           └── index.md
+│       └── <sub-topic>/        every folder inside a topic is a topic too, at any depth
+│           └── index.md        optional; without it the topic has no content of its own
 ├── inbox/
 │   ├── episodes/
 │   │   └── YYYY/MM/<ulid>.md   immutable episodes, UTC year and month
@@ -76,12 +75,12 @@ A topic is the unit people browse and search filters by, and its topic
 page summarizes it. Topics are folders, so every file browser shows them, and they
 form a tree ([D30](../decision/d30-topic-tree.md)).
 
-- A topic is a folder directly under `topics/`, or a folder at any depth
-  below it that has a topic page (`layout.topic_page`, §8). There are no named
-  levels: `people/` and `people/rin-sato/` are both topics.
-- A folder without a topic page inside a topic is plain organization. Its notes
-  belong to the enclosing topic.
-- A topic's parent is the nearest enclosing topic. A note belongs to the
+- Every folder under `topics/` that holds a file, directly or deeper, is a
+  topic ([D40](../decision/d40-every-folder-is-a-topic.md)). There are no
+  named levels: `people/` and `people/rin-sato/` are both topics.
+- The topic page (`layout.topic_page`, §8) is optional. A topic without
+  one has no content of its own: no description and no summary.
+- A sub-topic's parent is the topic of the folder above it. A note belongs to the
   topic whose folder holds it. No frontmatter field declares membership.
 - Notes MAY live outside any topic, for example in an imported vault
   (BW407, info).

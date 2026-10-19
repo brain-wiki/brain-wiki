@@ -52,3 +52,4 @@ Generated from `docs/decision/README.md`.
 - [[d37-per-agent-consolidation]]: D37: Each agent consolidates its own episodes, in a session or on a schedule
 - [[d38-topic-pages]]: D38: A topic is a folder and its page
 - [[d39-relation-fields]]: D39: Relations are link-only fields the author declares
+- [[d40-every-folder-is-a-topic]]: D40: Every folder is a topic

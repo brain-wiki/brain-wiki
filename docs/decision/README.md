@@ -33,7 +33,7 @@ One file per decision. Each says what was decided and why, what was rejected, an
 | [D27: Agents may read the brain's files](d27-direct-file-reads.md) | Accepted |
 | [D28: Checked agent edits](d28-checked-edits.md) | Superseded by [D34](d34-direct-edits.md) |
 | [D29: The bw- prefix and the format version](d29-bw-prefix.md) | Accepted |
-| [D30: Topics form a tree](d30-topic-tree.md) | Accepted |
+| [D30: Topics form a tree](d30-topic-tree.md) | Accepted, amended by [D40](d40-every-folder-is-a-topic.md) |
 | [D31: The CLI is built on Typer](d31-typer-cli.md) | Accepted |
 | [D32: Format 3: notes are Markdown pages](d32-format-3.md) | Accepted, amended by [D39](d39-relation-fields.md) |
 | [D33: brain-wiki does not extract meaning](d33-no-meaning-extraction.md) | Accepted, amended by [D39](d39-relation-fields.md) |
@@ -43,3 +43,4 @@ One file per decision. Each says what was decided and why, what was rejected, an
 | [D37: Each agent consolidates its own episodes, in a session or on a schedule](d37-per-agent-consolidation.md) | Accepted |
 | [D38: A topic is a folder and its page](d38-topic-pages.md) | Accepted |
 | [D39: Relations are link-only fields the author declares](d39-relation-fields.md) | Accepted |
+| [D40: Every folder is a topic](d40-every-folder-is-a-topic.md) | Accepted |

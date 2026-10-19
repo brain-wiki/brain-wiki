@@ -3,7 +3,7 @@
 | Term | Meaning |
 |---|---|
 | brain | A directory with a `brain.toml` manifest. Hosts are allowed or limited to whole brains, and a brain is chosen by name for each call, project, or host. |
-| topic | A folder under `topics/`, with a topic page that summarizes it and links its notes. A folder with its own topic page inside a topic is a sub-topic. |
+| topic | A folder under `topics/`, usually with a topic page that summarizes it and links its notes. Every folder inside a topic is a sub-topic, with or without a page. |
 | topic page | A topic's own page, `index.md` in the topic folder by default. Only that file is one; a note's `type` never makes it one. |
 | note | A Markdown file in a topic. Frontmatter holds metadata, and facts and links are ordinary Markdown in the body. |
 | link | A wikilink or Markdown link to another note. A body link is untyped, and the sentence around it says why it is there. In frontmatter, only the relation fields and `bw-sources` hold links. |

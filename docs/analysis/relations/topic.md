@@ -1,6 +1,6 @@
 # topic: part_of by folder
 
-Status: concluded.
+Status: concluded. Change 1 built 2026-10-19 ([D40](../../decision/d40-every-folder-is-a-topic.md)); changes 2 and 3 are still to build.
 Study: [Typed relations](README.md).
 Verdict: keep as the primary part_of; every folder is a topic, and a topic's title lives on its page.
 

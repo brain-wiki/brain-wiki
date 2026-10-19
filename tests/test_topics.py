@@ -33,13 +33,16 @@ def test_tree_slugs_and_parents():
     manifest = parse_manifest(MANIFEST)
     tree = _build_tree(
         manifest,
-        ["topics/people", "topics/search"],
         [
+            "topics/people/index.md",
             "topics/people/rin-sato/index.md",
-            "topics/people/rin-sato/meetings/index.md",
+            "topics/people/rin-sato/meetings/2026-10-01.md",  # no topic page: still a topic
+            "topics/people/rin-sato/drafts/idea.md",
             "topics/people/notes/index.md",
+            "topics/search/fts.md",
             "topics/search/notes/index.md",
             "topics/search/guide/index.md",
+            "topics/search/images/flow.png",  # no notes: a topic with no content of its own
             "inbox/episodes/index.md",  # not under topics/
         ],
     )
@@ -48,9 +51,11 @@ def test_tree_slugs_and_parents():
         "search": "topics/search",
         "rin-sato": "topics/people/rin-sato",  # declared without a path: found by slug
         "meetings": "topics/people/rin-sato/meetings",
+        "drafts": "topics/people/rin-sato/drafts",
         "notes": "topics/people/notes",
         "search-notes": "topics/search/notes",  # a clash takes its parent's slug as prefix
         "handbook": "topics/search/guide",  # an explicit path wins its folder
+        "images": "topics/search/images",
     }
     assert tree.parent("meetings") == "rin-sato" and tree.ancestors("meetings") == [
         "rin-sato",
@@ -58,10 +63,8 @@ def test_tree_slugs_and_parents():
     ]
     assert tree.roots() == ["people", "search"]
     assert tree.for_path("topics/people/rin-sato/meetings/2026-10-01.md") == "meetings"
-    assert (
-        tree.for_path("topics/people/rin-sato/drafts/idea.md") == "rin-sato"
-    )  # no topic page: no topic
-    assert tree.expand(["people"]) == {"people", "rin-sato", "meetings", "notes"}
+    assert tree.for_path("topics/people/rin-sato/drafts/idea.md") == "drafts"
+    assert tree.expand(["people"]) == {"people", "rin-sato", "meetings", "drafts", "notes"}
 
 
 def _note(root: Path, rel: str, title: str, body: str = "", extra: str = "") -> None:
@@ -123,18 +126,25 @@ def test_only_the_page_file_is_a_topic_page(people: Path):
         )
 
 
-def test_a_new_topic_page_makes_a_sub_topic_and_moves_notes_into_it(people: Path):
+def test_every_folder_is_a_sub_topic_with_or_without_a_page(people: Path):
     _note(people, "topics/people/ann/one-on-one.md", "1:1 with Ann")
     with Engine(open_brain(people)) as e:
         e.scan(force=True)
         topic = "SELECT topic FROM nodes WHERE path='topics/people/ann/one-on-one.md'"
-        assert e.db.execute(topic).fetchone()[0] == "people"
+        assert e.db.execute(topic).fetchone()[0] == "ann"
+        assert e.topics.parent("ann") == "people"
+        assert not [p for p in lint(e).problems if p.code == "BW404"]  # a sub-topic needs no page
         _note(people, "topics/people/ann/index.md", "Ann")
         e.scan(paths=["topics/people/ann/index.md"])
         assert e.db.execute(topic).fetchone()[0] == "ann"
+        kind = "SELECT kind FROM nodes WHERE path='topics/people/ann/index.md'"
+        assert e.db.execute(kind).fetchone()[0] == "topic"
         (people / "topics/people/ann/index.md").unlink()
         e.scan(paths=["topics/people/ann/index.md"])
-        assert e.db.execute(topic).fetchone()[0] == "people"
+        assert e.db.execute(topic).fetchone()[0] == "ann"
+        (people / "topics/people/ann/one-on-one.md").unlink()
+        e.scan(paths=["topics/people/ann/one-on-one.md"])
+        assert "ann" not in e.topics.paths  # a folder with no files is not a topic
 
 
 def test_topics_command_prints_the_tree(people: Path, capsys: pytest.CaptureFixture[str]):

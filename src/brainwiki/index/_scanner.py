@@ -16,9 +16,9 @@ from brainwiki.ids import is_ulid
 from brainwiki.index._resolver import Resolver, name_rows
 from brainwiki.index._topics import (
     TopicTree,
-    note_page_changes,
+    note_file_changes,
     page_name,
-    set_page_files,
+    set_files,
     topic_tree,
 )
 from brainwiki.index._written import is_marked
@@ -150,9 +150,9 @@ def scan(
         candidates = list(seen)
         deleted = [p for p in paths if p not in seen and p in known]
     if paths is None:
-        set_page_files(engine, seen)
+        set_files(engine, seen)
     else:
-        note_page_changes(engine, seen, [p for p in paths if p not in seen])
+        note_file_changes(engine, seen, [p for p in paths if p not in seen])
     tree = topic_tree(engine)
     topics = tree.paths
     stored_tree = conn.execute("SELECT value FROM meta WHERE key='topic_tree'").fetchone()

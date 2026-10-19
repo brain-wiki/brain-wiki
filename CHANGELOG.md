@@ -2,6 +2,13 @@
 
 ## 0.3.4 (unreleased)
 
+- **Every folder is a topic.** A folder inside a topic is a sub-topic
+  whether or not it has a topic page, so a note belongs to the folder it
+  sits in, as a file browser shows. Before, a folder without a page was
+  plain organization and its notes belonged to the enclosing topic. Only
+  top-level and declared topics are expected to have a page (BW404)
+  ([D40](docs/decision/d40-every-folder-is-a-topic.md)).
+
 - **A link to the map that stays put.** `brain viz --port P --keep-token`
   reuses the token saved for that brain and port, so a bookmarked link keeps
   working after a restart. Without it, each start has a new token as before.
