@@ -6,8 +6,9 @@ source: "docs/user/maintenance.md#git"
 ---
 # Git
 
-When the brain is a git work tree, each run commits exactly the files it
-touched. The commit uses your git identity and hooks, and has `Brain-Run:`
+When the brain is its own git repository, each run commits exactly the
+files it touched. A brain inside another repository is committed only with
+`[git] mode = "on"` in `brain.toml`. The commit uses your git identity and hooks, and has `Brain-Run:`
 and `Brain-Agent:` trailers.
 
 - `brain commit` commits direct edits. It is the only command that fetches,

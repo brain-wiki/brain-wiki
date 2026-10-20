@@ -385,7 +385,13 @@ class Run:
 
     def _git_commit(self, record: RunRecord, subject: str | None) -> None:
         root = self.engine.brain.root
-        if self.engine.manifest.git.mode not in ("auto", "on") or not git.is_work_tree(root):
+        mode = self.engine.manifest.git.mode
+        # `auto` commits only a brain that is its own repository; inside another repository
+        # (a samples or dotfiles repo) only `on` commits, so a run never lands in a repo that
+        # did not ask for it.
+        if mode == "auto" and not git.is_repo_root(root):
+            return
+        if mode not in ("auto", "on") or not git.is_work_tree(root):
             return
         sha, error = git.commit_paths(
             root,

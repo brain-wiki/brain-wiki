@@ -252,8 +252,8 @@ It differs from the skill:
   run, and backfill.
 - To create a brain it asks new or adopt, a folder, and a name. Adopting
   shows the overlay report and applies phase 0 after a yes. A new brain
-  asks for a template, listing the built-in ones and `none` (default
-  `personal`, which fits the default folder), then gets git after a yes (default yes).
+  asks for a template: a built-in name, a path to a template folder or a
+  brain (such as a sample), or `none` (default `minimal`), then gets git after a yes (default yes).
 - It offers the commit job for a git brain with none yet, every 15
   minutes, and asks about pushing only when the brain has an `origin`
   remote. It installs the job after the yes without showing it first.

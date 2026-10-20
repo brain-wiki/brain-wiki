@@ -26,6 +26,15 @@ def is_work_tree(root: Path) -> bool:
     return result.returncode == 0 and result.stdout.strip() == "true"
 
 
+def is_repo_root(root: Path) -> bool:
+    """Whether `root` is the top of its git work tree: the brain is the repository, not a
+    folder inside someone else's."""
+    if not is_work_tree(root):
+        return False
+    top = run_git(root, "rev-parse", "--show-toplevel").stdout.strip()
+    return bool(top) and Path(top).resolve() == root.resolve()
+
+
 def changed_files(root: Path, *, untracked: bool = True) -> list[str]:
     """Paths (relative to `root`) git sees as modified, added, deleted, or (with `untracked`)
     untracked."""

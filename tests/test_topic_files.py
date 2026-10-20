@@ -188,7 +188,7 @@ def test_topic_rules_can_be_turned_off(ruled: Path):
 
 def test_builtin_templates_are_lint_clean_brains(tmp_path: Path):
     names = [t.name for t in builtin_templates()]
-    assert {"personal", "engineering"} <= set(names)
+    assert names == ["minimal"]  # fuller templates are the brain-wiki-samples brains
     for name in names:
         root = init_brain(tmp_path / name, name, resolve_template(name))
         assert (root / "topics/_Rules.md").is_file()
@@ -203,8 +203,8 @@ def test_builtin_templates_are_lint_clean_brains(tmp_path: Path):
 
 
 def test_two_brains_from_one_template_get_their_own_ids(tmp_path: Path):
-    a = init_brain(tmp_path / "a", "a", resolve_template("personal"))
-    b = init_brain(tmp_path / "b", "b", resolve_template("personal"))
+    a = init_brain(tmp_path / "a", "a", resolve_template("minimal"))
+    b = init_brain(tmp_path / "b", "b", resolve_template("minimal"))
     assert (a / "topics/People/_Index.md").read_text() != (
         b / "topics/People/_Index.md"
     ).read_text()
@@ -233,7 +233,7 @@ def test_a_template_never_overwrites(tmp_path: Path):
     target = tmp_path / "busy"
     write(target, "topics/People/_Index.md", "mine\n")
     with pytest.raises(Conflict):
-        init_brain(target, "busy", resolve_template("personal"))
+        init_brain(target, "busy", resolve_template("minimal"))
     assert (target / "topics/People/_Index.md").read_text() == "mine\n"
     assert not (target / "brain.toml").exists()
 
@@ -254,9 +254,21 @@ def test_cli_init_with_template_and_templates_list(
 ):
     assert main(["templates", "--json"]) == 0
     listed = json.loads(capsys.readouterr().out)["templates"]
-    assert any(t["name"] == "engineering" and "Playbooks" in t["topics"] for t in listed)
-    target = tmp_path / "eng"
-    assert main(["init", str(target), "--template", "engineering", "--json"]) == 0
+    assert any(t["name"] == "minimal" and "Reference" in t["topics"] for t in listed)
+    target = tmp_path / "small"
+    assert main(["init", str(target), "--template", "minimal", "--json"]) == 0
     out = json.loads(capsys.readouterr().out)
-    assert out["template"] == "engineering" and "topics/Playbooks/_Rules.md" in out["files"]
+    assert out["template"] == "minimal" and "topics/Reference/_Rules.md" in out["files"]
     assert main(["init", str(tmp_path / "x"), "--template", "nope"]) != 0
+
+
+def test_setup_asks_for_a_built_in_a_folder_or_none(tmp_path: Path):
+    from brainwiki.setup_wizard import _ask_template
+
+    folder = tmp_path / "Sample"
+    write(folder, "topics/Garden/_Index.md", "# Garden\n")
+    said: list[str] = []
+    assert _ask_template(lambda _: "", said.append).name == "minimal"
+    assert _ask_template(lambda _: str(folder), said.append).root == folder.resolve()
+    assert _ask_template(lambda _: "none", said.append) is None
+    assert _ask_template(lambda _: "nope", said.append) is None  # three bad answers

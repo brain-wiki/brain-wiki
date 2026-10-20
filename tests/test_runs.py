@@ -167,6 +167,26 @@ def test_git_commits_only_touched_files_and_undo_restores(brain_dir: Path, git_e
         assert git(brain_dir, "status", "--porcelain").splitlines() == ["?? unrelated.md"]
 
 
+def test_auto_never_commits_into_an_enclosing_repository(tmp_path: Path, git_env: None):
+    from brainwiki.lifecycle import init_brain
+
+    outer = tmp_path / "samples"
+    brain = init_brain(outer / "Personal", "personal")
+    _git_init(outer)
+    head = git(outer, "rev-parse", "HEAD").strip()
+    with Engine(open_brain(brain)) as eng:
+        run = Run(eng, "test", summary="inside another repo")
+        run.create("topics/a/one.md", "# One\n")
+        assert run.commit().git_commit is None
+    assert git(outer, "rev-parse", "HEAD").strip() == head
+    toml = brain / "brain.toml"
+    toml.write_text(toml.read_text() + '\n[git]\nmode = "on"\n')
+    with Engine(open_brain(brain)) as eng:
+        run = Run(eng, "test", summary="asked for it")
+        run.create("topics/a/two.md", "# Two\n")
+        assert run.commit().git_commit
+
+
 def _git_init(root: Path) -> None:
     git(root, "init", "-q")
     git(root, "add", "-A")

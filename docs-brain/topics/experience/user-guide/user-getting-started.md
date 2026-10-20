@@ -65,7 +65,7 @@ following `brain setup --guide` runs:
 ```sh
 brain doctor
 brain templates                                # the topic trees a brain can start with
-brain init ~/brains/personal --name personal --template personal --git
+brain init ~/brains/personal --name personal --template minimal --git
 brain schedule add commit --dry-run            # then without --dry-run; --push to push too
 brain connect claude-code --dry-run            # then without --dry-run
 brain agents grant claude-code propose_rules
@@ -77,12 +77,14 @@ brain harvest route "~/**" personal
   it found on this machine. It changes nothing, except that it rolls back a
   run that a crash left half-applied.
 - `brain init --git` runs `git init` and makes a first commit.
-- `brain init --template personal` starts the brain with topic folders
+- `brain init --template minimal` starts the brain with topic folders
   (Preferences, People, Projects, Reference), each with a `_Rules.md` that
-  tells agents how to fill it. `engineering` has Preferences, Projects,
-  Systems, Playbooks, and People. `--template` also takes a folder, or
-  another brain, to copy the topic folders, pages, and rules of; notes are
-  never copied. Without `--template`, the brain starts empty and agents
+  tells agents how to fill it. `--template` also takes a folder, or another
+  brain, to copy the topic folders, pages, and rules of; notes are never
+  copied. The sample brains in
+  [brain-wiki-samples](https://github.com/brain-wiki/brain-wiki-samples)
+  are fuller templates: clone the repository and pass `./Personal` or
+  `./Work`. Without `--template`, the brain starts empty and agents
   create topics as they go.
 
 A new brain looks like this:

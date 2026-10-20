@@ -144,6 +144,6 @@ No code changes; `--template PATH` already does what §1 needs.
 | # | Question | Recommendation |
 |---|---|---|
 | SQ1 | The OpenClaw sample: remove it, or rebuild it in the current format as a third, large sample (about 840 notes from a real public project)? | Remove it; the two samples cover onboarding, and the bench generator already covers scale |
-| SQ2 | Should the built-in `personal` and `engineering` templates match the samples' topic trees, so `--template personal` and `--template ./Personal` give the same structure? | Yes: replace them with `personal` and `work` templates taken from the samples, and test that they stay equal |
+| SQ2 | Should the built-in templates match the samples' topic trees? | Decided: brain-wiki keeps one built-in, `minimal`; the samples are the fuller templates, passed by path (`--template ./Personal`) |
 | SQ3 | Fixed dates, or a script that shifts dates so the newest note is today, making "what changed last week" prompts work? | Fixed dates, with prompts that do not depend on the current date |
 | SQ4 | Keep the samples in their own repository, or move them into brain-wiki as `samples/`? | Own repository: about 350 notes would bloat the sdist, and samples change on their own schedule |

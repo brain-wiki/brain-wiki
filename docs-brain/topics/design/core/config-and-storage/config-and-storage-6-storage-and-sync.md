@@ -23,9 +23,12 @@ local copy, are a [[proposal-remote-sync|proposal]].
 
 ### 6.2 Local folder with optional git
 
-When the brain is a git work tree and `[git] mode` in `brain.toml` is
-`"auto"` (the default) or `"on"`, every brain-wiki run is committed as it
-applies ([[write-path-7-runs|write path §7.3]]):
+When the brain is a git repository and `[git] mode` in `brain.toml` is
+`"auto"` (the default), or the brain is inside a git work tree and the mode
+is `"on"`, every brain-wiki run is committed as it applies
+([[write-path-7-runs|write path §7.3]]). `auto` leaves a brain inside
+someone else's repository alone, so a run never commits into a repository
+that did not ask for it; `brain import --overlay` follows the same rule.
 
 - exactly the files the run touched are staged, so the user's unrelated
   work in progress is never swept in;

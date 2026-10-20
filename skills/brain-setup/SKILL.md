@@ -76,11 +76,14 @@ let the user decide:
   `brain undo` reverses only brain-wiki's own changes.
 - **Template.** A template starts the brain with topic folders, each with a
   `_Rules.md` saying how to fill it, so agents file knowledge in the same
-  places from the first session. Run `brain templates` and describe each in
-  a line; suggest the one that fits what the user told you about their work
-  (`personal` or `engineering`), or none for an empty brain.
+  places from the first session. The built-in `minimal` template has
+  Preferences, People, Projects, and Reference. For a fuller structure,
+  offer a sample brain from https://github.com/brain-wiki/brain-wiki-samples
+  (clone it, then pass the sample's folder, such as `./Personal`; only its
+  topic pages and rules are copied, never its notes). Or none, for an empty
+  brain.
 
-Then run `brain init PATH --name NAME`, adding `--template NAME` and
+Then run `brain init PATH --name NAME`, adding `--template NAME|PATH` and
 `--git` if they chose them. With git it makes a first commit, so a clone is
 a working brain. With a template, tell the user the `_Rules.md` files are
 theirs to edit: they are how agents learn the structure the user wants.

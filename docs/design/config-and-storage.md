@@ -252,12 +252,12 @@ Rules:
   conventions are topic rules, never `rules.md`: a rule carries the user's
   own words as its source, which a template does not have.
 
-The built-in templates:
-
-| Name | Top-level topics |
-|---|---|
-| `personal` | Preferences, People, Projects, Reference |
-| `engineering` | Preferences, Projects, Systems, Playbooks, People |
+brain-wiki ships one built-in template, `minimal`: Preferences, People,
+Projects, and Reference, with rules that suit any brain. Fuller templates
+are the sample brains in the separate `brain-wiki-samples` repository
+([samples proposal](../proposal/samples.md)), passed by path after a
+clone. They change on their own schedule, and carry made-up notes to
+explore that a package should not ship.
 
 ## 6. Storage and sync
 
@@ -276,9 +276,12 @@ local copy, are a [proposal](../proposal/remote-sync.md).
 
 ### 6.2 Local folder with optional git
 
-When the brain is a git work tree and `[git] mode` in `brain.toml` is
-`"auto"` (the default) or `"on"`, every brain-wiki run is committed as it
-applies ([write path §7.3](write-path.md#73-apply)):
+When the brain is a git repository and `[git] mode` in `brain.toml` is
+`"auto"` (the default), or the brain is inside a git work tree and the mode
+is `"on"`, every brain-wiki run is committed as it applies
+([write path §7.3](write-path.md#73-apply)). `auto` leaves a brain inside
+someone else's repository alone, so a run never commits into a repository
+that did not ask for it; `brain import --overlay` follows the same rule.
 
 - exactly the files the run touched are staged, so the user's unrelated
   work in progress is never swept in;

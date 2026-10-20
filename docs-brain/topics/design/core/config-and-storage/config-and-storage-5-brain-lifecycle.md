@@ -93,9 +93,9 @@ Rules:
   conventions are topic rules, never `rules.md`: a rule carries the user's
   own words as its source, which a template does not have.
 
-The built-in templates:
-
-| Name | Top-level topics |
-|---|---|
-| `personal` | Preferences, People, Projects, Reference |
-| `engineering` | Preferences, Projects, Systems, Playbooks, People |
+brain-wiki ships one built-in template, `minimal`: Preferences, People,
+Projects, and Reference, with rules that suit any brain. Fuller templates
+are the sample brains in the separate `brain-wiki-samples` repository
+([[proposal-samples|samples proposal]]), passed by path after a
+clone. They change on their own schedule, and carry made-up notes to
+explore that a package should not ship.

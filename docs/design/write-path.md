@@ -908,8 +908,9 @@ does not stall every later run that touches it. A failing check raises
    declares an older one. This is one-way
    ([brain format §13](brain-format.md#13-format-versioning)).
 8. Update the index and mark the record `applied`.
-9. If the brain is a git work tree and `[git] mode` is `"auto"` (the
-   default) or `"on"`, stage exactly the files the run touched, plus
+9. If `[git] mode` is `"auto"` (the default) and the brain is its own git
+   repository, or the mode is `"on"` and the brain is inside a git work
+   tree, stage exactly the files the run touched, plus
    `brain.toml` when step 7 changed it, and commit. The subject names the
    operation, for example `brain: consolidate 6 episodes`, with trailers
    `Brain-Run: run-…` and `Brain-Agent: claude-code` (`owner` from the

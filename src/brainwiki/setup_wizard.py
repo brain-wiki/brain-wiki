@@ -85,25 +85,26 @@ def _ask_name(ask: _Ask, out: Callable[[str], None], folder: Path) -> str:
 
 
 def _ask_template(ask: _Ask, out: Callable[[str], None]) -> Template | None:
-    """The built-in template to start from, or None for an empty brain (D44)."""
-    from brainwiki.templates import builtin_templates
+    """The template to start from: a built-in name, a folder (such as a sample brain), or
+    None for an empty brain (D44)."""
+    from brainwiki.errors import BrainError
+    from brainwiki.templates import builtin_templates, resolve_template
 
     templates = builtin_templates()
-    if not templates:
-        return None
     out("\nA template starts the brain with topic folders, each with rules for how to fill it:")
     for t in templates:
         out(f"  {t.name:<12} {t.description}")
     out(f"  {'none':<12} an empty brain; agents create topics as they go")
-    names = {t.name: t for t in templates}
-    default = "personal" if "personal" in names else templates[0].name  # fits ~/brains/personal
+    out("  or the path to a template folder or a brain, such as a brain-wiki sample")
+    default = "minimal" if any(t.name == "minimal" for t in templates) else "none"
     for _ in range(3):
-        answer = ask(f"Template? [{default}] ").strip().lower() or default
-        if answer == "none":
+        answer = ask(f"Template? [{default}] ").strip() or default
+        if answer.lower() == "none":
             return None
-        if answer in names:
-            return names[answer]
-        out(f"Answer one of: {', '.join([*names, 'none'])}.")
+        try:
+            return resolve_template(answer)
+        except BrainError as exc:
+            out(str(exc))
     return None
 
 

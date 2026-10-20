@@ -279,7 +279,7 @@ def test_setup_wizard_goes_on_when_the_scheduler_refuses(
 
 
 def test_setup_wizard_creates_brain(tmp_path: Path):
-    answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "personal", "n"])
+    answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "minimal", "n"])
     output: list[str] = []
     assert run_wizard(None, ask=lambda _: next(answers, "n"), out=output.append) == 0
     assert (tmp_path / "brains" / "mine" / "brain.toml").exists()

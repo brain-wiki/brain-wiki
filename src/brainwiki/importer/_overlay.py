@@ -14,7 +14,7 @@ from brainwiki.format import RULES_HEADER, replace_block
 from brainwiki.ids import is_ulid, new_ulid
 from brainwiki.importer._normalize import identity_and_status
 from brainwiki.importer._survey import Survey, survey
-from brainwiki.runs import Run, RunRecord, is_work_tree, run_git
+from brainwiki.runs import Run, RunRecord, is_repo_root, is_work_tree, run_git
 
 if TYPE_CHECKING:
     from brainwiki.engine import Engine
@@ -168,7 +168,7 @@ def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict
             encoding="utf-8",
         )
     git = None
-    if is_work_tree(root):
+    if is_repo_root(root):  # never commit into a repository the vault only sits inside
         problem = commit_files(root, created, f"Adopt {root.name} as brain-wiki brain {name}")
         git = problem or "committed"
     if register:

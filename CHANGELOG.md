@@ -30,13 +30,18 @@
   are not notes: not searched, no id, and they do not make a folder a
   topic. Lint reports one longer than `budgets.topic_rules_max_lines`
   (BW411) ([D43](docs/decision/d43-topic-rules.md)).
-- **Brain templates.** `brain init --template personal` (or
-  `engineering`) starts a brain with topic folders, each with its
+- **Brain templates.** `brain init --template minimal` starts a brain with
+  topic folders (Preferences, People, Projects, Reference), each with its
   `_Index.md` and `_Rules.md`, so agents file knowledge in the same places
   from the first session. `--template` also takes a template folder or
-  another brain, whose topic pages and rules are copied with new ids and no
-  notes. `brain templates` lists the built-in ones, and `brain setup` asks
-  for one ([D44](docs/decision/d44-brain-templates.md)).
+  another brain, such as a sample from brain-wiki-samples, whose topic
+  pages and rules are copied with new ids and no notes. `brain templates`
+  lists the built-in ones, and `brain setup` asks for one ([D44](docs/decision/d44-brain-templates.md)).
+- **Runs commit only a brain that is its own repository.** With the default
+  `git.mode = "auto"`, a brain inside another git repository (a dotfiles or
+  samples repository) is no longer committed by every run, and
+  `brain import --overlay` no longer commits into an enclosing repository.
+  `git.mode = "on"` keeps committing it.
 - **Links to a moved topic page name its path.** Every topic page has the
   same file name, so `brain mv` and lint fixes now write a link to one by
   path, which stays unambiguous when another topic gains a page.

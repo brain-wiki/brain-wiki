@@ -54,7 +54,7 @@ after_consolidate = true                    # `brain consolidate --done` regener
 commit = false                              # accepted, currently has no effect
 
 [git]
-mode = "auto"                               # auto | off; auto commits each run in a git work tree
+mode = "auto"                               # auto | on | off; auto commits each run when the brain is its own git repository
 
 [topics.search]                             # one table per declared topic (optional)
 path        = "topics/search"               # default: the folder with this slug, at any depth
@@ -90,7 +90,9 @@ Rules:
   reports `rules.md` (BW402), `AGENTS.md` (BW403), and topic rules
   (BW411), and orientation and the topic rules `brain_read` includes are
   cut to fit.
-- `git.mode = "on"` behaves like `auto`.
+- `git.mode = "auto"` commits a run only when the brain folder is the top
+  of its git work tree. `"on"` also commits a brain that sits inside
+  another repository, such as a dotfiles or samples repository.
 - Agent profile names are host ids
   ([[agent-integrations-2-host-ids|agent integrations §2]]). The write
   capabilities are `edit`, `propose_rules`, and `harvest`, and
