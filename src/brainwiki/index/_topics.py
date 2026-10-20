@@ -204,14 +204,20 @@ def _build_tree(manifest: Manifest, files: Iterable[str]) -> TopicTree:
         claimed[folder] = slug
 
     parents = {slug: parent_of(path) for slug, path in paths.items()}
+    # The old default name, in any case, until BW410 renames it (D42).
+    legacy: dict[str, str] = {}  # folder -> its page under the old name
+    if layout.legacy_topic_page:
+        for rel in sorted(files):
+            folder, name = posixpath.split(rel)
+            if layout.is_legacy_page(name):
+                legacy.setdefault(folder, rel)
     pages: dict[str, str] = {}
     for slug, folder in paths.items():
         page = f"{folder}/{page_name(layout, folder)}"
-        legacy = f"{folder}/{layout.legacy_topic_page}" if layout.legacy_topic_page else None
         if page in files:
             pages[slug] = page
-        elif legacy and legacy in files:  # the old default name, until BW410 renames it (D42)
-            pages[slug] = legacy
+        elif folder in legacy:
+            pages[slug] = legacy[folder]
     return TopicTree(paths, parents, pages, frozenset(rules))
 
 

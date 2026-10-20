@@ -83,7 +83,7 @@ one lists up to five candidates. A wikilink to an attachment, such as
 | BW407 | Note outside any topic. | info / off | — |
 | BW408 | `AGENTS.md` or its managed block is missing or out of date. | warning / warning | Create the file or regenerate the block |
 | BW409 | A topic slug declared in `brain.toml` is invalid. | error / warning | — |
-| BW410 | A topic page has the old default name, `index.md`, in a brain that does not set `layout.topic_page`. | warning / info | Rename it to `_Index.md` and rewrite the links that named it by path |
+| BW410 | A topic page has the old default name, `index.md` in any case, in a brain that does not set `layout.topic_page`. | warning / info | Rename it to `_Index.md` and rewrite the links that named it by path |
 | BW411 | A topic rules file has more lines than `budgets.topic_rules_max_lines`. | warning / warning | — |
 
 A sub-topic needs no page ([[brain-format-2-directory-layout|brain format §2.1]]),

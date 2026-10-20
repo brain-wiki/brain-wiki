@@ -18,7 +18,9 @@
   `index.md` pages; lint reports each (BW410), and
   `brain lint --fix --select BW410` renames them and rewrites the links
   that named them by path, as one undoable run
-  ([D42](docs/decision/d42-underscore-topic-files.md)).
+  ([D42](docs/decision/d42-underscore-topic-files.md)). The old name
+  matches in any case, so an adopted vault with `Index.md` pages moves the
+  same way once its `brain.toml` stops setting `topic_page`.
 - **Topic rules.** A folder's `_Rules.md` says how the user wants it, and
   every folder below it, organized: what belongs there, how notes are
   named, when to split. `brain_read` of a topic page includes the rules
@@ -68,7 +70,8 @@
 
 - **`brain mv` rewrites links in tables.** A wikilink in a Markdown table
   row escapes its pipe (`[[note\|label]]`, as Obsidian writes it), and
-  `brain mv` left such links pointing at the old path.
+  `brain mv` left such links pointing at the old path. It also left a moved
+  note's links to itself at the old path; they move with it now.
 
 ## 0.3.3 (2026-10-18)
 

@@ -34,6 +34,11 @@ class Layout:
     # parse_manifest, never read from brain.toml.
     legacy_topic_page: str = ""
 
+    def is_legacy_page(self, name: str) -> bool:
+        """Whether the file name `name` is the old default page name in any case: `index.md`, or
+        `Index.md` as Obsidian folder notes and adopted vaults name it."""
+        return bool(self.legacy_topic_page) and name.lower() == self.legacy_topic_page.lower()
+
     @property
     def episodes_dir(self) -> str:
         return f"{self.inbox_dir}/episodes"

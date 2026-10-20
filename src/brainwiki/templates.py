@@ -144,9 +144,7 @@ def _page_in(layout: Layout, rel: str, names: list[str]) -> str | None:
     wanted = layout.topic_page.replace("{folder}", posixpath.basename(rel))
     if wanted in names:
         return wanted
-    if layout.legacy_topic_page and layout.legacy_topic_page in names:
-        return layout.legacy_topic_page
-    return None
+    return next((name for name in sorted(names) if layout.is_legacy_page(name)), None)
 
 
 def fresh_page(text: str) -> str:

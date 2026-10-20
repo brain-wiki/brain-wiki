@@ -244,10 +244,10 @@ def rewrite_links(engine: Engine, run: Run, mapping: dict[str, str]) -> None:
     edits: dict[str, list[tuple[int, str, str, str | None, str | None]]] = {}
     for chunk in _chunks(list(moved)):
         marks = ",".join("?" * len(chunk))
-        for edge in conn.execute(  # links into what moved
+        for edge in conn.execute(  # links into what moved, a moved note's links to itself too
             f"""SELECT e.line, e.raw_target, e.written, e.other, n.path FROM edges e
                 JOIN nodes n ON n.id = e.declared_in
-                WHERE e.other IN ({marks}) AND e.declared_in != e.other AND e.line > 0""",  # noqa: S608
+                WHERE e.other IN ({marks}) AND e.line > 0""",  # noqa: S608
             chunk,
         ):
             old, new = moved[edge["other"]]

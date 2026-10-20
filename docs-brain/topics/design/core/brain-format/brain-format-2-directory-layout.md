@@ -103,10 +103,11 @@ browsers and Obsidian sort these names before the notes.
 - Other `_` names are ordinary notes. Later versions may give more names a
   meaning, so a brain SHOULD NOT use `_Name.md` notes for its own purposes.
 - A brain that does not set `layout.topic_page` also finds `index.md`, the
-  default before `_Index.md`, as the page of a folder without `_Index.md`.
-  Lint reports such a page (BW410), and `brain lint --fix` renames it and
-  rewrites the links that named it by path. A brain that sets
-  `topic_page`, as an imported vault does, finds only that name.
+  default before `_Index.md`, in any case (`Index.md` too), as the page of
+  a folder without `_Index.md`. Lint reports such a page (BW410), and
+  `brain lint --fix` renames it and rewrites the links that named it by
+  path. A brain that sets `topic_page`, as an imported vault does, finds
+  only that name; removing the setting moves its pages the same way.
 
 There is no state directory inside the brain. Machine state (the index,
 run records) is rebuildable or device-specific. Which episodes are done is

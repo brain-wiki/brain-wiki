@@ -17,4 +17,7 @@ brain lint --fix --select BW410
 ```
 
 A brain that sets `topic_page` in `brain.toml`, such as an adopted
-Obsidian vault with `Index.md` pages, is not affected.
+Obsidian vault with `Index.md` pages, is not affected. To move one to
+`_Index.md` as well, delete the `topic_page` line: its pages then count as
+the old name, which matches in any case, and the same two commands rename
+them.

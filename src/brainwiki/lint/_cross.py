@@ -388,18 +388,15 @@ def _structure_checks(
         notes = conn.execute(
             "SELECT id, path, title FROM nodes WHERE topic=? AND kind='note' ORDER BY path", (slug,)
         ).fetchall()
-        if (
-            page is not None
-            and layout.legacy_topic_page
-            and page_path.endswith("/" + layout.legacy_topic_page)
-        ):
+        current = page_path.rsplit("/", 1)[-1]
+        if page is not None and layout.is_legacy_page(current):
             wanted = f"{folder}/{page_name(layout, folder)}"
             out.append(
                 Problem(
                     "BW410",
                     page_path,
                     None,
-                    f"topic page is named {layout.legacy_topic_page}, the old default; "
+                    f"topic page is named {current}, the old default; "
                     f"rename it to {page_name(layout, folder)}",
                     fix=Fix(f"rename to {wanted}", move_to=wanted),
                 )
