@@ -75,7 +75,7 @@ Other rendering behavior:
 
 ### 3.1 Layout
 
-The layout is deterministic. The same brain always produces the same map. A topic is a folder ([brain format §2.1](brain-format.md#21-topics)): its topic page (`Index.md`) is the topic itself, every other note in the folder describes the topic, and every sub-folder is a sub-topic.
+The layout is deterministic. The same brain always produces the same map. A topic is a folder ([brain format §2.1](brain-format.md#21-topics)): its topic page (`_Index.md` by default) is the topic itself, every other note in the folder describes the topic, and every sub-folder is a sub-topic.
 
 ```
            plane 0   ·  top-level topics, packed by size
