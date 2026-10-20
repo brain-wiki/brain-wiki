@@ -12,7 +12,8 @@ The commands, in the order `brain --help` lists them:
 
 | Command | Does |
 |---|---|
-| `brain init [PATH] [--name N] [--git] [--no-register]` | Create a brain and register it |
+| `brain init [PATH] [--name N] [--template NAME\|PATH] [--git] [--no-register]` | Create a brain and register it, optionally from a template |
+| `brain templates` | List the built-in templates |
 | `brain brains [list \| add NAME PATH \| remove NAME [--purge-state] \| rename OLD NEW \| default NAME \| limit HOST BRAIN… \| unlimit HOST]` | List and manage registered brains |
 | `brain agents [list \| grant HOST CAP… [--dry-run] \| revoke HOST CAP… [--dry-run]]` | Show or change what each agent app may do |
 | `brain doctor` | Check configuration, brains, SQLite, agent apps, and commit jobs |
@@ -83,7 +84,9 @@ The commands, in the order `brain --help` lists them:
   not found (exit 3).
 - `brain read --mode outline` shows the summary, headings, links, parts
   (the notes that name it in `bw-part_of`, by title), and backlinks. It is
-  the default for topic pages. `--mode raw` prints the file byte
+  the default for topic pages. A topic page ends with the topic rules
+  (`_Rules.md`) of its folder and the folders above it, and a note names
+  them. `--mode raw` prints the file byte
   for byte. `--section H` alone implies `--mode section`.
 - `brain neighbors` puts a superseded note's replacement first. `--depth`
   is 1 to 3, `--limit` 1 to 100. `--relation` (repeatable) follows only

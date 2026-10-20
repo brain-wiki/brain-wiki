@@ -92,7 +92,7 @@ def lint(
         from brainwiki.index import classify
 
         for path, data in staged.items():
-            kind = kinds.get(path) or classify(engine, path, ctx.topics)
+            kind = kinds.get(path) or classify(engine, path, ctx.tree)
             if kind not in _CHECKED_KINDS or profile_for(path) == "off":
                 continue
             checked += 1

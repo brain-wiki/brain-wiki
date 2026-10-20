@@ -199,7 +199,9 @@ Notes:
   `brain rules accept`.
 - `brain_validate` writes nothing and needs no capability: any agent may
   check files. It returns the lint result (`problems`, counts) plus
-  `checked`, the paths it checked (`null` for the whole brain).
+  `checked`, the paths it checked (`null` for the whole brain), and
+  `rules`, the topic rules that apply to them, which its text names as a
+  reminder ([[brain-format-8-topic-pages|brain format §8.1]]).
 - The packet tools return the guidance and packet as text, and counts as
   structured content: `{episodes, pending, notes}` for consolidation,
   `{run, sessions, remaining}` for harvest. No MCP tool writes a note; the

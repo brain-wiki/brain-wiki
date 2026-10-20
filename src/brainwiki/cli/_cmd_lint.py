@@ -133,13 +133,18 @@ def lint(args: Any) -> int:
 
 
 def validate(args: Any) -> int:
-    from brainwiki.lint import format_validate_text
+    from brainwiki.lint import format_validate_text, validate_rules
     from brainwiki.lint import validate as run_validate
 
     with _engine(args) as engine:
         paths = brain_paths(engine, args.paths)
         result, scope = run_validate(engine, paths)
-    emit(args, result.to_json() | {"checked": scope}, format_validate_text(result, scope))
+        rules = validate_rules(engine, scope)
+    emit(
+        args,
+        result.to_json() | {"checked": scope, "rules": rules},
+        format_validate_text(result, scope, rules),
+    )
     return 1 if result.errors else 0
 
 

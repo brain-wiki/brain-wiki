@@ -45,3 +45,6 @@ One file per decision. Each says what was decided and why, what was rejected, an
 | [D39: Relations are link-only fields the author declares](d39-relation-fields.md) | Accepted |
 | [D40: Every folder is a topic](d40-every-folder-is-a-topic.md) | Accepted |
 | [D41: The map draws the topic tree in layers](d41-map-of-the-topic-tree.md) | Accepted |
+| [D42: The topic page is `_Index.md`](d42-underscore-topic-files.md) | Accepted |
+| [D43: Topic rules say how a folder is organized](d43-topic-rules.md) | Accepted |
+| [D44: A new brain can start from a template](d44-brain-templates.md) | Accepted |

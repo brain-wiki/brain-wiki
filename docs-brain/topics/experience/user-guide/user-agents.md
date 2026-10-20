@@ -115,7 +115,7 @@ the suggested body shape.
   reports an error for any of them it checks.
 - Direct edits are not runs, so `brain undo` does not reverse them. In a git
   brain, `brain commit` or its scheduled job records them, and git reverts
-  them. See [[user-maintenance|Maintenance]]. Without git
+  them. See [[user-maintenance-commit-direct-edits|Maintenance]]. Without git
   there is no record of them.
 - Your own edits in Obsidian or an editor work the same way.
 

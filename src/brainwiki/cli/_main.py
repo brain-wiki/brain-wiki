@@ -16,6 +16,7 @@ import typer
 
 _HANDLERS: dict[str, str] = {
     "init": "brainwiki.cli._cmd_core:init",
+    "templates": "brainwiki.cli._cmd_core:templates",
     "brains": "brainwiki.cli._cmd_core:brains",
     "agents": "brainwiki.cli._cmd_core:agents",
     "doctor": "brainwiki.cli._cmd_core:doctor",
@@ -168,11 +169,28 @@ def _init(
     no_register: Annotated[
         bool, typer.Option("--no-register", help="do not add it to the user config")
     ] = False,
+    template: Annotated[
+        str | None,
+        typer.Option(
+            "--template",
+            help="start with a topic tree: a built-in name (`brain templates` lists them), "
+            "a template folder, or a brain to copy the shape of",
+        ),
+    ] = None,
     brain: _Brain = None,
     as_host: _As = None,
     json: _Json = False,
 ) -> _Call:
-    return _call(ctx, "init", path=path, name=name, git=git, no_register=no_register)
+    return _call(
+        ctx, "init", path=path, name=name, git=git, no_register=no_register, template=template
+    )
+
+
+@_app.command("templates", help="list the templates `brain init --template` starts a brain from")
+def _templates(
+    ctx: typer.Context, brain: _Brain = None, as_host: _As = None, json: _Json = False
+) -> _Call:
+    return _call(ctx, "templates")
 
 
 _brains_app = _sub_app("list and manage registered brains (bare: list them)")

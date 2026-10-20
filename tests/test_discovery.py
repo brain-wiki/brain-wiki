@@ -262,7 +262,7 @@ def test_neighbors_follow_links_by_direction_and_depth(example: Path):
     assert {"rel": "conflicts_with", "src": out["root"], "dst": vector} in out["edges"]
     assert {"rel": "links_to", "src": out["root"], "dst": vector} in out["edges"]
     assert {n["path"] for n in into["nodes"][1:]} == {
-        "topics/storage/index.md",
+        "topics/storage/_Index.md",
         "topics/search/fts5.md",
     }
     assert {n["via"]["relation"] for n in into["nodes"][1:]} == {"depended_on_by", "linked_from"}
@@ -287,7 +287,7 @@ def test_cli_neighbors(example: Path, capsys: pytest.CaptureFixture[str]):
     assert main(["neighbors", "fts5", "--direction", "in", "--paths"]) == 0
     first, *rest = capsys.readouterr().out.split()
     assert first == "topics/search/ripgrep.md"  # supersession first, then newest first
-    assert sorted(rest) == ["topics/search/index.md", "topics/storage/sqlite-version-policy.md"]
+    assert sorted(rest) == ["topics/search/_Index.md", "topics/storage/sqlite-version-policy.md"]
 
 
 # -- relations: wholes and parts, dependents (index-and-search.md §6, §7, §9.2)
@@ -468,7 +468,7 @@ def test_browse_commands(example: Path, capsys: pytest.CaptureFixture[str]):
     assert '- links_to "SQLite version policy" (topics/storage/sqlite-version-policy.md)' in links
     first, *rest = run("backlinks", "fts5", "--paths").split()
     assert first == "topics/search/ripgrep.md"  # supersession first, then newest first
-    assert sorted(rest) == ["topics/search/index.md", "topics/storage/sqlite-version-policy.md"]
+    assert sorted(rest) == ["topics/search/_Index.md", "topics/storage/sqlite-version-policy.md"]
     assert "decision  3" in run("types", "--counts")
     assert run("tags", "--count").strip() == "2"
     assert run("search", "", "--sort", "recent", "--limit", "1", "--paths").count("\n") == 1

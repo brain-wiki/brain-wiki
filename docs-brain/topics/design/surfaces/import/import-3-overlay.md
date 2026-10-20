@@ -23,7 +23,7 @@ Conventions it detects:
 |---|---|---|
 | Obsidian vault | A `.obsidian/` folder | Reads `useMarkdownLinks` and `attachmentFolderPath` from `app.json`, and the template folder from `templates.json` |
 | Topics | Top-level folders with notes | Each becomes a declared topic: `path` is the folder, the slug comes from its name |
-| Topic page name | `index.md`, `_index.md`, `README.md`, or a folder note (`Folder/Folder.md`) directly in top-level folders | The most common one becomes `layout.topic_page` (`{folder}.md` for folder notes) |
+| Topic page name | `_Index.md`, `index.md`, `Index.md`, `_index.md`, `README.md`, or a folder note (`Folder/Folder.md`) directly in top-level folders | The most common one becomes `layout.topic_page` (`{folder}.md` for folder notes); with none, `_Index.md` |
 | Templates | A top-level folder named `templates`, `_templates`, or `template`, or Obsidian's template folder | Ignored |
 | Attachments | Obsidian's attachment folder, or a top-level folder named `attachments`, `assets`, `files`, `images`, `media`, or `_resources` | Ignored for knowledge, still linkable |
 | Daily notes | A folder where at least 3 notes, and at least half its notes, are named `YYYY-MM-DD.md` | Declared as the `journal` topic |

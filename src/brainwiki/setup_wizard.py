@@ -12,7 +12,10 @@ import re
 import sys
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from brainwiki.templates import Template
 
 _Ask = Callable[[str], str]
 
@@ -81,6 +84,29 @@ def _ask_name(ask: _Ask, out: Callable[[str], None], folder: Path) -> str:
     return default
 
 
+def _ask_template(ask: _Ask, out: Callable[[str], None]) -> Template | None:
+    """The built-in template to start from, or None for an empty brain (D44)."""
+    from brainwiki.templates import builtin_templates
+
+    templates = builtin_templates()
+    if not templates:
+        return None
+    out("\nA template starts the brain with topic folders, each with rules for how to fill it:")
+    for t in templates:
+        out(f"  {t.name:<12} {t.description}")
+    out(f"  {'none':<12} an empty brain; agents create topics as they go")
+    names = {t.name: t for t in templates}
+    default = "personal" if "personal" in names else templates[0].name  # fits ~/brains/personal
+    for _ in range(3):
+        answer = ask(f"Template? [{default}] ").strip().lower() or default
+        if answer == "none":
+            return None
+        if answer in names:
+            return names[answer]
+        out(f"Answer one of: {', '.join([*names, 'none'])}.")
+    return None
+
+
 def _yes(ask: _Ask, question: str, default: bool = False) -> bool:
     hint = "[Y/n]" if default else "[y/N]"
     answer = ask(f"{question} {hint} ").strip().lower()
@@ -91,6 +117,7 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
     from brainwiki.config import (
         add_harvest_route,
         load_user_config,
+        open_brain,
         register_brain,
         set_harvest,
     )
@@ -139,11 +166,18 @@ def run_wizard(args: Any, ask: _Ask = input, out: Callable[[str], None] = print)
                 or "~/brains/personal"
             )
             name = _ask_name(ask, out, Path(path).expanduser())
-            root = init_brain(Path(path), name)
+            template = _ask_template(ask, out)
+            root = init_brain(Path(path), name, template)
             register_brain(name, root)
-            summary.append(f"Created brain {name!r} at {root}")
+            summary.append(
+                f"Created brain {name!r} at {root}"
+                + (f" from the {template.name} template" if template else "")
+            )
             if _yes(ask, "Track it with git (recommended)?", True):
-                problem = init_git(root, name)
+                from brainwiki.templates import template_paths
+
+                layout = open_brain(root).manifest.layout
+                problem = init_git(root, name, template_paths(template, layout) if template else [])
                 summary.append(
                     f"git: {problem}" if problem else "git: initialized, with a first commit"
                 )

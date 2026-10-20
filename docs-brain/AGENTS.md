@@ -2,7 +2,7 @@
 # This folder is a brain-wiki brain: brain-wiki-docs
 
 - Read `rules.md` first: standing directives from the user.
-- Knowledge lives in `topics/<topic>/`; each topic has a page (`index.md`).
+- Knowledge lives in `topics/<topic>/`; each topic has a page (`<folder>.md`).
 - Do not change files here. To record something, call the brain-wiki MCP tool
   `brain_log_episode`.
 - A note's frontmatter is metadata; its facts and `[[links]]` are in the body. Relation

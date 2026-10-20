@@ -13,6 +13,7 @@ import os
 import posixpath
 import re
 import tomllib
+from collections import Counter
 from typing import TYPE_CHECKING
 from urllib.parse import quote
 
@@ -57,7 +58,7 @@ def plan_move(engine: Engine, src: str, dst: str) -> Run:
     engine.store.abspath(dst)  # refuses paths outside the brain
     run = Run(engine, "mv", summary=f"mv {src} → {dst}")
     run.move(src, dst)
-    _rewrite_links(engine, run, {src: dst})
+    rewrite_links(engine, run, {src: dst})
     return run
 
 
@@ -85,7 +86,7 @@ def _plan_folder(engine: Engine, src: str, dst: str) -> Run:
             mapping[old_page] = new_page
     for old, new in mapping.items():
         run.move(old, new)
-    _rewrite_links(engine, run, mapping)
+    rewrite_links(engine, run, mapping)
     _move_topics(engine, run, src, dst, mapping)
     return run
 
@@ -194,13 +195,13 @@ def _agents_block_after(
         shown = sorted(table[:keep])
         if keep < len(table):
             shown.append((f"… {len(table) - keep} more", "see the topic pages under topics/", ""))
-        block = default_agents_block(name, shown, edit=edit)
+        block = default_agents_block(name, shown, edit=edit, layout=engine.manifest.layout)
         if keep == 0 or len(block.splitlines()) <= budget:
             return block
         keep -= 1
 
 
-def _rewrite_links(engine: Engine, run: Run, mapping: dict[str, str]) -> None:
+def rewrite_links(engine: Engine, run: Run, mapping: dict[str, str]) -> None:
     """Rewrite links that named a moved note by path (or by a file name that changed), and
     relative Markdown links whose two ends no longer sit where they did."""
     conn = engine.db
@@ -213,12 +214,27 @@ def _rewrite_links(engine: Engine, run: Run, mapping: dict[str, str]) -> None:
             moved[row["id"]] = (row["path"], mapping[row["path"]])
     if not moved:
         return
+    layout = engine.manifest.layout
+    # Every topic page shares these names, so a link by name alone breaks once another topic
+    # has a page: name them by path.
+    shared = {
+        norm_key(_stem(name))
+        for name in (layout.topic_page, layout.legacy_topic_page)
+        if name and "{folder}" not in name
+    }
+    arriving = Counter(norm_key(_stem(new)) for _, new in moved.values())
     link_text: dict[str, tuple[str, bool]] = {}  # node id -> (new link, links by name still work)
     for node_id, (old, new) in moved.items():
-        others = conn.execute(
-            "SELECT COUNT(*) FROM names WHERE kind='stem' AND key=? AND node_id != ?",
-            (norm_key(_stem(new)), node_id),
-        ).fetchone()[0]
+        key = norm_key(_stem(new))
+        staying = [
+            row[0]
+            for row in conn.execute(
+                "SELECT node_id FROM names WHERE kind='stem' AND key=? AND node_id != ?",
+                (key, node_id),
+            )
+            if row[0] not in moved
+        ]
+        others = len(staying) + arriving[key] - 1 + (key in shared)
         link_text[node_id] = (
             _stem(new) if others == 0 else _bare(new),
             _stem(old) == _stem(new) and others == 0,

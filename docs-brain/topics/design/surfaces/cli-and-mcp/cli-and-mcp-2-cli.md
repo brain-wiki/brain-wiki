@@ -10,7 +10,8 @@ source: "docs/design/cli-and-mcp.md#2-cli"
 ### 2.1 Command tree
 
 ```
-brain init [PATH] [--name NAME] [--git] [--no-register]
+brain init [PATH] [--name NAME] [--template NAME|PATH] [--git] [--no-register]
+brain templates                                        # built-in templates for init --template
 brain brains [list]                                    # brains you (or --as HOST) may use
 brain brains add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME
 brain brains limit HOST BRAIN... | unlimit HOST        # which brains an agent app may use
@@ -127,6 +128,9 @@ with `--run`.
   path per line, for piping into file tools), `--limit`, and `--cursor`.
   `search` also takes `--facets` (counts by type, topic, and tag).
 - `brain init --git` runs `git init` and commits the new files.
+- `brain init --template` starts the brain with a template's topic pages
+  and topic rules ([[config-and-storage-5-brain-lifecycle|config and storage §5.1]]).
+  Its JSON adds `template` and `files`, the paths it copied.
 - `init` and `brains add` refuse a name or folder already registered to
   another brain, so a typo never points a name at a different brain. A
   moved brain may take its name along

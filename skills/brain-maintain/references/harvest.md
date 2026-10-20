@@ -53,8 +53,10 @@ Give each session one outcome, as consolidation does:
    and read the notes it belongs with.
 2. Edit or create the notes. Prefer an existing note; one fact per bullet,
    specific (numbers, names, versions, dates), and failed approaches as
-   facts. A new note gets a line in its topic page's `## Notes`; for a new
-   note, `brain_validate` gives the `id:` line to add. Relations are quoted
+   facts. Follow the `_Rules.md` of the folder you write in and the folders
+   above it (`brain_read` of the topic page shows them). A new note gets a
+   line in its topic page's `## Notes`; for a new note, `brain_validate`
+   gives the `id:` line to add. Relations are quoted
    links only: `bw-part_of` (its project, series, or team), `bw-depends_on`
    (notes it rests on), `bw-conflicts_with` (a note it disagrees with).
    When a session contradicts a note and you cannot tell which is right,
@@ -97,8 +99,8 @@ recorded and comes back in the next packet. Fix it and call
    user's call.
 7. **Be careful with personal details.** Do not record health, money, or
    other private details unless the user clearly wanted them remembered.
-8. **Never edit** `rules.md`, `brain.toml`, `AGENTS.md`, `log.md`, or
-   anything under `inbox/`, `archive/`, or `reports/`.
+8. **Never edit** `rules.md`, `_Rules.md` files, `brain.toml`, `AGENTS.md`,
+   `log.md`, or anything under `inbox/`, `archive/`, or `reports/`.
 
 ## Rounds
 

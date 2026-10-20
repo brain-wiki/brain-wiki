@@ -107,7 +107,8 @@ can read and write the files anyway
 ### 2.1 Command tree
 
 ```
-brain init [PATH] [--name NAME] [--git] [--no-register]
+brain init [PATH] [--name NAME] [--template NAME|PATH] [--git] [--no-register]
+brain templates                                        # built-in templates for init --template
 brain brains [list]                                    # brains you (or --as HOST) may use
 brain brains add NAME PATH | remove NAME [--purge-state] | rename OLD NEW | default NAME
 brain brains limit HOST BRAIN... | unlimit HOST        # which brains an agent app may use
@@ -223,6 +224,9 @@ with `--run`.
   path per line, for piping into file tools), `--limit`, and `--cursor`.
   `search` also takes `--facets` (counts by type, topic, and tag).
 - `brain init --git` runs `git init` and commits the new files.
+- `brain init --template` starts the brain with a template's topic pages
+  and topic rules ([config and storage §5.1](config-and-storage.md#51-templates)).
+  Its JSON adds `template` and `files`, the paths it copied.
 - `init` and `brains add` refuse a name or folder already registered to
   another brain, so a typo never points a name at a different brain. A
   moved brain may take its name along
@@ -539,7 +543,9 @@ Notes:
   `brain rules accept`.
 - `brain_validate` writes nothing and needs no capability: any agent may
   check files. It returns the lint result (`problems`, counts) plus
-  `checked`, the paths it checked (`null` for the whole brain).
+  `checked`, the paths it checked (`null` for the whole brain), and
+  `rules`, the topic rules that apply to them, which its text names as a
+  reminder ([brain format §8.1](brain-format.md#81-topic-rules)).
 - The packet tools return the guidance and packet as text, and counts as
   structured content: `{episodes, pending, notes}` for consolidation,
   `{run, sessions, remaining}` for harvest. No MCP tool writes a note; the

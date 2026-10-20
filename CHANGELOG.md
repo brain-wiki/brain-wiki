@@ -12,6 +12,33 @@
 - **The map stays up longer.** `brain viz` stops after 2 hours without a
   request, instead of 30 minutes.
 
+- **Topic pages are `_Index.md`.** A leading `_` marks the files in a topic
+  folder that brain-wiki gives a meaning to, and sorts them before the
+  notes. A brain that does not set `layout.topic_page` keeps finding its
+  `index.md` pages; lint reports each (BW410), and
+  `brain lint --fix --select BW410` renames them and rewrites the links
+  that named them by path, as one undoable run
+  ([D42](docs/decision/d42-underscore-topic-files.md)).
+- **Topic rules.** A folder's `_Rules.md` says how the user wants it, and
+  every folder below it, organized: what belongs there, how notes are
+  named, when to split. `brain_read` of a topic page includes the rules
+  that apply, reading a note names them, `brain_validate` lists them for
+  the files it checked, and orientation, the consolidation packet,
+  `AGENTS.md`, and the instruction block tell agents to follow them. They
+  are not notes: not searched, no id, and they do not make a folder a
+  topic. Lint reports one longer than `budgets.topic_rules_max_lines`
+  (BW411) ([D43](docs/decision/d43-topic-rules.md)).
+- **Brain templates.** `brain init --template personal` (or
+  `engineering`) starts a brain with topic folders, each with its
+  `_Index.md` and `_Rules.md`, so agents file knowledge in the same places
+  from the first session. `--template` also takes a template folder or
+  another brain, whose topic pages and rules are copied with new ids and no
+  notes. `brain templates` lists the built-in ones, and `brain setup` asks
+  for one ([D44](docs/decision/d44-brain-templates.md)).
+- **Links to a moved topic page name its path.** Every topic page has the
+  same file name, so `brain mv` and lint fixes now write a link to one by
+  path, which stays unambiguous when another topic gains a page.
+
 - **The map is the topic tree, in layers.** Each level of topics sits on its
   own plane, with a stem from each sub-topic to its parent. A topic's notes
   form a ring of slices around its topic page, clockwise by file name, a

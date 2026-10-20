@@ -56,10 +56,33 @@ def validate(engine: Engine, paths: list[str] | None = None) -> tuple[LintResult
     return result, scope
 
 
-def format_validate_text(result: LintResult, scope: list[str] | None) -> str:
+def validate_rules(engine: Engine, scope: list[str] | None) -> list[str]:
+    """The topic rules that apply to the files checked, outermost first (brain-format.md §8.1).
+    Nothing checks a note against them; naming them reminds the agent to."""
+    if not scope:
+        return []
+    tree = engine.topics
+    found: dict[str, None] = {}
+    for rel in scope:
+        if not tree.rules or rel in tree.rules:
+            continue
+        found.update(dict.fromkeys(tree.rules_for(rel)))
+    return list(found)
+
+
+def format_validate_text(
+    result: LintResult, scope: list[str] | None, rules: list[str] | None = None
+) -> str:
     if scope is not None and not scope and not result.problems:
         return "Nothing to validate: git sees no changed notes. Pass the paths you edited."
     if not result.problems:
         count = "every note" if scope is None else f"{len(scope)} file(s)"
-        return f"Valid: {count} checked, no frontmatter problems."
-    return result.format_text()
+        text = f"Valid: {count} checked, no frontmatter problems."
+    else:
+        text = result.format_text()
+    if rules:
+        text += (
+            "\nTopic rules apply to these files; check that the change follows them: "
+            + ", ".join(rules)
+        )
+    return text

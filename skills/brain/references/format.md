@@ -122,10 +122,16 @@ episodes move to `archive/`, so cite the `archive/` path.
 
 ## Topics and topic pages
 
-- A topic is a folder under `topics/` with a topic page, `index.md`. A note
-  belongs to the topic of its folder.
-- Topics nest: a folder with its own `index.md` inside a topic is a
-  sub-topic. Folders without a topic page just organize notes.
+- A topic is a folder under `topics/`, usually with a topic page,
+  `_Index.md`. A note belongs to the topic of its folder.
+- Topics nest: every folder with notes inside a topic is a sub-topic, with
+  or without its own `_Index.md`.
+- A folder may hold `_Rules.md`: the user's rules for how it, and every
+  folder below it, is organized. Follow them, outermost first; a nearer
+  file is more specific. They are not notes, and you edit them only when
+  the user asks.
+- Older brains may still name topic pages `index.md`; `brain lint --fix`
+  renames them (BW410).
 - A topic page's `## Notes` list is navigation: add a line for a new note.
   `brain lint --fix` adds missing entries and never removes lines.
 - To move or rename a note or a topic folder, use `brain mv SRC DST`, which

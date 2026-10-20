@@ -29,5 +29,7 @@ Generated from `docs/design/glossary.md`.
 - [[concept-run]]: Run
 - [[concept-sources]]: Sources
 - [[concept-supersession-guard]]: Supersession guard
+- [[concept-template]]: Template
 - [[concept-topic]]: Topic
 - [[concept-topic-page]]: Topic page
+- [[concept-topic-rules]]: Topic rules

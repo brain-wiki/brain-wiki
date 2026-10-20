@@ -67,7 +67,7 @@ The packet is JSON with brain-relative paths. The guidance comes before it:
      "archive_to": "archive/episodes/2026/10/01JA0D7F9G1H3J5K7M9N1P3Q5R.md",
      "agent": "claude-code", "created": "2026-10-10T19:22:11Z",
      "inputs": "unknown", "session_inputs": "local", "topics": ["search"],
-     "candidates": ["topics/search/index.md", "topics/search/fts5.md"],
+     "candidates": ["topics/search/_Index.md", "topics/search/fts5.md"],
      "origin_available": true, "pattern": "file",
      "text": "Switched Lumen's search path to FTS5 after …"}
   ],

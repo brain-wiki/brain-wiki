@@ -331,7 +331,8 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         title="Read a note",
         annotations=_READ,
         description="Read a note, topic page, or episode by id, path, file name, alias, or title. "
-        "Modes: outline (the default for topic pages), full (the default otherwise), section, raw.",
+        "Modes: outline (the default for topic pages), full (the default otherwise), section, raw. "
+        "A topic page comes with the topic rules (_Rules.md) that say how its folder is organized.",
     )
     @guard
     def brain_read(
@@ -418,12 +419,13 @@ def build_server(host: str | None = None, brain: str | None = None) -> MCPServer
         brain: _Brain = None,
         ctx: Context | None = None,
     ) -> CallToolResult:
-        from brainwiki.lint import format_validate_text, validate
+        from brainwiki.lint import format_validate_text, validate, validate_rules
 
         engine = state.engine(brain)
         result, scope = validate(engine, list(paths) or None)
-        data = result.to_json() | {"checked": scope}
-        return _result(format_validate_text(result, scope), data)
+        rules = validate_rules(engine, scope)
+        data = result.to_json() | {"checked": scope, "rules": rules}
+        return _result(format_validate_text(result, scope, rules), data)
 
     @mcp.tool(
         name="brain_log_episode",

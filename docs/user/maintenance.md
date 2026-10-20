@@ -157,6 +157,21 @@ keep both and say why in each. Once one side is superseded, `brain lint`
 reports the leftover `bw-conflicts_with` as BW314, and
 `brain lint --fix --select BW314` removes it.
 
+## Rename topic pages to `_Index.md`
+
+Topic pages are named `_Index.md` since brain-wiki 0.3.4, so they stand
+apart from notes. A brain that never set `layout.topic_page` keeps working
+with its `index.md` pages, and lint reports each as BW410. Rename them in
+one undoable run, which also rewrites the links that named them by path:
+
+```sh
+brain lint --fix --select BW410 --dry-run
+brain lint --fix --select BW410
+```
+
+A brain that sets `topic_page` in `brain.toml`, such as an adopted
+Obsidian vault with `Index.md` pages, is not affected.
+
 ## Convert notes from older versions
 
 brain-wiki 0.1 kept facts and relations in `bw-claims` and `bw-<verb>`

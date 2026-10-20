@@ -67,6 +67,8 @@ _RULES = [
     _RuleInfo("BW407", "info", "off", False, "note outside any topic"),
     _RuleInfo("BW408", "warning", "warning", True, "AGENTS.md managed block missing or stale"),
     _RuleInfo("BW409", "error", "warning", False, "topic slug invalid"),
+    _RuleInfo("BW410", "warning", "info", True, "topic page has the old default name"),
+    _RuleInfo("BW411", "warning", "warning", False, "topic rules exceed their budget"),
     _RuleInfo("BW501", "error", "error", False, "episode changed after it was created"),
     _RuleInfo("BW502", "error", "warning", True, "episode path does not match its id"),
     _RuleInfo("BW503", "error", "warning", True, "episode lacks required provenance fields"),

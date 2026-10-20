@@ -53,7 +53,7 @@ exist today; it comes back only with [host hooks](hooks.md).
 | P2 | A level is defined by the destinations it allows (§2). | Every level then answers whether a model may read it, a tool may get it, or an output may contain it. |
 | P3 | brain-wiki enforces a level where it controls the flow, and tells the agent where it does not. | It controls its tools, packets, runs, and exports, not the host's model or tool calls. |
 | P4 | Nothing an agent writes moves content to a less private place. | Otherwise consolidation, harvest, and direct edits copy private facts into open notes. |
-| P5 | The level is visible where the owner reads: in the topic's `index.md` frontmatter. | One place to look, shown in Obsidian, carried along when the folder moves. |
+| P5 | The level is visible where the owner reads: in the topic's `_Index.md` frontmatter. | One place to look, shown in Obsidian, carried along when the folder moves. |
 | P6 | With no settings, a brain behaves as it does today. | Most brains never need privacy levels. |
 | P7 | An unknown host or backend gets only open content. | Trust is granted, never assumed. |
 
@@ -78,10 +78,10 @@ editor.
 ### 4.2 Declaring
 
 - A topic declares its level in its topic page's frontmatter: `bw-privacy: private`
-  in `index.md`. The level covers the folder, its plain subfolders, and its
+  in `_Index.md`. The level covers the folder, its plain subfolders, and its
   sub-topics. The strictest level along the tree wins.
 - Notes carry no level of their own. One private note in an open topic moves
-  into a private sub-topic: a folder with an `index.md`, which may hold just
+  into a private sub-topic: a folder with an `_Index.md`, which may hold just
   that note.
 - Code gives each episode a level: the strictest of its topic hints and of
   what the session read (§4.4). An episode is never less private than its
@@ -143,7 +143,7 @@ trusted_providers = ["anthropic"]   # may read `private`; local models always ma
 
 | Option | For | Against |
 |---|---|---|
-| A. Levels as allowed destinations (this draft) | Concrete questions per level; covers models, tools, outputs, and exports; owner-only; visible in `index.md` | Most work; tool-call control depends on host hooks |
+| A. Levels as allowed destinations (this draft) | Concrete questions per level; covers models, tools, outputs, and exports; owner-only; visible in `_Index.md` | Most work; tool-call control depends on host hooks |
 | B. Restore the old read levels | Already designed and tested once | The problems in §1 |
 | C. Separate brains only (today) | Simplest; a folder boundary every tool understands | No links across brains; two brains to keep up; no control inside a brain |
 | D. Labels and instructions only | Cheap; no filtering code | Relies on agents obeying; no hard guarantee |

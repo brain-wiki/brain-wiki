@@ -33,16 +33,16 @@ def test_tree_slugs_and_parents():
     tree = _build_tree(
         manifest,
         [
-            "topics/people/index.md",
-            "topics/people/rin-sato/index.md",
+            "topics/people/_Index.md",
+            "topics/people/rin-sato/_Index.md",
             "topics/people/rin-sato/meetings/2026-10-01.md",  # no topic page: still a topic
             "topics/people/rin-sato/drafts/idea.md",
-            "topics/people/notes/index.md",
+            "topics/people/notes/_Index.md",
             "topics/search/fts.md",
-            "topics/search/notes/index.md",
-            "topics/search/guide/index.md",
+            "topics/search/notes/_Index.md",
+            "topics/search/guide/_Index.md",
             "topics/search/images/flow.png",  # attachments only: not a topic
-            "inbox/episodes/index.md",  # not under topics/
+            "inbox/episodes/_Index.md",  # not under topics/
         ],
     )
     assert tree.paths == {
@@ -71,10 +71,12 @@ def _note(root: Path, rel: str, title: str, body: str = "", extra: str = "") -> 
 
 @pytest.fixture
 def people(brain_dir: Path) -> Path:
-    _note(brain_dir, "topics/people/index.md", "People", "## Notes\n- [[rin-sato/index|Rin Sato]]")
-    _note(brain_dir, "topics/people/rin-sato/index.md", "Rin Sato", "## Notes\n- [[priority]]")
+    _note(
+        brain_dir, "topics/people/_Index.md", "People", "## Notes\n- [[rin-sato/_Index|Rin Sato]]"
+    )
+    _note(brain_dir, "topics/people/rin-sato/_Index.md", "Rin Sato", "## Notes\n- [[priority]]")
     _note(brain_dir, "topics/people/rin-sato/priority.md", "Priority", "Ship the search rewrite.")
-    _note(brain_dir, "topics/search/index.md", "Search", "## Notes\n- [[fts]]")
+    _note(brain_dir, "topics/search/_Index.md", "Search", "## Notes\n- [[fts]]")
     _note(
         brain_dir,
         "topics/search/fts.md",
@@ -92,12 +94,12 @@ def test_nested_topic_takes_its_notes(people: Path):
         ).fetchone()
         assert row["topic"] == "rin-sato"
         page = e.db.execute(
-            "SELECT kind FROM nodes WHERE path='topics/people/rin-sato/index.md'"
+            "SELECT kind FROM nodes WHERE path='topics/people/rin-sato/_Index.md'"
         ).fetchone()
         assert page["kind"] == "topic"
-        up = neighbors(e, "topics/people/rin-sato/index.md", direction="in")
+        up = neighbors(e, "topics/people/rin-sato/_Index.md", direction="in")
         assert [n["path"] for n in up["nodes"] if n["id"] != up["root"]] == [
-            "topics/people/index.md"
+            "topics/people/_Index.md"
         ]
         hits = search(e, "", topics=["people"])["results"]
         assert "topics/people/rin-sato/priority.md" in {h["path"] for h in hits}
@@ -115,12 +117,12 @@ def test_only_the_page_file_is_a_topic_page(people: Path):
         e.scan(force=True)
         kinds = dict(e.db.execute("SELECT path, kind FROM nodes WHERE topic = 'people'"))
         assert kinds == {
-            "topics/people/index.md": "topic",
+            "topics/people/_Index.md": "topic",
             "topics/people/overview.md": "note",
             "topics/people/roster.md": "note",
         }
         assert next(r for r in orient(e)["topics"] if r["slug"] == "people")["page"] == (
-            "topics/people/index.md"
+            "topics/people/_Index.md"
         )
 
 
@@ -132,13 +134,13 @@ def test_every_folder_is_a_sub_topic_with_or_without_a_page(people: Path):
         assert e.db.execute(topic).fetchone()[0] == "ann"
         assert e.topics.parent("ann") == "people"
         assert not [p for p in lint(e).problems if p.code == "BW404"]  # a sub-topic needs no page
-        _note(people, "topics/people/ann/index.md", "Ann")
-        e.scan(paths=["topics/people/ann/index.md"])
+        _note(people, "topics/people/ann/_Index.md", "Ann")
+        e.scan(paths=["topics/people/ann/_Index.md"])
         assert e.db.execute(topic).fetchone()[0] == "ann"
-        kind = "SELECT kind FROM nodes WHERE path='topics/people/ann/index.md'"
+        kind = "SELECT kind FROM nodes WHERE path='topics/people/ann/_Index.md'"
         assert e.db.execute(kind).fetchone()[0] == "topic"
-        (people / "topics/people/ann/index.md").unlink()
-        e.scan(paths=["topics/people/ann/index.md"])
+        (people / "topics/people/ann/_Index.md").unlink()
+        e.scan(paths=["topics/people/ann/_Index.md"])
         assert e.db.execute(topic).fetchone()[0] == "ann"
         (people / "topics/people/ann/one-on-one.md").unlink()
         e.scan(paths=["topics/people/ann/one-on-one.md"])

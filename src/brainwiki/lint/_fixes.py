@@ -59,6 +59,7 @@ def plan(engine: Engine, result: LintResult, *, include_info: bool) -> tuple[Run
                 problem.fix.edit = lambda t, f=problem.fix.link_edit, b=back: f(t, b)
         groups[target or problem.path].append(problem)
     applied: list[Problem] = []
+    moved: dict[str, str] = {}
     for target, problems in groups.items():
         original = run.read(target)
         text = original
@@ -85,11 +86,31 @@ def plan(engine: Engine, result: LintResult, *, include_info: bool) -> tuple[Run
                     run.move(target, fix.move_to)
                 except Conflict:
                     continue
+                moved[target] = fix.move_to
                 if problem not in applied:
                     applied.append(problem)
                 break
+    if moved:
+        _follow_moves(engine, run, moved)
     run.summary = f"lint --fix: {len(applied)} fix{'es' if len(applied) != 1 else ''}"
     return run, applied
+
+
+def _follow_moves(engine: Engine, run: Run, moved: dict[str, str]) -> None:
+    """Rewrite the links that named a moved note by path, and its row in the AGENTS.md topic
+    table, as `brain mv` would."""
+    from brainwiki.format import extract_block, replace_block
+    from brainwiki.write import rewrite_links
+
+    rewrite_links(engine, run, moved)
+    agents = run.read("AGENTS.md")
+    block = extract_block(agents) if agents else None
+    if agents and block:
+        new = block
+        for old, dst in moved.items():
+            new = new.replace(f"| {old} |", f"| {dst} |")
+        if new != block:
+            run.write("AGENTS.md", replace_block(agents, new))
 
 
 def _declare_format(engine: Engine) -> bool:

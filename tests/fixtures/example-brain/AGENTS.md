@@ -2,7 +2,7 @@
 # This folder is a brain-wiki brain: example
 
 - Read `rules.md` first: standing directives from the user.
-- Knowledge lives in `topics/<topic>/`; each topic has a page (`index.md`).
+- Knowledge lives in `topics/<topic>/`; each topic has a page (`_Index.md`).
 - Do not change files here. To record something, call the brain-wiki MCP tool
   `brain_log_episode`.
 - A note's frontmatter is metadata; its facts and `[[links]]` are in the body. Relation
@@ -11,7 +11,7 @@
 
 | Topic | Page | About |
 |---|---|---|
-| budget | topics/budget/index.md | Spending decisions. |
-| search | topics/search/index.md | How local search works and why. |
-| storage | topics/storage/index.md | Where data lives and which versions we require. |
+| budget | topics/budget/_Index.md | Spending decisions. |
+| search | topics/search/_Index.md | How local search works and why. |
+| storage | topics/storage/_Index.md | Where data lives and which versions we require. |
 <!-- brain-wiki:end -->

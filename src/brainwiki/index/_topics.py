@@ -27,14 +27,22 @@ def slugify(name: str) -> str:
 
 
 def page_name(layout: Layout, folder: str) -> str:
-    """The file name of the topic page in `folder` (`layout.topic_page`)."""
+    """The file name of the topic page in `folder` (`layout.topic_page`): the name a new page
+    gets. An existing page may have the legacy name instead; `TopicTree.page` finds it."""
     return layout.topic_page.replace("{folder}", folder.rsplit("/", 1)[-1])
+
+
+def is_rules_file(layout: Layout, rel: str) -> bool:
+    """Whether `rel` is a topic rules file (`layout.topic_rules`, brain-format.md §8.1)."""
+    return bool(layout.topic_rules) and posixpath.basename(rel) == layout.topic_rules
 
 
 @dataclass(frozen=True)
 class TopicTree:
     paths: dict[str, str]  # slug -> folder
     parents: dict[str, str | None]
+    pages: dict[str, str] = field(default_factory=dict)  # slug -> its topic page, if it has one
+    rules: frozenset[str] = frozenset()  # every topic rules file in the brain
     _children: dict[str, list[str]] = field(default_factory=dict, compare=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -74,6 +82,37 @@ class TopicTree:
             stack += reversed(self._children.get(current, []))
         return out
 
+    def page(self, slug: str) -> str | None:
+        """The path of the topic's page, or None when it has none."""
+        return self.pages.get(slug)
+
+    def is_page(self, rel: str) -> bool:
+        return rel in self._page_paths
+
+    @property
+    def _page_paths(self) -> frozenset[str]:
+        cached = self.__dict__.get("_page_set")
+        if cached is None:
+            cached = frozenset(self.pages.values())
+            object.__setattr__(self, "_page_set", cached)
+        return cached
+
+    def rules_for(self, rel: str) -> list[str]:
+        """The topic rules files that apply to a brain path or folder, outermost first: one in
+        its folder and in every folder above it (brain-format.md §8.1)."""
+        if not self.rules:
+            return []
+        folder = rel if not rel.lower().endswith(".md") else posixpath.dirname(rel)
+        found: list[str] = []
+        while True:
+            for path in self.rules:
+                if posixpath.dirname(path) == folder:
+                    found.append(path)
+            if not folder:
+                break
+            folder = posixpath.dirname(folder)
+        return found[::-1]
+
     def roots(self) -> list[str]:
         return sorted(s for s, p in self.parents.items() if p is None)
 
@@ -91,7 +130,10 @@ class TopicTree:
     @property
     def signature(self) -> str:
         return json.dumps(
-            {s: [self.paths[s], self.parents.get(s)] for s in sorted(self.paths)},
+            {
+                s: [self.paths[s], self.parents.get(s), self.pages.get(s)]
+                for s in sorted(self.paths)
+            },
             separators=(",", ":"),
         )
 
@@ -99,12 +141,18 @@ class TopicTree:
 def _build_tree(manifest: Manifest, files: Iterable[str]) -> TopicTree:
     """The tree from every folder under the topics directory that holds a note."""
     layout = manifest.layout
+    files = files if isinstance(files, (set, frozenset)) else frozenset(files)
     base = "" if layout.topics_dir in (".", "") else layout.topics_dir.rstrip("/") + "/"
     reserved = (layout.inbox_dir, layout.archive_dir, layout.reports_dir)
     folders: set[str] = set()
+    rules: set[str] = set()
     for rel in files:
         if not rel.lower().endswith(".md"):
             continue  # attachments alone do not make a topic
+        if is_rules_file(layout, rel):
+            if not any(rel.startswith(r + "/") for r in reserved):
+                rules.add(rel)
+            continue  # nor do rules: they say how to organize notes, they are not notes
         folder = posixpath.dirname(rel)
         while folder and folder.startswith(base) and folder not in folders:
             if any(folder == r or folder.startswith(r + "/") for r in reserved) or (
@@ -156,7 +204,15 @@ def _build_tree(manifest: Manifest, files: Iterable[str]) -> TopicTree:
         claimed[folder] = slug
 
     parents = {slug: parent_of(path) for slug, path in paths.items()}
-    return TopicTree(paths, parents)
+    pages: dict[str, str] = {}
+    for slug, folder in paths.items():
+        page = f"{folder}/{page_name(layout, folder)}"
+        legacy = f"{folder}/{layout.legacy_topic_page}" if layout.legacy_topic_page else None
+        if page in files:
+            pages[slug] = page
+        elif legacy and legacy in files:  # the old default name, until BW410 renames it (D42)
+            pages[slug] = legacy
+    return TopicTree(paths, parents, pages, frozenset(rules))
 
 
 def topic_tree(engine: Engine) -> TopicTree:

@@ -362,6 +362,14 @@ def prepare(
         if tree.parent(slug):
             entry["parent"] = tree.parent(slug)
         topics.append(entry)
+    rules = []
+    limit = manifest.budgets.topic_rules_max_lines
+    for path in sorted(tree.rules, key=lambda p: (p.count("/"), p)):
+        try:
+            lines = engine.store.read_text(path).splitlines()
+        except (OSError, UnicodeDecodeError):
+            continue
+        rules.append({"path": path, "content": "\n".join(lines[:limit]).strip()})
     others = {
         owner: counts
         for owner, counts in pending_by_agent(engine).items()
@@ -375,6 +383,7 @@ def prepare(
         "episodes": episodes,
         "notes": list(notes.values()),
         "topics": topics,
+        "topic_rules": rules,
         "not_included": others,
     }
 

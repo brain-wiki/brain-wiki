@@ -104,7 +104,13 @@ The steps of the `brain-setup` skill:
      (`~/brains/personal`), a name, and git. Recommend git strongly: agents
      edit notes directly, and git is the only way to see or revert those
      edits. Warn against a git brain inside a folder a sync tool copies
-     between machines. Then run `brain init PATH --name NAME [--git]`.
+     between machines. Offer a template
+     ([config and storage §5.1](config-and-storage.md#51-templates)): run
+     `brain templates`, describe each in a line, and recommend the one
+     that fits how the user described their work, or none for an empty
+     brain. Then run `brain init PATH --name NAME [--template NAME] [--git]`,
+     and point the user at the `_Rules.md` files they can edit to make the
+     structure theirs.
    - With an existing vault: run `brain import PATH --overlay --dry-run`,
      summarize the report, and after a yes apply phase 0. Mention phases 1
      and 2 without applying them.
@@ -246,7 +252,8 @@ It differs from the skill:
   run, and backfill.
 - To create a brain it asks new or adopt, a folder, and a name. Adopting
   shows the overlay report and applies phase 0 after a yes. A new brain
-  gets git after a yes (default yes).
+  asks for a template, listing the built-in ones and `none` (default
+  `personal`, which fits the default folder), then gets git after a yes (default yes).
 - It offers the commit job for a git brain with none yet, every 15
   minutes, and asks about pushing only when the brain has an `origin`
   remote. It installs the job after the yes without showing it first.

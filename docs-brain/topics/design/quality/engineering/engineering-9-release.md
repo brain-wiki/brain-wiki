@@ -26,7 +26,7 @@ source: "docs/design/engineering.md#9-release"
   public first. A Registry install gets only the MCP server, and its first
   run depends on the `not_configured` hint leading to `uvx --from
   brain-wiki brain setup --guide`
-  ([[skills-and-onboarding-3-onboarding|skills and onboarding §3.1]]).
+  ([[skills-and-onboarding-31-entry-points|skills and onboarding §3.1]]).
   When turned on, it lists final versions only.
 - The plugin files point at the newest dated release, final or development
   (`scripts/sync_versions.py`). The Claude Code and Codex marketplaces read

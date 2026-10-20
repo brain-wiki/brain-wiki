@@ -33,7 +33,7 @@ Generated from `docs/design/write-path.md`.
 - [[write-path-5-committing-direct-edits]]: Committing direct edits
 - [[write-path-6-rules]]: Rules (Write path)
 - [[write-path-7-runs]]: Runs
-- [[write-path-8-undo]]: Undo
+- [[write-path-8-undo]]: Undo (Write path)
 - [[write-path-9-concurrency-and-multiple-devices]]: Concurrency and multiple devices
 - [[write-path-10-failure-modes]]: Failure modes (Write path)
 - [[write-path-11-alternatives-considered]]: Alternatives considered (Write path)

@@ -355,7 +355,7 @@ def test_mv_topic_folder_renames_its_topic(example: Path):
     assert "[topics.persistence]" in toml and "[topics.storage]" not in toml
     assert 'description = "Where data lives' in toml
     agents = (root / "AGENTS.md").read_text()
-    assert "| persistence | topics/persistence/index.md |" in agents and "storage |" not in agents
+    assert "| persistence | topics/persistence/_Index.md |" in agents and "storage |" not in agents
     with eng(root) as e:
         assert "storage" not in e.topics.paths
         assert not {"BW404", "BW408"} & {p.code for p in lint(e).problems}
@@ -365,7 +365,7 @@ def test_mv_topic_folder_renames_its_topic(example: Path):
 
 def test_mv_topic_with_a_declared_path_and_folder_named_pages(example: Path):
     root = _registered(example, '\n[layout]\ntopic_page = "{folder}.md"\n')
-    (root / "topics/budget/index.md").rename(root / "topics/budget/budget.md")
+    (root / "topics/budget/_Index.md").rename(root / "topics/budget/budget.md")
     toml = root / "brain.toml"
     toml.write_text(
         toml.read_text().replace('title = "Budget"', 'path = "topics/budget"\ntitle = "Budget"')

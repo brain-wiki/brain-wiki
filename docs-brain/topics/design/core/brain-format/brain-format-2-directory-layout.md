@@ -19,11 +19,13 @@ root. The default layout follows. Every folder name is configurable in
 ├── log.md                      append-only human-readable change log
 ├── .gitattributes              written by `brain init`
 ├── topics/
+│   ├── _Rules.md               optional topic rules for the whole tree (§8.1)
 │   └── <topic>/
-│       ├── index.md            the topic page
+│       ├── _Index.md           the topic page (§8)
+│       ├── _Rules.md           optional: how this folder is organized (§8.1)
 │       ├── <note>.md           curated notes
 │       └── <sub-topic>/        every folder inside a topic is a topic too, at any depth
-│           └── index.md        optional; without it the topic has no content of its own
+│           └── _Index.md       optional; without it the topic has no content of its own
 ├── inbox/
 │   ├── episodes/
 │   │   └── YYYY/MM/<ulid>.md   immutable episodes, UTC year and month
@@ -61,7 +63,8 @@ form a tree ([[d30-topic-tree|D30]]).
 
 - Every folder under `topics/` that holds a note, directly or deeper, is a
   topic ([[d40-every-folder-is-a-topic|D40]]). A folder of
-  attachments only, or with nothing in it, is not. There are no named
+  attachments only, or with nothing in it, is not, and neither is one that
+  holds only topic rules (§8.1). There are no named
   levels: `people/` and `people/rin-sato/` are both topics.
 - The topic page (`layout.topic_page`, §8) is optional. A topic without
   one has no content of its own: no description and no summary.
@@ -84,6 +87,26 @@ notes and rewrites the links that named them by path, as one undoable run.
 A move by hand works too, and `brain lint --fix` repairs path links from
 the index's history. Because a topic is known by its slug, topic settings,
 links by file name, and run records survive the move.
+
+
+### 2.2 brain-wiki files in a topic folder
+
+A file in a topic folder whose name starts with `_` is one brain-wiki gives
+a meaning to ([[d42-underscore-topic-files|D42]]). File
+browsers and Obsidian sort these names before the notes.
+
+| File | Setting | What it is |
+|---|---|---|
+| `_Index.md` | `layout.topic_page` | The topic page (§8): the topic's summary and its `## Notes` list |
+| `_Rules.md` | `layout.topic_rules` | Topic rules (§8.1): how the user wants this folder and the folders below it organized |
+
+- Other `_` names are ordinary notes. Later versions may give more names a
+  meaning, so a brain SHOULD NOT use `_Name.md` notes for its own purposes.
+- A brain that does not set `layout.topic_page` also finds `index.md`, the
+  default before `_Index.md`, as the page of a folder without `_Index.md`.
+  Lint reports such a page (BW410), and `brain lint --fix` renames it and
+  rewrites the links that named it by path. A brain that sets
+  `topic_page`, as an imported vault does, finds only that name.
 
 There is no state directory inside the brain. Machine state (the index,
 run records) is rebuildable or device-specific. Which episodes are done is

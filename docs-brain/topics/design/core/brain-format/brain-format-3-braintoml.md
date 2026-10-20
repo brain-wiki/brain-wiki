@@ -23,13 +23,15 @@ topics_dir  = "topics"
 inbox_dir   = "inbox"
 archive_dir = "archive"
 reports_dir = "reports"
-topic_page  = "index.md"                    # or "{folder}.md" for folder-note style
+topic_page  = "_Index.md"                   # or "{folder}.md" for folder-note style
+topic_rules = "_Rules.md"                   # "" turns topic rules off
 ignore      = []                            # extra glob patterns, relative to the brain root
 
 [budgets]
 rules_max_lines     = 100
 rules_max_chars     = 4000
 agents_md_max_lines = 150
+topic_rules_max_lines = 60                  # per topic rules file (BW411)
 orient_max_tokens   = 1500
 
 [lint]                                      # see lint and reports §2
@@ -78,12 +80,15 @@ Rules:
 - An undeclared topic still works. Its title comes from its topic page,
   and its description from the page's `description` property. A declaration sets
   the title, the description, or a path (for imported vaults).
+- Without `layout.topic_page`, a folder without `_Index.md` takes
+  `index.md` as its page (§2.2).
 - Older `brain.toml` files may use the names from when topic pages were
   called hubs. `layout.hub_filename` is read as `layout.topic_page`, and a
   `hub` key in `search.kind_factor` as `topic`.
 - Declared topic slugs MUST match `^[a-z0-9][a-z0-9-]{0,63}$` (BW409).
 - `[budgets]` limits are hard. Rule writes refuse to exceed theirs, lint
-  reports `rules.md` (BW402) and `AGENTS.md` (BW403), and orientation is
+  reports `rules.md` (BW402), `AGENTS.md` (BW403), and topic rules
+  (BW411), and orientation and the topic rules `brain_read` includes are
   cut to fit.
 - `git.mode = "on"` behaves like `auto`.
 - Agent profile names are host ids

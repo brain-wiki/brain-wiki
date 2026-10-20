@@ -87,7 +87,8 @@ The user keeps long-term memory in brain-wiki "brains" that all their agents sha
 - A superseded hit comes with the note that replaced it. Prefer the current
   note, and tell the user when the difference matters.
 - To add or correct knowledge, edit or create the note directly (frontmatter
-  holds metadata only; facts and links go in the body), then run
+  holds metadata only; facts and links go in the body), following the
+  `_Rules.md` in its folder and the folders above it, then run
   `brain_validate` on what you changed and fix what it reports. Something you
   cannot place yet goes to the inbox with `brain_log_episode`. Never edit
   rules, episodes, or log.md, and never add rules unless the user asks.
@@ -145,7 +146,7 @@ the block from that file.
 
 `brain doctor` checks that each instruction file `connect` wrote for the
 user scope still holds the block, and that Antigravity's rule is still
-`always_on` ([[skills-and-onboarding-3-onboarding|skills and onboarding §3.4]]).
+`always_on` ([[skills-and-onboarding-34-brain-doctor---json|skills and onboarding §3.4]]).
 A plugin installed from a marketplace, without `brain connect`, cannot
 write user instruction files. It still carries the MCP server
 instructions, the `brain` skill, and Antigravity's always-on rule, and the

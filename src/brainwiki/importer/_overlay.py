@@ -146,9 +146,11 @@ def adopt(root: Path, *, name: str | None = None, register: bool = True) -> dict
     created.append(MANIFEST)
     agents = root / "AGENTS.md"
     current = agents.read_text(encoding="utf-8") if agents.exists() else ""
-    edit = parse_manifest(manifest_text).profile("default").can("edit")
+    parsed = parse_manifest(manifest_text)
+    edit = parsed.profile("default").can("edit")
     agents.write_text(
-        replace_block(current, default_agents_block(name, edit=edit)), encoding="utf-8"
+        replace_block(current, default_agents_block(name, edit=edit, layout=parsed.layout)),
+        encoding="utf-8",
     )
     created.append("AGENTS.md")
     for filename, content in (("rules.md", RULES_HEADER), ("log.md", LOG_HEADER)):

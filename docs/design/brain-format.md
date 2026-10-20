@@ -36,11 +36,13 @@ root. The default layout follows. Every folder name is configurable in
 ├── log.md                      append-only human-readable change log
 ├── .gitattributes              written by `brain init`
 ├── topics/
+│   ├── _Rules.md               optional topic rules for the whole tree (§8.1)
 │   └── <topic>/
-│       ├── index.md            the topic page
+│       ├── _Index.md           the topic page (§8)
+│       ├── _Rules.md           optional: how this folder is organized (§8.1)
 │       ├── <note>.md           curated notes
 │       └── <sub-topic>/        every folder inside a topic is a topic too, at any depth
-│           └── index.md        optional; without it the topic has no content of its own
+│           └── _Index.md       optional; without it the topic has no content of its own
 ├── inbox/
 │   ├── episodes/
 │   │   └── YYYY/MM/<ulid>.md   immutable episodes, UTC year and month
@@ -77,7 +79,8 @@ form a tree ([D30](../decision/d30-topic-tree.md)).
 
 - Every folder under `topics/` that holds a note, directly or deeper, is a
   topic ([D40](../decision/d40-every-folder-is-a-topic.md)). A folder of
-  attachments only, or with nothing in it, is not. There are no named
+  attachments only, or with nothing in it, is not, and neither is one that
+  holds only topic rules (§8.1). There are no named
   levels: `people/` and `people/rin-sato/` are both topics.
 - The topic page (`layout.topic_page`, §8) is optional. A topic without
   one has no content of its own: no description and no summary.
@@ -100,6 +103,25 @@ notes and rewrites the links that named them by path, as one undoable run.
 A move by hand works too, and `brain lint --fix` repairs path links from
 the index's history. Because a topic is known by its slug, topic settings,
 links by file name, and run records survive the move.
+
+### 2.2 brain-wiki files in a topic folder
+
+A file in a topic folder whose name starts with `_` is one brain-wiki gives
+a meaning to ([D42](../decision/d42-underscore-topic-files.md)). File
+browsers and Obsidian sort these names before the notes.
+
+| File | Setting | What it is |
+|---|---|---|
+| `_Index.md` | `layout.topic_page` | The topic page (§8): the topic's summary and its `## Notes` list |
+| `_Rules.md` | `layout.topic_rules` | Topic rules (§8.1): how the user wants this folder and the folders below it organized |
+
+- Other `_` names are ordinary notes. Later versions may give more names a
+  meaning, so a brain SHOULD NOT use `_Name.md` notes for its own purposes.
+- A brain that does not set `layout.topic_page` also finds `index.md`, the
+  default before `_Index.md`, as the page of a folder without `_Index.md`.
+  Lint reports such a page (BW410), and `brain lint --fix` renames it and
+  rewrites the links that named it by path. A brain that sets
+  `topic_page`, as an imported vault does, finds only that name.
 
 There is no state directory inside the brain. Machine state (the index,
 run records) is rebuildable or device-specific. Which episodes are done is
@@ -124,13 +146,15 @@ topics_dir  = "topics"
 inbox_dir   = "inbox"
 archive_dir = "archive"
 reports_dir = "reports"
-topic_page  = "index.md"                    # or "{folder}.md" for folder-note style
+topic_page  = "_Index.md"                   # or "{folder}.md" for folder-note style
+topic_rules = "_Rules.md"                   # "" turns topic rules off
 ignore      = []                            # extra glob patterns, relative to the brain root
 
 [budgets]
 rules_max_lines     = 100
 rules_max_chars     = 4000
 agents_md_max_lines = 150
+topic_rules_max_lines = 60                  # per topic rules file (BW411)
 orient_max_tokens   = 1500
 
 [lint]                                      # see lint and reports §2
@@ -179,12 +203,15 @@ Rules:
 - An undeclared topic still works. Its title comes from its topic page,
   and its description from the page's `description` property. A declaration sets
   the title, the description, or a path (for imported vaults).
+- Without `layout.topic_page`, a folder without `_Index.md` takes
+  `index.md` as its page (§2.2).
 - Older `brain.toml` files may use the names from when topic pages were
   called hubs. `layout.hub_filename` is read as `layout.topic_page`, and a
   `hub` key in `search.kind_factor` as `topic`.
 - Declared topic slugs MUST match `^[a-z0-9][a-z0-9-]{0,63}$` (BW409).
 - `[budgets]` limits are hard. Rule writes refuse to exceed theirs, lint
-  reports `rules.md` (BW402) and `AGENTS.md` (BW403), and orientation is
+  reports `rules.md` (BW402), `AGENTS.md` (BW403), and topic rules
+  (BW411), and orientation and the topic rules `brain_read` includes are
   cut to fit.
 - `git.mode = "on"` behaves like `auto`.
 - Agent profile names are host ids
@@ -543,6 +570,9 @@ How local search works in this project and why. Storage details are in
 - [[SQLite version policy]]: minimum versions and fallbacks
 ```
 
+- The default name is `_Index.md` (§2.2). The page MAY be named
+  otherwise with `layout.topic_page`, for example `Index.md` in a vault
+  that already uses it.
 - `type` defaults to `topic` on a topic page. Like every `type`, it is
   open vocabulary, so a page written with `type: hub` keeps working.
 - With `topic_page = "{folder}.md"`, the page of `topics/search/` is
@@ -559,6 +589,48 @@ How local search works in this project and why. Storage details are in
   removes lines a person wrote.
 - An optional `description` property on the page is the topic's one-line
   description when `brain.toml` does not declare one.
+
+### 8.1 Topic rules
+
+A topic folder, or the topics folder itself, MAY hold a topic rules file
+(`layout.topic_rules`, `_Rules.md` by default): the user's instructions for
+how that part of the brain is organized
+([D43](../decision/d43-topic-rules.md)).
+
+```markdown
+# People
+
+- One `type: person` note per person, named by their full name (`Rin Sato.md`).
+- Start with who they are to the user, then facts as bullets.
+- Give a person a folder only once they have several notes; their person
+  note then becomes that folder's `_Index.md`.
+```
+
+- A rules file applies to the folder that holds it and to every folder
+  below it. Where several apply, all of them hold, read outermost first,
+  and a nearer file is more specific.
+- The body is free Markdown. Frontmatter MAY be present and is ignored.
+- A rules file is not a note. It has no id, is not indexed for search,
+  does not make its folder a topic, is never listed in `## Notes`, and a
+  wikilink to it does not resolve.
+- Agents follow the rules that apply when they add, move, or split notes,
+  and do not edit a rules file unless the user asks. brain-wiki delivers
+  them where an agent decides where knowledge goes: `brain_read` of a
+  topic page includes their text, reading a note names them,
+  `brain_validate` names the ones for the files it checked, orientation
+  says which topics have them, and `brain consolidate --prepare` includes
+  them ([index and search §7](index-and-search.md#7-read)).
+- Nothing checks a note against them, since brain-wiki does not read
+  meaning from notes ([D33](../decision/d33-no-meaning-extraction.md)).
+  Lint checks only their length against
+  `budgets.topic_rules_max_lines` (BW411), because their text goes into
+  agents' context.
+- They differ from `rules.md` (§10): `rules.md` holds standing directives
+  loaded in every session, each with the user's own words as its source,
+  and changes only through the CLI. Topic rules are about organizing one
+  part of the brain, are read only when an agent works there, and are a
+  plain file the user edits or a template brings
+  ([config and storage §5.1](config-and-storage.md#51-templates)).
 
 ## 9. Episodes
 
@@ -678,18 +750,20 @@ outside the markers is preserved.
 # This folder is a brain-wiki brain: personal
 
 - Read `rules.md` first: standing directives from the user.
-- Knowledge lives in `topics/<topic>/`; each topic has a page (`index.md`).
+- Knowledge lives in `topics/<topic>/`; each topic has a page (`_Index.md`).
 - To add or correct knowledge, edit or create a note, then run
   `brain validate <path>` (MCP: `brain_validate`) and fix what it reports. Something
-  not organized yet goes in `inbox/episodes/YYYY/MM/<ULID>.md` (or the MCP tool
-  `brain_log_episode`). Never edit `rules.md`, episodes, or `log.md`.
+  not organized yet goes to the inbox through the MCP tool `brain_log_episode`.
+  Never edit `rules.md`, episodes, or `log.md`.
+- Before adding or moving notes in a folder, read its `_Rules.md` and
+  those of the folders above it: how the user wants that part organized.
 - A note's frontmatter is metadata; its facts and `[[links]]` are in the body. Relation
   fields hold links: `bw-part_of`, `bw-depends_on`, `bw-conflicts_with` (read both). A note
   with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
 
 | Topic | Page | About |
 |---|---|---|
-| search | topics/search/index.md | How local search works and why. |
+| search | topics/search/_Index.md | How local search works and why. |
 <!-- brain-wiki:end -->
 ```
 

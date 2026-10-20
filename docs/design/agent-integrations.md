@@ -124,7 +124,8 @@ The user keeps long-term memory in brain-wiki "brains" that all their agents sha
 - A superseded hit comes with the note that replaced it. Prefer the current
   note, and tell the user when the difference matters.
 - To add or correct knowledge, edit or create the note directly (frontmatter
-  holds metadata only; facts and links go in the body), then run
+  holds metadata only; facts and links go in the body), following the
+  `_Rules.md` in its folder and the folders above it, then run
   `brain_validate` on what you changed and fix what it reports. Something you
   cannot place yet goes to the inbox with `brain_log_episode`. Never edit
   rules, episodes, or log.md, and never add rules unless the user asks.

@@ -13,7 +13,7 @@ from brainwiki.format import STATUSES, parse_document
 from brainwiki.index import norm_key, slugify
 
 _DAILY = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
-_PAGE_NAMES = ("index.md", "_index.md", "README.md")
+_PAGE_NAMES = ("_Index.md", "index.md", "Index.md", "_index.md", "README.md")
 _TEMPLATE_NAMES = {"templates", "_templates", "template"}
 _INBOX_NAMES = {"inbox", "_inbox"}
 _ATTACHMENT_NAMES = {"attachments", "assets", "files", "images", "media", "_resources"}
@@ -30,7 +30,7 @@ class Survey:
     markdown_links: bool = False
     ignore: list[str] = field(default_factory=list)
     topics: dict[str, str] = field(default_factory=dict)  # slug -> folder
-    topic_page: str = "index.md"
+    topic_page: str = "_Index.md"  # brain-wiki's default when the folder shows no convention
     daily_folder: str | None = None
     counts: Counter[str] = field(default_factory=Counter)
     statuses: Counter[str] = field(default_factory=Counter)

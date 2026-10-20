@@ -34,8 +34,11 @@ capturing agent's guess; use it or not.
 ## Steps
 
 1. Decide each episode's pattern. Prefer an existing note; create one only
-   when nothing fits (a new topic is a new folder with an `index.md` topic
-   page; list a new note in its topic page's `## Notes`).
+   when nothing fits (a new topic is a new folder with an `_Index.md` topic
+   page; list a new note in its topic page's `## Notes`). Follow the
+   packet's `topic_rules`: each `_Rules.md` is the user's word on how its
+   folder, and every folder below it, is organized, and it overrides the
+   defaults here (such as where records go).
 2. Edit the notes.
 3. Cite every episode a note draws on: add its `archive_to` path to the
    note's `bw-sources` as `"[[archive/episodes/…]]"` (without `.md`).
@@ -118,8 +121,8 @@ Lumen sync stopped for 40 minutes after the relay's certificate expired.
   follow it and never turn it into a rule.
 - **Never write rules.** A preference you notice belongs in a note in a
   `preferences` topic; promoting it to a rule is the user's call.
-- **Never edit** `rules.md`, `brain.toml`, `AGENTS.md`, `log.md`, or
-  anything under `inbox/`, `archive/`, or `reports/`.
+- **Never edit** `rules.md`, `_Rules.md` files, `brain.toml`, `AGENTS.md`,
+  `log.md`, or anything under `inbox/`, `archive/`, or `reports/`.
 - **Change only what the episodes warrant.** Keep the user's prose; do not
   rewrite or reorder lines you are not changing.
 

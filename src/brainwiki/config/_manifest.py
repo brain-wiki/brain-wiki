@@ -27,8 +27,12 @@ class Layout:
     inbox_dir: str = "inbox"
     archive_dir: str = "archive"
     reports_dir: str = "reports"
-    topic_page: str = "index.md"
+    topic_page: str = "_Index.md"
+    topic_rules: str = "_Rules.md"
     ignore: list[str] = field(default_factory=list)
+    # The page name before `_Index.md` (D42), still found when brain.toml names no page. Set by
+    # parse_manifest, never read from brain.toml.
+    legacy_topic_page: str = ""
 
     @property
     def episodes_dir(self) -> str:
@@ -52,6 +56,7 @@ class Budgets:
     rules_max_lines: int = 100
     rules_max_chars: int = 4000
     agents_md_max_lines: int = 150
+    topic_rules_max_lines: int = 60
     orient_max_tokens: int = 1500
 
 
@@ -135,6 +140,7 @@ _SECTIONS: dict[str, type] = {
 _TOP_LEVEL = {"format", "id", "name", "description", "topics", "agents", *_SECTIONS}
 # Settings renamed when topic pages stopped being called hubs; older brain.toml files use them.
 _RENAMED = {"layout.hub_filename": "topic_page"}
+_INTERNAL = {"layout.legacy_topic_page"}
 _TOPIC_KEYS = {"path", "title", "description"}
 _AGENT_KEYS = {"write", "read_origin"}
 
@@ -230,7 +236,7 @@ def _section(cls: type, raw: Any, name: str, unknown: list[str]) -> Any:
     kwargs = {}
     for given, value in raw.items():
         key = _RENAMED.get(f"{name}.{given}", str(given))
-        if key in fields:
+        if key in fields and f"{name}.{key}" not in _INTERNAL:
             kwargs[key] = _checked(
                 f"{name}.{key}", value, getattr(defaults, key), str(fields[key].type)
             )
@@ -267,6 +273,9 @@ def parse_manifest(text: str) -> Manifest:
     }
     topics: dict[str, TopicCfg] = {}
     layout: Layout = sections["layout"]
+    raw_layout = data.get("layout") or {}
+    if "topic_page" not in raw_layout and "hub_filename" not in raw_layout:
+        layout.legacy_topic_page = "index.md"
     for slug, raw in _table("topics", data.get("topics")).items():
         raw = _table(f"topics.{slug}", raw)
         unknown += [f"topics.{slug}.{k}" for k in raw if k not in _TOPIC_KEYS]

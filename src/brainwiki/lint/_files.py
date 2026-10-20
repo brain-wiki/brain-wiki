@@ -167,7 +167,7 @@ def _page_names(ctx: FileContext, rel: str, kind: str) -> frozenset[str]:
     if not slug or slug not in tree.paths:
         return frozenset()
     folder = tree.paths[slug]
-    page = f"{folder}/{page_name(ctx.manifest.layout, folder)}"
+    page = tree.page(slug) or f"{folder}/{page_name(ctx.manifest.layout, folder)}"
     return frozenset({page.removesuffix(".md"), folder.rsplit("/", 1)[-1], slug})
 
 
@@ -426,7 +426,7 @@ def run_gate(engine: Engine) -> Callable[[Run], list[Problem]]:
         for path, before, after in run.text_changes():
             if after is None:
                 continue
-            kind = classify(engine, path, ctx.topics)
+            kind = classify(engine, path, ctx.tree)
             if kind not in _GATED_KINDS:
                 continue
 

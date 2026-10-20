@@ -155,6 +155,11 @@ How files become rows:
 - A file is kind `topic` only when it is a topic page by its path
   ([[brain-format-8-topic-pages|brain format §8]]), whatever its
   `type`. `type` defaults to `topic`, `episode`, or `note` by kind.
+- A topic rules file
+  ([[brain-format-8-topic-pages|brain format §8.1]]) gets a `files` row
+  of kind `topic_rules` and no node, so it is neither searched nor linked.
+  The topic tree keeps the set of them, so finding the rules for a path
+  needs no query.
 - A `status` outside the three values is indexed as `active`, and the
   value goes to `stage` when the note has no `bw-stage`.
 - `props` holds every frontmatter key except the standard ones (`id`,

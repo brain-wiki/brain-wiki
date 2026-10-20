@@ -193,7 +193,7 @@ def generate(root: Path, notes: int = 1000, seed: int = 0) -> Truth:
     }
     pages: dict[str, Node] = {}
     for t in topic_slugs:
-        page = Node(g.ulid(_EPOCH), "index", f"topics/{t}/index.md", topic_titles[t], t, "topic")
+        page = Node(g.ulid(_EPOCH), "_Index", f"topics/{t}/_Index.md", topic_titles[t], t, "topic")
         pages[t] = page
         truth.nodes[page.id] = page
 

@@ -189,6 +189,11 @@ How files become rows:
 - A file is kind `topic` only when it is a topic page by its path
   ([brain format §8](brain-format.md#8-topic-pages)), whatever its
   `type`. `type` defaults to `topic`, `episode`, or `note` by kind.
+- A topic rules file
+  ([brain format §8.1](brain-format.md#81-topic-rules)) gets a `files` row
+  of kind `topic_rules` and no node, so it is neither searched nor linked.
+  The topic tree keeps the set of them, so finding the rules for a path
+  needs no query.
 - A `status` outside the three values is indexed as `active`, and the
   value goes to `stage` when the note has no `bw-stage`.
 - `props` holds every frontmatter key except the standard ones (`id`,
@@ -532,6 +537,14 @@ is an error that lists the candidates instead of guessing.
 - `full` returns the body without frontmatter or HTML comments. For notes
   and topic pages it appends "Links:", "Parts:", and "Linked from:" lists
   below a `---` line, since the file's own wikilinks carry no paths.
+- In `outline` and `full`, a topic page's text ends with the topic rules
+  that apply to its folder, outermost first, each cut at
+  `budgets.topic_rules_max_lines` lines; a note's text ends with a line
+  naming their paths. The structured result's `rules` holds
+  `{path, content}` items for a topic page and `{path}` items for a note.
+  An agent deciding where knowledge goes reads the topic page, so the rules
+  arrive then without another call
+  ([D43](../decision/d43-topic-rules.md)).
 - `section` matches a heading's text, case-insensitively. Passing a
   section implies this mode. The mode without a section, or a section with
   another mode, is a usage error.
@@ -556,7 +569,7 @@ Links:
 - links_to "SQLite version policy" (topics/search/sqlite-versions.md)
 Linked from:
 - supersedes "Use ripgrep for search" (topics/search/ripgrep.md)
-- linked_from "Search" (topics/search/index.md)
+- linked_from "Search" (topics/search/_Index.md)
 ```
 
 Every link and backlink carries its handle, the path after the title. In
@@ -629,7 +642,9 @@ Sections, in output order:
    frontmatter fields and `status` values
    ([brain format §6.1](brain-format.md#61-frontmatter)), the relation
    fields ([brain format §6.6](brain-format.md#66-relations)), the body
-   conventions ([brain format §6.2](brain-format.md#62-body)), and "run
+   conventions ([brain format §6.2](brain-format.md#62-body)), which
+   topics have topic rules and that they are followed and not edited
+   ([brain format §8.1](brain-format.md#81-topic-rules)), and "run
    `brain_validate` on the files you changed".
 
 Note counts never include topic pages. A topic page describes its topic

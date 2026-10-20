@@ -16,6 +16,16 @@ Generated from `docs/user/`.
 - [[user-getting-started]]: Getting started
 - [[user-import]]: Import
 - [[user-maintenance]]: Maintenance
+  - [[user-maintenance-commit-direct-edits]]: Commit direct edits
+  - [[user-maintenance-share-a-brain-between-machines]]: Share a brain between machines
+  - [[user-maintenance-consolidate]]: Consolidate
+  - [[user-maintenance-rule-proposals]]: Rule proposals
+  - [[user-maintenance-lint-and-reports]]: Lint and reports
+  - [[user-maintenance-rename-topic-pages-to-indexmd]]: Rename topic pages to `_Index.md`
+  - [[user-maintenance-convert-notes-from-older-versions]]: Convert notes from older versions
+  - [[user-maintenance-move-a-note]]: Move a note
+  - [[user-maintenance-undo]]: Undo (Maintenance)
+  - [[user-maintenance-git]]: Git
 - [[user-privacy]]: Privacy and safety
 - [[user-reference]]: Reference
   - [[user-reference-commands]]: Commands

@@ -4,7 +4,9 @@
 |---|---|
 | brain | A directory with a `brain.toml` manifest. Hosts are allowed or limited to whole brains, and a brain is chosen by name for each call, project, or host. |
 | topic | A folder under `topics/`, usually with a topic page that summarizes it and links its notes. Every folder inside a topic that holds notes is a sub-topic, with or without a page. |
-| topic page | A topic's own page, `index.md` in the topic folder by default. Only that file is one; a note's `type` never makes it one. |
+| topic page | A topic's own page, `_Index.md` in the topic folder by default. Only that file is one; a note's `type` never makes it one. |
+| topic rules | A `_Rules.md` file in a topic folder, or in the topics folder: the user's instructions for how that folder and the folders below it are organized. Agents follow them; they are not notes. |
+| template | A topic tree, with topic pages and topic rules and no notes, that `brain init --template` starts a new brain with. |
 | note | A Markdown file in a topic. Frontmatter holds metadata, and facts and links are ordinary Markdown in the body. |
 | link | A wikilink or Markdown link to another note. A body link is untyped, and the sentence around it says why it is there. In frontmatter, only the relation fields and `bw-sources` hold links. |
 | relation | A typed link held in a frontmatter field on one side: `bw-part_of`, `bw-depends_on`, `bw-conflicts_with`, or `bw-superseded_by`. The note named sees it as a backlink. The author declares it; brain-wiki never infers one. |

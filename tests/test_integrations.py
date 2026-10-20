@@ -247,7 +247,9 @@ def test_setup_wizard_offers_a_commit_job_for_a_git_brain(
         monkeypatch.setenv(var, "Test")
     for var in ("GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"):
         monkeypatch.setenv(var, "test@example.com")
-    answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "y", "y"])  # git; commit job
+    answers = iter(
+        ["", str(tmp_path / "brains" / "mine"), "mine", "none", "y", "y"]
+    )  # git; commit job
     output: list[str] = []
     assert run_wizard(None, ask=lambda _: next(answers, "n"), out=output.append) == 0
     assert "# >>> brain-wiki commit " in cron.text and "commit --brain mine" in cron.text
@@ -267,7 +269,7 @@ def test_setup_wizard_goes_on_when_the_scheduler_refuses(
         monkeypatch.setenv(var, "Test")
     for var in ("GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"):
         monkeypatch.setenv(var, "test@example.com")
-    answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "y", "y"])
+    answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "none", "y", "y"])
     output: list[str] = []
     assert run_wizard(None, ask=lambda _: next(answers, "n"), out=output.append) == 0
     assert any(line.startswith("Could not schedule it (launchctl bootstrap") for line in output), (
@@ -277,10 +279,11 @@ def test_setup_wizard_goes_on_when_the_scheduler_refuses(
 
 
 def test_setup_wizard_creates_brain(tmp_path: Path):
-    answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "n"])
+    answers = iter(["", str(tmp_path / "brains" / "mine"), "mine", "personal", "n"])
     output: list[str] = []
     assert run_wizard(None, ask=lambda _: next(answers, "n"), out=output.append) == 0
     assert (tmp_path / "brains" / "mine" / "brain.toml").exists()
+    assert (tmp_path / "brains" / "mine" / "topics" / "People" / "_Rules.md").exists()
     assert "mine" in load_user_config().brains
     assert any("Verify: search works." in line for line in output)
     assert not list((tmp_path / "brains" / "mine" / "inbox" / "episodes").rglob("*.md"))
@@ -302,7 +305,7 @@ def test_every_setup_prompt_shows_a_default_that_enter_accepts(monkeypatch: pyte
         return ""
 
     assert run_wizard(None, ask=enter, out=lambda _: None) == 0
-    assert len(questions) >= 6  # brain, name, git, permissions, harvest
+    assert len(questions) >= 7  # brain, name, template, git, permissions, harvest
     for question in questions:
         assert re.search(r"\[[^\]]+\] $", question), question
     assert "personal" in load_user_config().brains

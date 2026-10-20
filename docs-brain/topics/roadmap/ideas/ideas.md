@@ -37,5 +37,9 @@ Generated from `docs/roadmap/ideas.md`.
   - [[idea-an-authority-order-for-when-sources]]: An authority order for when sources disagree
 - Setup
   - [[idea-an-option-for-brain-init-to]]: An option for brain init to make the new brain an Obsidian vault by writing…
+- Templates
+  - [[idea-more-built-in-templates]]: More built-in templates
+  - [[idea-brain-templates-save-path-to-write]]: brain templates save PATH to write a brain's topic pages and rules out as a template…
+  - [[idea-a-topic-rules-file-in-a]]: A topic rules file in a template for a sub-folder that does not exist yet
 - Naming
   - [[idea-title-case-names-by-default-for]]: Title Case names by default for note files and topic folders

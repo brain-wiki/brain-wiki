@@ -74,9 +74,16 @@ let the user decide:
   sync tool (iCloud, Dropbox, Syncthing) copies between machines: two
   machines committing into one `.git` can corrupt it. Without git,
   `brain undo` reverses only brain-wiki's own changes.
+- **Template.** A template starts the brain with topic folders, each with a
+  `_Rules.md` saying how to fill it, so agents file knowledge in the same
+  places from the first session. Run `brain templates` and describe each in
+  a line; suggest the one that fits what the user told you about their work
+  (`personal` or `engineering`), or none for an empty brain.
 
-Then run `brain init PATH --name NAME`, adding `--git` if they chose it. It
-makes a first commit, so a clone is a working brain.
+Then run `brain init PATH --name NAME`, adding `--template NAME` and
+`--git` if they chose them. With git it makes a first commit, so a clone is
+a working brain. With a template, tell the user the `_Rules.md` files are
+theirs to edit: they are how agents learn the structure the user wants.
 
 **The user already has a vault** (Obsidian or a folder of Markdown):
 

@@ -24,6 +24,14 @@ is an error that lists the candidates instead of guessing.
 - `full` returns the body without frontmatter or HTML comments. For notes
   and topic pages it appends "Links:", "Parts:", and "Linked from:" lists
   below a `---` line, since the file's own wikilinks carry no paths.
+- In `outline` and `full`, a topic page's text ends with the topic rules
+  that apply to its folder, outermost first, each cut at
+  `budgets.topic_rules_max_lines` lines; a note's text ends with a line
+  naming their paths. The structured result's `rules` holds
+  `{path, content}` items for a topic page and `{path}` items for a note.
+  An agent deciding where knowledge goes reads the topic page, so the rules
+  arrive then without another call
+  ([[d43-topic-rules|D43]]).
 - `section` matches a heading's text, case-insensitively. Passing a
   section implies this mode. The mode without a section, or a section with
   another mode, is a usage error.
@@ -48,7 +56,7 @@ Links:
 - links_to "SQLite version policy" (topics/search/sqlite-versions.md)
 Linked from:
 - supersedes "Use ripgrep for search" (topics/search/ripgrep.md)
-- linked_from "Search" (topics/search/index.md)
+- linked_from "Search" (topics/search/_Index.md)
 ```
 
 Every link and backlink carries its handle, the path after the title. In

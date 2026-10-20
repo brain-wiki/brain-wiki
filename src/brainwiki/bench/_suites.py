@@ -166,7 +166,7 @@ _QC = "topics/alpha/queue-choice.md"
 _BP = "topics/alpha/broker-policy.md"
 _IL = "topics/alpha/ingest-limits.md"
 _VC = "topics/vault/vault-costs.md"
-_ALPHA_PAGE = "topics/alpha/index.md"
+_ALPHA_PAGE = "topics/alpha/_Index.md"
 _BASE_EXTRA = """
 [git]
 mode = "off"
@@ -229,7 +229,7 @@ def _base_brain(root: Path) -> Path:
             "Producers are throttled at the gateway when the queue backs up.",
             ["The gateway throttles producers above 2000 events per second."],
         ),
-        "topics/vault/index.md": _topic_page("Vault", "Costs and contracts.", ["vault-costs"]),
+        "topics/vault/_Index.md": _topic_page("Vault", "Costs and contracts.", ["vault-costs"]),
         _VC: _note(
             "Broker hosting costs",
             "The hosted broker costs more than running it ourselves; see [[broker-policy]].",
@@ -403,7 +403,7 @@ def _bw312(root: Path) -> _Expect:
 
 @_case("BW313")
 def _bw313(root: Path) -> _Expect:
-    return [("BW313", _IL, _frontmatter(root, _IL, 'bw-part_of: "[[alpha/index]]"'))], {_IL: 1}
+    return [("BW313", _IL, _frontmatter(root, _IL, 'bw-part_of: "[[alpha/_Index]]"'))], {_IL: 1}
 
 
 @_case("BW314")
@@ -451,7 +451,7 @@ def _bw404(root: Path) -> _Expect:
     )
     _insert(root, _IL, "Producers", "See [[orphan-idea]].\n")
     expected = [("BW404", "topics/gamma", None), ("BW408", "AGENTS.md", None)]
-    return expected, {"topics/gamma/index.md": "created"}
+    return expected, {"topics/gamma/_Index.md": "created"}
 
 
 @_case("BW406")

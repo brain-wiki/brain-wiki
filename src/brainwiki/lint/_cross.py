@@ -381,13 +381,29 @@ def _structure_checks(
     layout = manifest.layout
     namer = LinkNamer(conn)
     for slug, folder in sorted(ctx.topics.items()):
-        page_path = f"{folder}/{page_name(layout, folder)}"
+        page_path = ctx.tree.page(slug) or f"{folder}/{page_name(layout, folder)}"
         page = conn.execute(
             "SELECT id, path FROM nodes WHERE path=? AND kind='topic'", (page_path,)
         ).fetchone()
         notes = conn.execute(
             "SELECT id, path, title FROM nodes WHERE topic=? AND kind='note' ORDER BY path", (slug,)
         ).fetchall()
+        if (
+            page is not None
+            and layout.legacy_topic_page
+            and page_path.endswith("/" + layout.legacy_topic_page)
+        ):
+            wanted = f"{folder}/{page_name(layout, folder)}"
+            out.append(
+                Problem(
+                    "BW410",
+                    page_path,
+                    None,
+                    f"topic page is named {layout.legacy_topic_page}, the old default; "
+                    f"rename it to {page_name(layout, folder)}",
+                    fix=Fix(f"rename to {wanted}", move_to=wanted),
+                )
+            )
         if page is None:
             declared = manifest.topics.get(slug)
             if engine.store.exists(page_path) or (
@@ -455,6 +471,23 @@ def _structure_checks(
         "SELECT path FROM nodes WHERE kind='note' AND topic IS NULL ORDER BY path"
     ):
         out.append(Problem("BW407", row["path"], None, "note is outside any topic"))
+
+    rules_limit = manifest.budgets.topic_rules_max_lines
+    for path in sorted(ctx.tree.rules):
+        try:
+            count = len(engine.store.read_text(path).splitlines())
+        except (OSError, UnicodeDecodeError):
+            continue
+        if count > rules_limit:
+            out.append(
+                Problem(
+                    "BW411",
+                    path,
+                    None,
+                    f"topic rules have {count} lines (budget {rules_limit}); agents read them "
+                    "whole, so keep them short",
+                )
+            )
 
     block = agents_block(engine)
     try:

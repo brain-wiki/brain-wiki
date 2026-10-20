@@ -54,3 +54,6 @@ Generated from `docs/decision/README.md`.
 - [[d39-relation-fields]]: D39: Relations are link-only fields the author declares
 - [[d40-every-folder-is-a-topic]]: D40: Every folder is a topic
 - [[d41-map-of-the-topic-tree]]: D41: The map draws the topic tree in layers
+- [[d42-underscore-topic-files]]: D42: The topic page is `_Index.md`
+- [[d43-topic-rules]]: D43: Topic rules say how a folder is organized
+- [[d44-brain-templates]]: D44: A new brain can start from a template

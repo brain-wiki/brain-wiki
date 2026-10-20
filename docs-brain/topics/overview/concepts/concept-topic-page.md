@@ -7,4 +7,4 @@ source: "docs/design/glossary.md"
 ---
 # Topic page
 
-A topic's own page, `index.md` in the topic folder by default. Only that file is one; a note's `type` never makes it one.
+A topic's own page, `_Index.md` in the topic folder by default. Only that file is one; a note's `type` never makes it one.

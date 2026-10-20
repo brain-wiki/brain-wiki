@@ -42,7 +42,7 @@ plugin is already installed from your agent's marketplace, ask the agent:
   machine, but not direct edits.
 - To use the brain on another machine, push it to a private git remote. Do
   not sync a git brain with a sync tool. See
-  [[user-maintenance|Maintenance]].
+  [[user-maintenance-share-a-brain-between-machines|Maintenance]].
 - The commit job does not push unless you say so. Setup asks only when the
   brain has a git remote.
 
@@ -64,7 +64,8 @@ following `brain setup --guide` runs:
 
 ```sh
 brain doctor
-brain init ~/brains/personal --name personal --git
+brain templates                                # the topic trees a brain can start with
+brain init ~/brains/personal --name personal --template personal --git
 brain schedule add commit --dry-run            # then without --dry-run; --push to push too
 brain connect claude-code --dry-run            # then without --dry-run
 brain agents grant claude-code propose_rules
@@ -76,6 +77,13 @@ brain harvest route "~/**" personal
   it found on this machine. It changes nothing, except that it rolls back a
   run that a crash left half-applied.
 - `brain init --git` runs `git init` and makes a first commit.
+- `brain init --template personal` starts the brain with topic folders
+  (Preferences, People, Projects, Reference), each with a `_Rules.md` that
+  tells agents how to fill it. `engineering` has Preferences, Projects,
+  Systems, Playbooks, and People. `--template` also takes a folder, or
+  another brain, to copy the topic folders, pages, and rules of; notes are
+  never copied. Without `--template`, the brain starts empty and agents
+  create topics as they go.
 
 A new brain looks like this:
 
@@ -85,7 +93,7 @@ A new brain looks like this:
 ├── AGENTS.md           how agents that only read files should use it
 ├── rules.md            your standing rules, part of every briefing
 ├── log.md              a readable history of changes brain-wiki made
-├── topics/<topic>/     notes; each topic has a page (index.md)
+├── topics/<topic>/     notes; each topic has a page (_Index.md) and may have rules (_Rules.md)
 ├── inbox/episodes/     raw observations from agents and from you
 ├── inbox/proposals/    rules agents proposed, waiting for you
 ├── archive/            consolidated episodes, kept as sources
@@ -110,9 +118,14 @@ brain rules add "Prefer pytest for new tests." --quote "from now on use pytest"
   remembered, tell an agent "remember that …".
 - **Notes** hold the knowledge. You and your agents write them directly.
   **Consolidation** folds the inbox into notes when you ask. See
-  [[user-maintenance|Maintenance]].
+  [[user-maintenance-consolidate|Maintenance]].
 - **Rules** are your standing instructions. Only you add them, from the CLI
   or by accepting an agent's proposal.
+- **Topic rules** say how one folder is organized: what belongs there and
+  how notes are named. Write them in plain Markdown in the folder's
+  `_Rules.md`; they apply to the folders below it too. Agents read them
+  when they open the topic's page (`_Index.md`) and follow them when they
+  add or move notes there.
 
 
 ## What a note looks like
@@ -161,7 +174,7 @@ Edit notes in any editor, then check them:
 
 Notes from older versions (formats 1 to 3) still work, and
 `brain lint --fix` converts them. See
-[[user-maintenance|Maintenance]].
+[[user-maintenance-convert-notes-from-older-versions|Maintenance]].
 
 
 ## Next

@@ -47,7 +47,9 @@ Sections, in output order:
    frontmatter fields and `status` values
    ([[brain-format-61-frontmatter|brain format §6.1]]), the relation
    fields ([[brain-format-66-relations|brain format §6.6]]), the body
-   conventions ([[brain-format-62-body|brain format §6.2]]), and "run
+   conventions ([[brain-format-62-body|brain format §6.2]]), which
+   topics have topic rules and that they are followed and not edited
+   ([[brain-format-8-topic-pages|brain format §8.1]]), and "run
    `brain_validate` on the files you changed".
 
 Note counts never include topic pages. A topic page describes its topic

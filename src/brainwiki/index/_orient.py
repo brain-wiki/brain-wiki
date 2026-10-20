@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import posixpath
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -215,7 +216,28 @@ def _writing_lines(engine: Engine, topics: list[dict[str, Any]]) -> list[str]:
         "record that rather than overwrite either). Say why in the body.",
         "- Body: a one-paragraph summary, then one fact per bullet; link notes with "
         "`[[wikilinks]]` inside sentences.",
+        *_rules_lines(engine),
         "- Then run `brain_validate` on the files you changed and fix what it reports.",
+    ]
+
+
+def _rules_lines(engine: Engine) -> list[str]:
+    """Where the topic rules are, for agents that may edit (brain-format.md §8.1)."""
+    layout = engine.manifest.layout
+    if not layout.topic_rules:
+        return []
+    tree = engine.topics
+    where = sorted(
+        (tree.for_path(path) if posixpath.dirname(path) in tree.paths.values() else None)
+        or (posixpath.dirname(path) + "/" if posixpath.dirname(path) else "the brain root")
+        for path in tree.rules
+    )
+    found = f" (in: {', '.join(where[:6])}{', …' if len(where) > 6 else ''})" if where else ""
+    return [
+        f"- A folder's `{layout.topic_rules}` says how the user wants it organized{found}. It "
+        "applies to the folders below it too. Follow it, and the ones above it, when adding, "
+        "moving, or splitting notes; `brain_read` of a topic page includes them. Do not edit "
+        "it unless the user asks.",
     ]
 
 
@@ -428,7 +450,7 @@ def agents_block(
         ]
         if hidden:
             table.append((f"… {hidden} more", "see the topic pages under topics/", ""))
-        return default_agents_block(name, table, edit=can_edit)
+        return default_agents_block(name, table, edit=can_edit, layout=engine.manifest.layout)
 
     try:
         current = engine.store.read_text("AGENTS.md")

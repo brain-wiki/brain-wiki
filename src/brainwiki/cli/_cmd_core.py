@@ -22,18 +22,21 @@ from brainwiki.errors import BrainError, Conflict, NotFound, UsageError
 def init(args: Any) -> int:
     from brainwiki.config import registration_conflict
     from brainwiki.lifecycle import init_brain, init_git
+    from brainwiki.templates import resolve_template, template_paths
 
     target = Path(args.path).expanduser()
     if not args.no_register:
         problem = registration_conflict(args.name or target.resolve().name, target)
         if problem:
             raise Conflict(problem)
-    root = init_brain(target, args.name)
+    template = resolve_template(args.template) if getattr(args, "template", None) else None
+    root = init_brain(target, args.name, template)
     brain = open_brain(root)
     name = args.name or brain.manifest.name or root.name
     if not args.no_register:
         register_brain(name, root)
-    git_problem = init_git(root, name) if args.git else None
+    copied = template_paths(template, brain.manifest.layout) if template else []
+    git_problem = init_git(root, name, copied) if args.git else None
     if not args.git:
         git_line = "\n  tip: `brain init --git` or `git init` to track changes"
     elif git_problem:
@@ -48,10 +51,35 @@ def init(args: Any) -> int:
             "id": brain.id,
             "registered": not args.no_register,
             "git": bool(args.git) and git_problem is None,
+            "template": template.name if template else None,
+            "files": copied,
         },
         f"Created brain {name!r} at {root}\n  id: {brain.id}"
+        + (
+            f"\n  template: {template.name} ({len(copied)} topic pages and rules)"
+            if template
+            else ""
+        )
         + ("" if args.no_register else "\n  registered in the user config")
         + git_line,
+    )
+    return 0
+
+
+def templates(args: Any) -> int:
+    from brainwiki.templates import template_rows
+
+    rows = template_rows()
+    text = "\n".join(
+        f"{r['name']:<14} {r['description']}\n{'':<14} topics: {', '.join(r['topics'])}"
+        for r in rows
+    )
+    emit(
+        args,
+        {"templates": rows},
+        (text or "No built-in templates.")
+        + "\n\nStart a brain from one: brain init PATH --template NAME"
+        + "\n(--template also takes a template folder, or a brain to copy the shape of)",
     )
     return 0
 

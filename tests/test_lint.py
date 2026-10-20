@@ -102,7 +102,7 @@ def fields_note(root: Path, rel: str, ulid: str, title: str, fields: str = "") -
 
 
 def test_relation_field_rules(brain_dir: Path):
-    fields_note(brain_dir, "topics/work/index.md", "01M4KT3JPRY4W6766VT18CQSA1", "Work")
+    fields_note(brain_dir, "topics/work/_Index.md", "01M4KT3JPRY4W6766VT18CQSA1", "Work")
     fields_note(
         brain_dir,
         "topics/work/launch.md",
@@ -115,7 +115,7 @@ def test_relation_field_rules(brain_dir: Path):
         "topics/work/benchmark.md",
         "01M4KT3JPRY4W6766VT18CQSA3",
         "Storage Benchmark",
-        'bw-part_of: ["[[launch]]", "[[index]]"]\n',
+        'bw-part_of: ["[[launch]]", "[[_Index]]"]\n',
     )
     fields_note(
         brain_dir,
@@ -245,7 +245,7 @@ def test_cross_file_rules(brain_dir: Path):
             f'bw-sources: ["[[archive/episodes/2026/10/gone]]"]\n---\n# {title}\n\n{body}\n',
         )
 
-    note(brain_dir, "topics/a/index.md", ids["a"], "Topic A", "## Notes\n- [[one]]")
+    note(brain_dir, "topics/a/_Index.md", ids["a"], "Topic A", "## Notes\n- [[one]]")
     replaced("topics/a/one.md", ids["b"], "One", "two", "See [[Tow]].")
     replaced("topics/a/two.md", ids["c"], "Two", "one")
     replaced("topics/a/three.md", ids["d"], "Three", "three")
@@ -308,16 +308,16 @@ def test_fix_is_one_undoable_run(brain_dir: Path):
         text = (brain_dir / "topics/a/x.md").read_text()
         assert "status: active" in text and "bw-stage: wip" in text and "id: " in text
         assert text.endswith("## Relations\n- requires [[y]]\n")  # free prose in format 4
-        assert (brain_dir / "topics/a/index.md").exists()  # BW404 created the topic page
+        assert (brain_dir / "topics/a/_Index.md").exists()  # BW404 created the topic page
         undo(e, outcome.record.run)
         assert (brain_dir / "topics/a/x.md").read_text() == before
-        assert not (brain_dir / "topics/a/index.md").exists()
+        assert not (brain_dir / "topics/a/_Index.md").exists()
 
 
 def test_renamed_target_is_repaired_from_path_history(brain_dir: Path):
     note(
         brain_dir,
-        "topics/a/index.md",
+        "topics/a/_Index.md",
         "01M4KT3JPRY4W6766VT18CQS30",
         "A",
         "## Notes\n- [[old-name]]",
@@ -329,7 +329,7 @@ def test_renamed_target_is_repaired_from_path_history(brain_dir: Path):
         e.scan(force=True)
         assert "BW310" in codes(lint(e))
         fix(e)
-        assert "- [[new-name]]" in (brain_dir / "topics/a/index.md").read_text()
+        assert "- [[new-name]]" in (brain_dir / "topics/a/_Index.md").read_text()
 
 
 def test_gate_blocks_only_new_errors(brain_dir: Path):
@@ -449,7 +449,7 @@ def test_notes_nested_under_listed_notes_need_no_page_line(brain_dir: Path):
     from brainwiki.ids import new_ulid
 
     ids = {k: new_ulid() for k in "habc"}
-    note(brain_dir, "topics/a/index.md", ids["h"], "A", "## Notes\n- [[section]]")
+    note(brain_dir, "topics/a/_Index.md", ids["h"], "A", "## Notes\n- [[section]]")
     note(brain_dir, "topics/a/section.md", ids["a"], "Section", "## Parts\n- [[deep/child]]")
     note(brain_dir, "topics/a/deep/child.md", ids["b"], "Child", "body")
     note(brain_dir, "topics/a/stray.md", ids["c"], "Stray", "body")
@@ -459,7 +459,7 @@ def test_notes_nested_under_listed_notes_need_no_page_line(brain_dir: Path):
 
 
 def test_fixable_count_matches_what_fix_applies(brain_dir: Path, capsys):
-    write(brain_dir, "topics/a/index.md", "---\nid: 01M4KT3JPRY4W6766VT18CQS51\n---\n# A\n")
+    write(brain_dir, "topics/a/_Index.md", "---\nid: 01M4KT3JPRY4W6766VT18CQS51\n---\n# A\n")
     write(brain_dir, "topics/a/bad.md", "# Bad\n\n<<<<<<< HEAD\nx\n=======\ny\n>>>>>>> o\n")
     assert main(["lint", "--fix"]) == 1  # BW103 and BW408 are fixed; the merge markers are not
     assert "Fixed " in capsys.readouterr().out

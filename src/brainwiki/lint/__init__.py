@@ -8,7 +8,7 @@ from brainwiki.lint._fixes import fix, plan
 from brainwiki.lint._hook import install_hook, staged_files
 from brainwiki.lint._reports import generate
 from brainwiki.lint._runner import lint
-from brainwiki.lint._validate import format_validate_text, validate
+from brainwiki.lint._validate import format_validate_text, validate, validate_rules
 
 __all__ = [
     "fix",
@@ -21,4 +21,5 @@ __all__ = [
     "staged_files",
     "unknown_codes",
     "validate",
+    "validate_rules",
 ]

@@ -16,6 +16,7 @@ from brainwiki.ids import is_ulid
 from brainwiki.index._resolver import Resolver, name_rows
 from brainwiki.index._topics import (
     TopicTree,
+    is_rules_file,
     note_file_changes,
     page_name,
     set_files,
@@ -57,7 +58,7 @@ def discovered_topics(engine: Engine) -> dict[str, str]:
     return dict(topic_tree(engine).paths)
 
 
-def classify(engine: Engine, rel: str, topics: dict[str, str]) -> str:
+def classify(engine: Engine, rel: str, tree: TopicTree) -> str:
     layout = engine.manifest.layout
     if rel == "brain.toml":
         return "manifest"
@@ -81,8 +82,12 @@ def classify(engine: Engine, rel: str, topics: dict[str, str]) -> str:
         return "proposal"
     if rel.startswith((layout.archive_episodes_dir + "/", layout.archive_dir + "/agents/")):
         return "archived_episode"
+    if is_rules_file(layout, rel):
+        return "topic_rules"
     folder, _, filename = rel.rpartition("/")
-    if folder in topics.values() and filename == page_name(layout, folder):
+    if tree.is_page(rel) or (
+        folder in tree.paths.values() and filename == page_name(layout, folder)
+    ):
         return "topic"
     return "note"
 
@@ -154,7 +159,6 @@ def scan(
     else:
         note_file_changes(engine, seen, [p for p in paths if p not in seen])
     tree = topic_tree(engine)
-    topics = tree.paths
     stored_tree = conn.execute("SELECT value FROM meta WHERE key='topic_tree'").fetchone()
     tree_changed = stored_tree is None or stored_tree[0] != tree.signature
     force: set[str] = set()  # re-indexed although unchanged: the topic tree moved under them
@@ -225,7 +229,7 @@ def scan(
         parsed_nodes: list[tuple[str, str]] = []
         for rel, data in to_parse:
             st = seen[rel]
-            kind = classify(engine, rel, topics)
+            kind = classify(engine, rel, tree)
             is_new = rel not in known
             node_id, changed_names = _index_file(
                 engine, conn, rel, data, st.mtime_ns, st.size, kind, tree, sanctioned, orphaned

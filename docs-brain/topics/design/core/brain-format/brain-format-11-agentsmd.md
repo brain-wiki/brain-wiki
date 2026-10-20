@@ -16,18 +16,20 @@ outside the markers is preserved.
 # This folder is a brain-wiki brain: personal
 
 - Read `rules.md` first: standing directives from the user.
-- Knowledge lives in `topics/<topic>/`; each topic has a page (`index.md`).
+- Knowledge lives in `topics/<topic>/`; each topic has a page (`_Index.md`).
 - To add or correct knowledge, edit or create a note, then run
   `brain validate <path>` (MCP: `brain_validate`) and fix what it reports. Something
-  not organized yet goes in `inbox/episodes/YYYY/MM/<ULID>.md` (or the MCP tool
-  `brain_log_episode`). Never edit `rules.md`, episodes, or `log.md`.
+  not organized yet goes to the inbox through the MCP tool `brain_log_episode`.
+  Never edit `rules.md`, episodes, or `log.md`.
+- Before adding or moving notes in a folder, read its `_Rules.md` and
+  those of the folders above it: how the user wants that part organized.
 - A note's frontmatter is metadata; its facts and `[[links]]` are in the body. Relation
   fields hold links: `bw-part_of`, `bw-depends_on`, `bw-conflicts_with` (read both). A note
   with `status: superseded` names its replacement in `bw-superseded_by`: read that one.
 
 | Topic | Page | About |
 |---|---|---|
-| search | topics/search/index.md | How local search works and why. |
+| search | topics/search/_Index.md | How local search works and why. |
 <!-- brain-wiki:end -->
 ```
 
