@@ -2,6 +2,13 @@
 
 ## 0.3.4 (unreleased)
 
+- **A topic opens as its topic page.** Selecting a topic in the map shows
+  its `Index.md` in the Details panel, then its notes, sub-topics, links,
+  and backlinks on the same page, in place of a summary with a button to
+  open the page. Clicking a topic page anywhere opens its topic. The
+  Details panel and the note preview widen for reading with a button in
+  their header or `W`.
+
 - **The map stays up longer.** `brain viz` stops after 2 hours without a
   request, instead of 30 minutes.
 
